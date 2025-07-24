@@ -1,0 +1,4325 @@
+{
+  "timestamp": "2025-07-04 23:23:34",
+  "results": [
+    {
+      "section": "brats",
+      "subject": "TCGA-19-1789",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0188",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6663",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-14-1456",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-1802",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6662",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0187",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0142",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-1598",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0392",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0068",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0509",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-14-3477",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0034",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0356",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0033",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0069",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0011",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6191",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-6389",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0075",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0086",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-14-1794",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0644",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-1094",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-2570",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0158",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-1084",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-14-1825",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-5413",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0192",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-19-5951",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6282",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0106",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-19-5960",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-19-5958",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6285",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6656",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0185",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0182",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0149",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0116",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-0616",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0177",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-4932",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6661",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0184",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6657",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0179",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-0829",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0054",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-19-2624",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0006",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0390",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0238",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0355",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0646",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-1098",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0240",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0046",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-76-6193",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-08-0385",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-19-0963",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0047",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-12-0776",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-02-0085",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0137",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0190",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0138",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-5417",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "brats",
+      "subject": "TCGA-06-0162",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00588_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00629_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00132_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00023_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00314_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00341_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00190_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00310_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00250_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00157_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00017_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00386_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00042_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00106_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00046_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00264_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00324_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00235_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00320_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00365_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00334_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00274_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00287_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00396_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00052_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00240_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00355_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00300_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00091_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00211_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00180_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00351_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00033_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00062_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00598_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00489_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00619_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00293_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00102_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00042_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00153_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00382_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00231_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00260_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00027_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00167_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00076_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00314_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00254_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00345_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00184_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00355_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00244_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00095_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00304_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00126_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00066_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00037_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00330_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00270_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00361_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00221_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00392_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00052_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00112_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00283_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00043_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00152_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00012_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00230_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00370_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00133_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00166_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00077_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00084_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00315_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00255_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00195_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00185_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00354_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00245_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00305_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00094_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00127_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00067_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00176_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00036_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00220_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00393_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00142_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00053_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00282_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00498_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00589_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00628_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00073_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00133_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00340_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00084_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00200_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00311_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00080_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00344_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00251_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00156_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00387_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00016_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00296_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00107_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00265_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00325_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00374_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00224_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00275_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00006_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00146_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00241_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00090_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00354_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00210_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00350_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00172_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00032_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00123_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00036_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00599_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00608_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00488_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00078_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00138_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00029_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00169_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00617_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00582_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00571_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00431_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00520_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00623_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00454_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00514_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00405_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00545_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00555_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00444_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00470_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00530_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00421_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00561_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00592_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00603_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00483_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00179_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00128_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00299_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00048_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00019_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00388_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00450_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00510_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00613_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00497_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00464_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00425_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00565_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00474_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00487_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00607_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00596_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00500_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00440_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00551_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00398_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00009_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00149_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00289_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00298_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00109_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00049_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00158_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00018_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00626_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00400_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00540_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00451_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00511_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00612_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00496_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00525_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00465_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00564_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00486_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00606_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00501_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00441_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00550_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00129_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00148_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00059_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00119_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00288_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00079_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00139_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00028_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00168_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00616_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00492_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00583_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00430_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00521_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00461_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00515_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00404_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00544_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00414_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00505_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00445_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00471_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00420_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00560_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00602_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00482_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00148_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00178_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00038_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00129_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00069_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00268_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00379_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00452_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00512_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00403_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00543_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00625_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00577_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00466_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00495_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00584_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00605_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00594_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00485_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00476_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00536_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00427_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00567_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00502_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00442_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00219_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00229_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00338_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00278_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00258_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00349_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00209_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00198_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00522_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00462_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00573_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00433_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00615_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00407_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00456_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00516_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00446_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00417_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00481_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00590_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00601_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00423_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00472_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00532_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00219_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00359_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00248_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00348_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00199_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00208_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00463_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00572_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00432_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00581_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00610_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00614_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00490_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00406_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00546_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00457_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00620_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00630_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00447_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00416_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00480_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00600_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00591_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00422_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00562_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00473_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00533_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00218_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00189_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00358_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00249_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00309_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00098_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00269_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00329_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00238_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00378_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00453_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00513_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00542_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00624_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00576_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00436_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00527_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00494_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00585_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00595_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00604_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00484_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00477_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00566_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00552_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00412_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00503_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00443_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00368_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00228_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00339_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00279_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00458_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00518_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00409_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00322_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00233_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00151_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00380_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00011_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00291_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00312_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00347_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00196_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00087_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00256_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00074_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00025_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00165_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00175_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00035_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00124_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00246_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00353_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00097_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00306_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00186_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00217_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00302_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00357_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00050_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00110_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00281_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00390_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00285_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00141_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00363_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00332_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00272_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00559_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00419_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00508_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00468_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00579_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00439_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00083_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00252_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00192_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00021_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00161_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00134_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00070_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00130_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00237_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00377_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00266_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00326_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00104_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00295_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00044_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00155_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00394_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00005_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00145_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00114_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00141_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00336_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00332_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00060_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00213_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00182_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00353_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00242_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00302_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00569_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00478_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00538_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00529_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00469_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00438_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00313_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00082_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00086_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00342_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00202_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00020_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00160_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00071_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00131_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00236_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00327_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00150_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00294_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00154_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00385_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00280_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00144_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00055_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00140_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00115_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00284_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00337_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00366_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00226_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00183_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00212_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00307_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00352_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00243_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00092_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00303_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00428_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00568_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00539_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00263_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00323_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00267_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00232_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00372_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00010_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00381_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00101_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00041_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00346_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00197_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00206_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00160_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00164_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00174_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00034_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00125_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00247_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00307_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00096_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00352_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00187_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00356_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00055_21",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00391_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00333_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00558_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    },
+    {
+      "section": "upenn",
+      "subject": "UPENN-GBM-00418_11",
+      "spacing_ok": true,
+      "intensity_ok": true,
+      "mask_overlap_ok": true,
+      "all_ok": true
+    }
+  ]
+}

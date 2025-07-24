@@ -1,0 +1,16 @@
+checkpoints/
+preprocessed/
+runs/
+samples/
+scripts/venv/
+*.ckpt
+*.pth
+*.pt
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+venv/
+.env
