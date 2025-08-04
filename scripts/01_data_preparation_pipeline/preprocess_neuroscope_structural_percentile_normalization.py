@@ -5,6 +5,7 @@ import SimpleITK as sitk
 import numpy as np
 import time
 from typing import List, Tuple, Dict
+from neuroscope_config import PATHS
 
 
 def configure_logging() -> None:
@@ -18,32 +19,30 @@ def configure_logging() -> None:
 
 
 def find_modality_paths_fixed(
-    data_root: str,
     section: str,
-    subj_id: str,
-    brats_root: str,
-    upenn_root: str
+    subj_id: str
 ) -> List[str]:
     """
     FIXED VERSION: Locate modality files for a subject, avoiding segmentation masks.
+    Uses neuroscope_config.py for path resolution.
     
     Returns a list of four modality paths if complete, else empty list.
     This version specifically excludes segmentation files (_seg.nii.gz).
     """
     if section == 'brats':
-        subj_dir = os.path.join(data_root, brats_root, subj_id)
+        subj_dir = PATHS['raw_data_root'] / PATHS['raw_brats_root'] / subj_id
         # BraTS expected suffixes (avoiding segmentation)
         expected_patterns = ['_t1.nii.gz', '_t1Gd.nii.gz', '_t2.nii.gz', '_flair.nii.gz']
     else:
-        subj_dir = os.path.join(data_root, upenn_root, subj_id)
+        subj_dir = PATHS['raw_data_root'] / PATHS['raw_upenn_root'] / subj_id
         # UPENN expected suffixes  
         expected_patterns = ['_T1.nii.gz', '_T1GD.nii.gz', '_T2.nii.gz', '_FLAIR.nii.gz']
     
-    if not os.path.isdir(subj_dir):
+    if not subj_dir.exists():
         logging.warning("Subject directory not found: %s", subj_dir)
         return []
     
-    files = os.listdir(subj_dir)
+    files = os.listdir(str(subj_dir))
     # CRITICAL FIX: Exclude segmentation files
     files = [f for f in files if not ('_seg' in f.lower() or 'segmentation' in f.lower())]
     
@@ -57,7 +56,7 @@ def find_modality_paths_fixed(
             return []
         
         # Take the first match
-        paths.append(os.path.join(subj_dir, matches[0]))
+        paths.append(str(subj_dir / matches[0]))
         logging.info("Found %s for %s/%s: %s", pattern, section, subj_id, matches[0])
     
     return paths
@@ -150,7 +149,6 @@ def process_subject_with_verification(
     section: str,
     subj_id: str,
     paths: List[str],
-    output_dir: str,
     target_spacing: Tuple[float, float, float]
 ) -> bool:
     """
@@ -170,8 +168,10 @@ def process_subject_with_verification(
     # All inputs verified as MRI data, proceed with processing
     t1 = sitk.ReadImage(paths[0])
     mask = generate_brain_mask(t1)
-    subj_out_dir = os.path.join(output_dir, section, subj_id)
-    os.makedirs(subj_out_dir, exist_ok=True)
+    
+    # Use neuroscope_config for output directory
+    subj_out_dir = PATHS['preprocessed_dir'] / section / subj_id
+    subj_out_dir.mkdir(parents=True, exist_ok=True)
     
     modality_names = ['t1.nii.gz', 't1gd.nii.gz', 't2.nii.gz', 'flair.nii.gz']
     
@@ -181,7 +181,7 @@ def process_subject_with_verification(
         img = sitk.ReadImage(path)
         norm = percentile_normalize(img, mask)
         resampled = resample_to_isotropic(norm, target_spacing)
-        out_path = os.path.join(subj_out_dir, mod_name)
+        out_path = str(subj_out_dir / mod_name)
         sitk.WriteImage(resampled, out_path)
         
         # Verify output
@@ -196,25 +196,24 @@ def process_subject_with_verification(
     return True
 
 
-def dump_split_txts(
-    json_path: str,
-    out_dir: str
-) -> None:
+def dump_split_txts() -> None:
     """
     Dump train/val/test subject lists from JSON to text files.
+    Uses neuroscope_config.py for paths.
     """
-    with open(json_path, 'r') as f:
+    with open(str(PATHS['metadata_splits']), 'r') as f:
         meta = json.load(f)
+    
     splits = {'train': [], 'val': [], 'test': []}
     for section in ('brats', 'upenn'):
         for sid, info in meta.get(section, {}).get('valid_subjects', {}).items():
             sp = info.get('split')
             if sp in splits:
                 splits[sp].append(f"{section}/{sid}")
-    os.makedirs(out_dir, exist_ok=True)
+    
     for sp, entries in splits.items():
-        path = os.path.join(out_dir, f"{sp}_subjects.txt")
-        with open(path, 'w') as f:
+        path = PATHS['scripts_dir'] / f"{sp}_subjects.txt"
+        with open(str(path), 'w') as f:
             for line in entries:
                 f.write(line + '\n')
         logging.info("Wrote %d entries to %s", len(entries), path)
@@ -223,31 +222,29 @@ def dump_split_txts(
 def main() -> None:
     """
     Main: preprocess train subjects using JSON splits with verification.
+    Uses neuroscope_config.py for all path management.
     """
     configure_logging()
     start_all = time.time()
 
-    # ADJUST THESE PATHS TO MATCH YOUR SETUP
-    base_dir = '/Volumes/USB DRIVE/neuroscope'  # or your USB drive path
-    data_dir = os.path.join(base_dir, 'data')
-    brats_root = os.path.join('BraTS-TCGA-GBM', 'Pre-operative_TCGA_GBM_NIfTI_and_Segmentations')
-    upenn_root = os.path.join('PKG - UPENN-GBM-NIfTI', 'UPENN-GBM', 'NIfTI-files', 'images_structural')
+    # Use neuroscope_config for all paths
+    logging.info("Using neuroscope_config.py for path management")
+    logging.info("  USB Root: %s", PATHS['usb_root'])
+    logging.info("  Raw Data: %s", PATHS['raw_data_root'])
+    logging.info("  Preprocessed Output: %s", PATHS['preprocessed_dir'])
+    logging.info("  Metadata: %s", PATHS['metadata_splits'])
     
-    # Local scripts and outputs
-    local_base = os.path.expanduser('~/Downloads/neuroscope')
-    metadata_splits = os.path.join(local_base, 'scripts', '01_data_preparation_pipeline', 'neuroscope_dataset_metadata_splits.json')
-    output_dir = os.path.join(local_base, 'preprocessed')  # output dir
-    txt_out = os.path.join(local_base, 'scripts')
     target_spacing = (1.0, 1.0, 1.0)
 
-    logging.info("Loading JSON splits from %s", metadata_splits)
-    if not os.path.isfile(metadata_splits):
-        logging.error("Metadata splits file not found: %s", metadata_splits)
+    logging.info("Loading JSON splits from %s", PATHS['metadata_splits'])
+    if not PATHS['metadata_splits'].exists():
+        logging.error("Metadata splits file not found: %s", PATHS['metadata_splits'])
         return
-    with open(metadata_splits, 'r') as f:
+    
+    with open(str(PATHS['metadata_splits']), 'r') as f:
         meta = json.load(f)
 
-    # Build task list (limiting to first few for testing)
+    # Build task list (process all train subjects)
     tasks = []
     for section in ('brats', 'upenn'):
         for sid, info in meta.get(section, {}).get('valid_subjects', {}).items():
@@ -255,7 +252,7 @@ def main() -> None:
                 tasks.append((section, sid))
     
     total = len(tasks)
-    logging.info("Total train subjects to process (testing): %d", total)
+    logging.info("Total train subjects to process: %d", total)
     
     if total == 0:
         logging.error("No train subjects found in JSON.")
@@ -264,13 +261,13 @@ def main() -> None:
     # Resolve paths and process with verification
     success_count = 0
     for section, sid in tasks:
-        paths = find_modality_paths_fixed(data_dir, section, sid, brats_root, upenn_root)
+        paths = find_modality_paths_fixed(section, sid)
         if not paths:
             logging.error("Could not find all modalities for %s/%s", section, sid)
             continue
             
         # Process with verification
-        if process_subject_with_verification(section, sid, paths, output_dir, target_spacing):
+        if process_subject_with_verification(section, sid, paths, target_spacing):
             success_count += 1
         else:
             logging.error("Failed to process %s/%s", section, sid)
@@ -279,12 +276,12 @@ def main() -> None:
     
     # Only dump split files if some subjects were processed successfully
     if success_count > 0:
-        logging.info("Dumping split .txt files to %s", txt_out)
-        dump_split_txts(metadata_splits, txt_out)
+        logging.info("Dumping split .txt files")
+        dump_split_txts()
 
     elapsed = time.time() - start_all
     logging.info("Processing finished in %.2f minutes", elapsed/60)
-    logging.info("Outputs available in %s", output_dir)
+    logging.info("Outputs available in %s", PATHS['preprocessed_dir'])
 
 
 if __name__ == '__main__':
