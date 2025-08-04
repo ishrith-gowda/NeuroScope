@@ -1,6 +1,9 @@
-import os, json, logging
+import os
+import json
+import logging
 import SimpleITK as sitk
 import numpy as np
+from neuroscope_config import PATHS
 
 def configure_logging():
     logging.basicConfig(
@@ -11,7 +14,7 @@ def configure_logging():
 def load_metadata(path):
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
-    with open(path,'r') as f:
+    with open(path, 'r') as f:
         return json.load(f)
 
 def generate_brain_mask(image):
@@ -25,10 +28,10 @@ def compute_slice_variation(image, mask):
     slice_means = []
     for z in range(arr.shape[0]):
         slice_vals = arr[z][m[z]]
-        if slice_vals.size>0:
+        if slice_vals.size > 0:
             slice_means.append(slice_vals.mean())
     slice_means = np.array(slice_means)
-    if slice_means.size<2:
+    if slice_means.size < 2:
         return np.nan
     global_std = arr[m].std()
     ratio = slice_means.std() / (global_std + 1e-8)
@@ -52,10 +55,16 @@ def assess_dataset(metadata, section, modalities):
 
 def main():
     configure_logging()
-    base = '/Volumes/USB Drive/neuroscope'
-    meta = load_metadata(os.path.join(base,'scripts','neuroscope_dataset_metadata_splits.json'))
-    brats_mods = ['_t1.nii.gz','_t1Gd.nii.gz','_t2.nii.gz','_flair.nii.gz']
-    upenn_mods = ['_T1.nii.gz','_T1GD.nii.gz','_T2.nii.gz','_FLAIR.nii.gz']
+    
+    # Use standardized paths
+    meta_path = PATHS['metadata_splits']
+    output_path = PATHS['slice_bias_assessment']
+    
+    logging.info("Loading metadata from %s", meta_path)
+    meta = load_metadata(str(meta_path))
+    
+    brats_mods = ['_t1.nii.gz', '_t1Gd.nii.gz', '_t2.nii.gz', '_flair.nii.gz']
+    upenn_mods = ['_T1.nii.gz', '_T1GD.nii.gz', '_T2.nii.gz', '_FLAIR.nii.gz']
 
     logging.info('Assessing slice bias for BraTS')
     brats = assess_dataset(meta, 'brats', brats_mods)
@@ -63,10 +72,10 @@ def main():
     upenn = assess_dataset(meta, 'upenn', upenn_mods)
 
     out = {'brats': brats, 'upenn': upenn}
-    out_path = os.path.join(base,'scripts','neuroscope_slice_bias_assessment.json')
-    with open(out_path,'w') as f:
+    
+    with open(str(output_path), 'w') as f:
         json.dump(out, f, indent=2)
-    logging.info('Slice bias assessment saved to %s', out_path)
+    logging.info('Slice bias assessment saved to %s', output_path)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

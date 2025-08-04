@@ -251,7 +251,7 @@ def main() -> None:
     tasks = []
     for section in ('brats', 'upenn'):
         for sid, info in meta.get(section, {}).get('valid_subjects', {}).items():
-            if info.get('split') == 'train':  # LIMIT FOR TESTING
+            if info.get('split') == 'train':
                 tasks.append((section, sid))
     
     total = len(tasks)
