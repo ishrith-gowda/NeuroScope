@@ -4,7 +4,6 @@ import logging
 import subprocess
 import SimpleITK as sitk
 from typing import List, Tuple
-from neuroscope_config import PATHS
 
 def configure_logging():
     """
@@ -15,7 +14,8 @@ def configure_logging():
         format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-def load_train_subjects(json_path: str) -> List[Tuple[str, str]]:
+
+def load_train_subjects(json_path: str) -> List[Tuple[str,str]]:
     """
     Load train subjects (section, subject_id) from metadata JSON.
     """
@@ -25,12 +25,13 @@ def load_train_subjects(json_path: str) -> List[Tuple[str, str]]:
     with open(json_path, 'r') as f:
         meta = json.load(f)
     subjects = []
-    for section in ('brats', 'upenn'):
+    for section in ('brats','upenn'):
         for sid, info in meta.get(section, {}).get('valid_subjects', {}).items():
             if info.get('split') == 'train':
                 subjects.append((section, sid))
     logging.info("Loaded %d train subjects from %s", len(subjects), json_path)
     return subjects
+
 
 def run_hdbet(input_path: str, output_path: str, device: str = 'cpu') -> str:
     """
@@ -48,11 +49,12 @@ def run_hdbet(input_path: str, output_path: str, device: str = 'cpu') -> str:
     logging.info("Running HD-BET: %s", ' '.join(cmd))
     subprocess.run(cmd, check=True)
     # HD-BET outputs *_BET.nii.gz and *_BET_mask.nii.gz
-    mask_path = output_path.replace('.nii', '_mask.nii')
+    mask_path = output_path.replace('.nii','_mask.nii')
     if not os.path.isfile(mask_path):
         # Fallback to gz
         mask_path = mask_path + '.gz'
     return mask_path
+
 
 def register_to_mni(
     moving_path: str,
@@ -97,6 +99,7 @@ def register_to_mni(
     sitk.WriteTransform(tx, transform_out)
     return tx
 
+
 def apply_transform(
     input_path: str,
     fixed: sitk.Image,
@@ -110,80 +113,42 @@ def apply_transform(
     res = sitk.Resample(img, fixed, tx, sitk.sitkLinear, 0.0, img.GetPixelID())
     sitk.WriteImage(res, out_path)
 
+
 def main():
     configure_logging()
-    
-    # Use standardized paths
-    preprocessed_dir = PATHS['preprocessed_dir']
-    metadata_path = PATHS['metadata_splits']
-    mni_template = PATHS['mni_template']
-    output_root = PATHS['preprocessed_registered_dir']
+    # Paths
+    base_data = '/Users/IshrithG/Downloads/neuroscope/preprocessed'
+    scripts_dir = os.path.expanduser('~/Downloads/neuroscope/scripts')
+    json_meta = os.path.join(scripts_dir, 'neuroscope_dataset_metadata_splits.json')
+    mni_template = os.path.join(scripts_dir, 'templates', 'MNI152_T1_1mm.nii.gz')
+    output_root = os.path.expanduser('~/Downloads/neuroscope/preprocessed_registered')
     device = 'cpu'  # or 'cuda'
-    
-    logging.info("Using paths:")
-    logging.info("  Preprocessed data: %s", preprocessed_dir)
-    logging.info("  Metadata: %s", metadata_path)
-    logging.info("  MNI template: %s", mni_template)
-    logging.info("  Output directory: %s", output_root)
-    
-    # Check if MNI template exists
-    if not mni_template.exists():
-        logging.error("MNI template not found at %s", mni_template)
-        logging.error("Please place MNI152_T1_1mm.nii.gz in the templates directory")
-        return
-    
-    subjects = load_train_subjects(str(metadata_path))
-    
+    subjects = load_train_subjects(json_meta)
     for section, sid in subjects:
         # Prepare dirs
-        pre_dir = preprocessed_dir / section / sid
-        out_dir = output_root / section / sid
-        out_dir.mkdir(parents=True, exist_ok=True)
-        
-        if not pre_dir.exists():
-            logging.warning("Preprocessed directory not found for %s/%s", section, sid)
-            continue
-        
+        pre_dir = os.path.join(base_data, section, sid)
+        out_dir = os.path.join(output_root, section, sid)
+        os.makedirs(out_dir, exist_ok=True)
         # Identify T1
-        files = os.listdir(str(pre_dir))
-        t1_files = [f for f in files if 't1.nii' in f.lower() and 'gd' not in f.lower()]
-        
-        if not t1_files:
-            logging.warning("No T1 file found for %s/%s", section, sid)
-            continue
-            
-        t1 = t1_files[0]
-        t1_path = str(pre_dir / t1)
-        
+        files = os.listdir(pre_dir)
+        t1 = next(f for f in files if 't1.nii' in f.lower() and 'gd' not in f.lower())
+        t1_path = os.path.join(pre_dir, t1)
         # HD-BET
-        bet_output = str(out_dir / f"{sid}_BET.nii.gz")
-        try:
-            mask_path = run_hdbet(t1_path, bet_output, device)
-        except subprocess.CalledProcessError as e:
-            logging.error("HD-BET failed for %s/%s: %s", section, sid, e)
-            continue
-        
+        bet_output = os.path.join(out_dir, sid + '_BET.nii.gz')
+        mask_path = run_hdbet(t1_path, bet_output, device)
         # Registration
-        reg_out = str(out_dir / f"{sid}_registered.nii.gz")
-        tx_out = str(out_dir / f"{sid}_to_MNI.tfm")
-        
-        try:
-            tx = register_to_mni(bet_output, str(mni_template), reg_out, tx_out)
-            fixed_img = sitk.ReadImage(str(mni_template), sitk.sitkFloat32)
-            
-            # Apply to other modalities
-            for f in files:
-                if f == t1 or not f.endswith('.nii'):
-                    continue
-                inp = str(pre_dir / f)
-                outf = str(out_dir / f.replace('.nii.gz', '_MNI.nii.gz'))
-                apply_transform(inp, fixed_img, tx, outf)
-                logging.info("Applied transform to %s", f)
-                
-        except Exception as e:
-            logging.error("Registration failed for %s/%s: %s", section, sid, e)
-            continue
-    
+        reg_out = os.path.join(out_dir, sid + '_registered.nii.gz')
+        tx_out = os.path.join(out_dir, sid + '_to_MNI.tfm')
+        tx = register_to_mni(bet_output, mni_template, reg_out, tx_out)
+        fixed_img = sitk.ReadImage(mni_template, sitk.sitkFloat32)
+        # Apply to other modalities
+        for f in files:
+            if f == t1 or not f.endswith('.nii'):
+                continue
+            inp = os.path.join(pre_dir, f)
+            outf = os.path.join(out_dir, f.replace('.nii.gz','_MNI.nii.gz'))
+            apply_transform(inp, fixed_img, tx, outf)
+            logging.info("Applied transform to %s", f)
     logging.info("Skull-stripping and registration complete for all train subjects.")
 
 if __name__ == '__main__':
