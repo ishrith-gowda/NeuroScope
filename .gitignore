@@ -1,8 +1,8 @@
-checkpoints/
+# checkpoints/
 preprocessed/
-runs/
-samples/
-scripts/venv/
+# runs/
+# samples/
+# scripts/venv/
 *.ckpt
 *.pth
 *.pt
@@ -14,5 +14,5 @@ __pycache__/
 *.so
 venv/
 .env
-.venv/
+# .venv/
 scripts/01_data_preparation_pipeline/templates/
