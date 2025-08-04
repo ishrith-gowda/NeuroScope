@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 
 def configure_logging() -> None:
     """
-    Configure logging for bias field assessment.
+    logging for bias field assessment.
     """
     logging.basicConfig(
         level=logging.INFO,
@@ -18,20 +18,20 @@ def configure_logging() -> None:
 
 def load_splits_metadata(path: str) -> Dict:
     """
-    Load the metadata JSON with splits and file paths.
+    load metadata JSON with splits and file paths.
     """
     if not os.path.isfile(path):
-        logging.error('Metadata file not found: %s', path)
+        logging.error('metadata file not found: %s', path)
         raise FileNotFoundError(path)
     with open(path, 'r') as f:
         data = json.load(f)
-    logging.info('Loaded metadata from %s', path)
+    logging.info('loaded metadata from %s', path)
     return data
 
 
 def generate_brain_mask(image: sitk.Image) -> sitk.Image:
     """
-    Generate a brain mask using Otsu threshold and morphological fill.
+    generate brain mask using Otsu threshold and morphological fill.
     """
     mask = sitk.OtsuThreshold(image, 0, 1, 200)
     return sitk.BinaryFillhole(mask)
@@ -43,15 +43,15 @@ def compute_bias_residual_metrics(
     smoothing_sigma_mm: float = 10.0
 ) -> Dict[str, float]:
     """
-    Estimate bias field presence by comparing original and smoothed intensities.
+    estimate bias field presence by comparing original and smoothed intensities.
 
-    Parameters:
-        image (sitk.Image): Input MRI volume.
-        mask (sitk.Image): Brain mask volume.
-        smoothing_sigma_mm (float): Gaussian smoothing sigma in millimeters.
+    parameters:
+        image (sitk.Image): input MRI volume.
+        mask (sitk.Image): brain mask volume.
+        smoothing_sigma_mm (float): gaussian smoothing sigma in mm.
 
-    Returns:
-        dict: Metrics with keys 'orig_std', 'residual_std', and 'ratio'.
+    returns:
+        dict: metrics with keys 'orig_std', 'residual_std', and 'ratio'.
     """
     # Convert to numpy for statistics
     arr = sitk.GetArrayFromImage(image).astype(np.float32)
@@ -81,16 +81,16 @@ def assess_dataset_bias(
     smoothing_sigma_mm: float
 ) -> Dict:
     """
-    Loop over all subjects in a dataset section and compute bias residual metrics for each modality.
+    loop over all subjects in dataset section and compute bias residual metrics for each modality.
 
-    Parameters:
-        metadata (dict): Metadata containing valid_subjects info.
-        section (str): Section key ('brats' or 'upenn').
-        modalities (List[str]): List of modality filename suffixes.
-        smoothing_sigma_mm (float): Sigma for Gaussian smoothing in mm.
+    parameters:
+        metadata (dict): metadata containing valid_subjects info.
+        section (str): section key ('brats' or 'upenn').
+        modalities (list[str]): list of modality filename suffixes.
+        smoothing_sigma_mm (float): sigma for Gaussian smoothing in mm.
 
-    Returns:
-        dict: Nested dict mapping subject -> modality -> metrics.
+    returns:
+        dict: nested dict mapping subject -> modality -> metrics.
     """
     results = {}
     subjects = metadata[section]['valid_subjects']
@@ -99,9 +99,9 @@ def assess_dataset_bias(
         for suffix in modalities:
             path = info.get(suffix)
             if not path or not os.path.isfile(path):
-                logging.warning('Missing file for %s: %s', subj_id, suffix)
+                logging.warning('missing file for %s: %s', subj_id, suffix)
                 continue
-            logging.info('Assessing bias for %s [%s]', subj_id, suffix)
+            logging.info('assessing bias for %s [%s]', subj_id, suffix)
             img = sitk.ReadImage(path)
             mask = generate_brain_mask(img)
             metrics = compute_bias_residual_metrics(img, mask, smoothing_sigma_mm)
@@ -112,9 +112,9 @@ def assess_dataset_bias(
 
 def main() -> None:
     """
-    Main entry to assess bias field correction in neuroscope datasets.
+    main entry to assess bias field correction in neuroscope datasets.
 
-    Writes a JSON with bias residual metrics per subject and modality.
+    writes a json with bias residual metrics per subject and modality.
     """
     configure_logging()
     base = os.path.expanduser('~/Downloads/neuroscope')
@@ -138,7 +138,7 @@ def main() -> None:
     out_path = os.path.join(base, 'scripts', 'neuroscope_bias_assessment.json')
     with open(out_path, 'w') as f:
         json.dump(out, f, indent=2)
-    logging.info('Bias assessment saved to %s', out_path)
+    logging.info('bias assessment saved to %s', out_path)
 
 
 if __name__ == '__main__':

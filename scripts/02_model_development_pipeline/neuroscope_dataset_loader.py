@@ -149,7 +149,7 @@ def get_dataloaders(
 
 if __name__ == '__main__':
     configure_logging()
-    BASE = '/Downloads/neuroscope/data/preprocessed'
+    BASE = '/Downloads/neuroscope/preprocessed'
     META = os.path.expanduser('~/Downloads/neuroscope/scripts/01_data_preparation_pipeline/neuroscope_dataset_metadata_splits.json')
     loaders = get_dataloaders(BASE, META)
     batch = next(iter(loaders['train']))
