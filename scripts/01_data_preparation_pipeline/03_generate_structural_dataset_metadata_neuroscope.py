@@ -3,8 +3,8 @@ import json
 import logging
 from glob import glob
 from typing import Dict, List, Tuple
+from neuroscope_preprocessing_config import PATHS
 
-# Configure logging
 def configure_logging():
     """
     Configure the root logger to output debug information.
@@ -13,7 +13,6 @@ def configure_logging():
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
     )
-
 
 def scan_dataset(
     root_dir: str,
@@ -60,12 +59,9 @@ def scan_dataset(
             logging.debug("Subject %s is valid", subject)
         else:
             missing[subject] = missing_mods
-            logging.debug(
-                "Subject %s missing modalities: %s", subject, missing_mods
-            )
+            logging.debug("Subject %s missing modalities: %s", subject, missing_mods)
 
     return valid, missing
-
 
 def main():
     """
@@ -76,37 +72,23 @@ def main():
     """
     configure_logging()
 
-    base_data_dir = os.path.expanduser("~/Downloads/neuroscope/data")
-    brats_dir = os.path.join(
-        base_data_dir,
-        "BraTS-TCGA-GBM",
-        "Pre-operative_TCGA_GBM_NIfTI_and_Segmentations"
-    )
-    upenn_dir = os.path.join(
-        base_data_dir,
-        "PKG - UPENN-GBM-NIfTI",
-        "UPENN-GBM",
-        "NIfTI-files",
-        "images_structural"
-    )
+    # Use config paths
+    brats_dir = PATHS['raw_data_root'] / PATHS['raw_brats_root']
+    upenn_dir = PATHS['raw_data_root'] / PATHS['raw_upenn_root']
 
-    # Define required modalities
+    # Define required modalities for each dataset
     brats_modalities = ["_t1.nii.gz", "_t1Gd.nii.gz", "_t2.nii.gz", "_flair.nii.gz"]
     upenn_modalities = ["_T1.nii.gz", "_T1GD.nii.gz", "_T2.nii.gz", "_FLAIR.nii.gz"]
 
+    # Scan BraTS
     logging.info("Scanning BraTS dataset at %s", brats_dir)
-    brats_valid, brats_missing = scan_dataset(brats_dir, brats_modalities)
-    logging.info(
-        "BraTS: %d valid subjects, %d subjects missing modalities",
-        len(brats_valid), len(brats_missing)
-    )
+    brats_valid, brats_missing = scan_dataset(str(brats_dir), brats_modalities)
+    logging.info("BraTS: %d valid subjects, %d missing", len(brats_valid), len(brats_missing))
 
-    logging.info("Scanning UPENN-GBM dataset at %s", upenn_dir)
-    upenn_valid, upenn_missing = scan_dataset(upenn_dir, upenn_modalities)
-    logging.info(
-        "UPENN-GBM: %d valid subjects, %d subjects missing modalities",
-        len(upenn_valid), len(upenn_missing)
-    )
+    # Scan UPenn
+    logging.info("Scanning UPenn-GBM dataset at %s", upenn_dir)
+    upenn_valid, upenn_missing = scan_dataset(str(upenn_dir), upenn_modalities)
+    logging.info("UPenn-GBM: %d valid subjects, %d missing", len(upenn_valid), len(upenn_missing))
 
     # Compile metadata
     metadata = {
@@ -120,16 +102,14 @@ def main():
         }
     }
 
-    # Write metadata JSON
-    scripts_dir = os.path.expanduser("~/Downloads/neuroscope/scripts")
-    os.makedirs(scripts_dir, exist_ok=True)
-    output_path = os.path.join(scripts_dir, "neuroscope_dataset_metadata.json")
+    # Save JSON to configured metadata location
+    output_path = PATHS['metadata_base']
+    output_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure parent directory exists
 
     with open(output_path, "w") as outfile:
         json.dump(metadata, outfile, indent=2)
 
-    logging.info("Master metadata written to %s", output_path)
-
+    logging.info("Metadata JSON written to %s", output_path)
 
 if __name__ == "__main__":
     main()

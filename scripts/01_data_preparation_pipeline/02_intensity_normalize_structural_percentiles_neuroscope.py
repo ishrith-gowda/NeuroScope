@@ -5,7 +5,7 @@ import SimpleITK as sitk
 import numpy as np
 import time
 from typing import List, Tuple, Dict
-from neuroscope_config import PATHS
+from neuroscope_preprocessing_config import PATHS
 
 
 def configure_logging() -> None:
@@ -39,7 +39,7 @@ def find_modality_paths_fixed(
         expected_patterns = ['_T1.nii.gz', '_T1GD.nii.gz', '_T2.nii.gz', '_FLAIR.nii.gz']
     
     if not subj_dir.exists():
-        logging.warning("Subject directory not found: %s", subj_dir)
+        logging.warning("subject directory not found: %s", subj_dir)
         return []
     
     files = os.listdir(str(subj_dir))
@@ -51,13 +51,13 @@ def find_modality_paths_fixed(
         # Find files that end with the pattern
         matches = [f for f in files if f.endswith(pattern)]
         if not matches:
-            logging.warning("Missing modality %s for %s/%s in files: %s", 
+            logging.warning("missing modality %s for %s/%s in files: %s", 
                           pattern, section, subj_id, files)
             return []
         
         # Take the first match
         paths.append(str(subj_dir / matches[0]))
-        logging.info("Found %s for %s/%s: %s", pattern, section, subj_id, matches[0])
+        logging.info("found %s for %s/%s: %s", pattern, section, subj_id, matches[0])
     
     return paths
 
@@ -75,24 +75,24 @@ def verify_image_is_mri(image_path: str) -> bool:
         # Check if it's binary (0s and 1s only) - likely a mask
         unique_vals = np.unique(arr)
         if len(unique_vals) <= 2 and np.allclose(unique_vals, [0, 1]):
-            logging.error("MASK DETECTED: %s appears to be binary mask, not MRI data", image_path)
+            logging.error("mask detected: %s appears to be binary mask, not MRI data", image_path)
             return False
         
         # Check if it has very few unique values - likely segmentation
         if len(unique_vals) < 10:
-            logging.warning("POSSIBLE MASK: %s has only %d unique values", image_path, len(unique_vals))
+            logging.warning("possible mask: %s has only %d unique values", image_path, len(unique_vals))
             return False
         
         # Check if it has reasonable intensity distribution for MRI
         if arr.std() < 0.01:  # Very low variation
-            logging.warning("LOW VARIATION: %s has very low intensity variation", image_path)
+            logging.warning("low variation: %s has very low intensity variation", image_path)
             return False
             
-        logging.info("VERIFIED MRI: %s passes MRI content checks", image_path)
+        logging.info("verified MRI: %s passes MRI content checks", image_path)
         return True
         
     except Exception as e:
-        logging.error("Error verifying image %s: %s", image_path, e)
+        logging.error("error verifying image %s: %s", image_path, e)
         return False
 
 
@@ -117,7 +117,7 @@ def percentile_normalize(
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
     vals = arr[mask_arr]
     if vals.size == 0:
-        logging.error("Empty mask for percentile normalization")
+        logging.error("empty mask for percentile normalization")
         return image
     lo, hi = np.percentile(vals, (p_low, p_high))
     arr = np.clip(arr, lo, hi)
@@ -156,12 +156,12 @@ def process_subject_with_verification(
     
     Returns True if successful, False if any issues detected.
     """
-    logging.info("[%s/%s] Starting preprocessing with verification", section, subj_id)
+    logging.info("[%s/%s] starting preprocessing with verification", section, subj_id)
     
     # CRITICAL: Verify all input files are actually MRI data, not masks
     for i, path in enumerate(paths):
         if not verify_image_is_mri(path):
-            logging.error("[%s/%s] ABORTING: Input file %d appears to be a mask: %s", 
+            logging.error("[%s/%s] aborting: input file %d appears to be a mask: %s", 
                          section, subj_id, i, path)
             return False
     
@@ -177,7 +177,7 @@ def process_subject_with_verification(
     
     for i, path in enumerate(paths):
         mod_name = modality_names[i]
-        logging.info("[%s/%s] Processing modality %s", section, subj_id, mod_name)
+        logging.info("[%s/%s] processing modality %s", section, subj_id, mod_name)
         img = sitk.ReadImage(path)
         norm = percentile_normalize(img, mask)
         resampled = resample_to_isotropic(norm, target_spacing)
@@ -186,13 +186,13 @@ def process_subject_with_verification(
         
         # Verify output
         if not verify_image_is_mri(out_path):
-            logging.error("[%s/%s] ERROR: Output file appears to be corrupted: %s", 
+            logging.error("[%s/%s] error: output file appears to be corrupted: %s", 
                          section, subj_id, out_path)
             return False
             
-        logging.info("[%s/%s] Successfully saved %s", section, subj_id, mod_name)
+        logging.info("[%s/%s] successfully saved %s", section, subj_id, mod_name)
     
-    logging.info("[%s/%s] Completed preprocessing successfully", section, subj_id)
+    logging.info("[%s/%s] completed preprocessing successfully", section, subj_id)
     return True
 
 
@@ -216,7 +216,7 @@ def dump_split_txts() -> None:
         with open(str(path), 'w') as f:
             for line in entries:
                 f.write(line + '\n')
-        logging.info("Wrote %d entries to %s", len(entries), path)
+        logging.info("wrote %d entries to %s", len(entries), path)
 
 
 def main() -> None:
@@ -228,17 +228,17 @@ def main() -> None:
     start_all = time.time()
 
     # Use neuroscope_config for all paths
-    logging.info("Using neuroscope_config.py for path management")
-    logging.info("  USB Root: %s", PATHS['usb_root'])
-    logging.info("  Raw Data: %s", PATHS['raw_data_root'])
-    logging.info("  Preprocessed Output: %s", PATHS['preprocessed_dir'])
-    logging.info("  Metadata: %s", PATHS['metadata_splits'])
+    logging.info("using neuroscope_config.py for path management")
+    logging.info("  USB root: %s", PATHS['usb_root'])
+    logging.info("  raw data: %s", PATHS['raw_data_root'])
+    logging.info("  preprocessed output: %s", PATHS['preprocessed_dir'])
+    logging.info("  metadata: %s", PATHS['metadata_splits'])
     
     target_spacing = (1.0, 1.0, 1.0)
 
-    logging.info("Loading JSON splits from %s", PATHS['metadata_splits'])
+    logging.info("loading JSON splits from %s", PATHS['metadata_splits'])
     if not PATHS['metadata_splits'].exists():
-        logging.error("Metadata splits file not found: %s", PATHS['metadata_splits'])
+        logging.error("metadata splits file not found: %s", PATHS['metadata_splits'])
         return
     
     with open(str(PATHS['metadata_splits']), 'r') as f:
@@ -252,10 +252,10 @@ def main() -> None:
                 tasks.append((section, sid))
     
     total = len(tasks)
-    logging.info("Total train subjects to process: %d", total)
+    logging.info("total train subjects to process: %d", total)
     
     if total == 0:
-        logging.error("No train subjects found in JSON.")
+        logging.error("no train subjects found in JSON.")
         return
 
     # Resolve paths and process with verification
@@ -263,25 +263,25 @@ def main() -> None:
     for section, sid in tasks:
         paths = find_modality_paths_fixed(section, sid)
         if not paths:
-            logging.error("Could not find all modalities for %s/%s", section, sid)
+            logging.error("could not find all modalities for %s/%s", section, sid)
             continue
             
         # Process with verification
         if process_subject_with_verification(section, sid, paths, target_spacing):
             success_count += 1
         else:
-            logging.error("Failed to process %s/%s", section, sid)
+            logging.error("failed to process %s/%s", section, sid)
 
-    logging.info("Successfully processed %d/%d subjects", success_count, total)
+    logging.info("successfully processed %d/%d subjects", success_count, total)
     
     # Only dump split files if some subjects were processed successfully
     if success_count > 0:
-        logging.info("Dumping split .txt files")
+        logging.info("dumping split .txt files")
         dump_split_txts()
 
     elapsed = time.time() - start_all
-    logging.info("Processing finished in %.2f minutes", elapsed/60)
-    logging.info("Outputs available in %s", PATHS['preprocessed_dir'])
+    logging.info("processing finished in %.2f minutes", elapsed/60)
+    logging.info("outputs available in %s", PATHS['preprocessed_dir'])
 
 
 if __name__ == '__main__':

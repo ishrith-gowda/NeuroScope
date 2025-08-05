@@ -33,10 +33,10 @@ def get_neuroscope_paths():
         # === RAW DATA PATHS (USB Drive) ===
         'usb_root': USB_DRIVE_ROOT,
         'raw_data_root': USB_DRIVE_ROOT / "data",
-        'raw_brats_root': "BraTS-TCGA-GBM/Pre-operative_TCGA_GBM_NIfTI_and_Segmentations",
-        'raw_upenn_root': "PKG - UPENN-GBM-NIfTI/UPENN-GBM/NIfTI-files/images_structural",
+        'raw_brats_root': USB_DRIVE_ROOT / "data" / "BraTS-TCGA-GBM" / "Pre-operative_TCGA_GBM_NIfTI_and_Segmentations",
+        'raw_upenn_root': USB_DRIVE_ROOT / "data" / "PKG - UPENN-GBM-NIfTI" / "UPENN-GBM" / "NIfTI-files" / "images_structural",
         'upenn_acquisition_csv': USB_DRIVE_ROOT / "data" / "PKG - UPENN-GBM-NIfTI" / "UPENN-GBM_acquisition.csv",
-        
+
         # === WORKING DIRECTORY PATHS (Local Computer) ===
         'local_root': LOCAL_ROOT,
         'scripts_dir': LOCAL_ROOT / "scripts",
@@ -131,11 +131,12 @@ def get_raw_subject_dir(section: str, subject_id: str) -> Path:
         Path: Full path to subject directory on USB drive
     """
     if section == 'brats':
-        return PATHS['raw_data_root'] / PATHS['raw_brats_root'] / subject_id
+        return PATHS['raw_brats_root'] / subject_id
     elif section == 'upenn':
-        return PATHS['raw_data_root'] / PATHS['raw_upenn_root'] / subject_id
+        return PATHS['raw_upenn_root'] / subject_id
     else:
         raise ValueError(f"Unknown section: {section}")
+
 
 def get_preprocessed_subject_dir(section: str, subject_id: str) -> Path:
     """

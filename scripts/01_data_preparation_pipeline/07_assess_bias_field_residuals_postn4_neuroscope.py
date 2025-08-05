@@ -4,7 +4,7 @@ import logging
 import SimpleITK as sitk
 import numpy as np
 from typing import List, Dict, Tuple
-from neuroscope_config import PATHS
+from neuroscope_preprocessing_config import PATHS
 
 
 def configure_logging() -> None:

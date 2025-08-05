@@ -3,7 +3,7 @@ import json
 import logging
 import SimpleITK as sitk
 import numpy as np
-from neuroscope_config import PATHS
+from neuroscope_preprocessing_config import PATHS
 
 def configure_logging():
     logging.basicConfig(
