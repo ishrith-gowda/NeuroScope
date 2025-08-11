@@ -334,7 +334,7 @@ def main() -> None:
         background_percentile=5.0, 
         brain_low=1.0,
         brain_high=99.0,
-        splits_to_process=['train']  # Only train for CycleGAN training
+        splits_to_process=['train', 'val']
     )
     
     # Generate convenience text files
