@@ -300,7 +300,6 @@ def main() -> None:
     
     print(f"\nOVERALL:")
     print(f"  total complete subjects:  {total_complete}")
-    print(f"  ready for preprocessing:  yes" if total_complete > 0 else "  ready for preprocessing:  no")
     print("="*60)
 
 if __name__ == "__main__":
