@@ -1,0 +1,47 @@
+{
+  "timestamp": "/Volumes/usb drive/neuroscope/scripts/02_model_development_pipeline",
+  "validation_results": {
+    "file_structure": {
+      "required_files": {
+        "metadata_splits": {
+          "path": "/Volumes/usb drive/neuroscope/scripts/01_data_preparation_pipeline/neuroscope_dataset_metadata_splits.json",
+          "exists": true
+        },
+        "preprocessing_config": {
+          "path": "/Volumes/usb drive/neuroscope/scripts/01_data_preparation_pipeline/neuroscope_dataset_metadata.json",
+          "exists": true
+        },
+        "mni_template": {
+          "path": "/Volumes/usb drive/neuroscope/scripts/01_data_preparation_pipeline/templates/MNI152_T1_1mm.nii.gz",
+          "exists": true
+        }
+      },
+      "required_dirs": {
+        "preprocessed_dir": {
+          "path": "/Volumes/usb drive/neuroscope/preprocessed",
+          "exists": true
+        },
+        "checkpoints_dir": {
+          "path": "/Volumes/usb drive/neuroscope/checkpoints",
+          "exists": true
+        },
+        "samples_dir": {
+          "path": "/Volumes/usb drive/neuroscope/samples",
+          "exists": true
+        },
+        "figures_dir": {
+          "path": "/Volumes/usb drive/neuroscope/figures",
+          "exists": true
+        }
+      },
+      "issues": []
+    }
+  },
+  "summary": {
+    "total_issues": 0,
+    "preprocessing_valid": true,
+    "dataloader_valid": true,
+    "consistency_valid": true,
+    "file_structure_valid": true
+  }
+}

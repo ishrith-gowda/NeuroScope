@@ -4,8 +4,10 @@ import logging
 import SimpleITK as sitk
 import numpy as np
 import time
+import argparse
 from typing import List, Tuple, Dict, Optional
 from neuroscope_preprocessing_config import PATHS
+from preprocessing_utils import verify_mri_path
 
 
 def configure_logging() -> None:
@@ -51,80 +53,95 @@ def find_modality_paths_fixed(section: str, subj_id: str) -> List[str]:
     return paths
 
 
-def verify_image_is_mri(image_path: str) -> bool:
-    """
-    Quick verification that an image contains MRI intensities, not segmentation masks.
-    """
-    try:
-        img = sitk.ReadImage(image_path)
-        arr = sitk.GetArrayFromImage(img).astype(np.float32)
-        
-        unique_vals = np.unique(arr)
-        if len(unique_vals) <= 2 and np.allclose(unique_vals, [0, 1]):
-            logging.error("mask detected: %s appears to be binary mask", image_path)
-            return False
-        
-        if len(unique_vals) < 10:
-            logging.warning("possible mask: %s has only %d unique values", image_path, len(unique_vals))
-            return False
-        
-        if arr.std() < 0.01:
-            logging.warning("low variation: %s has very low intensity variation", image_path)
-            return False
-            
-        return True
-        
-    except Exception as e:
-        logging.error("error verifying image %s: %s", image_path, e)
-        return False
-
-
 def fast_intensity_normalize(
     image: sitk.Image, 
     background_percentile: float = 5.0,  # More conservative background threshold
     brain_low: float = 1.0, 
     brain_high: float = 99.0
 ) -> sitk.Image:
-
-    arr = sitk.GetArrayFromImage(image).astype(np.float32)
+    """
+    Fast intensity normalization for CycleGAN preprocessing.
     
-    # Step 1: Identify background threshold (exclude bottom background_percentile)
-    background_threshold = np.percentile(arr.flatten(), background_percentile)
+    Normalizes brain tissue to [0,1] range while keeping background at 0.
+    This ensures clean input for CycleGAN training.
     
-    # Step 2: Get brain tissue voxels (above background threshold)
-    brain_mask = arr > background_threshold
-    brain_voxels = arr[brain_mask]
-    
-    if brain_voxels.size == 0:
-        logging.warning("no brain voxels found after background exclusion")
+    Args:
+        image: Input SimpleITK image
+        background_percentile: Percentile threshold for background detection
+        brain_low: Lower percentile for brain tissue normalization
+        brain_high: Upper percentile for brain tissue normalization
+        
+    Returns:
+        Normalized image with brain tissue in [0,1] and background at 0
+    """
+    try:
+        arr = sitk.GetArrayFromImage(image).astype(np.float32)
+        
+        # Validate input
+        if arr.size == 0:
+            logging.error("Empty image array")
+            return image
+            
+        # Check for NaN or infinite values
+        if not np.isfinite(arr).all():
+            logging.warning("Image contains NaN or infinite values, cleaning...")
+            arr = np.nan_to_num(arr, nan=0.0, posinf=arr.max(), neginf=arr.min())
+        
+        # Step 1: Identify background threshold (exclude bottom background_percentile)
+        background_threshold = np.percentile(arr.flatten(), background_percentile)
+        
+        # Step 2: Get brain tissue voxels (above background threshold)
+        brain_mask = arr > background_threshold
+        brain_voxels = arr[brain_mask]
+        
+        if brain_voxels.size == 0:
+            logging.warning("no brain voxels found after background exclusion, using global normalization")
+            # Fallback: use global normalization
+            arr_min, arr_max = arr.min(), arr.max()
+            if arr_max > arr_min:
+                arr_normalized = (arr - arr_min) / (arr_max - arr_min)
+            else:
+                arr_normalized = np.zeros_like(arr)
+        else:
+            # Step 3: Compute normalization range from brain tissue only
+            brain_low_val = np.percentile(brain_voxels, brain_low)
+            brain_high_val = np.percentile(brain_voxels, brain_high)
+            
+            if brain_high_val <= brain_low_val:
+                logging.warning("invalid percentile range: low=%.2f, high=%.2f, using global normalization", 
+                               brain_low_val, brain_high_val)
+                # Fallback: use global normalization
+                arr_min, arr_max = arr.min(), arr.max()
+                if arr_max > arr_min:
+                    arr_normalized = (arr - arr_min) / (arr_max - arr_min)
+                else:
+                    arr_normalized = np.zeros_like(arr)
+            else:
+                # Step 4: Initialize output array
+                arr_normalized = np.zeros_like(arr)
+                
+                # Step 5: Normalize brain tissue to [0,1]
+                brain_intensities = np.clip(arr[brain_mask], brain_low_val, brain_high_val)
+                arr_normalized[brain_mask] = (brain_intensities - brain_low_val) / (brain_high_val - brain_low_val)
+        
+        # Step 6: Ensure values are in [0,1] range (safety clamp)
+        arr_normalized = np.clip(arr_normalized, 0.0, 1.0)
+        
+        # Create output image
+        normalized_img = sitk.GetImageFromArray(arr_normalized)
+        normalized_img.CopyInformation(image)
+        
+        # Validate output
+        output_min, output_max = arr_normalized.min(), arr_normalized.max()
+        logging.debug("normalization: bg_thresh=%.2f, brain_range=[%.2f, %.2f] → [%.3f, %.3f]", 
+                     background_threshold, brain_low_val if 'brain_low_val' in locals() else 'N/A', 
+                     brain_high_val if 'brain_high_val' in locals() else 'N/A', output_min, output_max)
+        
+        return normalized_img
+        
+    except Exception as e:
+        logging.error("Error in fast_intensity_normalize: %s", str(e))
         return image
-    
-    # Step 3: Compute normalization range from brain tissue only
-    brain_low_val = np.percentile(brain_voxels, brain_low)
-    brain_high_val = np.percentile(brain_voxels, brain_high)
-    
-    if brain_high_val <= brain_low_val:
-        logging.warning("invalid percentile range: low=%.2f, high=%.2f", brain_low_val, brain_high_val)
-        return image
-    
-    # Step 4: Initialize output array
-    arr_normalized = np.zeros_like(arr)
-    
-    # Step 5: Normalize brain tissue to [0,1]
-    brain_intensities = np.clip(arr[brain_mask], brain_low_val, brain_high_val)
-    arr_normalized[brain_mask] = (brain_intensities - brain_low_val) / (brain_high_val - brain_low_val)
-    
-    # Step 6: Background remains at 0 (clean for CycleGAN)
-    # arr_normalized[~brain_mask] = 0  # Already initialized to 0
-    
-    # Create output image
-    normalized_img = sitk.GetImageFromArray(arr_normalized)
-    normalized_img.CopyInformation(image)
-    
-    logging.debug("normalization: bg_thresh=%.2f, brain_range=[%.2f, %.2f] → [0, 1], bg→0", 
-                 background_threshold, brain_low_val, brain_high_val)
-    
-    return normalized_img
 
 
 def resample_to_isotropic(image: sitk.Image, spacing: Tuple[float, float, float]) -> sitk.Image:
@@ -159,7 +176,7 @@ def process_subject_fast_intensity_only(
     
     # Verify all input files are MRI data
     for i, path in enumerate(paths):
-        if not verify_image_is_mri(path):
+        if not verify_mri_path(path):
             logging.error("[%s/%s] aborting: input file %d appears to be a mask: %s", 
                          section, subj_id, i, path)
             return False
@@ -198,7 +215,7 @@ def process_subject_fast_intensity_only(
         sitk.WriteImage(final_img, output_path)
         
         # Verify final output
-        if not verify_image_is_mri(output_path):
+        if not verify_mri_path(output_path):
             logging.error("[%s/%s] error: final output appears corrupted: %s", section, subj_id, mod_name)
             return False
         
@@ -322,18 +339,30 @@ def dump_split_txts() -> None:
         logging.info("wrote %d entries to %s", len(entries), path)
 
 
+def parse_args():
+    p = argparse.ArgumentParser(description="Fast intensity normalization for NeuroScope")
+    p.add_argument('--target-spacing', type=float, nargs=3, default=(1.0,1.0,1.0))
+    p.add_argument('--disable-resample', action='store_true', help='Skip isotropic resampling')
+    p.add_argument('--background-percentile', type=float, default=5.0)
+    p.add_argument('--brain-low', type=float, default=1.0)
+    p.add_argument('--brain-high', type=float, default=99.0)
+    p.add_argument('--splits', type=str, default='train,val,test', help='Comma list of splits to process')
+    return p.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
     configure_logging()
     
     # Process only training subjects by default (for CycleGAN training)
     # You can modify splits_to_process to include ['train', 'val'] or ['train', 'val', 'test']
     process_subjects_from_splits(
-        target_spacing=(1.0, 1.0, 1.0),
-        enable_resampling=True,
-        background_percentile=5.0, 
-        brain_low=1.0,
-        brain_high=99.0,
-        splits_to_process=['train', 'val', 'test']
+        target_spacing=tuple(args.target_spacing),
+        enable_resampling=not args.disable_resample,
+        background_percentile=args.background_percentile,
+        brain_low=args.brain_low,
+        brain_high=args.brain_high,
+        splits_to_process=[s.strip() for s in args.splits.split(',') if s.strip()]
     )
     
     # Generate convenience text files

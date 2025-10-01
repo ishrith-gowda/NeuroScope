@@ -10,8 +10,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 from collections import defaultdict
+import argparse
 
 from neuroscope_preprocessing_config import PATHS
+from preprocessing_utils import write_json_with_schema, generate_brain_mask
 
 
 def configure_logging() -> None:
@@ -94,42 +96,6 @@ def verify_preprocessed_file(file_path: str) -> bool:
     except Exception as e:
         logging.debug("error reading image %s: %s", file_path, e)
         return False
-
-
-def generate_robust_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -> sitk.Image:
-    """
-    Generate a robust brain mask using multiple methods.
-    
-    Args:
-        image: Input SimpleITK image
-        background_threshold: Threshold for background exclusion
-        
-    Returns:
-        sitk.Image: Binary brain mask
-    """
-    # Method 1: Simple threshold for normalized images (background should be ~0)
-    arr = sitk.GetArrayFromImage(image)
-    simple_mask = arr > background_threshold
-    
-    # Method 2: Otsu thresholding as fallback
-    try:
-        otsu_mask_img = sitk.OtsuThreshold(image, 0, 1, 256)
-        otsu_mask = sitk.GetArrayFromImage(otsu_mask_img).astype(bool)
-    except:
-        otsu_mask = simple_mask
-    
-    # Combine masks (use intersection for robustness)
-    combined_mask = simple_mask & otsu_mask
-    
-    # Apply morphological operations to clean up
-    mask_img = sitk.GetImageFromArray(combined_mask.astype(np.uint8))
-    mask_img.CopyInformation(image)
-    
-    # Fill holes and remove small components
-    mask_img = sitk.BinaryFillhole(mask_img)
-    mask_img = sitk.BinaryOpeningByReconstruction(mask_img, [2, 2, 2])
-    
-    return mask_img
 
 
 def compute_slice_wise_statistics(image: sitk.Image, mask: sitk.Image) -> Dict[str, float]:
@@ -307,7 +273,7 @@ def assess_subject_bias(
             image = sitk.ReadImage(str(preprocessed_path))
             
             # Generate brain mask
-            mask = generate_robust_brain_mask(image)
+            mask = generate_brain_mask(image)
             
             # Compute bias metrics
             bias_metrics = compute_slice_wise_statistics(image, mask)
@@ -564,13 +530,28 @@ def save_bias_assessment_results(
     }
     
     try:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w') as f:
-            json.dump(output_data, f, indent=2, sort_keys=True)
-        
+        schema = {
+            'assessment_info': dict,
+            'processing_info': dict,
+            'detailed_results': dict,
+            'summary_statistics': dict
+        }
+        write_json_with_schema(output_data, output_path, schema=schema)
         file_size = output_path.stat().st_size
         logging.info("bias assessment results saved to: %s (%.1f KB)", output_path, file_size / 1024)
-        
+        summary_path = output_path.parent / (output_path.stem + '_summary.json')
+        light = {
+            'script_version': output_data['assessment_info']['script_version'],
+            'generated': output_data['assessment_info']['assessment_date'],
+            'splits': output_data['processing_info'].get('splits_assessed'),
+            'subjects': {
+                'total': output_data['processing_info'].get('total_subjects'),
+                'successful': output_data['processing_info'].get('successful_subjects'),
+                'failed': output_data['processing_info'].get('failed_subjects')
+            }
+        }
+        write_json_with_schema(light, summary_path)
+        logging.info("summary file written: %s", summary_path)
     except Exception as e:
         logging.error("failed to save bias assessment results: %s", e)
         raise
@@ -719,6 +700,14 @@ def check_preprocessing_status(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return status
 
 
+def parse_args():
+    ap = argparse.ArgumentParser(description='Comprehensive intensity bias assessment (configurable)')
+    ap.add_argument('--splits', type=str, default='train,val', help='Comma list of dataset splits to assess')
+    ap.add_argument('--output', type=str, default=None, help='Override output JSON path')
+    ap.add_argument('--no-summary', action='store_true', help='Disable writing separate summary JSON')
+    return ap.parse_args()
+
+
 def main() -> None:
     """
     Main function to run comprehensive intensity bias assessment.
@@ -758,7 +747,12 @@ def main() -> None:
         # Step 2: Run comprehensive bias assessment
         logging.info("step 2: analyzing intensity bias across datasets...")
         # Only assess train and val splits by default (since test split may not be preprocessed)
-        results = analyze_dataset_bias(metadata, splits_to_assess=['train', 'val'])
+        splits_to_assess = ['train', 'val']
+        args = parse_args()
+        if args.splits:
+            splits_to_assess = [s.strip() for s in args.splits.split(',')]
+        
+        results = analyze_dataset_bias(metadata, splits_to_assess=splits_to_assess)
         
         # Step 3: Generate summary statistics
         logging.info("step 3: generating summary statistics...")
@@ -766,6 +760,9 @@ def main() -> None:
         
         # Step 4: Save results
         logging.info("step 4: saving assessment results...")
+        if args.output:
+            output_path = Path(args.output)
+        
         save_bias_assessment_results(results, summary, output_path)
         
         # Step 5: Display summary

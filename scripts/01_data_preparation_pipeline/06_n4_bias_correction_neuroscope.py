@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import argparse
 
 import numpy as np
 import SimpleITK as sitk
@@ -16,9 +17,11 @@ except ImportError:
     print("error: cannot import neuroscope_preprocessing_config.py")
     exit(1)
 
+from preprocessing_utils import generate_brain_mask, evaluate_bias_need, acceptable_n4_change, basic_intensity_stats
+
 
 def setup_logging():
-    """Configure logging for balanced processing."""
+    """Configure logging for improved N4 processing."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
@@ -39,125 +42,10 @@ def validate_image_file(file_path: Path) -> bool:
         return False
 
 
-def create_smart_brain_mask(image: sitk.Image) -> sitk.Image:
+def apply_conservative_n4(image: sitk.Image, mask: sitk.Image) -> Tuple[sitk.Image, bool]:
     """
-    Create robust brain mask that works reliably across different image types.
-    Uses multiple fallback strategies for maximum compatibility.
-    
-    Args:
-        image: Input SimpleITK image
-        
-    Returns:
-        sitk.Image: Binary brain mask
-    """
-    # Get image array for analysis
-    image_array = sitk.GetArrayFromImage(image)
-    
-    # Strategy 1: Try Otsu thresholding (most accurate when it works)
-    try:
-        otsu_filter = sitk.OtsuThresholdImageFilter()
-        otsu_filter.SetInsideValue(1)
-        otsu_filter.SetOutsideValue(0)
-        mask = otsu_filter.Execute(image)
-        
-        # Validate Otsu result
-        mask_array = sitk.GetArrayFromImage(mask)
-        mask_volume = int(mask_array.sum())
-        total_volume = int(mask_array.size)
-        
-        # Check if Otsu gives reasonable result (5-80% of volume)
-        if 0.05 < mask_volume/total_volume < 0.80:
-            # Clean up mask
-            try:
-                mask = sitk.BinaryFillhole(mask)
-                return mask
-            except Exception:
-                pass  # If cleanup fails, use basic Otsu result
-            return mask
-            
-    except Exception:
-        pass  # Continue to fallback
-    
-    # Strategy 2: Percentile-based thresholding (more robust)
-    try:
-        # Use different percentiles based on image intensity distribution
-        nonzero_values = image_array[image_array > 0]
-        if len(nonzero_values) > 1000:  # Ensure we have enough data
-            # Try multiple thresholds and pick the best one
-            percentiles = [10, 15, 20, 25]
-            best_mask = None
-            best_volume_ratio = 0
-            
-            for p in percentiles:
-                threshold = np.percentile(nonzero_values, p)
-                mask_array = (image_array > threshold).astype(np.uint8)
-                volume_ratio = mask_array.sum() / mask_array.size
-                
-                # Look for reasonable volume ratio (brain typically 10-70% of image)
-                if 0.10 <= volume_ratio <= 0.70:
-                    if abs(volume_ratio - 0.30) < abs(best_volume_ratio - 0.30):  # Prefer ~30%
-                        best_mask = mask_array
-                        best_volume_ratio = volume_ratio
-            
-            if best_mask is not None:
-                mask = sitk.GetImageFromArray(best_mask)
-                mask.CopyInformation(image)
-                
-                # Try to clean up
-                try:
-                    mask = sitk.BinaryFillhole(mask)
-                except Exception:
-                    pass
-                
-                return mask
-                
-    except Exception:
-        pass  # Continue to final fallback
-    
-    # Strategy 3: Simple mean-based thresholding (most robust fallback)
-    try:
-        nonzero_mean = np.mean(image_array[image_array > 0]) if np.any(image_array > 0) else 0
-        threshold = nonzero_mean * 0.1  # Very conservative threshold
-        
-        mask_array = (image_array > threshold).astype(np.uint8)
-        
-        # Ensure mask isn't too large or too small
-        volume_ratio = mask_array.sum() / mask_array.size
-        if volume_ratio > 0.90:  # Too large - increase threshold
-            threshold = nonzero_mean * 0.3
-            mask_array = (image_array > threshold).astype(np.uint8)
-        elif volume_ratio < 0.05:  # Too small - decrease threshold
-            threshold = nonzero_mean * 0.05
-            mask_array = (image_array > threshold).astype(np.uint8)
-        
-        mask = sitk.GetImageFromArray(mask_array)
-        mask.CopyInformation(image)
-        
-        return mask
-        
-    except Exception:
-        # Final fallback: create a minimal mask
-        mask_array = (image_array > 0.001).astype(np.uint8)
-        mask = sitk.GetImageFromArray(mask_array)
-        mask.CopyInformation(image)
-        return mask
-
-
-def apply_balanced_n4(image: sitk.Image, mask: sitk.Image) -> Tuple[sitk.Image, bool]:
-    """
-    Apply N4 correction with robust parameters that actually work.
-    
-    Strategy:
-    - Multiple fallback approaches with increasingly robust parameters
-    - Proper mask validation and preprocessing
-    - Conservative N4 settings that rarely fail
-    
-    Args:
-        image: Input image
-        mask: Brain mask
-        
-    Returns:
-        Tuple of (corrected_image, success_flag)
+    Apply N4 correction with very conservative parameters designed to avoid
+    increasing variation while still providing some bias correction benefit.
     """
     # Convert to appropriate types
     if image.GetPixelID() != sitk.sitkFloat32:
@@ -166,112 +54,82 @@ def apply_balanced_n4(image: sitk.Image, mask: sitk.Image) -> Tuple[sitk.Image, 
     if mask.GetPixelID() != sitk.sitkUInt8:
         mask = sitk.Cast(mask, sitk.sitkUInt8)
     
-    # More robust mask validation
+    # Validate mask
     mask_array = sitk.GetArrayFromImage(mask)
     mask_volume = int(mask_array.sum())
-    total_volume = int(mask_array.size)
     
-    # If mask is problematic, create a simple one
-    if mask_volume < 500 or mask_volume > total_volume * 0.9:
-        # Create simple mask from image intensities
-        image_array = sitk.GetArrayFromImage(image)
-        threshold = np.percentile(image_array[image_array > 0], 20) if np.any(image_array > 0) else 0.1
-        mask_array = (image_array > threshold).astype(np.uint8)
-        mask = sitk.GetImageFromArray(mask_array)
-        mask.CopyInformation(image)
-        mask_volume = int(mask_array.sum())
-    
-    # If still no good mask, skip N4
-    if mask_volume < 500:
+    if mask_volume < 1000:  # Need reasonable amount of brain tissue
         return image, False
     
-    # Strategy 1: Try with 2x downsampling and very robust parameters
-    try:
-        shrink_factor = 2
-        shrinker = sitk.ShrinkImageFilter()
-        shrinker.SetShrinkFactors([shrink_factor] * image.GetDimension())
-        
-        small_image = shrinker.Execute(image)
-        small_mask = shrinker.Execute(mask)
-        
-        # Very robust N4 parameters (conservative but reliable)
-        n4_filter = sitk.N4BiasFieldCorrectionImageFilter()
-        n4_filter.SetMaximumNumberOfIterations([10, 5])      # Minimal iterations
-        n4_filter.SetConvergenceThreshold(0.01)             # Very relaxed
-        n4_filter.SetBiasFieldFullWidthAtHalfMaximum(0.30)  # Wide smoothing
-        n4_filter.SetWienerFilterNoise(0.05)                # Higher noise tolerance
-        n4_filter.SetNumberOfControlPoints([2, 2, 2])       # Very coarse grid
-        
-        # Apply N4
-        small_corrected = n4_filter.Execute(small_image, small_mask)
-        
-        # Calculate and upsample bias field
-        epsilon = 1e-6  # Prevent division by zero
-        small_bias = small_image / (small_corrected + epsilon)
-        
-        # Smooth the bias field to prevent artifacts
-        gaussian = sitk.SmoothingRecursiveGaussianImageFilter()
-        gaussian.SetSigma(1.0)
-        small_bias = gaussian.Execute(small_bias)
-        
-        # Upsample with linear interpolation (more robust than B-spline)
-        resampler = sitk.ResampleImageFilter()
-        resampler.SetReferenceImage(image)
-        resampler.SetInterpolator(sitk.sitkLinear)
-        bias_field = resampler.Execute(small_bias)
-        
-        # Apply bias correction
-        corrected_image = image / (bias_field + epsilon)
-        
-        # Verify result
-        corrected_array = sitk.GetArrayFromImage(corrected_image)
-        if np.isfinite(corrected_array).all() and np.any(corrected_array > 0):
-            return corrected_image, True
-        else:
-            raise ValueError("invalid correction result")
-            
-    except Exception as e:
-        pass  # Continue to next strategy
-    
-    # Strategy 2: Direct processing with ultra-conservative parameters
+    # Strategy 1: Ultra-conservative N4 (minimal correction)
     try:
         n4_filter = sitk.N4BiasFieldCorrectionImageFilter()
-        n4_filter.SetMaximumNumberOfIterations([5])          # Single level, minimal iterations  
-        n4_filter.SetConvergenceThreshold(0.05)             # Very relaxed convergence
-        n4_filter.SetBiasFieldFullWidthAtHalfMaximum(0.50)  # Very wide smoothing
-        n4_filter.SetWienerFilterNoise(0.1)                 # High noise tolerance
-        n4_filter.SetNumberOfControlPoints([2, 2, 2])       # Very coarse
         
+        # Ultra-conservative parameters to minimize over-correction
+        n4_filter.SetMaximumNumberOfIterations([5, 3])        # Very few iterations
+        n4_filter.SetConvergenceThreshold(0.01)              # Relaxed convergence  
+        n4_filter.SetBiasFieldFullWidthAtHalfMaximum(0.50)   # Wide smoothing (less aggressive)
+        n4_filter.SetWienerFilterNoise(0.05)                 # Higher noise tolerance
+        n4_filter.SetNumberOfControlPoints([3, 3, 3])        # Coarse control points
+        
+        # Apply N4 correction
         corrected_image = n4_filter.Execute(image, mask)
         
-        # Verify result
+        # Verify result quality
         corrected_array = sitk.GetArrayFromImage(corrected_image)
-        if np.isfinite(corrected_array).all() and np.any(corrected_array > 0):
-            return corrected_image, True
-        else:
+        
+        if not np.isfinite(corrected_array).all():
+            raise ValueError("Non-finite values in corrected image")
+        
+        # Additional quality check: ensure correction didn't create extreme values
+        orig_array = sitk.GetArrayFromImage(image)
+        orig_brain = orig_array[mask_array.astype(bool)]
+        corr_brain = corrected_array[mask_array.astype(bool)]
+        
+        # Check for reasonable intensity preservation
+        orig_range = orig_brain.max() - orig_brain.min()
+        corr_range = corr_brain.max() - corr_brain.min()
+        
+        # Reject if correction caused extreme scaling
+        if corr_range > orig_range * 2.0 or corr_range < orig_range * 0.5:
+            logging.debug("Rejected N4 result: extreme intensity scaling")
             return image, False
-            
+        
+        # Check for reasonable mean preservation
+        orig_mean = orig_brain.mean()
+        corr_mean = corr_brain.mean()
+        
+        if corr_mean > orig_mean * 1.5 or corr_mean < orig_mean * 0.5:
+            logging.debug("Rejected N4 result: extreme mean shift")
+            return image, False
+        
+        return corrected_image, True
+        
     except Exception as e:
-        pass  # Continue to next strategy
+        logging.debug(f"Conservative N4 failed: {e}")
+        pass
     
-    # Strategy 3: Minimal correction - just smooth the image slightly
+    # Strategy 2: Gentle smoothing-based pseudo-correction
     try:
-        # Apply very gentle smoothing as a form of bias correction
+        # Create a very gentle "bias field" using smoothing
         gaussian = sitk.SmoothingRecursiveGaussianImageFilter()
-        gaussian.SetSigma(0.5)  # Very gentle smoothing
+        gaussian.SetSigma([3.0, 3.0, 3.0])  # Gentle smoothing
         
         smoothed = gaussian.Execute(image)
         
-        # Create a pseudo bias field
+        # Create pseudo bias field (very mild correction)
         epsilon = 1e-6
-        bias_field = image / (smoothed + epsilon)
+        pseudo_bias = image / (smoothed + epsilon)
         
-        # Smooth the bias field
-        gaussian.SetSigma(2.0)
-        bias_field = gaussian.Execute(bias_field)
+        # Limit the correction strength
+        pseudo_bias_array = sitk.GetArrayFromImage(pseudo_bias)
+        pseudo_bias_array = np.clip(pseudo_bias_array, 0.9, 1.1)  # Limit to ±10% correction
         
-        # Apply minimal correction
-        corrected_image = image / (bias_field + epsilon)
+        limited_bias = sitk.GetImageFromArray(pseudo_bias_array)
+        limited_bias.CopyInformation(image)
+        
+        # Apply limited correction
+        corrected_image = image / (limited_bias + epsilon)
         
         corrected_array = sitk.GetArrayFromImage(corrected_image)
         if np.isfinite(corrected_array).all():
@@ -280,21 +138,25 @@ def apply_balanced_n4(image: sitk.Image, mask: sitk.Image) -> Tuple[sitk.Image, 
             return image, False
             
     except Exception:
-        # If everything fails, return original image
+        # If all fails, return original image
         return image, False
 
 
-def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
+def parse_args():
+    ap = argparse.ArgumentParser(description='Improved N4 bias correction (configurable)')
+    ap.add_argument('--splits', type=str, default='train,val', help='Comma list of splits to process')
+    ap.add_argument('--overwrite', action='store_true')
+    ap.add_argument('--max-workers', type=int, default=max(1, mp.cpu_count()-1))
+    ap.add_argument('--bias-threshold', type=float, default=0.18, help='Median slice CV threshold to trigger N4')
+    ap.add_argument('--second-pass-iters', type=str, default='10,5', help='Second pass iteration schedule if first conservative attempt rejected')
+    return ap.parse_args()
+
+
+def process_subject_improved(args: Tuple[str, str, bool, float, Tuple[int,int]]) -> Dict:
     """
-    Process N4 correction for a single subject with balanced approach.
-    
-    Args:
-        args: Tuple of (section, subject_id, overwrite)
-        
-    Returns:
-        Dict: Detailed processing results
+    Process N4 correction for a single subject with improved approach.
     """
-    section, subject_id, overwrite = args
+    section, subject_id, overwrite, bias_threshold, second_pass = args
     
     start_time = time.time()
     result = {
@@ -302,8 +164,9 @@ def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
         'section': section,
         'success': False,
         'processed_modalities': [],
-        'failed_modalities': [],
         'skipped_modalities': [],
+        'skipped_unnecessary': [],
+        'failed_modalities': [],
         'processing_time': 0,
         'error_message': None
     }
@@ -313,7 +176,7 @@ def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
     try:
         # Define directories
         input_dir = PATHS['preprocessed_dir'] / section / subject_id
-        output_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected" / subject_id
+        output_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected_v2" / subject_id
         
         if not input_dir.exists():
             result['error_message'] = f"input directory not found: {input_dir}"
@@ -326,6 +189,7 @@ def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
         for modality in modalities:
             input_file = input_dir / f"{modality}.nii.gz"
             output_file = output_dir / f"{modality}.nii.gz"
+            reason_log = []
             
             # Skip if output exists and not overwriting
             if output_file.exists() and not overwrite:
@@ -341,38 +205,48 @@ def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
                 # Load image
                 image = sitk.ReadImage(str(input_file))
                 
-                # Create smart brain mask
-                mask = create_smart_brain_mask(image)
-                
-                # Apply balanced N4 correction
-                corrected_image, success = apply_balanced_n4(image, mask)
-                
+                # Create improved brain mask
+                mask = generate_brain_mask(image)
+                median_cv = evaluate_bias_need(image, mask)
+                if median_cv < bias_threshold:
+                    sitk.WriteImage(image, str(output_file))
+                    result['skipped_unnecessary'].append(f"{modality}_low_bias({median_cv:.3f})")
+                    continue
+                # First conservative attempt
+                orig_stats = basic_intensity_stats(image, mask)
+                corrected_image, success = apply_conservative_n4(image, mask)
                 if success:
-                    # Save corrected image
+                    corr_stats = basic_intensity_stats(corrected_image, mask)
+                    if not acceptable_n4_change(orig_stats, corr_stats):
+                        # Retry with second-pass iterations if provided
+                        it1,it2 = second_pass
+                        try:
+                            n4_filter = sitk.N4BiasFieldCorrectionImageFilter()
+                            n4_filter.SetMaximumNumberOfIterations([it1,it2])
+                            corrected_retry = n4_filter.Execute(image, mask)
+                            corr_stats2 = basic_intensity_stats(corrected_retry, mask)
+                            if acceptable_n4_change(orig_stats, corr_stats2):
+                                corrected_image = corrected_retry
+                            else:
+                                success = False
+                        except Exception:
+                            success = False
+                if success:
                     sitk.WriteImage(corrected_image, str(output_file))
-                    
-                    # Verify saved file
                     if validate_image_file(output_file):
                         result['processed_modalities'].append(modality)
                     else:
-                        result['failed_modalities'].append(f"{modality}_save_failed")
-                        # Clean up failed file
-                        try:
-                            output_file.unlink()
-                        except Exception:
-                            pass
+                        result['failed_modalities'].append(f"{modality}_post_write_validation_fail")
                 else:
-                    result['failed_modalities'].append(f"{modality}_n4_failed")
-                    
+                    sitk.WriteImage(image, str(output_file))
+                    result['skipped_unnecessary'].append(f"{modality}_fallback_copy")
             except Exception as e:
                 result['failed_modalities'].append(f"{modality}_processing_error")
                 logging.debug(f"error processing {modality} for {subject_id}: {str(e)}")
         
-        # Mark as successful if at least one modality was processed
-        if result['processed_modalities']:
+        # Mark as successful if at least one modality was processed/copied
+        if result['processed_modalities'] or result['skipped_modalities'] or result['skipped_unnecessary']:
             result['success'] = True
-        elif result['skipped_modalities'] and not result['failed_modalities']:
-            result['success'] = True  # All already existed
         
     except Exception as e:
         result['error_message'] = str(e)
@@ -381,7 +255,7 @@ def process_subject_balanced(args: Tuple[str, str, bool]) -> Dict:
     return result
 
 
-def collect_subjects_for_processing(splits_to_process: List[str] = None) -> List[Tuple[str, str]]:
+def collect_subjects_for_processing(splits_to_process: List[str] = None, bias_threshold: float = 0.18) -> List[Tuple[str, str]]:
     """Collect subjects for processing with validation."""
     if splits_to_process is None:
         splits_to_process = ['train', 'val']
@@ -419,20 +293,20 @@ def collect_subjects_for_processing(splits_to_process: List[str] = None) -> List
     return subjects
 
 
-def run_balanced_n4_correction(subjects: List[Tuple[str, str]], 
+def run_improved_n4_correction(subjects: List[Tuple[str, str]], 
                               overwrite: bool = False,
-                              max_workers: int = None) -> Dict:
+                              max_workers: int = None,
+                              bias_threshold: float = 0.18,
+                              second_pass: Tuple[int, int] = (10, 5)) -> Dict:
     """
-    Run N4 correction with balanced speed/accuracy approach.
+    Run improved N4 correction with conservative parameters.
     """
     if max_workers is None:
         max_workers = max(1, mp.cpu_count() - 1)
     
-    # Estimate processing time (more realistic)
-    estimated_time = len(subjects) * 8  # ~8 seconds per subject
     logging.info(f"processing {len(subjects)} subjects with {max_workers} workers")
-    logging.info(f"estimated time: {estimated_time/60:.1f} minutes (balanced mode)")
-    logging.info("using 2x downsampling for optimal speed/accuracy balance")
+    logging.info("using improved conservative N4 correction approach")
+    logging.info("will skip N4 for images with minimal bias field")
     
     start_time = time.time()
     results = {
@@ -441,23 +315,29 @@ def run_balanced_n4_correction(subjects: List[Tuple[str, str]],
         'failed_subjects': 0,
         'total_modalities_processed': 0,
         'total_modalities_skipped': 0,
+        'total_modalities_skipped_unnecessary': 0,
         'start_time': time.strftime('%H:%M:%S'),
         'processing_details': [],
         'parameters': {
-            'downsampling_factor': 2,
-            'n4_iterations': '[20, 15, 10]',
-            'convergence_threshold': 0.001,
-            'max_workers': max_workers
+            'approach': 'conservative_n4_with_bias_assessment',
+            'n4_iterations': '[5, 3]',
+            'convergence_threshold': 0.01,
+            'bias_field_fwhm': 0.50,
+            'max_workers': max_workers,
+            'quality_checks': 'enabled'
         }
     }
     
     # Prepare arguments
-    args_list = [(section, subject_id, overwrite) for section, subject_id in subjects]
+    args_list = [
+        (section, subject_id, overwrite, bias_threshold, second_pass)
+        for section, subject_id in subjects
+    ]
     
     # Process with progress updates
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         future_to_subject = {
-            executor.submit(process_subject_balanced, args): args[1]
+            executor.submit(process_subject_improved, args): args[1]
             for args in args_list
         }
         
@@ -471,6 +351,7 @@ def run_balanced_n4_correction(subjects: List[Tuple[str, str]],
                     results['successful_subjects'] += 1
                     results['total_modalities_processed'] += len(result['processed_modalities'])
                     results['total_modalities_skipped'] += len(result['skipped_modalities'])
+                    results['total_modalities_skipped_unnecessary'] += len(result['skipped_unnecessary'])
                 else:
                     results['failed_subjects'] += 1
                 
@@ -498,96 +379,96 @@ def run_balanced_n4_correction(subjects: List[Tuple[str, str]],
     return results
 
 
-def print_balanced_summary(results: Dict):
-    """Print comprehensive summary of balanced processing."""
+def print_improved_summary(results: Dict):
+    """Print comprehensive summary of improved processing."""
     elapsed = results['elapsed_time']
     
-    print(f"\n{'='*60}")
-    print("N4 BIAS CORRECTION SUMMARY")
-    print(f"{'='*60}")
+    print(f"\n{'='*70}")
+    print("IMPROVED N4 BIAS CORRECTION SUMMARY")
+    print(f"{'='*70}")
     
     print(f"\nprocessing results:")
-    print(f"  total subjects:       {results['total_subjects']}")
-    print(f"  successful:           {results['successful_subjects']}")
-    print(f"  failed:               {results['failed_subjects']}")
-    print(f"  success rate:         {results['successful_subjects']/max(results['total_subjects'],1)*100:.1f}%")
-    print(f"  modalities processed: {results['total_modalities_processed']}")
-    print(f"  modalities skipped:   {results['total_modalities_skipped']}")
+    print(f"  total subjects:              {results['total_subjects']}")
+    print(f"  successful:                  {results['successful_subjects']}")
+    print(f"  failed:                      {results['failed_subjects']}")
+    print(f"  success rate:                {results['successful_subjects']/max(results['total_subjects'],1)*100:.1f}%")
+    
+    print(f"\nmodality processing breakdown:")
+    print(f"  N4 corrected:                {results['total_modalities_processed']}")
+    print(f"  skipped (already existed):   {results['total_modalities_skipped']}")
+    print(f"  skipped (unnecessary/failed): {results['total_modalities_skipped_unnecessary']}")
+    
+    total_modalities = (results['total_modalities_processed'] + 
+                       results['total_modalities_skipped'] + 
+                       results['total_modalities_skipped_unnecessary'])
+    
+    if total_modalities > 0:
+        n4_rate = results['total_modalities_processed'] / total_modalities * 100
+        print(f"  actual N4 correction rate:   {n4_rate:.1f}%")
     
     print(f"\ntiming:")
-    print(f"  processing time:      {elapsed/60:.1f} minutes ({elapsed:.0f}s)")
+    print(f"  processing time:             {elapsed/60:.1f} minutes ({elapsed:.0f}s)")
     if elapsed > 0 and results['successful_subjects'] > 0:
         rate = results['successful_subjects'] * 60 / elapsed
         avg_time = elapsed / results['successful_subjects']
-        print(f"  processing rate:      {rate:.1f} subjects/minute")
-        print(f"  average per subject:  {avg_time:.1f} seconds")
+        print(f"  processing rate:             {rate:.1f} subjects/minute")
+        print(f"  average per subject:         {avg_time:.1f} seconds")
     
-    print(f"\nparameters used:")
-    params = results['parameters']
-    print(f"  downsampling factor:  {params['downsampling_factor']}x")
-    print(f"  n4 iterations:        {params['n4_iterations']}")
-    print(f"  convergence thresh:   {params['convergence_threshold']}")
-    print(f"  parallel workers:     {params['max_workers']}")
+    print(f"\nimproved approach features:")
+    print(f"  ✓ Conservative N4 parameters to avoid over-correction")
+    print(f"  ✓ Bias field assessment - skips N4 when unnecessary")
+    print(f"  ✓ Quality validation - rejects poor N4 results")
+    print(f"  ✓ Fallback strategy - copies original if N4 fails")
+    print(f"  ✓ Intensity range protection")
     
-    # Show sample failures if any
-    if results['failed_subjects'] > 0:
-        print(f"\nsample failures (first 3):")
-        failure_count = 0
-        for detail in results['processing_details']:
-            if not detail['success'] and failure_count < 3:
-                print(f"  {detail['section']}/{detail['subject_id']}: "
-                      f"{detail.get('error_message', 'Processing failed')}")
-                if detail['failed_modalities']:
-                    print(f"    failed modalities: {detail['failed_modalities'][:3]}")
-                failure_count += 1
+    # Show sample processing details
+    n4_applied_count = 0
+    skipped_unnecessary_count = 0
+    for detail in results['processing_details']:
+        n4_applied_count += len(detail['processed_modalities'])
+        skipped_unnecessary_count += len([x for x in detail['skipped_unnecessary'] 
+                                        if not x.endswith('_n4_failed_copied_original')])
+    
+    if n4_applied_count + skipped_unnecessary_count > 0:
+        skip_rate = skipped_unnecessary_count / (n4_applied_count + skipped_unnecessary_count) * 100
+        print(f"\nbias field analysis results:")
+        print(f"  modalities with minimal bias: {skipped_unnecessary_count} ({skip_rate:.1f}%)")
+        print(f"  modalities needing N4:       {n4_applied_count} ({100-skip_rate:.1f}%)")
     
     print(f"\noutput location:")
-    print(f"  n4-corrected files: {PATHS['preprocessed_dir']}/[section]_n4corrected/")
+    print(f"  improved N4 files: {PATHS['preprocessed_dir']}/[section]_n4corrected_v2/")
     
-    if results['successful_subjects'] > 0:
-        print(f"\nbalanced n4 correction completed successfully")
-        print(f"quality: good bias correction with 2x downsampling")
-        print(f"speed: ~{results['successful_subjects']*60/elapsed:.1f}x faster than standard n4")
-    else:
-        print(f"\nn4 correction failed for all subjects")
-        print(f"check error messages above for troubleshooting")
+    print(f"\nnext step:")
+    print(f"  run script 07 again on the _n4corrected_v2 directories to assess improvement")
     
-    print(f"{'='*60}")
+    print(f"{'='*70}")
 
 
-def main():
-    """Main function for balanced N4 correction."""
+def main(config: Dict):
+    """Main function for improved N4 correction with provided config."""
     setup_logging()
-    
-    print("=== NeuroScope N4 Bias Field Correction ===")
-    logging.info("starting balanced n4 bias field correction")
-    
-    # Configuration
-    config = {
-        'splits_to_process': ['train', 'val'],
-        'overwrite': False,
-        'max_workers': max(1, mp.cpu_count() - 1)
-    }
-    
+
+    print("=== NeuroScope Improved N4 Bias Field Correction ===")
+    logging.info("starting improved conservative n4 bias field correction")
+
     try:
-        # Collect subjects
         logging.info("collecting subjects for processing...")
         subjects = collect_subjects_for_processing(config['splits_to_process'])
-        
+
         if not subjects:
             logging.error("no subjects found for processing!")
             logging.error("check that preprocessed files exist in expected locations")
             return
-        
-        # Run balanced processing
-        results = run_balanced_n4_correction(
-            subjects, 
+
+        results = run_improved_n4_correction(
+            subjects,
             overwrite=config['overwrite'],
-            max_workers=config['max_workers']
+            max_workers=config['max_workers'],
+            bias_threshold=config['bias_threshold'],
+            second_pass=config['second_pass']
         )
-        
-        # Save results
-        output_path = PATHS['preprocessed_dir'] / "n4_correction_results_balanced.json"
+
+        output_path = PATHS['preprocessed_dir'] / "n4_correction_results_improved_v2.json"
         try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, 'w') as f:
@@ -595,13 +476,20 @@ def main():
             logging.info(f"results saved to {output_path}")
         except Exception as e:
             logging.warning(f"could not save results: {e}")
-        
-        # Print comprehensive summary
-        print_balanced_summary(results)
-        
+
+        print_improved_summary(results)
+
     except Exception as e:
-        logging.error(f"balanced n4 correction failed: {e}")
+        logging.error(f"improved n4 correction failed: {e}")
         raise
 
 if __name__ == '__main__':
-    main()
+    parsed = parse_args()
+    config = {
+        'splits_to_process': [s.strip() for s in parsed.splits.split(',') if s.strip()],
+        'overwrite': parsed.overwrite,
+        'max_workers': parsed.max_workers,
+        'bias_threshold': parsed.bias_threshold,
+        'second_pass': tuple(int(x) for x in parsed.second_pass_iters.split(',') if x.strip())[:2] or (10, 5)
+    }
+    main(config)

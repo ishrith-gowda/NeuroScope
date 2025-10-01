@@ -13,7 +13,7 @@ from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from torchinfo import summary
 from torch.utils.data import DataLoader
-from neuroscope_dataset_loader import get_dataloaders
+from neuroscope_dataset_loader import get_cycle_domain_loaders
 from train_cyclegan import ResNetGenerator
 
 
@@ -127,8 +127,8 @@ if __name__ == '__main__':
     # Dataset
     # -----------------------------
     logging.info("Loading dataset...")
-    loaders = get_dataloaders(DATA_ROOT, META, batch_size=4, num_workers=0)
-    val_loader = loaders['val']
+    loaders = get_cycle_domain_loaders(DATA_ROOT, META, batch_size=4, num_workers=0)
+    val_loader = loaders['val_A']
 
     # -----------------------------
     # Figures
