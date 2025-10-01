@@ -1,18 +1,60 @@
-# checkpoints/
-preprocessed/
-# runs/
-# samples/
-# scripts/venv/
-*.ckpt
-# *.pth
-*.pt
-.DS_Store
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 venv/
+ENV/
+env/
 .env
-# .venv/
-scripts/01_data_preparation_pipeline/templates/
+
+# macOS
+.DS_Store
+._.DS_Store
+._*
+
+# VS Code
+.vscode/
+
+# Training outputs - exclude large binary files
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# TensorBoard
+runs/
+logs/
+
+# Data folders
+preprocessed/
+preprocessed_registered/
+samples/
+figures/
+
+# MRI data
+*.nii.gz
+*.nii
+*.dcm
+*.dicom
+
+# Ignore specific directories that contain large data
+checkpoints/*
+samples/*
+runs/*

@@ -4,19 +4,19 @@ import argparse
 import logging
 import itertools
 import json
+import random
 from datetime import datetime
 
 import torch
 from torch import nn, optim
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import save_image, make_grid
 import matplotlib.pyplot as plt
 
-from neuroscope_dataset_loader import get_dataloaders
 import seaborn as sns
 import matplotlib as mpl
-import logging
+
+from neuroscope_dataset_loader import get_cycle_domain_loaders
 
 # ─── Seaborn + Times New Roman setup ──────────────────────────────
 sns.set_theme(style="whitegrid")
@@ -127,9 +127,12 @@ class PatchDiscriminator(nn.Module):
 
 
 def sample_images(step, G_A2B, G_B2A, loaders, output_dir, tb_writer=None):
-    real_A = next(iter(loaders['train'])).to(device)
+    dev = next(G_A2B.parameters()).device
+    if 'train_A' not in loaders or 'train_B' not in loaders:
+        return
+    real_A = next(iter(loaders['train_A'])).to(dev)
     fake_B = G_A2B(real_A)
-    real_B = next(iter(loaders['train'])).to(device)
+    real_B = next(iter(loaders['train_B'])).to(dev)
     fake_A = G_B2A(real_B)
 
     imgs = torch.cat((real_A, fake_B, real_B, fake_A), 0)
@@ -158,30 +161,61 @@ def plot_loss_graph(loss_history, save_path, tb_writer=None):
             tb_writer.add_scalars('losses', {key: values[-1]}, len(values))
 
 
-def train(args):
-    configure_logging()
-    # Ultra‑verbose PyTorch logs
-    logging.getLogger('torch').setLevel(logging.DEBUG)
+def set_seed(seed: int = 42):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
-    logging.info("Starting CycleGAN training")
-    tb_writer = SummaryWriter(log_dir=os.path.expanduser('~/Downloads/neuroscope/runs'))
-    logging.debug("TensorBoard writer initialized")
+
+def train(args, device: torch.device):
+    configure_logging()
+    logging.getLogger('torch').setLevel(logging.INFO)
+
+    set_seed(args.seed)
+    logging.info("Starting CycleGAN training (domains: A=brats, B=upenn)")
+    tb_writer = SummaryWriter(log_dir=os.path.join(args.run_dir, datetime.now().strftime('%Y%m%d_%H%M%S')))
 
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     os.makedirs(args.sample_dir, exist_ok=True)
 
-    # Data
-    loaders = get_dataloaders(args.data_root, args.meta_json,
-                              args.batch_size, args.num_workers)
-    train_loader = loaders['train']
-    logging.info(f"Loaded train loader with {len(train_loader)} batches")
+    # Domain-specific loaders (expects preprocessed data in [0,1] scaled to [-1,1] by dataset)
+    loaders = get_cycle_domain_loaders(
+        preprocessed_dir=args.data_root,
+        metadata_json=args.meta_json,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        slices_per_subject=args.slices_per_subject,
+        seed=args.seed,
+    )
+    required_keys = ['train_A', 'train_B']
+    for k in required_keys:
+        if k not in loaders:
+            raise RuntimeError(f"Missing required dataloader '{k}'. Ensure preprocessing & metadata are correct.")
 
-    # Debug raw inputs
-    raw_A = next(iter(train_loader)).to(device)
-    debug_path = os.path.join(args.sample_dir, "debug_raw_A.png")
-    save_image(raw_A, debug_path, nrow=4, normalize=False)
-    logging.info(f"Saved raw input batch to {debug_path} "
-                 f"(min={raw_A.min():.4f}, max={raw_A.max():.4f})")
+    train_loader_A = loaders['train_A']
+    train_loader_B = loaders['train_B']
+    iter_B = iter(train_loader_B)
+
+    # Debug batch and validate tensor ranges
+    debug_A = next(iter(train_loader_A)).to(device)
+    debug_B = next(iter(train_loader_B)).to(device)
+    
+    # Validate tensor ranges
+    a_min, a_max = debug_A.min().item(), debug_A.max().item()
+    b_min, b_max = debug_B.min().item(), debug_B.max().item()
+    
+    if not (-1.0 <= a_min <= a_max <= 1.0):
+        logging.warning("Domain A tensor range outside [-1,1]: [%.3f, %.3f]", a_min, a_max)
+    if not (-1.0 <= b_min <= b_max <= 1.0):
+        logging.warning("Domain B tensor range outside [-1,1]: [%.3f, %.3f]", b_min, b_max)
+    
+    save_image((debug_A + 1) / 2.0, os.path.join(args.sample_dir, 'debug_domain_A.png'), nrow=4)
+    save_image((debug_B + 1) / 2.0, os.path.join(args.sample_dir, 'debug_domain_B.png'), nrow=4)
+    logging.info(
+        "Debug batches saved - Domain A: [%.3f, %.3f], Domain B: [%.3f, %.3f]", 
+        a_min, a_max, b_min, b_max
+    )
 
     # Model init
     G_A2B = ResNetGenerator().to(device)
@@ -192,38 +226,37 @@ def train(args):
         net.apply(weights_init_normal)
 
     # Quick model summary
-    from torchinfo import summary
-    summary_str = summary(G_A2B, input_size=(1,4,256,256), device=device, verbose=0).__str__()
-    with open(os.path.join(args.sample_dir, "model_summary.txt"), "w") as f:
-        f.write(summary_str)
-    logging.info("Saved model summary to model_summary.txt")
+    try:
+        from torchinfo import summary  # optional dependency
+        summary_str = summary(G_A2B, input_size=(1,4,256,256), device=device, verbose=0).__str__()
+        with open(os.path.join(args.sample_dir, "model_summary.txt"), "w") as f:
+            f.write(summary_str)
+        logging.info("Saved model summary to model_summary.txt")
+    except Exception as e:
+        logging.warning("Model summary skipped (torchinfo unavailable or failed): %s", e)
 
-    # Losses & optimizers
+    # Losses & optimizers with performance optimizations
     L_GAN   = nn.MSELoss()
     L_cycle = nn.L1Loss()
     L_id    = nn.L1Loss()
-    opt_G   = optim.Adam(itertools.chain(G_A2B.parameters(), G_B2A.parameters()),
-                         lr=args.lr, betas=(0.5, 0.999))
-    opt_D_A = optim.Adam(D_A.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    opt_D_B = optim.Adam(D_B.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    
+    # Use AdamW for better generalization
+    opt_G   = optim.AdamW(itertools.chain(G_A2B.parameters(), G_B2A.parameters()),
+                         lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
+    opt_D_A = optim.AdamW(D_A.parameters(), lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
+    opt_D_B = optim.AdamW(D_B.parameters(), lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
+    
+    # Gradient clipping parameters
+    max_grad_norm = 5.0
 
     # LR schedulers with safe denominator
-    decay_span = args.n_epochs - args.decay_epoch
-    if decay_span <= 0:
-        logging.warning(f"decay_epoch ({args.decay_epoch}) >= n_epochs ({args.n_epochs}); "
-                        "forcing decay over final epoch only.")
-    denom = max(1, decay_span)
-        # ─── Safe LR scheduler setup ───────────────────────────────
-    # ensure decay_epoch < n_epochs
     if args.decay_epoch >= args.n_epochs:
-        logging.warning(
-            f"decay_epoch ({args.decay_epoch}) >= n_epochs ({args.n_epochs}); "
-            "clamping decay_epoch to n_epochs - 1"
-        )
+        logging.warning("decay_epoch >= n_epochs; clamping to n_epochs - 1")
         args.decay_epoch = args.n_epochs - 1
+    decay_span = max(1, args.n_epochs - args.decay_epoch)
 
-    decay_span = args.n_epochs - args.decay_epoch  # guaranteed ≥ 1 now
-    lambda_lr  = lambda e: 1 - max(0, e - args.decay_epoch) / decay_span
+    def lambda_lr(e):
+        return 1 - max(0, e - args.decay_epoch) / decay_span
 
     sched_G   = optim.lr_scheduler.LambdaLR(opt_G,   lr_lambda=lambda_lr)
     sched_D_A = optim.lr_scheduler.LambdaLR(opt_D_A, lr_lambda=lambda_lr)
@@ -237,10 +270,15 @@ def train(args):
     for epoch in range(1, args.n_epochs + 1):
         epoch_start = datetime.now()
         logging.info(f"Epoch {epoch}/{args.n_epochs} started")
-
-        for i, real_A in enumerate(train_loader, 1):
-            real_B = next(iter(train_loader))
-            real_A, real_B = real_A.to(device), real_B.to(device)
+        iter_A = iter(train_loader_A)
+        for i, real_A in enumerate(iter_A, 1):
+            try:
+                real_B = next(iter_B)
+            except StopIteration:
+                iter_B = iter(train_loader_B)
+                real_B = next(iter_B)
+            real_A = real_A.to(device)
+            real_B = real_B.to(device)
 
             # Labels
             pred_shape = D_A(real_A).shape
@@ -261,6 +299,10 @@ def train(args):
 
             loss_G = loss_id_A + loss_id_B + loss_GAN_A2B + loss_GAN_B2A + loss_cycle
             loss_G.backward()
+            
+            # Gradient clipping for stability
+            torch.nn.utils.clip_grad_norm_(itertools.chain(G_A2B.parameters(), G_B2A.parameters()), max_grad_norm)
+            
             opt_G.step()
 
             # Log fake_B range once
@@ -272,6 +314,10 @@ def train(args):
             loss_D_A = (L_GAN(D_A(real_A), valid) +
                         L_GAN(D_A(fake_A.detach()), fake_label)) * 0.5
             loss_D_A.backward()
+            
+            # Gradient clipping for discriminator
+            torch.nn.utils.clip_grad_norm_(D_A.parameters(), max_grad_norm)
+            
             opt_D_A.step()
 
             # Discriminator B
@@ -279,6 +325,10 @@ def train(args):
             loss_D_B = (L_GAN(D_B(real_B), valid) +
                         L_GAN(D_B(fake_B.detach()), fake_label)) * 0.5
             loss_D_B.backward()
+            
+            # Gradient clipping for discriminator
+            torch.nn.utils.clip_grad_norm_(D_B.parameters(), max_grad_norm)
+            
             opt_D_B.step()
 
             # Record & TB
@@ -288,7 +338,7 @@ def train(args):
             loss_history["Cycle"].append(loss_cycle.item())
             loss_history["Id"].append((loss_id_A.item() + loss_id_B.item()) / 2)
 
-            step = (epoch - 1) * len(train_loader) + i
+            step = (epoch - 1) * len(train_loader_A) + i
             tb_writer.add_scalar('Loss/G', loss_G.item(), step)
             tb_writer.add_scalar('Loss/D_A', loss_D_A.item(), step)
             tb_writer.add_scalar('Loss/D_B', loss_D_B.item(), step)
@@ -301,12 +351,17 @@ def train(args):
                     tb_writer.add_histogram(f'Weights/G_A2B/{name}', param, step)
 
             if i % args.log_interval == 0:
-                logging.debug(f"Batch {i}/{len(train_loader)} | "
-                              f"Loss_G={loss_G:.4f} Loss_D_A={loss_D_A:.4f} "
-                              f"Loss_D_B={loss_D_B:.4f} Cycle={loss_cycle:.4f}")
+                logging.debug(
+                    f"Batch {i}/{len(train_loader_A)} | Loss_G={loss_G:.4f} "
+                    f"Loss_D_A={loss_D_A:.4f} Loss_D_B={loss_D_B:.4f} "
+                    f"Cycle={loss_cycle:.4f}"
+                )
 
             if step % args.sample_interval == 0:
-                sample_images(step, G_A2B, G_B2A, loaders, args.sample_dir, tb_writer)
+                try:
+                    sample_images(step, G_A2B, G_B2A, loaders, args.sample_dir, tb_writer)
+                except Exception as e:
+                    logging.warning("Sample image generation failed at step %d: %s", step, e)
 
         # End of epoch
         sched_G.step(); sched_D_A.step(); sched_D_B.step()
@@ -373,11 +428,9 @@ def train(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data_root', type=str,
-                        default='/Volumes/USB DRIVE/neuroscope/data/preprocessed')
-    parser.add_argument('--meta_json', type=str,
-                        default=os.path.expanduser('~/Downloads/neuroscope/scripts/neuroscope_dataset_metadata_splits.json'))
+    parser = argparse.ArgumentParser(description="Train CycleGAN on NeuroScope domains (A=BraTS, B=UPenn)")
+    parser.add_argument('--data_root', type=str, default='/Volumes/usb drive/neuroscope/preprocessed')
+    parser.add_argument('--meta_json', type=str, default='/Volumes/usb drive/neuroscope/scripts/01_data_preparation_pipeline/neuroscope_dataset_metadata_splits.json')
     parser.add_argument('--n_epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--lr', type=float, default=2e-4)
@@ -386,19 +439,16 @@ if __name__ == '__main__':
     parser.add_argument('--lambda_identity', type=float, default=5.0)
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--log_interval', type=int, default=50)
-    parser.add_argument('--sample_interval', type=int, default=200)
+    parser.add_argument('--sample_interval', type=int, default=500)
     parser.add_argument('--checkpoint_interval', type=int, default=10)
-    parser.add_argument('--checkpoint_dir', type=str,
-                        default=os.path.expanduser('~/Downloads/neuroscope/checkpoints'))
-    parser.add_argument('--sample_dir', type=str,
-                        default=os.path.expanduser('~/Downloads/neuroscope/samples'))
+    parser.add_argument('--checkpoint_dir', type=str, default='/Volumes/usb drive/neuroscope/checkpoints')
+    parser.add_argument('--sample_dir', type=str, default='/Volumes/usb drive/neuroscope/samples')
+    parser.add_argument('--run_dir', type=str, default='/Volumes/usb drive/neuroscope/runs')
+    parser.add_argument('--slices_per_subject', type=int, default=4)
+    parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
 
-    device = torch.device(
-        'cuda' if torch.cuda.is_available()
-        else 'mps' if torch.backends.mps.is_available()
-        else 'cpu'
-    )
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     configure_logging()
-    logging.info(f"Using device: {device}")
-    train(args)
+    logging.info("Using device: %s", device)
+    train(args, device)
