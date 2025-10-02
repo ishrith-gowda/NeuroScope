@@ -1,193 +1,250 @@
 # NeuroScope
 
-Domain-aware standardization of multimodal glioma MRI; CycleGAN‑based framework for standardizing multi‑institutional glioblastoma MRI scans (T1, T1ce, T2, FLAIR) across different scanner protocols.
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.11%2B-red.svg)](https://pytorch.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Table of Contents
+**Domain-aware standardization of multimodal glioma MRI using CycleGAN-based framework for standardizing multi-institutional glioblastoma MRI scans (T1, T1ce, T2, FLAIR) across different scanner protocols.**
 
-1. Overview
-2. Features
-3. Directory structure
-4. Requirements
-5. Installation
-6. Data preparation
-7. Preprocessing pipeline
-8. Training
-9. Evaluation & visualization
-10. Usage examples
-11. Contributing
-12. License
+## 🧠 Overview
 
-## Overview
+NeuroScope tackles scanner-protocol heterogeneity in glioblastoma MRI by learning an unsupervised image-to-image translation between BraTS (TCGA-GBM) and UPenn-GBM datasets. The CycleGAN operates on four-channel 2D axial slices (T1, T1ce, T2, FLAIR) to produce harmonized volumes for downstream radiomic analysis.
 
-NeuroScope tackles scanner‑protocol heterogeneity in glioblastoma MRI by learning an unsupervised image‑to‑image translation between BraTS (TCGA‑GBM) and UPenn‑GBM datasets. The CycleGAN operates on four‑channel 2D axial slices (T1, T1ce, T2, FLAIR) to produce harmonized volumes for downstream radiomic analysis.
+## ✨ Key Features
 
-## Features
+- **Advanced Preprocessing Pipeline**: Comprehensive medical imaging preprocessing including skull stripping, bias correction, normalization, and resampling
+- **CycleGAN Implementation**: State-of-the-art domain adaptation with ResNet-based generators and PatchGAN discriminators
+- **Professional Architecture**: Modular, extensible design following best practices for medical imaging research
+- **Comprehensive Evaluation**: Bias assessment, quality control, and statistical analysis tools
+- **CLI Interface**: Command-line tools for all major operations
+- **Extensive Documentation**: Professional documentation with examples and tutorials
 
-- Domain splitting into BraTS (domain A) and UPenn (domain B)
-- Preprocessing: skull‑stripping, percentile intensity normalization, 1 mm isotropic resampling
-- CycleGAN with ResNet‑based generators (nine residual blocks) and 70×70 PatchGAN discriminators
-- Losses: adversarial (MSE), cycle‑consistency (L1), identity (L1)
-- TensorBoard logging: loss curves, weight histograms, sample grids
-- Visualization: sample translation montages; SSIM/PSNR histograms; model summary and parameter counts
+## 🚀 Quick Start
 
-## Requirements
+### Installation
 
-- Python 3.9 or later
-- PyTorch 1.11 or later (CUDA or MPS support)
-- torchvision, SimpleITK, matplotlib, numpy, pandas
-- TensorBoard
-- ANTs or HD‑BET (for optional skull‑stripping)
-- NBIA Data Retriever or Aspera Connect (for dataset download)
+```bash
+# Clone the repository
+git clone https://github.com/ishrith-gowda/NeuroScope.git
+cd NeuroScope
 
-## Installation
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-1. Clone the repo: git clone [https://github.com/ishrith-gowda/NeuroScope.git](https://github.com/ishrith-gowda/NeuroScope.git) and cd NeuroScope
-2. Create and activate a virtual environment: python -m venv venv; source venv/bin/activate
-3. Install dependencies: pip install -r requirements.txt
-4. (Optional) Install HD‑BET: pip install hd-bet
-5. Place the MNI152 template at \~/Templates/MNI152_T1_1mm.nii.gz
+# Install package
+pip install -e .
 
-## Data preparation
-
-1. Download BraTS (TCGA‑GBM) and UPenn‑GBM data via TCIA.
-2. Organize under data/: data/BraTS-TCGA-GBM and data/UPENN-GBM.
-
-## Preprocessing Pipeline (Refactored & Orchestrated)
-
-All preprocessing scripts now expose consistent CLI arguments (`--splits`, `--output`, plus task‑specific flags). A unified orchestrator chains the major stages with dependency checks and idempotent skipping.
-
-Primary scripts (in execution order):
-
-1. `01_fast_intensity_normalization_neuroscope.py` – Fast percentile normalization & optional resampling
-2. `05_comprehensive_intensity_bias_assessment_neuroscope.py` – Pre‑N4 slice bias profiling
-3. `06_n4_bias_correction_neuroscope.py` – Conservative + adaptive N4 bias correction with retry logic
-4. `07_assess_n4_correction_effectiveness_neuroscope.py` – Before/after CV & residual bias evaluation
-5. `08_diagnose_n4_issues_neuroscope.py` – Targeted diagnostics on sampled subjects
-6. `09_verify_preprocessing_completeness_neuroscope.py` – Final readiness & quality audit
-
-Each stage writes both a full JSON and a lightweight `_summary.json` (median / key metrics). Schema validation and minimal summaries accelerate large‑scale inspection.
-
-### One‑Command Orchestrator
-
-Run the full pipeline (default `train,val` splits):
-
-```
-python scripts/01_data_preparation_pipeline/run_preprocessing_pipeline.py --splits=train,val --verbose
+# Install with optional dependencies
+pip install -e ".[all]"
 ```
 
-Key flags:
+### Basic Usage
 
-- `--force` re-runs stages even if their outputs exist
-- `--dry-run` prints planned actions only
-- `--stop-on-fail` aborts at first failing stage
+```bash
+# Preprocess data
+neuroscope preprocess --input-dir /path/to/raw --output-dir /path/to/processed
 
-### Individual Script Usage Examples
+# Train CycleGAN model
+neuroscope train --data-root /path/to/data --output-dir /path/to/results
 
-Fast normalization (train + val):
-
-```
-python scripts/01_data_preparation_pipeline/01_fast_intensity_normalization_neuroscope.py \
-	--splits=train,val --lower-pct 0.5 --upper-pct 99.5
+# Run complete pipeline
+neuroscope pipeline --input-dir /path/to/raw --output-dir /path/to/results
 ```
 
-N4 bias correction with custom threshold & workers:
+### Python API
 
-```
-python scripts/01_data_preparation_pipeline/06_n4_bias_correction_neuroscope.py \
-	--splits=train,val --bias-threshold 0.16 --max-workers 6
-```
+```python
+import neuroscope
+from neuroscope.config import get_default_training_config
+from neuroscope.models.architectures import CycleGAN
+from neuroscope.training.trainers import CycleGANTrainer
 
-Assess N4 effectiveness on validation only:
+# Load configuration
+config = get_default_training_config()
 
-```
-python scripts/01_data_preparation_pipeline/07_assess_n4_correction_effectiveness_neuroscope.py --splits=val
-```
+# Initialize model
+model = CycleGAN(**config['model'])
 
-Diagnostics (sample 8 subjects per section):
-
-```
-python scripts/01_data_preparation_pipeline/08_diagnose_n4_issues_neuroscope.py --max-per-section 8
-```
-
-Final verification including test split (if prepared):
-
-```
-python scripts/01_data_preparation_pipeline/09_verify_preprocessing_completeness_neuroscope.py --splits=train,val,test
+# Train model
+trainer = CycleGANTrainer(model, optimizer, device, config)
+trainer.train_epoch(train_loader_a, train_loader_b, epoch=0)
 ```
 
-### Output Conventions
-
-- Core outputs reside under `preprocessed/` with dataset + (optional) `_n4corrected_v2` suffixes.
-- Assessment JSONs: `slice_bias_assessment.json`, `n4_correction_results_improved_v2.json`, `n4_effectiveness_assessment.json`, `n4_diagnostic_analysis.json`, `neuroscope_pipeline_verification_results.json` plus `_summary.json` companions.
-- A pipeline run summary: `preprocessed/pipeline_run_summary.json`.
-
-### Quality Safeguards
-
-- Unified brain mask generation across scripts for metric consistency.
-- Conservative N4 pass with adaptive retry if first result fails sanity checks.
-- Schema‑aware JSON writer: guards against truncated or structurally invalid result files.
-- Lightweight summaries enable rapid monitoring in remote / low‑bandwidth settings.
-
-### Reproducibility
-
-All randomness (subject sampling in diagnostics) uses fixed seeds. Re-run determinism is preserved unless inputs change or `--force` triggers regeneration.
-
-## Training
-
-Run:
-python 02_model_development_pipeline/train_cyclegan.py<br/>
-\--data_root /path/to/data/preprocessed<br/>
-\--meta_json /path/to/scripts/neuroscope_dataset_metadata_splits.json<br/>
-\--n_epochs 100<br/>
-\--batch_size 8<br/>
-\--lr 2e-4<br/>
-\--decay_epoch 50<br/>
-\--checkpoint_interval 10<br/>
-\--sample_interval 200<br/>
-\--log_interval 50<br/>
-Models are saved in checkpoints/, sample images in samples/, and TensorBoard logs in \~/Downloads/neuroscope/runs. Launch TensorBoard with tensorboard --logdir \~/Downloads/neuroscope/runs.
-
-### Modular Training Pipeline
-
-To mirror the preprocessing pipeline, CycleGAN training is split into small, composable scripts under `scripts/02_model_development_pipeline/`:
-
-- `01_prepare_training_manifest.py`: Verifies preprocessed subjects per split and writes `neuroscope_training_manifest.json` + `_summary.json`.
-- `02_dataloader_smoke_test.py`: Quick loader check to confirm balanced, valid batches for domains A/B.
-- `03_train_cyclegan_entry.py`: Thin wrapper around `train_cyclegan.py` using USB-aware defaults from `neuroscope_preprocessing_config.py`.
-- `04_evaluate_cyclegan.py`: Computes SSIM/PSNR on a small validation subset and saves qualitative grids.
-- `05_export_inference_package.py`: Exports a self-contained generator bundle `full_G_A2B.pt` with a tiny inference stub.
-- `run_training_pipeline.py`: Orchestrates the above with idempotent behavior and sensible defaults.
-
-One-command run (after preprocessing):
+## 📁 Project Structure
 
 ```
-python scripts/02_model_development_pipeline/run_training_pipeline.py --verbose
+neuroscope/
+├── neuroscope/                    # Main package
+│   ├── core/                      # Core utilities
+│   │   ├── logging/              # Logging system
+│   │   ├── config/               # Configuration management
+│   │   ├── constants/            # Constants and enums
+│   │   └── validators/           # Validation utilities
+│   ├── data/                     # Data handling
+│   │   ├── loaders/             # Data loaders
+│   │   ├── transforms/          # Data transformations
+│   │   ├── datasets/            # Dataset implementations
+│   │   └── splits/              # Data splitting utilities
+│   ├── models/                   # Model implementations
+│   │   ├── generators/          # Generator networks
+│   │   ├── discriminators/      # Discriminator networks
+│   │   ├── losses/              # Loss functions
+│   │   └── architectures/       # Complete architectures
+│   ├── preprocessing/           # Preprocessing pipeline
+│   │   ├── bias_correction/     # Bias field correction
+│   │   ├── registration/        # Image registration
+│   │   ├── normalization/      # Intensity normalization
+│   │   └── skull_stripping/     # Skull stripping
+│   ├── training/                # Training framework
+│   │   ├── trainers/            # Training implementations
+│   │   ├── optimizers/          # Optimizers and schedulers
+│   │   ├── schedulers/          # Learning rate schedulers
+│   │   └── callbacks/           # Training callbacks
+│   ├── evaluation/              # Evaluation tools
+│   │   ├── metrics/             # Evaluation metrics
+│   │   ├── analyzers/           # Analysis tools
+│   │   └── reporters/           # Reporting utilities
+│   ├── visualization/           # Visualization tools
+│   │   ├── plotters/            # Plotting utilities
+│   │   ├── montages/            # Image montages
+│   │   └── dashboards/          # Interactive dashboards
+│   └── utils/                   # Utility functions
+│       ├── io/                  # I/O utilities
+│       ├── math/                # Mathematical utilities
+│       └── image/               # Image processing utilities
+├── scripts/                     # Command-line scripts
+│   ├── cli/                     # CLI implementations
+│   ├── pipeline/               # Pipeline scripts
+│   ├── experiments/            # Experimental scripts
+│   └── utilities/              # Utility scripts
+├── tests/                       # Test suite
+│   ├── unit/                   # Unit tests
+│   ├── integration/            # Integration tests
+│   └── fixtures/               # Test fixtures
+├── docs/                        # Documentation
+│   ├── api/                    # API documentation
+│   ├── guides/                 # User guides
+│   └── examples/               # Example notebooks
+├── examples/                    # Example scripts
+│   ├── basic/                  # Basic examples
+│   └── advanced/               # Advanced examples
+└── config/                      # Configuration files
+    ├── defaults/               # Default configurations
+    └── experiments/            # Experiment configurations
 ```
 
-You can also run individual steps, e.g.:
+## 🔧 Configuration
 
+NeuroScope uses a comprehensive configuration system with sensible defaults:
+
+```python
+from neuroscope.config import get_default_training_config
+
+# Get default configuration
+config = get_default_training_config()
+
+# Customize configuration
+config['training']['n_epochs'] = 200
+config['training']['batch_size'] = 16
+config['model']['lambda_cycle'] = 15.0
+
+# Validate configuration
+from neuroscope.config import validate_config
+assert validate_config(config)
 ```
-python scripts/02_model_development_pipeline/01_prepare_training_manifest.py
-python scripts/02_model_development_pipeline/02_dataloader_smoke_test.py \
-	--preprocessed_dir "/Volumes/usb drive/neuroscope/preprocessed" \
-	--metadata_json "/Volumes/usb drive/neuroscope/scripts/01_data_preparation_pipeline/neuroscope_dataset_metadata_splits.json"
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=neuroscope
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
 ```
 
-## Evaluation & visualization
+## 📊 Evaluation
 
-After training, run:
-python 02_model_development_pipeline/visualize_cyclegan_training.py
-Generates loss curves, SSIM/PSNR histograms, translation grids, and model summaries in figures/.
+NeuroScope provides comprehensive evaluation tools:
 
-## Usage examples
+```python
+from neuroscope.evaluation.analyzers import analyze_dataset_bias
+from neuroscope.evaluation.reporters import create_bias_visualization
 
-Inference on new scans:
+# Analyze dataset bias
+bias_results = analyze_dataset_bias(metadata, splits_to_assess=['train', 'val'])
 
-- Load a full model: model = torch.load('checkpoints/full_G_A2B_100.pt')\['architecture']
-- model.eval(); output = model(input_tensor) for each slice
+# Create visualizations
+create_bias_visualization(bias_results, output_dir='results/')
+```
 
-Contributing
+## 📈 Monitoring
 
-1. Fork the repo and create a feature branch
-2. Commit and push changes
-3. Open a pull request with tests and PEP8 compliance
+Track training progress with TensorBoard:
+
+```bash
+# Launch TensorBoard
+tensorboard --logdir runs/
+
+# Or use Weights & Biases
+wandb login
+neuroscope train --use-wandb
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📚 Documentation
+
+- [API Documentation](https://neuroscope.readthedocs.io/)
+- [User Guide](docs/guides/user_guide.md)
+- [Developer Guide](docs/guides/developer_guide.md)
+- [Examples](examples/)
+
+## 🏆 Citation
+
+If you use NeuroScope in your research, please cite:
+
+```bibtex
+@software{neuroscope2024,
+  title={NeuroScope: Domain-aware standardization of multimodal glioma MRI},
+  author={Gowda, Ishrith},
+  year={2024},
+  url={https://github.com/ishrith-gowda/NeuroScope},
+  version={0.1.0}
+}
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- BraTS dataset providers
+- UPenn-GBM dataset contributors
+- PyTorch and torchvision teams
+- Medical imaging community
+
+## 📞 Support
+
+- 📧 Email: your.email@example.com
+- 🐛 Issues: [GitHub Issues](https://github.com/ishrith-gowda/NeuroScope/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/ishrith-gowda/NeuroScope/discussions)
+
+---
+
+**NeuroScope** - Advancing medical imaging through domain adaptation and standardization.
