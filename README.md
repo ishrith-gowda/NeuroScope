@@ -1,4 +1,4 @@
-# neuroscope
+# NeuroScope
 
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![pytorch](https://img.shields.io/badge/pytorch-1.11%2B-red.svg)](https://pytorch.org)
