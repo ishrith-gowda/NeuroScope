@@ -2,8 +2,6 @@
 
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![pytorch](https://img.shields.io/badge/pytorch-1.11%2B-red.svg)](https://pytorch.org)
-[![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 domain-aware standardization of multimodal glioma mri; cyclegan-based framework for standardizing multi-institutional glioblastoma mri scans (t1, t1ce, t2, flair) across different scanner protocols.
 
