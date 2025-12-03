@@ -19,7 +19,10 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Virtual environments
 venv/
+.venv/
 ENV/
 env/
 .env
@@ -29,31 +32,35 @@ env/
 ._.DS_Store
 ._*
 
-# VS Code
+# VS Code (keep settings but ignore history)
 .vscode/
 
-# Training outputs - exclude large binary files
-checkpoints/
-*.pth
-*.pt
-*.ckpt
-
-# TensorBoard
-runs/
-logs/
-
-# Data folders
+# Large data folders (too big for git)
 preprocessed/
 preprocessed_registered/
-samples/
 
-# MRI data
+# Raw MRI data formats
 *.nii.gz
 *.nii
 *.dcm
 *.dicom
 
-# Ignore specific directories that contain large data
-checkpoints/*
-samples/*
-runs/*
+# Old/intermediate checkpoints (keep final models only tracked via LFS)
+checkpoints/D_A_*.pth
+checkpoints/D_B_*.pth
+checkpoints/G_A2B_*.pth
+checkpoints/G_B2A_*.pth
+checkpoints/full_models_*.pt
+checkpoints/fast_D_A_[0-9]*.pth
+checkpoints/fast_D_B_[0-9]*.pth
+checkpoints/fast_G_A2B_[0-9]*.pth
+checkpoints/fast_G_B2A_[0-9]*.pth
+
+# Old sample images (keep key ones)
+samples/sample_*.png
+samples/._*
+
+# Training logs (verbose)
+*.log
+nohup.out
+scripts_new/

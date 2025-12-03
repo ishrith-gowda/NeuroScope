@@ -51,13 +51,13 @@ The model can take a brain MRI from the BraTS dataset (multi-institutional, hete
 
 When MRI scans are acquired at different institutions, they exhibit significant technical variations that can mask genuine biological differences:
 
-| Source of Variation | Effect on Images |
-|---------------------|------------------|
-| Field Strength (1.5T vs 3T) | Signal-to-noise differences, contrast variations |
-| Acquisition Parameters (TE/TR) | Tissue contrast changes |
-| Vendor Differences (Siemens, GE, Philips) | Reconstruction algorithm artifacts |
-| Institutional Calibration | Intensity scale differences |
-| Coil Configurations | Spatial sensitivity patterns |
+| Source of Variation                       | Effect on Images                                 |
+| ----------------------------------------- | ------------------------------------------------ |
+| Field Strength (1.5T vs 3T)               | Signal-to-noise differences, contrast variations |
+| Acquisition Parameters (TE/TR)            | Tissue contrast changes                          |
+| Vendor Differences (Siemens, GE, Philips) | Reconstruction algorithm artifacts               |
+| Institutional Calibration                 | Intensity scale differences                      |
+| Coil Configurations                       | Spatial sensitivity patterns                     |
 
 ## Why CycleGAN?
 
@@ -80,34 +80,34 @@ Traditional normalization techniques (z-score, histogram matching) fail to addre
 
 ## 3.1 BraTS-TCGA (Domain A)
 
-| Property | Value |
-|----------|-------|
-| **Source** | Brain Tumor Segmentation Challenge / The Cancer Imaging Archive (TCIA) |
-| **Subjects** | 88 glioblastoma patients |
-| **Institutions** | Multi-institutional (heterogeneous protocols) |
-| **Modalities** | T1, T1-contrast enhanced (T1ce), T2, FLAIR |
-| **Resolution** | 256 × 256 × 155 (axial slices) |
-| **Preprocessing** | Skull-stripped, co-registered, normalized |
+| Property          | Value                                                                  |
+| ----------------- | ---------------------------------------------------------------------- |
+| **Source**        | Brain Tumor Segmentation Challenge / The Cancer Imaging Archive (TCIA) |
+| **Subjects**      | 88 glioblastoma patients                                               |
+| **Institutions**  | Multi-institutional (heterogeneous protocols)                          |
+| **Modalities**    | T1, T1-contrast enhanced (T1ce), T2, FLAIR                             |
+| **Resolution**    | 256 × 256 × 155 (axial slices)                                         |
+| **Preprocessing** | Skull-stripped, co-registered, normalized                              |
 
 ## 3.2 UPenn-GBM (Domain B)
 
-| Property | Value |
-|----------|-------|
-| **Source** | University of Pennsylvania Glioblastoma Dataset |
-| **Subjects** | 566 glioblastoma patients |
-| **Institution** | Single-site (consistent acquisition protocol) |
-| **Modalities** | T1, T1-contrast enhanced (T1ce), T2, FLAIR |
-| **Resolution** | 256 × 256 × 155 (axial slices) |
-| **Preprocessing** | Skull-stripped, co-registered, normalized |
+| Property          | Value                                           |
+| ----------------- | ----------------------------------------------- |
+| **Source**        | University of Pennsylvania Glioblastoma Dataset |
+| **Subjects**      | 566 glioblastoma patients                       |
+| **Institution**   | Single-site (consistent acquisition protocol)   |
+| **Modalities**    | T1, T1-contrast enhanced (T1ce), T2, FLAIR      |
+| **Resolution**    | 256 × 256 × 155 (axial slices)                  |
+| **Preprocessing** | Skull-stripped, co-registered, normalized       |
 
 ## 3.3 Data Split
 
-| Split | BraTS | UPenn | Total |
-|-------|-------|-------|-------|
-| Training | 40 subjects | 40 subjects | 80 |
-| Validation | 24 subjects | 263 subjects | 287 |
-| Testing | 24 subjects | 263 subjects | 287 |
-| **Total** | 88 | 566 | 654 |
+| Split      | BraTS       | UPenn        | Total |
+| ---------- | ----------- | ------------ | ----- |
+| Training   | 40 subjects | 40 subjects  | 80    |
+| Validation | 24 subjects | 263 subjects | 287   |
+| Testing    | 24 subjects | 263 subjects | 287   |
+| **Total**  | 88          | 566          | 654   |
 
 ## 3.4 Training Slice Extraction
 
@@ -175,7 +175,7 @@ CycleGAN consists of two generator-discriminator pairs:
 Domain A (BraTS) ──G_A2B──> Domain B (UPenn)
          ↑                         │
          └────────G_B2A────────────┘
-         
+
          Cycle: A → G_A2B(A) → G_B2A(G_A2B(A)) ≈ A
 ```
 
@@ -200,29 +200,29 @@ class FastGenerator(nn.Module):
             nn.Conv2d(4, 64, kernel_size=7),    # 256→256
             nn.InstanceNorm2d(64),
             nn.ReLU(inplace=True),
-            
+
             nn.Conv2d(64, 128, stride=2),        # 256→128
             nn.InstanceNorm2d(128),
             nn.ReLU(inplace=True),
-            
+
             nn.Conv2d(128, 256, stride=2),       # 128→64
             nn.InstanceNorm2d(256),
             nn.ReLU(inplace=True),
         ]
-        
+
         # Bottleneck: 6 Residual Blocks
         self.residual = [ResidualBlock(256) for _ in range(6)]
-        
+
         # Decoder: Upsample 2×
         self.decoder = [
             nn.ConvTranspose2d(256, 128, stride=2),  # 64→128
             nn.InstanceNorm2d(128),
             nn.ReLU(inplace=True),
-            
+
             nn.ConvTranspose2d(128, 64, stride=2),   # 128→256
             nn.InstanceNorm2d(64),
             nn.ReLU(inplace=True),
-            
+
             nn.ReflectionPad2d(3),
             nn.Conv2d(64, 4, kernel_size=7),
             nn.Tanh()  # Output: [-1, 1]
@@ -231,12 +231,12 @@ class FastGenerator(nn.Module):
 
 **Key Design Choices:**
 
-| Component | Choice | Rationale |
-|-----------|--------|-----------|
-| Normalization | Instance Norm | Better for style transfer than Batch Norm |
-| Padding | Reflection | Reduces boundary artifacts vs zero padding |
-| Activation (output) | Tanh | Maps to [-1, 1] for stable gradients |
-| Residual Blocks | 6 | Balance between capacity and training speed |
+| Component           | Choice        | Rationale                                   |
+| ------------------- | ------------- | ------------------------------------------- |
+| Normalization       | Instance Norm | Better for style transfer than Batch Norm   |
+| Padding             | Reflection    | Reduces boundary artifacts vs zero padding  |
+| Activation (output) | Tanh          | Maps to [-1, 1] for stable gradients        |
+| Residual Blocks     | 6             | Balance between capacity and training speed |
 
 ![Generator Architecture](figures/publication/fig2_generator.png)
 
@@ -257,19 +257,19 @@ class FastDiscriminator(nn.Module):
             # No normalization on first layer
             spectral_norm(nn.Conv2d(4, 64, 4, stride=2)),    # 256→128
             nn.LeakyReLU(0.2),
-            
+
             spectral_norm(nn.Conv2d(64, 128, 4, stride=2)),  # 128→64
             nn.InstanceNorm2d(128),
             nn.LeakyReLU(0.2),
-            
+
             spectral_norm(nn.Conv2d(128, 256, 4, stride=2)), # 64→32
             nn.InstanceNorm2d(256),
             nn.LeakyReLU(0.2),
-            
+
             spectral_norm(nn.Conv2d(256, 512, 4, stride=2)), # 32→16
             nn.InstanceNorm2d(512),
             nn.LeakyReLU(0.2),
-            
+
             nn.ZeroPad2d((1, 0, 1, 0)),
             spectral_norm(nn.Conv2d(512, 1, 4))              # 16→15
         )
@@ -290,13 +290,13 @@ class FastDiscriminator(nn.Module):
 
 ## 5.4 Model Parameters
 
-| Model | Parameters | Size |
-|-------|------------|------|
-| Generator (G_A2B) | 7.84M | 29.9 MB |
-| Generator (G_B2A) | 7.84M | 29.9 MB |
-| Discriminator (D_A) | 2.76M | 10.6 MB |
-| Discriminator (D_B) | 2.76M | 10.6 MB |
-| **Total** | 21.2M | 81.0 MB |
+| Model               | Parameters | Size    |
+| ------------------- | ---------- | ------- |
+| Generator (G_A2B)   | 7.84M      | 29.9 MB |
+| Generator (G_B2A)   | 7.84M      | 29.9 MB |
+| Discriminator (D_A) | 2.76M      | 10.6 MB |
+| Discriminator (D_B) | 2.76M      | 10.6 MB |
+| **Total**           | 21.2M      | 81.0 MB |
 
 ---
 
@@ -308,13 +308,13 @@ The initial training run (50 epochs with the original architecture) suffered fro
 
 ### Symptoms Observed
 
-| Metric | Expected (Healthy) | Observed (Collapsed) |
-|--------|-------------------|---------------------|
-| SSIM | > 0.7 | **0.037** |
-| PSNR | > 20 dB | **5.4 dB** |
-| D_A Loss | ~0.3-0.5 | **0.049** (too low!) |
-| D_B Loss | ~0.3-0.5 | **0.051** (too low!) |
-| Output Variance | > 0.4 | **< 0.1** |
+| Metric          | Expected (Healthy) | Observed (Collapsed) |
+| --------------- | ------------------ | -------------------- |
+| SSIM            | > 0.7              | **0.037**            |
+| PSNR            | > 20 dB            | **5.4 dB**           |
+| D_A Loss        | ~0.3-0.5           | **0.049** (too low!) |
+| D_B Loss        | ~0.3-0.5           | **0.051** (too low!) |
+| Output Variance | > 0.4              | **< 0.1**            |
 
 ### What the Numbers Mean
 
@@ -397,7 +397,7 @@ fake = torch.full((batch, 1, 15, 15), 0.1)    # Fake: 0.1
 class ReplayBuffer:
     def __init__(self, max_size=50):
         self.buffer = []
-    
+
     def push_and_pop(self, new_images):
         # 50% chance: return buffered image instead of new one
         # This prevents discriminator from forgetting older examples
@@ -418,13 +418,13 @@ torch.nn.utils.clip_grad_norm_(G_B2A.parameters(), max_norm=1.0)
 
 ## 6.4 Results: Mode Collapse Resolved
 
-| Metric | Before (Collapsed) | After (Stable) | Improvement |
-|--------|-------------------|----------------|-------------|
-| SSIM | 0.037 | **0.886** | **23.9× better** |
-| PSNR | 5.4 dB | **25.45 dB** | **+20.05 dB** |
-| D_A Loss | 0.049 | 0.134 | Healthy range |
-| D_B Loss | 0.051 | 0.142 | Healthy range |
-| Output Std | < 0.1 | 0.54 | Healthy variance |
+| Metric     | Before (Collapsed) | After (Stable) | Improvement      |
+| ---------- | ------------------ | -------------- | ---------------- |
+| SSIM       | 0.037              | **0.886**      | **23.9× better** |
+| PSNR       | 5.4 dB             | **25.45 dB**   | **+20.05 dB**    |
+| D_A Loss   | 0.049              | 0.134          | Healthy range    |
+| D_B Loss   | 0.051              | 0.142          | Healthy range    |
+| Output Std | < 0.1              | 0.54           | Healthy variance |
 
 ![Training Comparison](figures/publication/fig8_training_comparison.png)
 
@@ -436,18 +436,18 @@ torch.nn.utils.clip_grad_norm_(G_B2A.parameters(), max_norm=1.0)
 
 ## 7.1 Final Hyperparameters
 
-| Parameter | Value | Notes |
-|-----------|-------|-------|
-| **Epochs** | 30 | Sufficient with anti-mode-collapse techniques |
-| **Batch Size** | 4 | Limited by memory |
-| **Generator LR** | 2×10⁻⁴ | TTUR: 2× discriminator LR |
-| **Discriminator LR** | 1×10⁻⁴ | Half of generator LR |
-| **Optimizer** | Adam | β₁=0.5, β₂=0.999 |
-| **LR Decay** | Linear | Start decay at epoch 15 |
-| **λ_cycle** | 10.0 | Cycle consistency weight |
-| **λ_identity** | 5.0 | Identity loss weight |
-| **Replay Buffer** | 50 samples | Per domain |
-| **Label Smoothing** | 0.9/0.1 | Real/fake labels |
+| Parameter            | Value      | Notes                                         |
+| -------------------- | ---------- | --------------------------------------------- |
+| **Epochs**           | 30         | Sufficient with anti-mode-collapse techniques |
+| **Batch Size**       | 4          | Limited by memory                             |
+| **Generator LR**     | 2×10⁻⁴     | TTUR: 2× discriminator LR                     |
+| **Discriminator LR** | 1×10⁻⁴     | Half of generator LR                          |
+| **Optimizer**        | Adam       | β₁=0.5, β₂=0.999                              |
+| **LR Decay**         | Linear     | Start decay at epoch 15                       |
+| **λ_cycle**          | 10.0       | Cycle consistency weight                      |
+| **λ_identity**       | 5.0        | Identity loss weight                          |
+| **Replay Buffer**    | 50 samples | Per domain                                    |
+| **Label Smoothing**  | 0.9/0.1    | Real/fake labels                              |
 
 ## 7.2 Loss Functions
 
@@ -478,6 +478,7 @@ $$\mathcal{L}_G = \mathcal{L}_{GAN} + 10.0 \cdot \mathcal{L}_{cycle} + 5.0 \cdot
 ![Training Losses](figures/publication/fig2_training_losses.png)
 
 **Figure: Training Loss Curves.** The losses show healthy GAN dynamics:
+
 - Generator total loss decreases steadily from 5.3 to 1.4
 - Discriminator losses remain balanced (D_A ≈ D_B ≈ 0.14)
 - Cycle consistency loss converges to ~0.7
@@ -485,25 +486,25 @@ $$\mathcal{L}_G = \mathcal{L}_{GAN} + 10.0 \cdot \mathcal{L}_{cycle} + 5.0 \cdot
 
 ### Loss Trajectory (Selected Epochs)
 
-| Epoch | G_total | G_cycle | G_identity | D_A | D_B |
-|-------|---------|---------|------------|-----|-----|
-| 1 | 5.32 | 3.09 | 1.51 | 0.356 | 0.373 |
-| 5 | 2.20 | 1.23 | 0.56 | 0.166 | 0.167 |
-| 10 | 1.97 | 1.05 | 0.50 | 0.152 | 0.159 |
-| 15 | 1.87 | 0.99 | 0.46 | 0.150 | 0.157 |
-| 20 | 1.77 | 0.92 | 0.43 | 0.154 | 0.161 |
-| 25 | 1.68 | 0.86 | 0.39 | 0.144 | 0.150 |
-| 30 | 1.42 | 0.71 | 0.33 | 0.134 | 0.142 |
+| Epoch | G_total | G_cycle | G_identity | D_A   | D_B   |
+| ----- | ------- | ------- | ---------- | ----- | ----- |
+| 1     | 5.32    | 3.09    | 1.51       | 0.356 | 0.373 |
+| 5     | 2.20    | 1.23    | 0.56       | 0.166 | 0.167 |
+| 10    | 1.97    | 1.05    | 0.50       | 0.152 | 0.159 |
+| 15    | 1.87    | 0.99    | 0.46       | 0.150 | 0.157 |
+| 20    | 1.77    | 0.92    | 0.43       | 0.154 | 0.161 |
+| 25    | 1.68    | 0.86    | 0.39       | 0.144 | 0.150 |
+| 30    | 1.42    | 0.71    | 0.33       | 0.134 | 0.142 |
 
 ## 7.4 Training Time & Hardware
 
-| Property | Value |
-|----------|-------|
-| Device | Apple M-series (MPS backend) |
-| Training Time | ~85 minutes (30 epochs) |
-| Time per Epoch | ~170 seconds |
-| Memory Usage | ~8 GB |
-| Storage (data) | External USB drive |
+| Property       | Value                        |
+| -------------- | ---------------------------- |
+| Device         | Apple M-series (MPS backend) |
+| Training Time  | ~85 minutes (30 epochs)      |
+| Time per Epoch | ~170 seconds                 |
+| Memory Usage   | ~8 GB                        |
+| Storage (data) | External USB drive           |
 
 **Optimization:** Memory caching of slices eliminated USB I/O bottleneck, reducing epoch time from ~30 minutes to ~3 minutes.
 
@@ -520,6 +521,7 @@ We evaluated on **all subjects not used in training**:
 - **Total:** 654 subjects
 
 For each subject, we:
+
 1. Extracted center axial slice (z = depth // 2)
 2. Passed through generator (G_A2B or G_B2A)
 3. Applied cycle reconstruction (G_B2A(G_A2B(x)) or G_A2B(G_B2A(y)))
@@ -558,19 +560,19 @@ $$MAE = \frac{1}{N}\sum_{i=1}^{N}|x_i - y_i|$$
 
 ### Per-Direction Results
 
-| Direction | Subjects | SSIM | PSNR (dB) | MAE | Output Std |
-|-----------|----------|------|-----------|-----|------------|
-| A→B (BraTS→UPenn) | 88 | 0.896 ± 0.013 | 25.69 ± 1.40 | 0.043 ± 0.009 | 0.488 |
-| B→A (UPenn→BraTS) | 566 | 0.885 ± 0.016 | 25.41 ± 1.37 | 0.045 ± 0.010 | 0.549 |
-| **Combined** | **654** | **0.886 ± 0.016** | **25.45 ± 1.37** | **0.045 ± 0.010** | **0.541** |
+| Direction         | Subjects | SSIM              | PSNR (dB)        | MAE               | Output Std |
+| ----------------- | -------- | ----------------- | ---------------- | ----------------- | ---------- |
+| A→B (BraTS→UPenn) | 88       | 0.896 ± 0.013     | 25.69 ± 1.40     | 0.043 ± 0.009     | 0.488      |
+| B→A (UPenn→BraTS) | 566      | 0.885 ± 0.016     | 25.41 ± 1.37     | 0.045 ± 0.010     | 0.549      |
+| **Combined**      | **654**  | **0.886 ± 0.016** | **25.45 ± 1.37** | **0.045 ± 0.010** | **0.541**  |
 
 ### Comparison with Baseline
 
-| Metric | Original (50 epochs, collapsed) | Final (30 epochs, stable) | Improvement |
-|--------|--------------------------------|---------------------------|-------------|
-| SSIM | 0.037 | 0.886 | **23.9×** |
-| PSNR | 5.4 dB | 25.45 dB | **+20.05 dB** |
-| Mode Collapse | Yes | **No** | ✓ Resolved |
+| Metric        | Original (50 epochs, collapsed) | Final (30 epochs, stable) | Improvement   |
+| ------------- | ------------------------------- | ------------------------- | ------------- |
+| SSIM          | 0.037                           | 0.886                     | **23.9×**     |
+| PSNR          | 5.4 dB                          | 25.45 dB                  | **+20.05 dB** |
+| Mode Collapse | Yes                             | **No**                    | ✓ Resolved    |
 
 ![Metrics Distribution](figures/publication/fig12_statistical_analysis.png)
 
@@ -594,45 +596,45 @@ All publication-quality figures are saved in `figures/publication/` in both PDF 
 
 ## 9.1 Architecture Figures
 
-| Figure | Filename | Description |
-|--------|----------|-------------|
-| 1 | `fig1_architecture.png` | Complete CycleGAN architecture with generators, discriminators, and loss flows |
-| 2 | `fig2_generator.png` | Detailed generator architecture showing encoder-residual-decoder structure |
+| Figure | Filename                | Description                                                                    |
+| ------ | ----------------------- | ------------------------------------------------------------------------------ |
+| 1      | `fig1_architecture.png` | Complete CycleGAN architecture with generators, discriminators, and loss flows |
+| 2      | `fig2_generator.png`    | Detailed generator architecture showing encoder-residual-decoder structure     |
 
 ## 9.2 Training Figures
 
-| Figure | Filename | Description |
-|--------|----------|-------------|
-| 3 | `fig2_training_losses.png` | All training losses over 30 epochs |
-| 4 | `fig3_training_curves.png` | Generator vs discriminator dynamics |
-| 5 | `fig5_hyperparameters.png` | Hyperparameter configuration table |
-| 6 | `fig6_techniques.png` | Anti-mode-collapse techniques comparison |
-| 8 | `fig8_training_comparison.png` | Before/after mode collapse comparison |
-| 13 | `fig13_training_progression.png` | Sample quality progression through training |
+| Figure | Filename                         | Description                                 |
+| ------ | -------------------------------- | ------------------------------------------- |
+| 3      | `fig2_training_losses.png`       | All training losses over 30 epochs          |
+| 4      | `fig3_training_curves.png`       | Generator vs discriminator dynamics         |
+| 5      | `fig5_hyperparameters.png`       | Hyperparameter configuration table          |
+| 6      | `fig6_techniques.png`            | Anti-mode-collapse techniques comparison    |
+| 8      | `fig8_training_comparison.png`   | Before/after mode collapse comparison       |
+| 13     | `fig13_training_progression.png` | Sample quality progression through training |
 
 ## 9.3 Dataset Figures
 
-| Figure | Filename | Description |
-|--------|----------|-------------|
-| 4 | `fig4_dataset_stats.png` | BraTS vs UPenn dataset statistics |
-| 5 | `fig5_dataset_distribution.png` | Subject distribution across domains |
-| 7 | `fig7_model_comparison.png` | Model architecture comparison |
+| Figure | Filename                        | Description                         |
+| ------ | ------------------------------- | ----------------------------------- |
+| 4      | `fig4_dataset_stats.png`        | BraTS vs UPenn dataset statistics   |
+| 5      | `fig5_dataset_distribution.png` | Subject distribution across domains |
+| 7      | `fig7_model_comparison.png`     | Model architecture comparison       |
 
 ## 9.4 Results Figures
 
-| Figure | Filename | Description |
-|--------|----------|-------------|
-| 9 | `fig9_metrics_table.png` | Final quantitative metrics table |
-| 10 | `fig10_multimodality_translation.png` | Multi-modality synthesis examples |
-| 11 | `fig11_bidirectional_grid.png` | Bidirectional translation comparison grid |
-| 12 | `fig12_statistical_analysis.png` | SSIM/PSNR distribution analysis |
-| 14 | `fig14_final_summary.png` | Complete results summary |
+| Figure | Filename                              | Description                               |
+| ------ | ------------------------------------- | ----------------------------------------- |
+| 9      | `fig9_metrics_table.png`              | Final quantitative metrics table          |
+| 10     | `fig10_multimodality_translation.png` | Multi-modality synthesis examples         |
+| 11     | `fig11_bidirectional_grid.png`        | Bidirectional translation comparison grid |
+| 12     | `fig12_statistical_analysis.png`      | SSIM/PSNR distribution analysis           |
+| 14     | `fig14_final_summary.png`             | Complete results summary                  |
 
 ## 9.5 Tables
 
-| Table | Filename | Description |
-|-------|----------|-------------|
-| 1 | `table1_configuration.png` | Complete training configuration |
+| Table | Filename                   | Description                     |
+| ----- | -------------------------- | ------------------------------- |
+| 1     | `table1_configuration.png` | Complete training configuration |
 
 ---
 
@@ -706,19 +708,19 @@ This is the script used for final training. Key components:
 # Memory-cached dataset for fast training
 class CachedSliceDataset(Dataset):
     """Pre-loads all slices into RAM to eliminate USB I/O bottleneck"""
-    
+
 # Generator with configurable residual blocks
 class FastGenerator(nn.Module):
     """Encoder-ResBlocks-Decoder architecture"""
-    
+
 # PatchGAN with spectral normalization
 class FastDiscriminator(nn.Module):
     """70×70 receptive field with spectral norm for stability"""
-    
+
 # Experience replay buffer
 class ReplayBuffer:
     """Stores 50 previous samples to prevent discriminator forgetting"""
-    
+
 # Training loop with TTUR and gradient clipping
 def train(args):
     # Anti-mode-collapse techniques implemented here
@@ -732,12 +734,12 @@ Generates all publication figures:
 # Style configuration
 def setup_publication_style():
     """Times New Roman, 300 DPI, seaborn whitegrid"""
-    
+
 # Architecture diagrams
 def create_architecture_diagram()
 def create_generator_diagram()
 
-# Training visualizations  
+# Training visualizations
 def create_training_loss_figure()
 def create_discriminator_balance_figure()
 
@@ -794,14 +796,14 @@ with torch.no_grad():
 
 ## 11.3 Future Directions
 
-| Direction | Description | Potential Impact |
-|-----------|-------------|------------------|
-| **3D CycleGAN** | Extend to volumetric synthesis using 3D convolutions | Better inter-slice consistency |
-| **Attention Mechanisms** | Add self-attention for long-range dependencies | Improved structural coherence |
-| **Perceptual Loss** | Incorporate VGG-based feature matching | More visually realistic outputs |
-| **Multi-Domain** | StarGAN-style multi-domain translation | Support > 2 institutions |
-| **Clinical Validation** | Radiologist evaluation of synthesized images | Clinical applicability |
-| **External Validation** | Test on datasets from other institutions | Generalization assessment |
+| Direction                | Description                                          | Potential Impact                |
+| ------------------------ | ---------------------------------------------------- | ------------------------------- |
+| **3D CycleGAN**          | Extend to volumetric synthesis using 3D convolutions | Better inter-slice consistency  |
+| **Attention Mechanisms** | Add self-attention for long-range dependencies       | Improved structural coherence   |
+| **Perceptual Loss**      | Incorporate VGG-based feature matching               | More visually realistic outputs |
+| **Multi-Domain**         | StarGAN-style multi-domain translation               | Support > 2 institutions        |
+| **Clinical Validation**  | Radiologist evaluation of synthesized images         | Clinical applicability          |
+| **External Validation**  | Test on datasets from other institutions             | Generalization assessment       |
 
 ## 11.4 Recommendations
 
@@ -873,18 +875,18 @@ python scripts/02_model_development_pipeline/train_cyclegan_fast.py \
 
 ## C. Loss History (Final 10 Epochs)
 
-| Epoch | G_total | G_GAN | G_cycle | G_identity | D_A | D_B |
-|-------|---------|-------|---------|------------|-----|-----|
-| 21 | 1.753 | 0.425 | 0.908 | 0.420 | 0.147 | 0.148 |
-| 22 | 1.753 | 0.428 | 0.910 | 0.415 | 0.149 | 0.159 |
-| 23 | 1.749 | 0.422 | 0.910 | 0.417 | 0.144 | 0.156 |
-| 24 | 1.707 | 0.422 | 0.879 | 0.405 | 0.151 | 0.152 |
-| 25 | 1.682 | 0.430 | 0.862 | 0.390 | 0.146 | 0.150 |
-| 26 | 1.705 | 0.424 | 0.884 | 0.397 | 0.144 | 0.155 |
-| 27 | 1.597 | 0.407 | 0.817 | 0.373 | 0.135 | 0.141 |
-| 28 | 1.538 | 0.388 | 0.789 | 0.360 | 0.137 | 0.141 |
-| 29 | 1.493 | 0.388 | 0.760 | 0.345 | 0.133 | 0.142 |
-| 30 | 1.416 | 0.377 | 0.711 | 0.327 | 0.134 | 0.142 |
+| Epoch | G_total | G_GAN | G_cycle | G_identity | D_A   | D_B   |
+| ----- | ------- | ----- | ------- | ---------- | ----- | ----- |
+| 21    | 1.753   | 0.425 | 0.908   | 0.420      | 0.147 | 0.148 |
+| 22    | 1.753   | 0.428 | 0.910   | 0.415      | 0.149 | 0.159 |
+| 23    | 1.749   | 0.422 | 0.910   | 0.417      | 0.144 | 0.156 |
+| 24    | 1.707   | 0.422 | 0.879   | 0.405      | 0.151 | 0.152 |
+| 25    | 1.682   | 0.430 | 0.862   | 0.390      | 0.146 | 0.150 |
+| 26    | 1.705   | 0.424 | 0.884   | 0.397      | 0.144 | 0.155 |
+| 27    | 1.597   | 0.407 | 0.817   | 0.373      | 0.135 | 0.141 |
+| 28    | 1.538   | 0.388 | 0.789   | 0.360      | 0.137 | 0.141 |
+| 29    | 1.493   | 0.388 | 0.760   | 0.345      | 0.133 | 0.142 |
+| 30    | 1.416   | 0.377 | 0.711   | 0.327      | 0.134 | 0.142 |
 
 ## D. References
 
@@ -902,7 +904,7 @@ python scripts/02_model_development_pipeline/train_cyclegan_fast.py \
 
 **End of Research Report**
 
-*Generated: December 2025*  
-*Total Pages: ~25*  
-*Total Figures: 17*  
-*Total Test Subjects: 654*
+_Generated: December 2025_  
+_Total Pages: ~25_  
+_Total Figures: 17_  
+_Total Test Subjects: 654_
