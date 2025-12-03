@@ -46,7 +46,6 @@ logs/
 preprocessed/
 preprocessed_registered/
 samples/
-figures/
 
 # MRI data
 *.nii.gz
