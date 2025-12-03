@@ -3,6 +3,10 @@ import json
 import logging
 import subprocess
 import sys
+import importlib.util
+import time
+import datetime
+import os
 from pathlib import Path
 
 # Use PATHS for defaults
@@ -11,6 +15,17 @@ PREP_DIR = HERE.parent / '01_data_preparation_pipeline'
 sys.path.insert(0, str(PREP_DIR))
 import neuroscope_preprocessing_config as npc  # type: ignore
 PATHS = npc.PATHS
+
+# Print banner to make it obvious the script is starting
+print("\n" + "="*80)
+print(f"NEUROSCOPE TRAINING PIPELINE - STARTED AT {datetime.datetime.now()}")
+print("="*80 + "\n")
+
+# Check Python interpreter to help with debugging
+print(f"Using Python interpreter: {sys.executable}")
+print(f"Python version: {sys.version}")
+print(f"Working directory: {os.getcwd()}")
+print()
 
 
 STAGES = [
@@ -51,18 +66,45 @@ STAGES = [
 
 
 def setup_logging(verbose: bool):
-    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO, format='[%(levelname)s] %(message)s')
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.INFO,
+        format='[%(asctime)s] [%(levelname)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
 
 def run_py(script_path: Path, args: list) -> int:
     cmd = [sys.executable, str(script_path)] + list(args)
-    logging.info('→ %s', ' '.join(str(x) for x in cmd))
-    res = subprocess.run(cmd, capture_output=True, text=True)
-    if res.returncode != 0:
-        logging.error('stderr: %s', res.stderr[-600:])
-    else:
-        logging.debug(res.stdout[-600:])
-    return res.returncode
+    logging.info('Executing command: %s', ' '.join(str(x) for x in cmd))
+    
+    try:
+        # Run the process and capture output
+        res = subprocess.run(
+            cmd, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False  # Don't raise exception on non-zero exit
+        )
+        
+        # Log stdout
+        if res.stdout:
+            for line in res.stdout.split('\n'):
+                if line.strip():
+                    logging.info('STDOUT: %s', line.strip())
+        
+        if res.returncode != 0:
+            logging.error('Command failed with exit code: %d', res.returncode)
+            if res.stderr:
+                logging.error('Error details:\n%s', res.stderr)
+        else:
+            logging.info('Command completed successfully')
+            
+        return res.returncode
+        
+    except Exception as e:
+        logging.error('Failed to run command: %s', e)
+        return 1
 
 
 def latest_checkpoint(ckpt_dir: Path, prefix: str = 'G_A2B_', suffix: str = '.pth') -> Path | None:
@@ -85,6 +127,25 @@ def parse_args():
 def main():
     args = parse_args()
     setup_logging(args.verbose)
+    
+    # Use virtual environment python if available
+    venv_path = Path("/Volumes/usb drive/neuroscope/.venv/bin/python")
+    if venv_path.exists():
+        logging.info(f"Using virtual environment Python: {venv_path}")
+        sys.executable = str(venv_path)
+        
+    # Check for required dependencies
+    required_packages = ['tensorboard', 'torch', 'seaborn', 'matplotlib']
+    missing_packages = []
+    
+    for package in required_packages:
+        if importlib.util.find_spec(package) is None:
+            missing_packages.append(package)
+            
+    if missing_packages:
+        logging.error(f"Missing required packages: {', '.join(missing_packages)}")
+        logging.error(f"Please install them using: pip install {' '.join(missing_packages)}")
+        return 1
 
     # 1) Prepare manifest
     stage = STAGES[0]

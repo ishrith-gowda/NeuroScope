@@ -172,7 +172,41 @@ def train(args, device: torch.device):
     configure_logging()
     logging.getLogger('torch').setLevel(logging.INFO)
 
+    print("\n" + "="*80)
+    print("CYCLEGAN TRAINING FUNCTION")
+    print("="*80 + "\n")
+    
+    # Print start time for tracking
+    start_time = datetime.now()
+    print(f"Starting training at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Print every argument for debugging
+    print("Arguments received:")
+    for attr in dir(args):
+        if not attr.startswith('_'):  # Skip private attributes
+            try:
+                value = getattr(args, attr)
+                if not callable(value):  # Skip methods
+                    print(f"  {attr}: {value}")
+            except Exception as e:
+                print(f"  {attr}: Error accessing value: {e}")
+    print()
+    
+    # Set more conservative batch size if using MPS backend
+    if device.type == 'mps':
+        original_batch_size = args.batch_size
+        if args.batch_size > 4:
+            args.batch_size = 4
+            print(f"WARNING: Reduced batch size from {original_batch_size} to {args.batch_size} for MPS backend")
+    
+    # Print memory stats if available
+    if hasattr(torch, 'cuda') and torch.cuda.is_available():
+        print(f"CUDA Memory allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
+        print(f"CUDA Memory reserved: {torch.cuda.memory_reserved() / 1e9:.2f} GB")
+    print()
+
     set_seed(args.seed)
+    print(f"Random seed set to: {args.seed}")
     logging.info("Starting CycleGAN training (domains: A=brats, B=upenn)")
     tb_writer = SummaryWriter(log_dir=os.path.join(args.run_dir, datetime.now().strftime('%Y%m%d_%H%M%S')))
 

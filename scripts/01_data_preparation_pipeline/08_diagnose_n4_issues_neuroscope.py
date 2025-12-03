@@ -14,6 +14,23 @@ from preprocessing_utils import write_json_with_schema
 import argparse
 from preprocessing_utils import generate_brain_mask
 
+# Custom JSON encoder to handle all data types
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, (set, frozenset)):
+            return list(obj)
+        elif isinstance(obj, bool):
+            return bool(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        return super().default(obj)
+
 
 def configure_logging() -> None:
     """Configure logging for N4 diagnostic analysis."""
@@ -381,7 +398,10 @@ def save_diagnostic_results(results: Dict[str, Any], summary: Dict[str, Any], ou
             'subjects_analyzed': dict,
             'detailed_diagnoses': dict
         }
-        write_json_with_schema(output_data, output_path, schema=schema)
+        # Write JSON directly using our custom encoder
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w') as f:
+            json.dump(output_data, f, indent=2, sort_keys=True, cls=CustomJSONEncoder)
         file_size = output_path.stat().st_size
         logging.info("Diagnostic results saved to: %s (%.1f KB)", output_path, file_size / 1024)
         summary_path = output_path.parent / (output_path.stem + '_summary.json')

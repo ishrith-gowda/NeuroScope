@@ -1,0 +1,2844 @@
+{
+  "splits": {
+    "train": {
+      "brats": [
+        {
+          "subject": "TCGA-02-0009",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0009"
+        },
+        {
+          "subject": "TCGA-02-0011",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0011"
+        },
+        {
+          "subject": "TCGA-02-0034",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0034"
+        },
+        {
+          "subject": "TCGA-02-0037",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0037"
+        },
+        {
+          "subject": "TCGA-02-0046",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0046"
+        },
+        {
+          "subject": "TCGA-02-0047",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0047"
+        },
+        {
+          "subject": "TCGA-02-0054",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0054"
+        },
+        {
+          "subject": "TCGA-02-0059",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0059"
+        },
+        {
+          "subject": "TCGA-02-0068",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0068"
+        },
+        {
+          "subject": "TCGA-02-0075",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0075"
+        },
+        {
+          "subject": "TCGA-02-0085",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0085"
+        },
+        {
+          "subject": "TCGA-02-0087",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0087"
+        },
+        {
+          "subject": "TCGA-02-0102",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0102"
+        },
+        {
+          "subject": "TCGA-02-0116",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0116"
+        },
+        {
+          "subject": "TCGA-06-0122",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0122"
+        },
+        {
+          "subject": "TCGA-06-0130",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0130"
+        },
+        {
+          "subject": "TCGA-06-0138",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0138"
+        },
+        {
+          "subject": "TCGA-06-0149",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0149"
+        },
+        {
+          "subject": "TCGA-06-0158",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0158"
+        },
+        {
+          "subject": "TCGA-06-0162",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0162"
+        },
+        {
+          "subject": "TCGA-06-0164",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0164"
+        },
+        {
+          "subject": "TCGA-06-0177",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0177"
+        },
+        {
+          "subject": "TCGA-06-0179",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0179"
+        },
+        {
+          "subject": "TCGA-06-0182",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0182"
+        },
+        {
+          "subject": "TCGA-06-0184",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0184"
+        },
+        {
+          "subject": "TCGA-06-0185",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0185"
+        },
+        {
+          "subject": "TCGA-06-0190",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0190"
+        },
+        {
+          "subject": "TCGA-06-0192",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0192"
+        },
+        {
+          "subject": "TCGA-06-0238",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0238"
+        },
+        {
+          "subject": "TCGA-06-0240",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0240"
+        },
+        {
+          "subject": "TCGA-06-0644",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0644"
+        },
+        {
+          "subject": "TCGA-06-0646",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0646"
+        },
+        {
+          "subject": "TCGA-06-1084",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-1084"
+        },
+        {
+          "subject": "TCGA-06-2570",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-2570"
+        },
+        {
+          "subject": "TCGA-06-6389",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-6389"
+        },
+        {
+          "subject": "TCGA-08-0355",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0355"
+        },
+        {
+          "subject": "TCGA-08-0359",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0359"
+        },
+        {
+          "subject": "TCGA-08-0360",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0360"
+        },
+        {
+          "subject": "TCGA-08-0385",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0385"
+        },
+        {
+          "subject": "TCGA-08-0389",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0389"
+        },
+        {
+          "subject": "TCGA-08-0390",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0390"
+        },
+        {
+          "subject": "TCGA-08-0392",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0392"
+        },
+        {
+          "subject": "TCGA-08-0512",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0512"
+        },
+        {
+          "subject": "TCGA-08-0520",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0520"
+        },
+        {
+          "subject": "TCGA-08-0522",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0522"
+        },
+        {
+          "subject": "TCGA-12-0616",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-12-0616"
+        },
+        {
+          "subject": "TCGA-12-0829",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-12-0829"
+        },
+        {
+          "subject": "TCGA-12-1098",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-12-1098"
+        },
+        {
+          "subject": "TCGA-12-1601",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-12-1601"
+        },
+        {
+          "subject": "TCGA-14-1825",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-14-1825"
+        },
+        {
+          "subject": "TCGA-14-3477",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-14-3477"
+        },
+        {
+          "subject": "TCGA-19-0963",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-0963"
+        },
+        {
+          "subject": "TCGA-19-2624",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-2624"
+        },
+        {
+          "subject": "TCGA-19-2631",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-2631"
+        },
+        {
+          "subject": "TCGA-19-5951",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-5951"
+        },
+        {
+          "subject": "TCGA-19-5954",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-5954"
+        },
+        {
+          "subject": "TCGA-19-5960",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-19-5960"
+        },
+        {
+          "subject": "TCGA-76-4932",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-4932"
+        },
+        {
+          "subject": "TCGA-76-4934",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-4934"
+        },
+        {
+          "subject": "TCGA-76-6280",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6280"
+        },
+        {
+          "subject": "TCGA-76-6656",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6656"
+        },
+        {
+          "subject": "TCGA-76-6661",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6661"
+        }
+      ],
+      "upenn": [
+        {
+          "subject": "UPENN-GBM-00002_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00002_11"
+        },
+        {
+          "subject": "UPENN-GBM-00005_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00005_11"
+        },
+        {
+          "subject": "UPENN-GBM-00006_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00006_11"
+        },
+        {
+          "subject": "UPENN-GBM-00008_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00008_11"
+        },
+        {
+          "subject": "UPENN-GBM-00009_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00009_11"
+        },
+        {
+          "subject": "UPENN-GBM-00010_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00010_11"
+        },
+        {
+          "subject": "UPENN-GBM-00014_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00014_11"
+        },
+        {
+          "subject": "UPENN-GBM-00015_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00015_11"
+        },
+        {
+          "subject": "UPENN-GBM-00016_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00016_11"
+        },
+        {
+          "subject": "UPENN-GBM-00018_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00018_11"
+        },
+        {
+          "subject": "UPENN-GBM-00019_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00019_11"
+        },
+        {
+          "subject": "UPENN-GBM-00021_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00021_11"
+        },
+        {
+          "subject": "UPENN-GBM-00022_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00022_11"
+        },
+        {
+          "subject": "UPENN-GBM-00024_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00024_11"
+        },
+        {
+          "subject": "UPENN-GBM-00025_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00025_11"
+        },
+        {
+          "subject": "UPENN-GBM-00029_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00029_11"
+        },
+        {
+          "subject": "UPENN-GBM-00030_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00030_11"
+        },
+        {
+          "subject": "UPENN-GBM-00032_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00032_11"
+        },
+        {
+          "subject": "UPENN-GBM-00034_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00034_11"
+        },
+        {
+          "subject": "UPENN-GBM-00036_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00036_11"
+        },
+        {
+          "subject": "UPENN-GBM-00038_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00038_11"
+        },
+        {
+          "subject": "UPENN-GBM-00039_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00039_11"
+        },
+        {
+          "subject": "UPENN-GBM-00040_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00040_11"
+        },
+        {
+          "subject": "UPENN-GBM-00041_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00041_11"
+        },
+        {
+          "subject": "UPENN-GBM-00044_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00044_11"
+        },
+        {
+          "subject": "UPENN-GBM-00045_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00045_21"
+        },
+        {
+          "subject": "UPENN-GBM-00047_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00047_11"
+        },
+        {
+          "subject": "UPENN-GBM-00048_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00048_11"
+        },
+        {
+          "subject": "UPENN-GBM-00049_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00049_11"
+        },
+        {
+          "subject": "UPENN-GBM-00050_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00050_11"
+        },
+        {
+          "subject": "UPENN-GBM-00051_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00051_11"
+        },
+        {
+          "subject": "UPENN-GBM-00051_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00051_21"
+        },
+        {
+          "subject": "UPENN-GBM-00054_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00054_11"
+        },
+        {
+          "subject": "UPENN-GBM-00055_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00055_21"
+        },
+        {
+          "subject": "UPENN-GBM-00057_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00057_11"
+        },
+        {
+          "subject": "UPENN-GBM-00058_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00058_11"
+        },
+        {
+          "subject": "UPENN-GBM-00059_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00059_11"
+        },
+        {
+          "subject": "UPENN-GBM-00061_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00061_11"
+        },
+        {
+          "subject": "UPENN-GBM-00063_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00063_11"
+        },
+        {
+          "subject": "UPENN-GBM-00064_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00064_11"
+        },
+        {
+          "subject": "UPENN-GBM-00067_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00067_11"
+        },
+        {
+          "subject": "UPENN-GBM-00069_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00069_11"
+        },
+        {
+          "subject": "UPENN-GBM-00070_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00070_11"
+        },
+        {
+          "subject": "UPENN-GBM-00071_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00071_11"
+        },
+        {
+          "subject": "UPENN-GBM-00073_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00073_11"
+        },
+        {
+          "subject": "UPENN-GBM-00074_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00074_11"
+        },
+        {
+          "subject": "UPENN-GBM-00077_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00077_11"
+        },
+        {
+          "subject": "UPENN-GBM-00078_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00078_11"
+        },
+        {
+          "subject": "UPENN-GBM-00079_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00079_11"
+        },
+        {
+          "subject": "UPENN-GBM-00080_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00080_11"
+        },
+        {
+          "subject": "UPENN-GBM-00083_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00083_11"
+        },
+        {
+          "subject": "UPENN-GBM-00084_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00084_21"
+        },
+        {
+          "subject": "UPENN-GBM-00086_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00086_11"
+        },
+        {
+          "subject": "UPENN-GBM-00088_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00088_21"
+        },
+        {
+          "subject": "UPENN-GBM-00089_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00089_11"
+        },
+        {
+          "subject": "UPENN-GBM-00090_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00090_11"
+        },
+        {
+          "subject": "UPENN-GBM-00092_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00092_11"
+        },
+        {
+          "subject": "UPENN-GBM-00093_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00093_11"
+        },
+        {
+          "subject": "UPENN-GBM-00096_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00096_11"
+        },
+        {
+          "subject": "UPENN-GBM-00097_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00097_11"
+        },
+        {
+          "subject": "UPENN-GBM-00098_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00098_11"
+        },
+        {
+          "subject": "UPENN-GBM-00100_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00100_11"
+        },
+        {
+          "subject": "UPENN-GBM-00101_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00101_11"
+        },
+        {
+          "subject": "UPENN-GBM-00104_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00104_11"
+        },
+        {
+          "subject": "UPENN-GBM-00107_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00107_11"
+        },
+        {
+          "subject": "UPENN-GBM-00109_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00109_11"
+        },
+        {
+          "subject": "UPENN-GBM-00110_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00110_11"
+        },
+        {
+          "subject": "UPENN-GBM-00111_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00111_11"
+        },
+        {
+          "subject": "UPENN-GBM-00113_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00113_11"
+        },
+        {
+          "subject": "UPENN-GBM-00114_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00114_11"
+        },
+        {
+          "subject": "UPENN-GBM-00115_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00115_11"
+        },
+        {
+          "subject": "UPENN-GBM-00120_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00120_11"
+        },
+        {
+          "subject": "UPENN-GBM-00121_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00121_11"
+        },
+        {
+          "subject": "UPENN-GBM-00123_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00123_11"
+        },
+        {
+          "subject": "UPENN-GBM-00124_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00124_11"
+        },
+        {
+          "subject": "UPENN-GBM-00127_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00127_11"
+        },
+        {
+          "subject": "UPENN-GBM-00128_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00128_11"
+        },
+        {
+          "subject": "UPENN-GBM-00128_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00128_21"
+        },
+        {
+          "subject": "UPENN-GBM-00129_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00129_11"
+        },
+        {
+          "subject": "UPENN-GBM-00130_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00130_21"
+        },
+        {
+          "subject": "UPENN-GBM-00131_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00131_11"
+        },
+        {
+          "subject": "UPENN-GBM-00133_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00133_21"
+        },
+        {
+          "subject": "UPENN-GBM-00134_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00134_11"
+        },
+        {
+          "subject": "UPENN-GBM-00134_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00134_21"
+        },
+        {
+          "subject": "UPENN-GBM-00135_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00135_11"
+        },
+        {
+          "subject": "UPENN-GBM-00137_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00137_11"
+        },
+        {
+          "subject": "UPENN-GBM-00138_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00138_11"
+        },
+        {
+          "subject": "UPENN-GBM-00139_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00139_11"
+        },
+        {
+          "subject": "UPENN-GBM-00140_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00140_11"
+        },
+        {
+          "subject": "UPENN-GBM-00141_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00141_11"
+        },
+        {
+          "subject": "UPENN-GBM-00141_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00141_21"
+        },
+        {
+          "subject": "UPENN-GBM-00145_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00145_11"
+        },
+        {
+          "subject": "UPENN-GBM-00146_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00146_11"
+        },
+        {
+          "subject": "UPENN-GBM-00149_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00149_11"
+        },
+        {
+          "subject": "UPENN-GBM-00150_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00150_21"
+        },
+        {
+          "subject": "UPENN-GBM-00151_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00151_11"
+        },
+        {
+          "subject": "UPENN-GBM-00154_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00154_11"
+        },
+        {
+          "subject": "UPENN-GBM-00156_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00156_11"
+        },
+        {
+          "subject": "UPENN-GBM-00158_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00158_11"
+        },
+        {
+          "subject": "UPENN-GBM-00159_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00159_11"
+        },
+        {
+          "subject": "UPENN-GBM-00160_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00160_11"
+        },
+        {
+          "subject": "UPENN-GBM-00160_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00160_21"
+        },
+        {
+          "subject": "UPENN-GBM-00162_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00162_11"
+        },
+        {
+          "subject": "UPENN-GBM-00164_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00164_11"
+        },
+        {
+          "subject": "UPENN-GBM-00165_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00165_11"
+        },
+        {
+          "subject": "UPENN-GBM-00166_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00166_11"
+        },
+        {
+          "subject": "UPENN-GBM-00168_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00168_11"
+        },
+        {
+          "subject": "UPENN-GBM-00169_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00169_11"
+        },
+        {
+          "subject": "UPENN-GBM-00171_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00171_11"
+        },
+        {
+          "subject": "UPENN-GBM-00172_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00172_11"
+        },
+        {
+          "subject": "UPENN-GBM-00174_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00174_11"
+        },
+        {
+          "subject": "UPENN-GBM-00176_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00176_11"
+        },
+        {
+          "subject": "UPENN-GBM-00178_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00178_11"
+        },
+        {
+          "subject": "UPENN-GBM-00179_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00179_11"
+        },
+        {
+          "subject": "UPENN-GBM-00181_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00181_11"
+        },
+        {
+          "subject": "UPENN-GBM-00183_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00183_21"
+        },
+        {
+          "subject": "UPENN-GBM-00185_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00185_11"
+        },
+        {
+          "subject": "UPENN-GBM-00186_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00186_11"
+        },
+        {
+          "subject": "UPENN-GBM-00187_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00187_11"
+        },
+        {
+          "subject": "UPENN-GBM-00188_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00188_11"
+        },
+        {
+          "subject": "UPENN-GBM-00189_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00189_11"
+        },
+        {
+          "subject": "UPENN-GBM-00191_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00191_11"
+        },
+        {
+          "subject": "UPENN-GBM-00193_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00193_11"
+        },
+        {
+          "subject": "UPENN-GBM-00196_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00196_11"
+        },
+        {
+          "subject": "UPENN-GBM-00197_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00197_11"
+        },
+        {
+          "subject": "UPENN-GBM-00198_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00198_11"
+        },
+        {
+          "subject": "UPENN-GBM-00199_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00199_11"
+        },
+        {
+          "subject": "UPENN-GBM-00203_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00203_11"
+        },
+        {
+          "subject": "UPENN-GBM-00204_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00204_11"
+        },
+        {
+          "subject": "UPENN-GBM-00206_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00206_11"
+        },
+        {
+          "subject": "UPENN-GBM-00207_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00207_11"
+        },
+        {
+          "subject": "UPENN-GBM-00209_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00209_11"
+        },
+        {
+          "subject": "UPENN-GBM-00212_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00212_11"
+        },
+        {
+          "subject": "UPENN-GBM-00213_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00213_11"
+        },
+        {
+          "subject": "UPENN-GBM-00214_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00214_11"
+        },
+        {
+          "subject": "UPENN-GBM-00216_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00216_11"
+        },
+        {
+          "subject": "UPENN-GBM-00217_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00217_11"
+        },
+        {
+          "subject": "UPENN-GBM-00218_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00218_11"
+        },
+        {
+          "subject": "UPENN-GBM-00219_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00219_11"
+        },
+        {
+          "subject": "UPENN-GBM-00219_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00219_21"
+        },
+        {
+          "subject": "UPENN-GBM-00220_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00220_11"
+        },
+        {
+          "subject": "UPENN-GBM-00223_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00223_11"
+        },
+        {
+          "subject": "UPENN-GBM-00224_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00224_11"
+        },
+        {
+          "subject": "UPENN-GBM-00227_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00227_11"
+        },
+        {
+          "subject": "UPENN-GBM-00229_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00229_11"
+        },
+        {
+          "subject": "UPENN-GBM-00232_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00232_11"
+        },
+        {
+          "subject": "UPENN-GBM-00234_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00234_11"
+        },
+        {
+          "subject": "UPENN-GBM-00236_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00236_11"
+        },
+        {
+          "subject": "UPENN-GBM-00237_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00237_11"
+        },
+        {
+          "subject": "UPENN-GBM-00238_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00238_11"
+        },
+        {
+          "subject": "UPENN-GBM-00239_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00239_11"
+        },
+        {
+          "subject": "UPENN-GBM-00241_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00241_11"
+        },
+        {
+          "subject": "UPENN-GBM-00242_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00242_11"
+        },
+        {
+          "subject": "UPENN-GBM-00243_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00243_11"
+        },
+        {
+          "subject": "UPENN-GBM-00248_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00248_11"
+        },
+        {
+          "subject": "UPENN-GBM-00251_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00251_11"
+        },
+        {
+          "subject": "UPENN-GBM-00253_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00253_11"
+        },
+        {
+          "subject": "UPENN-GBM-00255_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00255_11"
+        },
+        {
+          "subject": "UPENN-GBM-00256_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00256_11"
+        },
+        {
+          "subject": "UPENN-GBM-00258_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00258_11"
+        },
+        {
+          "subject": "UPENN-GBM-00262_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00262_11"
+        },
+        {
+          "subject": "UPENN-GBM-00263_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00263_11"
+        },
+        {
+          "subject": "UPENN-GBM-00265_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00265_11"
+        },
+        {
+          "subject": "UPENN-GBM-00266_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00266_11"
+        },
+        {
+          "subject": "UPENN-GBM-00267_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00267_11"
+        },
+        {
+          "subject": "UPENN-GBM-00267_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00267_21"
+        },
+        {
+          "subject": "UPENN-GBM-00268_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00268_11"
+        },
+        {
+          "subject": "UPENN-GBM-00269_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00269_11"
+        },
+        {
+          "subject": "UPENN-GBM-00272_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00272_11"
+        },
+        {
+          "subject": "UPENN-GBM-00273_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00273_11"
+        },
+        {
+          "subject": "UPENN-GBM-00277_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00277_11"
+        },
+        {
+          "subject": "UPENN-GBM-00278_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00278_11"
+        },
+        {
+          "subject": "UPENN-GBM-00279_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00279_11"
+        },
+        {
+          "subject": "UPENN-GBM-00280_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00280_21"
+        },
+        {
+          "subject": "UPENN-GBM-00281_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00281_11"
+        },
+        {
+          "subject": "UPENN-GBM-00282_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00282_11"
+        },
+        {
+          "subject": "UPENN-GBM-00285_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00285_11"
+        },
+        {
+          "subject": "UPENN-GBM-00285_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00285_21"
+        },
+        {
+          "subject": "UPENN-GBM-00286_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00286_11"
+        },
+        {
+          "subject": "UPENN-GBM-00288_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00288_11"
+        },
+        {
+          "subject": "UPENN-GBM-00289_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00289_11"
+        },
+        {
+          "subject": "UPENN-GBM-00290_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00290_11"
+        },
+        {
+          "subject": "UPENN-GBM-00291_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00291_11"
+        },
+        {
+          "subject": "UPENN-GBM-00294_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00294_11"
+        },
+        {
+          "subject": "UPENN-GBM-00296_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00296_11"
+        },
+        {
+          "subject": "UPENN-GBM-00298_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00298_11"
+        },
+        {
+          "subject": "UPENN-GBM-00299_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00299_11"
+        },
+        {
+          "subject": "UPENN-GBM-00301_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00301_11"
+        },
+        {
+          "subject": "UPENN-GBM-00301_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00301_21"
+        },
+        {
+          "subject": "UPENN-GBM-00303_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00303_11"
+        },
+        {
+          "subject": "UPENN-GBM-00305_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00305_11"
+        },
+        {
+          "subject": "UPENN-GBM-00306_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00306_11"
+        },
+        {
+          "subject": "UPENN-GBM-00307_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00307_11"
+        },
+        {
+          "subject": "UPENN-GBM-00307_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00307_21"
+        },
+        {
+          "subject": "UPENN-GBM-00308_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00308_11"
+        },
+        {
+          "subject": "UPENN-GBM-00309_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00309_11"
+        },
+        {
+          "subject": "UPENN-GBM-00311_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00311_11"
+        },
+        {
+          "subject": "UPENN-GBM-00313_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00313_11"
+        },
+        {
+          "subject": "UPENN-GBM-00316_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00316_11"
+        },
+        {
+          "subject": "UPENN-GBM-00317_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00317_11"
+        },
+        {
+          "subject": "UPENN-GBM-00318_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00318_11"
+        },
+        {
+          "subject": "UPENN-GBM-00322_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00322_11"
+        },
+        {
+          "subject": "UPENN-GBM-00323_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00323_11"
+        },
+        {
+          "subject": "UPENN-GBM-00325_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00325_11"
+        },
+        {
+          "subject": "UPENN-GBM-00326_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00326_11"
+        },
+        {
+          "subject": "UPENN-GBM-00327_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00327_11"
+        },
+        {
+          "subject": "UPENN-GBM-00332_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00332_11"
+        },
+        {
+          "subject": "UPENN-GBM-00333_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00333_11"
+        },
+        {
+          "subject": "UPENN-GBM-00337_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00337_11"
+        },
+        {
+          "subject": "UPENN-GBM-00339_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00339_11"
+        },
+        {
+          "subject": "UPENN-GBM-00340_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00340_11"
+        },
+        {
+          "subject": "UPENN-GBM-00342_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00342_11"
+        },
+        {
+          "subject": "UPENN-GBM-00343_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00343_11"
+        },
+        {
+          "subject": "UPENN-GBM-00344_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00344_21"
+        },
+        {
+          "subject": "UPENN-GBM-00347_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00347_11"
+        },
+        {
+          "subject": "UPENN-GBM-00348_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00348_11"
+        },
+        {
+          "subject": "UPENN-GBM-00349_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00349_11"
+        },
+        {
+          "subject": "UPENN-GBM-00353_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00353_21"
+        },
+        {
+          "subject": "UPENN-GBM-00354_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00354_11"
+        },
+        {
+          "subject": "UPENN-GBM-00354_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00354_21"
+        },
+        {
+          "subject": "UPENN-GBM-00356_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00356_11"
+        },
+        {
+          "subject": "UPENN-GBM-00357_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00357_11"
+        },
+        {
+          "subject": "UPENN-GBM-00358_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00358_11"
+        },
+        {
+          "subject": "UPENN-GBM-00359_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00359_11"
+        },
+        {
+          "subject": "UPENN-GBM-00360_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00360_11"
+        },
+        {
+          "subject": "UPENN-GBM-00362_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00362_11"
+        },
+        {
+          "subject": "UPENN-GBM-00363_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00363_11"
+        },
+        {
+          "subject": "UPENN-GBM-00364_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00364_11"
+        },
+        {
+          "subject": "UPENN-GBM-00366_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00366_11"
+        },
+        {
+          "subject": "UPENN-GBM-00367_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00367_11"
+        },
+        {
+          "subject": "UPENN-GBM-00369_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00369_11"
+        },
+        {
+          "subject": "UPENN-GBM-00372_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00372_11"
+        },
+        {
+          "subject": "UPENN-GBM-00373_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00373_11"
+        },
+        {
+          "subject": "UPENN-GBM-00374_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00374_11"
+        },
+        {
+          "subject": "UPENN-GBM-00376_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00376_11"
+        },
+        {
+          "subject": "UPENN-GBM-00377_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00377_11"
+        },
+        {
+          "subject": "UPENN-GBM-00378_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00378_11"
+        },
+        {
+          "subject": "UPENN-GBM-00379_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00379_11"
+        },
+        {
+          "subject": "UPENN-GBM-00380_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00380_11"
+        },
+        {
+          "subject": "UPENN-GBM-00381_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00381_11"
+        },
+        {
+          "subject": "UPENN-GBM-00384_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00384_11"
+        },
+        {
+          "subject": "UPENN-GBM-00385_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00385_11"
+        },
+        {
+          "subject": "UPENN-GBM-00387_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00387_11"
+        },
+        {
+          "subject": "UPENN-GBM-00388_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00388_11"
+        },
+        {
+          "subject": "UPENN-GBM-00390_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00390_11"
+        },
+        {
+          "subject": "UPENN-GBM-00391_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00391_11"
+        },
+        {
+          "subject": "UPENN-GBM-00393_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00393_11"
+        },
+        {
+          "subject": "UPENN-GBM-00394_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00394_11"
+        },
+        {
+          "subject": "UPENN-GBM-00395_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00395_11"
+        },
+        {
+          "subject": "UPENN-GBM-00397_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00397_11"
+        },
+        {
+          "subject": "UPENN-GBM-00399_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00399_11"
+        },
+        {
+          "subject": "UPENN-GBM-00400_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00400_11"
+        },
+        {
+          "subject": "UPENN-GBM-00401_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00401_11"
+        },
+        {
+          "subject": "UPENN-GBM-00402_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00402_11"
+        },
+        {
+          "subject": "UPENN-GBM-00403_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00403_11"
+        },
+        {
+          "subject": "UPENN-GBM-00404_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00404_11"
+        },
+        {
+          "subject": "UPENN-GBM-00407_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00407_11"
+        },
+        {
+          "subject": "UPENN-GBM-00408_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00408_11"
+        },
+        {
+          "subject": "UPENN-GBM-00409_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00409_11"
+        },
+        {
+          "subject": "UPENN-GBM-00410_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00410_11"
+        },
+        {
+          "subject": "UPENN-GBM-00411_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00411_11"
+        },
+        {
+          "subject": "UPENN-GBM-00412_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00412_11"
+        },
+        {
+          "subject": "UPENN-GBM-00413_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00413_11"
+        },
+        {
+          "subject": "UPENN-GBM-00414_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00414_11"
+        },
+        {
+          "subject": "UPENN-GBM-00415_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00415_11"
+        },
+        {
+          "subject": "UPENN-GBM-00416_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00416_11"
+        },
+        {
+          "subject": "UPENN-GBM-00417_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00417_11"
+        },
+        {
+          "subject": "UPENN-GBM-00418_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00418_11"
+        },
+        {
+          "subject": "UPENN-GBM-00421_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00421_11"
+        },
+        {
+          "subject": "UPENN-GBM-00422_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00422_11"
+        },
+        {
+          "subject": "UPENN-GBM-00425_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00425_11"
+        },
+        {
+          "subject": "UPENN-GBM-00426_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00426_11"
+        },
+        {
+          "subject": "UPENN-GBM-00427_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00427_11"
+        },
+        {
+          "subject": "UPENN-GBM-00428_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00428_11"
+        },
+        {
+          "subject": "UPENN-GBM-00431_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00431_11"
+        },
+        {
+          "subject": "UPENN-GBM-00432_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00432_11"
+        },
+        {
+          "subject": "UPENN-GBM-00434_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00434_11"
+        },
+        {
+          "subject": "UPENN-GBM-00436_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00436_11"
+        },
+        {
+          "subject": "UPENN-GBM-00437_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00437_11"
+        },
+        {
+          "subject": "UPENN-GBM-00438_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00438_11"
+        },
+        {
+          "subject": "UPENN-GBM-00440_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00440_11"
+        },
+        {
+          "subject": "UPENN-GBM-00442_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00442_11"
+        },
+        {
+          "subject": "UPENN-GBM-00443_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00443_11"
+        },
+        {
+          "subject": "UPENN-GBM-00444_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00444_11"
+        },
+        {
+          "subject": "UPENN-GBM-00445_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00445_11"
+        },
+        {
+          "subject": "UPENN-GBM-00447_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00447_11"
+        },
+        {
+          "subject": "UPENN-GBM-00448_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00448_11"
+        },
+        {
+          "subject": "UPENN-GBM-00449_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00449_11"
+        },
+        {
+          "subject": "UPENN-GBM-00450_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00450_11"
+        },
+        {
+          "subject": "UPENN-GBM-00451_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00451_11"
+        },
+        {
+          "subject": "UPENN-GBM-00452_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00452_11"
+        },
+        {
+          "subject": "UPENN-GBM-00454_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00454_11"
+        },
+        {
+          "subject": "UPENN-GBM-00455_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00455_11"
+        },
+        {
+          "subject": "UPENN-GBM-00456_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00456_11"
+        },
+        {
+          "subject": "UPENN-GBM-00458_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00458_11"
+        },
+        {
+          "subject": "UPENN-GBM-00459_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00459_11"
+        },
+        {
+          "subject": "UPENN-GBM-00461_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00461_11"
+        },
+        {
+          "subject": "UPENN-GBM-00462_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00462_11"
+        },
+        {
+          "subject": "UPENN-GBM-00463_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00463_11"
+        },
+        {
+          "subject": "UPENN-GBM-00464_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00464_11"
+        },
+        {
+          "subject": "UPENN-GBM-00466_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00466_11"
+        },
+        {
+          "subject": "UPENN-GBM-00467_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00467_11"
+        },
+        {
+          "subject": "UPENN-GBM-00468_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00468_11"
+        },
+        {
+          "subject": "UPENN-GBM-00469_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00469_11"
+        },
+        {
+          "subject": "UPENN-GBM-00470_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00470_11"
+        },
+        {
+          "subject": "UPENN-GBM-00473_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00473_11"
+        },
+        {
+          "subject": "UPENN-GBM-00474_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00474_11"
+        },
+        {
+          "subject": "UPENN-GBM-00475_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00475_11"
+        },
+        {
+          "subject": "UPENN-GBM-00476_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00476_11"
+        },
+        {
+          "subject": "UPENN-GBM-00478_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00478_11"
+        },
+        {
+          "subject": "UPENN-GBM-00480_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00480_11"
+        },
+        {
+          "subject": "UPENN-GBM-00482_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00482_11"
+        },
+        {
+          "subject": "UPENN-GBM-00483_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00483_11"
+        },
+        {
+          "subject": "UPENN-GBM-00484_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00484_11"
+        },
+        {
+          "subject": "UPENN-GBM-00485_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00485_11"
+        },
+        {
+          "subject": "UPENN-GBM-00486_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00486_11"
+        },
+        {
+          "subject": "UPENN-GBM-00487_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00487_11"
+        },
+        {
+          "subject": "UPENN-GBM-00488_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00488_11"
+        },
+        {
+          "subject": "UPENN-GBM-00490_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00490_11"
+        },
+        {
+          "subject": "UPENN-GBM-00491_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00491_11"
+        },
+        {
+          "subject": "UPENN-GBM-00492_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00492_11"
+        },
+        {
+          "subject": "UPENN-GBM-00493_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00493_11"
+        },
+        {
+          "subject": "UPENN-GBM-00494_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00494_11"
+        },
+        {
+          "subject": "UPENN-GBM-00497_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00497_11"
+        },
+        {
+          "subject": "UPENN-GBM-00498_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00498_11"
+        },
+        {
+          "subject": "UPENN-GBM-00502_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00502_11"
+        },
+        {
+          "subject": "UPENN-GBM-00503_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00503_11"
+        },
+        {
+          "subject": "UPENN-GBM-00504_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00504_11"
+        },
+        {
+          "subject": "UPENN-GBM-00507_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00507_11"
+        },
+        {
+          "subject": "UPENN-GBM-00510_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00510_11"
+        },
+        {
+          "subject": "UPENN-GBM-00513_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00513_11"
+        },
+        {
+          "subject": "UPENN-GBM-00514_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00514_11"
+        },
+        {
+          "subject": "UPENN-GBM-00515_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00515_11"
+        },
+        {
+          "subject": "UPENN-GBM-00516_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00516_11"
+        },
+        {
+          "subject": "UPENN-GBM-00517_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00517_11"
+        },
+        {
+          "subject": "UPENN-GBM-00520_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00520_11"
+        },
+        {
+          "subject": "UPENN-GBM-00521_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00521_11"
+        },
+        {
+          "subject": "UPENN-GBM-00522_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00522_11"
+        },
+        {
+          "subject": "UPENN-GBM-00523_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00523_11"
+        },
+        {
+          "subject": "UPENN-GBM-00524_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00524_11"
+        },
+        {
+          "subject": "UPENN-GBM-00526_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00526_11"
+        },
+        {
+          "subject": "UPENN-GBM-00527_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00527_11"
+        },
+        {
+          "subject": "UPENN-GBM-00528_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00528_11"
+        },
+        {
+          "subject": "UPENN-GBM-00531_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00531_11"
+        },
+        {
+          "subject": "UPENN-GBM-00532_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00532_11"
+        },
+        {
+          "subject": "UPENN-GBM-00533_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00533_11"
+        },
+        {
+          "subject": "UPENN-GBM-00535_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00535_11"
+        },
+        {
+          "subject": "UPENN-GBM-00536_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00536_11"
+        },
+        {
+          "subject": "UPENN-GBM-00537_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00537_11"
+        },
+        {
+          "subject": "UPENN-GBM-00538_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00538_11"
+        },
+        {
+          "subject": "UPENN-GBM-00539_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00539_11"
+        },
+        {
+          "subject": "UPENN-GBM-00542_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00542_11"
+        },
+        {
+          "subject": "UPENN-GBM-00543_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00543_11"
+        },
+        {
+          "subject": "UPENN-GBM-00544_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00544_11"
+        },
+        {
+          "subject": "UPENN-GBM-00547_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00547_11"
+        },
+        {
+          "subject": "UPENN-GBM-00548_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00548_11"
+        },
+        {
+          "subject": "UPENN-GBM-00553_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00553_11"
+        },
+        {
+          "subject": "UPENN-GBM-00554_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00554_11"
+        },
+        {
+          "subject": "UPENN-GBM-00555_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00555_11"
+        },
+        {
+          "subject": "UPENN-GBM-00556_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00556_11"
+        },
+        {
+          "subject": "UPENN-GBM-00557_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00557_11"
+        },
+        {
+          "subject": "UPENN-GBM-00558_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00558_11"
+        },
+        {
+          "subject": "UPENN-GBM-00559_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00559_11"
+        },
+        {
+          "subject": "UPENN-GBM-00561_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00561_11"
+        },
+        {
+          "subject": "UPENN-GBM-00562_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00562_11"
+        },
+        {
+          "subject": "UPENN-GBM-00567_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00567_11"
+        },
+        {
+          "subject": "UPENN-GBM-00568_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00568_11"
+        },
+        {
+          "subject": "UPENN-GBM-00569_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00569_11"
+        },
+        {
+          "subject": "UPENN-GBM-00570_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00570_11"
+        },
+        {
+          "subject": "UPENN-GBM-00571_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00571_11"
+        },
+        {
+          "subject": "UPENN-GBM-00572_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00572_11"
+        },
+        {
+          "subject": "UPENN-GBM-00573_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00573_11"
+        },
+        {
+          "subject": "UPENN-GBM-00574_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00574_11"
+        },
+        {
+          "subject": "UPENN-GBM-00575_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00575_11"
+        },
+        {
+          "subject": "UPENN-GBM-00577_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00577_11"
+        },
+        {
+          "subject": "UPENN-GBM-00582_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00582_11"
+        },
+        {
+          "subject": "UPENN-GBM-00583_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00583_11"
+        },
+        {
+          "subject": "UPENN-GBM-00584_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00584_11"
+        },
+        {
+          "subject": "UPENN-GBM-00585_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00585_11"
+        },
+        {
+          "subject": "UPENN-GBM-00586_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00586_11"
+        },
+        {
+          "subject": "UPENN-GBM-00589_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00589_11"
+        },
+        {
+          "subject": "UPENN-GBM-00590_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00590_11"
+        },
+        {
+          "subject": "UPENN-GBM-00591_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00591_11"
+        },
+        {
+          "subject": "UPENN-GBM-00593_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00593_11"
+        },
+        {
+          "subject": "UPENN-GBM-00594_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00594_11"
+        },
+        {
+          "subject": "UPENN-GBM-00595_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00595_11"
+        },
+        {
+          "subject": "UPENN-GBM-00596_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00596_11"
+        },
+        {
+          "subject": "UPENN-GBM-00602_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00602_11"
+        },
+        {
+          "subject": "UPENN-GBM-00604_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00604_11"
+        },
+        {
+          "subject": "UPENN-GBM-00605_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00605_11"
+        },
+        {
+          "subject": "UPENN-GBM-00606_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00606_11"
+        },
+        {
+          "subject": "UPENN-GBM-00607_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00607_11"
+        },
+        {
+          "subject": "UPENN-GBM-00610_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00610_11"
+        },
+        {
+          "subject": "UPENN-GBM-00611_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00611_11"
+        },
+        {
+          "subject": "UPENN-GBM-00612_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00612_21"
+        },
+        {
+          "subject": "UPENN-GBM-00613_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00613_21"
+        },
+        {
+          "subject": "UPENN-GBM-00615_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00615_21"
+        },
+        {
+          "subject": "UPENN-GBM-00616_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00616_21"
+        },
+        {
+          "subject": "UPENN-GBM-00620_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00620_21"
+        },
+        {
+          "subject": "UPENN-GBM-00621_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00621_21"
+        },
+        {
+          "subject": "UPENN-GBM-00625_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00625_21"
+        },
+        {
+          "subject": "UPENN-GBM-00627_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00627_21"
+        },
+        {
+          "subject": "UPENN-GBM-00628_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00628_21"
+        }
+      ]
+    },
+    "val": {
+      "brats": [
+        {
+          "subject": "TCGA-02-0006",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0006"
+        },
+        {
+          "subject": "TCGA-02-0106",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-02-0106"
+        },
+        {
+          "subject": "TCGA-06-0137",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0137"
+        },
+        {
+          "subject": "TCGA-06-0139",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-0139"
+        },
+        {
+          "subject": "TCGA-06-5413",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-06-5413"
+        },
+        {
+          "subject": "TCGA-08-0356",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0356"
+        },
+        {
+          "subject": "TCGA-08-0509",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-08-0509"
+        },
+        {
+          "subject": "TCGA-12-1094",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-12-1094"
+        },
+        {
+          "subject": "TCGA-14-1794",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-14-1794"
+        },
+        {
+          "subject": "TCGA-76-4935",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-4935"
+        },
+        {
+          "subject": "TCGA-76-6191",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6191"
+        },
+        {
+          "subject": "TCGA-76-6193",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6193"
+        },
+        {
+          "subject": "TCGA-76-6285",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6285"
+        },
+        {
+          "subject": "TCGA-76-6657",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/brats/TCGA-76-6657"
+        }
+      ],
+      "upenn": [
+        {
+          "subject": "UPENN-GBM-00001_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00001_11"
+        },
+        {
+          "subject": "UPENN-GBM-00004_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00004_11"
+        },
+        {
+          "subject": "UPENN-GBM-00011_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00011_11"
+        },
+        {
+          "subject": "UPENN-GBM-00020_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00020_11"
+        },
+        {
+          "subject": "UPENN-GBM-00035_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00035_11"
+        },
+        {
+          "subject": "UPENN-GBM-00036_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00036_21"
+        },
+        {
+          "subject": "UPENN-GBM-00055_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00055_11"
+        },
+        {
+          "subject": "UPENN-GBM-00060_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00060_11"
+        },
+        {
+          "subject": "UPENN-GBM-00065_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00065_11"
+        },
+        {
+          "subject": "UPENN-GBM-00082_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00082_11"
+        },
+        {
+          "subject": "UPENN-GBM-00086_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00086_21"
+        },
+        {
+          "subject": "UPENN-GBM-00093_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00093_21"
+        },
+        {
+          "subject": "UPENN-GBM-00099_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00099_11"
+        },
+        {
+          "subject": "UPENN-GBM-00108_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00108_11"
+        },
+        {
+          "subject": "UPENN-GBM-00117_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00117_11"
+        },
+        {
+          "subject": "UPENN-GBM-00119_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00119_11"
+        },
+        {
+          "subject": "UPENN-GBM-00125_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00125_11"
+        },
+        {
+          "subject": "UPENN-GBM-00129_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00129_21"
+        },
+        {
+          "subject": "UPENN-GBM-00140_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00140_21"
+        },
+        {
+          "subject": "UPENN-GBM-00144_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00144_11"
+        },
+        {
+          "subject": "UPENN-GBM-00150_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00150_11"
+        },
+        {
+          "subject": "UPENN-GBM-00161_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00161_11"
+        },
+        {
+          "subject": "UPENN-GBM-00170_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00170_11"
+        },
+        {
+          "subject": "UPENN-GBM-00183_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00183_11"
+        },
+        {
+          "subject": "UPENN-GBM-00208_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00208_11"
+        },
+        {
+          "subject": "UPENN-GBM-00222_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00222_11"
+        },
+        {
+          "subject": "UPENN-GBM-00233_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00233_11"
+        },
+        {
+          "subject": "UPENN-GBM-00259_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00259_11"
+        },
+        {
+          "subject": "UPENN-GBM-00276_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00276_11"
+        },
+        {
+          "subject": "UPENN-GBM-00280_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00280_11"
+        },
+        {
+          "subject": "UPENN-GBM-00284_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00284_11"
+        },
+        {
+          "subject": "UPENN-GBM-00302_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00302_11"
+        },
+        {
+          "subject": "UPENN-GBM-00312_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00312_11"
+        },
+        {
+          "subject": "UPENN-GBM-00328_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00328_11"
+        },
+        {
+          "subject": "UPENN-GBM-00331_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00331_11"
+        },
+        {
+          "subject": "UPENN-GBM-00336_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00336_11"
+        },
+        {
+          "subject": "UPENN-GBM-00346_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00346_11"
+        },
+        {
+          "subject": "UPENN-GBM-00350_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00350_11"
+        },
+        {
+          "subject": "UPENN-GBM-00353_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00353_11"
+        },
+        {
+          "subject": "UPENN-GBM-00368_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00368_11"
+        },
+        {
+          "subject": "UPENN-GBM-00398_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00398_11"
+        },
+        {
+          "subject": "UPENN-GBM-00405_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00405_11"
+        },
+        {
+          "subject": "UPENN-GBM-00406_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00406_11"
+        },
+        {
+          "subject": "UPENN-GBM-00420_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00420_11"
+        },
+        {
+          "subject": "UPENN-GBM-00423_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00423_11"
+        },
+        {
+          "subject": "UPENN-GBM-00435_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00435_11"
+        },
+        {
+          "subject": "UPENN-GBM-00439_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00439_11"
+        },
+        {
+          "subject": "UPENN-GBM-00441_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00441_11"
+        },
+        {
+          "subject": "UPENN-GBM-00446_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00446_11"
+        },
+        {
+          "subject": "UPENN-GBM-00453_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00453_11"
+        },
+        {
+          "subject": "UPENN-GBM-00457_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00457_11"
+        },
+        {
+          "subject": "UPENN-GBM-00460_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00460_11"
+        },
+        {
+          "subject": "UPENN-GBM-00465_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00465_11"
+        },
+        {
+          "subject": "UPENN-GBM-00472_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00472_11"
+        },
+        {
+          "subject": "UPENN-GBM-00479_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00479_11"
+        },
+        {
+          "subject": "UPENN-GBM-00481_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00481_11"
+        },
+        {
+          "subject": "UPENN-GBM-00495_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00495_11"
+        },
+        {
+          "subject": "UPENN-GBM-00496_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00496_11"
+        },
+        {
+          "subject": "UPENN-GBM-00500_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00500_11"
+        },
+        {
+          "subject": "UPENN-GBM-00501_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00501_11"
+        },
+        {
+          "subject": "UPENN-GBM-00505_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00505_11"
+        },
+        {
+          "subject": "UPENN-GBM-00508_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00508_11"
+        },
+        {
+          "subject": "UPENN-GBM-00512_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00512_11"
+        },
+        {
+          "subject": "UPENN-GBM-00519_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00519_11"
+        },
+        {
+          "subject": "UPENN-GBM-00529_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00529_11"
+        },
+        {
+          "subject": "UPENN-GBM-00541_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00541_11"
+        },
+        {
+          "subject": "UPENN-GBM-00545_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00545_11"
+        },
+        {
+          "subject": "UPENN-GBM-00546_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00546_11"
+        },
+        {
+          "subject": "UPENN-GBM-00549_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00549_11"
+        },
+        {
+          "subject": "UPENN-GBM-00550_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00550_11"
+        },
+        {
+          "subject": "UPENN-GBM-00552_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00552_11"
+        },
+        {
+          "subject": "UPENN-GBM-00560_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00560_11"
+        },
+        {
+          "subject": "UPENN-GBM-00565_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00565_11"
+        },
+        {
+          "subject": "UPENN-GBM-00566_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00566_11"
+        },
+        {
+          "subject": "UPENN-GBM-00579_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00579_11"
+        },
+        {
+          "subject": "UPENN-GBM-00580_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00580_11"
+        },
+        {
+          "subject": "UPENN-GBM-00581_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00581_11"
+        },
+        {
+          "subject": "UPENN-GBM-00587_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00587_11"
+        },
+        {
+          "subject": "UPENN-GBM-00597_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00597_11"
+        },
+        {
+          "subject": "UPENN-GBM-00599_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00599_11"
+        },
+        {
+          "subject": "UPENN-GBM-00600_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00600_11"
+        },
+        {
+          "subject": "UPENN-GBM-00601_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00601_11"
+        },
+        {
+          "subject": "UPENN-GBM-00608_11",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00608_11"
+        },
+        {
+          "subject": "UPENN-GBM-00617_21",
+          "depth": 155,
+          "path": "/Volumes/usb drive/neuroscope/preprocessed/upenn/UPENN-GBM-00617_21"
+        }
+      ]
+    }
+  },
+  "root": "/Volumes/usb drive/neuroscope/preprocessed",
+  "summary": {
+    "train": {
+      "brats_subjects": 62,
+      "upenn_subjects": 403,
+      "total_subjects": 465
+    },
+    "val": {
+      "brats_subjects": 14,
+      "upenn_subjects": 84,
+      "total_subjects": 98
+    }
+  }
+}

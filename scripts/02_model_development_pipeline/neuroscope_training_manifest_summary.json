@@ -1,0 +1,12 @@
+{
+  "train": {
+    "brats_subjects": 62,
+    "upenn_subjects": 403,
+    "total_subjects": 465
+  },
+  "val": {
+    "brats_subjects": 14,
+    "upenn_subjects": 84,
+    "total_subjects": 98
+  }
+}

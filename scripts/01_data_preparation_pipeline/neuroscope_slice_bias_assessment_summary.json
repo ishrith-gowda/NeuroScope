@@ -1,0 +1,13 @@
+{
+  "generated": "2025-10-08 10:15:38",
+  "script_version": "05_comprehensive_intensity_bias_assessment_neuroscope.py v2.0",
+  "splits": [
+    "train",
+    "val"
+  ],
+  "subjects": {
+    "failed": 0,
+    "successful": 563,
+    "total": 655
+  }
+}
