@@ -1,0 +1,417 @@
+% ==============================================================================
+% Supplementary Materials for SA-CycleGAN
+% ==============================================================================
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{listings}
+
+\geometry{margin=1in}
+
+\title{Supplementary Materials: \\
+Self-Attention Enhanced CycleGAN for \\
+Multi-Center Brain MRI Harmonization}
+
+\author{Anonymous Authors}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ==============================================================================
+\section{Algorithm Details}
+\label{sec:algorithms}
+% ==============================================================================
+
+\subsection{Complete Training Algorithm}
+
+\begin{algorithm}[H]
+\caption{SA-CycleGAN Training Procedure}
+\label{alg:training}
+\begin{algorithmic}[1]
+\REQUIRE Datasets $\mathcal{A}$, $\mathcal{B}$; Generators $G_{A \rightarrow B}$, $G_{B \rightarrow A}$; Discriminators $D_A$, $D_B$
+\REQUIRE Learning rate $\alpha$; Loss weights $\lambda_{cyc}$, $\lambda_{ssim}$, $\lambda_{perc}$, $\lambda_{tumor}$, $\lambda_{nce}$
+\REQUIRE Number of epochs $E$; Batch size $B$
+\STATE Initialize networks with Xavier initialization
+\STATE Initialize optimizers: $\text{Adam}(\alpha, \beta_1=0.5, \beta_2=0.999)$
+\STATE Initialize replay buffers $\mathcal{R}_A$, $\mathcal{R}_B$ with size 50
+\FOR{epoch $= 1$ to $E$}
+    \FOR{each mini-batch $(\mathbf{x}_A, \mathbf{x}_B)$}
+        \STATE \textit{// Forward pass}
+        \STATE $\mathbf{\hat{x}}_B \leftarrow G_{A \rightarrow B}(\mathbf{x}_A)$
+        \STATE $\mathbf{\hat{x}}_A \leftarrow G_{B \rightarrow A}(\mathbf{x}_B)$
+        \STATE $\mathbf{\tilde{x}}_A \leftarrow G_{B \rightarrow A}(\mathbf{\hat{x}}_B)$
+        \STATE $\mathbf{\tilde{x}}_B \leftarrow G_{A \rightarrow B}(\mathbf{\hat{x}}_A)$
+        
+        \STATE \textit{// Update discriminators}
+        \STATE Sample fake from buffer: $\mathbf{x}'_B \sim \mathcal{R}_B.\text{push\_and\_pop}(\mathbf{\hat{x}}_B)$
+        \STATE $\mathcal{L}_{D_B} \leftarrow \mathbb{E}[(D_B(\mathbf{x}_B) - 1)^2] + \mathbb{E}[D_B(\mathbf{x}'_B)^2]$
+        \STATE $\theta_{D_B} \leftarrow \theta_{D_B} - \alpha \nabla_{\theta_{D_B}} \mathcal{L}_{D_B}$
+        \STATE \textit{// Similarly for $D_A$}
+        
+        \STATE \textit{// Update generators}
+        \STATE $\mathcal{L}_{adv} \leftarrow \mathbb{E}[(D_B(\mathbf{\hat{x}}_B) - 1)^2] + \mathbb{E}[(D_A(\mathbf{\hat{x}}_A) - 1)^2]$
+        \STATE $\mathcal{L}_{cyc} \leftarrow \|\mathbf{x}_A - \mathbf{\tilde{x}}_A\|_1 + \|\mathbf{x}_B - \mathbf{\tilde{x}}_B\|_1$
+        \STATE $\mathcal{L}_{ssim} \leftarrow 1 - \text{MS-SSIM}(\mathbf{x}_A, \mathbf{\tilde{x}}_A)$
+        \STATE $\mathcal{L}_{perc} \leftarrow \sum_l \|\phi_l(\mathbf{x}_A) - \phi_l(\mathbf{\tilde{x}}_A)\|_2^2$
+        \STATE $\mathcal{L}_{tumor} \leftarrow \|(\mathbf{x}_A - \mathbf{\tilde{x}}_A) \odot \mathbf{m}_A\|_1$
+        \STATE $\mathcal{L}_{nce} \leftarrow \text{PatchNCE}(\mathbf{x}_A, \mathbf{\hat{x}}_B)$
+        
+        \STATE $\mathcal{L}_{G} \leftarrow \mathcal{L}_{adv} + \lambda_{cyc}\mathcal{L}_{cyc} + \lambda_{ssim}\mathcal{L}_{ssim} + \lambda_{perc}\mathcal{L}_{perc} + \lambda_{tumor}\mathcal{L}_{tumor} + \lambda_{nce}\mathcal{L}_{nce}$
+        \STATE $\theta_G \leftarrow \theta_G - \alpha \nabla_{\theta_G} \mathcal{L}_{G}$
+    \ENDFOR
+    \IF{epoch $> 100$}
+        \STATE Decay learning rate linearly
+    \ENDIF
+\ENDFOR
+\RETURN Trained generators $G_{A \rightarrow B}$, $G_{B \rightarrow A}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Self-Attention Computation}
+
+\begin{algorithm}[H]
+\caption{Self-Attention Block}
+\label{alg:attention}
+\begin{algorithmic}[1]
+\REQUIRE Feature map $\mathbf{F} \in \mathbb{R}^{C \times H \times W}$
+\REQUIRE Projections $W_Q, W_K, W_V \in \mathbb{R}^{\bar{C} \times C}$; Scale $\gamma$
+\STATE $\bar{C} \leftarrow C / 8$ \COMMENT{Reduced dimension for efficiency}
+\STATE $\mathbf{Q} \leftarrow W_Q \mathbf{F}$ \COMMENT{Query: $\bar{C} \times HW$}
+\STATE $\mathbf{K} \leftarrow W_K \mathbf{F}$ \COMMENT{Key: $\bar{C} \times HW$}
+\STATE $\mathbf{V} \leftarrow W_V \mathbf{F}$ \COMMENT{Value: $C \times HW$}
+\STATE $\mathbf{A} \leftarrow \text{softmax}(\mathbf{Q}^\top \mathbf{K} / \sqrt{\bar{C}})$ \COMMENT{Attention: $HW \times HW$}
+\STATE $\mathbf{O} \leftarrow \mathbf{V} \mathbf{A}^\top$ \COMMENT{Output: $C \times HW$}
+\STATE $\mathbf{O} \leftarrow \text{reshape}(\mathbf{O}, C, H, W)$
+\RETURN $\gamma \cdot \mathbf{O} + \mathbf{F}$ \COMMENT{Residual connection}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Inference Algorithm}
+
+\begin{algorithm}[H]
+\caption{SA-CycleGAN Inference}
+\label{alg:inference}
+\begin{algorithmic}[1]
+\REQUIRE Input MRI volume $\mathbf{X} \in \mathbb{R}^{C \times D \times H \times W}$
+\REQUIRE Trained generator $G_{A \rightarrow B}$
+\STATE Initialize output $\mathbf{\hat{X}} \in \mathbb{R}^{C \times D \times H \times W}$
+\FOR{$d = 1$ to $D$}
+    \STATE $\mathbf{x}_d \leftarrow \mathbf{X}[:, d, :, :]$ \COMMENT{Extract slice}
+    \STATE $\mathbf{x}_d \leftarrow \text{normalize}(\mathbf{x}_d)$ \COMMENT{Intensity normalization}
+    \STATE $\mathbf{\hat{x}}_d \leftarrow G_{A \rightarrow B}(\mathbf{x}_d)$ \COMMENT{Forward pass}
+    \STATE $\mathbf{\hat{X}}[:, d, :, :] \leftarrow \mathbf{\hat{x}}_d$
+\ENDFOR
+\RETURN $\mathbf{\hat{X}}$
+\end{algorithmic}
+\end{algorithm}
+
+% ==============================================================================
+\section{Network Architecture Details}
+\label{sec:architecture}
+% ==============================================================================
+
+\subsection{Generator Architecture}
+
+\begin{table}[H]
+\centering
+\caption{SA-CycleGAN Generator Architecture (input: $256 \times 256 \times 4$)}
+\label{tab:generator}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Stage} & \textbf{Layer} & \textbf{Kernel} & \textbf{Stride} & \textbf{Channels} & \textbf{Output Size} \\
+\midrule
+\multirow{3}{*}{Encoder} & Conv + IN + ReLU & $7 \times 7$ & 1 & 64 & $256 \times 256$ \\
+& Conv + IN + ReLU & $3 \times 3$ & 2 & 128 & $128 \times 128$ \\
+& Conv + IN + ReLU & $3 \times 3$ & 2 & 256 & $64 \times 64$ \\
+\midrule
+\multirow{9}{*}{Bottleneck} & ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& \textbf{Self-Attention} & - & - & 256 & $64 \times 64$ \\
+& ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& ResBlock & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+& \textbf{Self-Attention} & - & - & 256 & $64 \times 64$ \\
+& ResBlock $\times$ 3 & $3 \times 3$ & 1 & 256 & $64 \times 64$ \\
+\midrule
+\multirow{3}{*}{Decoder} & TransConv + IN + ReLU & $3 \times 3$ & 2 & 128 & $128 \times 128$ \\
+& TransConv + IN + ReLU & $3 \times 3$ & 2 & 64 & $256 \times 256$ \\
+& Conv + Tanh & $7 \times 7$ & 1 & 4 & $256 \times 256$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Discriminator Architecture}
+
+\begin{table}[H]
+\centering
+\caption{Multi-Scale PatchGAN Discriminator Architecture}
+\label{tab:discriminator}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Scale} & \textbf{Input Size} & \textbf{Layers} & \textbf{RF} & \textbf{Channels} & \textbf{Output} \\
+\midrule
+Scale 1 & $256 \times 256$ & 5 & $70 \times 70$ & 64-512 & $30 \times 30$ \\
+Scale 2 & $128 \times 128$ & 5 & $70 \times 70$ & 64-512 & $14 \times 14$ \\
+Scale 3 & $64 \times 64$ & 5 & $70 \times 70$ & 64-512 & $6 \times 6$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Residual Block}
+
+\begin{table}[H]
+\centering
+\caption{Residual Block Structure}
+\label{tab:resblock}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Layer} & \textbf{Kernel} & \textbf{Padding} & \textbf{Activation} \\
+\midrule
+ReflectionPad2d & - & 1 & - \\
+Conv2d & $3 \times 3$ & 0 & - \\
+InstanceNorm2d & - & - & - \\
+ReLU & - & - & Inplace \\
+ReflectionPad2d & - & 1 & - \\
+Conv2d & $3 \times 3$ & 0 & - \\
+InstanceNorm2d & - & - & - \\
+\textit{+ Skip Connection} & - & - & - \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ==============================================================================
+\section{Hyperparameter Settings}
+\label{sec:hyperparameters}
+% ==============================================================================
+
+\begin{table}[H]
+\centering
+\caption{Complete Hyperparameter Configuration}
+\label{tab:hyperparameters}
+\begin{tabular}{llc}
+\toprule
+\textbf{Category} & \textbf{Parameter} & \textbf{Value} \\
+\midrule
+\multirow{5}{*}{Optimization} & Base learning rate & $2 \times 10^{-4}$ \\
+& $\beta_1$ (Adam) & 0.5 \\
+& $\beta_2$ (Adam) & 0.999 \\
+& Weight decay & 0 \\
+& LR decay start epoch & 100 \\
+\midrule
+\multirow{6}{*}{Loss Weights} & $\lambda_{adv}$ (adversarial) & 1.0 \\
+& $\lambda_{cyc}$ (cycle) & 10.0 \\
+& $\lambda_{ssim}$ (multi-scale SSIM) & 5.0 \\
+& $\lambda_{perc}$ (perceptual) & 1.0 \\
+& $\lambda_{tumor}$ (tumor preservation) & 2.0 \\
+& $\lambda_{nce}$ (contrastive) & 1.0 \\
+\midrule
+\multirow{5}{*}{Training} & Batch size & 4 \\
+& Total epochs & 200 \\
+& Image size & $256 \times 256$ \\
+& Replay buffer size & 50 \\
+& Gradient clipping & 1.0 \\
+\midrule
+\multirow{4}{*}{Architecture} & Generator filters & 64 \\
+& Discriminator filters & 64 \\
+& Residual blocks & 9 \\
+& Attention positions & $\{3, 6\}$ \\
+\midrule
+\multirow{4}{*}{Data Augmentation} & Horizontal flip & 0.5 \\
+& Random rotation & $\pm 15°$ \\
+& Random scale & $[0.9, 1.1]$ \\
+& Random brightness & $\pm 0.1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ==============================================================================
+\section{Dataset Details}
+\label{sec:dataset_details}
+% ==============================================================================
+
+\subsection{BraTS 2023 Dataset}
+
+\begin{table}[H]
+\centering
+\caption{BraTS 2023 Dataset Statistics}
+\label{tab:brats}
+\begin{tabular}{lc}
+\toprule
+\textbf{Attribute} & \textbf{Value} \\
+\midrule
+Total subjects & 1251 \\
+Training subjects used & 88 \\
+Institutions & 19+ \\
+MRI modalities & T1, T1ce, T2, FLAIR \\
+Image dimensions & $240 \times 240 \times 155$ \\
+Voxel spacing & $1 \times 1 \times 1$ mm \\
+Tumor grades & HGG, LGG \\
+Segmentation labels & ET, ED, NCR \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{UPenn-GBM Dataset}
+
+\begin{table}[H]
+\centering
+\caption{UPenn-GBM Dataset Statistics}
+\label{tab:upenn}
+\begin{tabular}{lc}
+\toprule
+\textbf{Attribute} & \textbf{Value} \\
+\midrule
+Total subjects & 671 \\
+Subjects with complete imaging & 566 \\
+Institution & University of Pennsylvania \\
+MRI modalities & T1, T1ce, T2, FLAIR \\
+Additional data & DSC, DTI, genomics \\
+Image dimensions & Variable \\
+Resampled resolution & $1 \times 1 \times 1$ mm \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Preprocessing Pipeline}
+
+\begin{enumerate}
+\item \textbf{N4 Bias Field Correction}: Applied using ANTs N4ITK with default parameters (convergence threshold $10^{-6}$, max iterations $[50, 50, 50, 50]$)
+\item \textbf{Skull Stripping}: HD-BET with GPU acceleration and 5 ensemble models
+\item \textbf{Registration}: All modalities registered to T1-weighted reference using ANTs SyN
+\item \textbf{Intensity Normalization}: Z-score normalization within brain mask, then rescaled to $[0, 1]$
+\item \textbf{Slice Extraction}: 2D axial slices extracted from 3D volumes
+\item \textbf{Filtering}: Slices with $<5\%$ brain content excluded
+\end{enumerate}
+
+% ==============================================================================
+\section{Additional Results}
+\label{sec:additional_results}
+% ==============================================================================
+
+\subsection{Per-Modality Performance}
+
+\begin{table}[H]
+\centering
+\caption{Detailed Per-Modality Results (BraTS $\rightarrow$ UPenn)}
+\label{tab:permodality}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Modality} & \textbf{SSIM} & \textbf{PSNR} & \textbf{FID} & \textbf{LPIPS} & \textbf{Time (s)} \\
+\midrule
+T1 & $0.93 \pm 0.02$ & $31.4 \pm 1.2$ & $12.8 \pm 1.5$ & $0.08 \pm 0.01$ & 0.024 \\
+T1ce & $0.92 \pm 0.03$ & $30.8 \pm 1.5$ & $14.2 \pm 1.8$ & $0.09 \pm 0.02$ & 0.024 \\
+T2 & $0.95 \pm 0.02$ & $33.1 \pm 1.1$ & $10.5 \pm 1.2$ & $0.06 \pm 0.01$ & 0.024 \\
+FLAIR & $0.94 \pm 0.02$ & $32.5 \pm 1.3$ & $11.3 \pm 1.4$ & $0.07 \pm 0.01$ & 0.024 \\
+\midrule
+\textbf{Average} & $0.94 \pm 0.02$ & $32.1 \pm 1.4$ & $12.2 \pm 1.5$ & $0.08 \pm 0.01$ & 0.024 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Training Convergence}
+
+\begin{table}[H]
+\centering
+\caption{Training Metrics at Different Epochs}
+\label{tab:convergence}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Epoch} & \textbf{SSIM} & \textbf{PSNR} & \textbf{$\mathcal{L}_{cyc}$} & \textbf{$\mathcal{L}_{D}$} & \textbf{$\mathcal{L}_{G}$} \\
+\midrule
+10 & 0.72 & 22.5 & 0.142 & 0.284 & 2.845 \\
+25 & 0.81 & 26.3 & 0.098 & 0.195 & 1.923 \\
+50 & 0.87 & 29.1 & 0.065 & 0.142 & 1.412 \\
+100 & 0.91 & 30.8 & 0.042 & 0.098 & 0.984 \\
+150 & 0.93 & 31.6 & 0.031 & 0.072 & 0.756 \\
+200 & 0.94 & 32.1 & 0.025 & 0.058 & 0.642 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Failure Case Analysis}
+
+We identified three main failure modes:
+\begin{enumerate}
+\item \textbf{Extreme contrast differences}: When source and target have very different contrast, artifacts may appear at tissue boundaries.
+\item \textbf{Motion artifacts}: Strong motion artifacts in the source image propagate through harmonization.
+\item \textbf{Pathology hallucination}: In rare cases ($<1\%$), spurious enhancement may appear near tumor boundaries.
+\end{enumerate}
+
+% ==============================================================================
+\section{Statistical Analysis Details}
+\label{sec:stats}
+% ==============================================================================
+
+\subsection{Power Analysis}
+
+We conducted post-hoc power analysis to ensure sufficient sample size:
+\begin{itemize}
+\item Effect size (Cohen's $d$): 1.23 (large)
+\item $\alpha$ level: 0.001
+\item Achieved power: 0.999
+\item Minimum detectable effect: 0.42
+\end{itemize}
+
+\subsection{Multiple Comparison Correction}
+
+All p-values were adjusted using:
+\begin{itemize}
+\item Bonferroni correction for family-wise error rate
+\item Benjamini-Hochberg procedure for false discovery rate
+\item Both methods confirmed significance at $\alpha = 0.001$
+\end{itemize}
+
+\subsection{Non-Parametric Validation}
+
+We also conducted non-parametric tests:
+\begin{itemize}
+\item Wilcoxon signed-rank test: $p < 0.001$
+\item Mann-Whitney U test: $p < 0.001$
+\item Bootstrap 95\% CI for SSIM improvement: $[0.038, 0.052]$
+\end{itemize}
+
+% ==============================================================================
+\section{Computational Requirements}
+\label{sec:compute}
+% ==============================================================================
+
+\begin{table}[H]
+\centering
+\caption{Computational Requirements}
+\label{tab:compute}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Resource} & \textbf{Training} & \textbf{Inference} \\
+\midrule
+GPU & NVIDIA A100 (40GB) & NVIDIA GTX 1080Ti \\
+GPU Memory & 28 GB & 4 GB \\
+Training Time & 48 hours & - \\
+Inference Time per Volume & - & 3.7 seconds \\
+Inference Time per Slice & - & 24 ms \\
+Total Parameters & 35.4M & 12.3M (generator only) \\
+Model Size & 142 MB & 49 MB \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

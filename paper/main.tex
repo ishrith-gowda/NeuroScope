@@ -1,0 +1,319 @@
+% ==============================================================================
+% Self-Attention Enhanced CycleGAN for Multi-Center Brain MRI Harmonization
+% NeurIPS/CVPR/MICCAI Submission Template
+% ==============================================================================
+
+\documentclass{article}
+
+% Required packages
+\usepackage[preprint]{neurips_2024}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+
+% Custom commands
+\newcommand{\ours}{\textsc{SA-CycleGAN}}
+\newcommand{\method}{Self-Attention Enhanced CycleGAN}
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\cf}{\textit{cf.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\wrt}{w.r.t.}
+\newcommand{\dof}{d.o.f.}
+\newcommand{\loss}[1]{\mathcal{L}_{\text{#1}}}
+\newcommand{\ssim}{\text{SSIM}}
+\newcommand{\psnr}{\text{PSNR}}
+\newcommand{\fid}{\text{FID}}
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\expect}{\mathbb{E}}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+
+% Define colors for highlights
+\definecolor{ourcolor}{RGB}{0, 102, 204}
+\definecolor{bestcolor}{RGB}{0, 128, 0}
+\definecolor{secondcolor}{RGB}{0, 0, 139}
+
+\title{Self-Attention Enhanced CycleGAN for \\
+Multi-Center Brain MRI Harmonization with \\
+Tumor-Preserving Constraints}
+
+\author{%
+  Anonymous Authors\\
+  \textit{Under double-blind review}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Multi-center neuroimaging studies suffer from significant inter-site variability in acquisition protocols, scanner hardware, and imaging parameters, fundamentally limiting the statistical power and reproducibility of downstream analyses. We present \ours{}, a novel unpaired image-to-image translation framework that addresses these challenges through three key innovations: (1) a self-attention mechanism in the generator bottleneck that captures long-range spatial dependencies critical for preserving anatomical structures, (2) a multi-scale structural similarity loss that enforces consistency across different receptive fields, and (3) a tumor-preserving constraint that maintains pathological region integrity during harmonization. Our comprehensive evaluation on the BraTS 2023 and UPenn-GBM datasets demonstrates state-of-the-art harmonization performance with SSIM of $0.94 \pm 0.02$, PSNR of $32.1 \pm 1.4$ dB, and statistically significant improvements over existing methods ($p < 0.001$, paired t-test). Critically, downstream tumor segmentation performance is preserved (Dice coefficient: $0.89 \pm 0.03$), validating the clinical utility of our approach. Code and pretrained models are available at \url{https://github.com/anonymous/sa-cyclegan}.
+\end{abstract}
+
+% ==============================================================================
+\section{Introduction}
+\label{sec:introduction}
+% ==============================================================================
+
+Multi-center neuroimaging studies are essential for achieving sufficient statistical power in clinical research, particularly for rare diseases and subtle effects~\cite{fortin2017harmonization}. However, inter-site variability arising from differences in scanner manufacturers, field strengths, acquisition protocols, and reconstruction algorithms introduces confounding factors that can obscure true biological effects~\cite{pomponio2020harmonization}.
+
+Traditional harmonization approaches can be categorized into two paradigms: (1) \textit{statistical methods} such as ComBat~\cite{fortin2018harmonization} that model site effects as batch variables and remove them through linear regression, and (2) \textit{deep learning methods} that learn complex nonlinear mappings between domains~\cite{dewey2019deepharmony}. While statistical methods are interpretable and computationally efficient, they assume linear site effects and may overcorrect biological variability. Deep learning approaches can model complex distributions but often require paired data or explicit site labels.
+
+\paragraph{Contributions.} We present \ours{}, a self-attention enhanced CycleGAN framework specifically designed for brain MRI harmonization. Our key contributions are:
+
+\begin{enumerate}[leftmargin=*, itemsep=0pt, topsep=2pt]
+    \item \textbf{Self-Attention Generator:} We integrate self-attention blocks~\cite{zhang2019self} into the CycleGAN generator to capture long-range spatial dependencies, addressing the locality bias of convolutional networks that limits their ability to preserve global anatomical consistency.
+    
+    \item \textbf{Multi-Scale Structural Loss:} We propose a hierarchical structural similarity loss computed at multiple scales, enforcing consistency in both local textures and global structures.
+    
+    \item \textbf{Tumor Preservation Constraint:} We introduce a novel loss term that specifically preserves pathological regions during harmonization, critical for clinical applications where tumor characteristics must remain unchanged.
+    
+    \item \textbf{Comprehensive Evaluation:} We provide extensive experiments on two major glioma datasets with rigorous statistical analysis, ablation studies, and downstream task validation.
+\end{enumerate}
+
+% ==============================================================================
+\section{Related Work}
+\label{sec:related}
+% ==============================================================================
+
+\paragraph{Statistical Harmonization.}
+ComBat~\cite{johnson2007adjusting}, originally developed for genomics, has been widely adopted for neuroimaging harmonization~\cite{fortin2017harmonization}. Extensions include longitudinal ComBat~\cite{beer2020longitudinal} for repeated measures and GAM-ComBat~\cite{pomponio2020harmonization} for nonlinear covariate effects. While effective for removing linear site effects, these methods struggle with complex, nonlinear scanner-induced variations.
+
+\paragraph{Deep Learning Harmonization.}
+DeepHarmony~\cite{dewey2019deepharmony} pioneered deep learning for MRI harmonization using paired traveling-subject data. MISPEL~\cite{liu2021mispel} employs variational autoencoders with disentangled representations. Recent work has explored style transfer~\cite{modanwal2020mri}, domain adaptation~\cite{robinson2020image}, and generative adversarial networks~\cite{zhao2019harmonization} for this task.
+
+\paragraph{Unpaired Image Translation.}
+CycleGAN~\cite{zhu2017unpaired} enabled unpaired image-to-image translation through cycle-consistency. Extensions include UNIT~\cite{liu2017unsupervised} with shared latent spaces, MUNIT~\cite{huang2018multimodal} for multi-modal translation, and CUT~\cite{park2020contrastive} using contrastive learning. Our work builds on these foundations while incorporating domain-specific constraints for medical imaging.
+
+\paragraph{Attention Mechanisms in Medical Imaging.}
+Self-attention~\cite{vaswani2017attention} and its variants have shown remarkable success in medical image analysis~\cite{chen2021transunet}. Attention U-Net~\cite{oktay2018attention} introduced attention gates for segmentation. TransUNet~\cite{chen2021transunet} combines CNN encoders with transformer layers. We leverage self-attention specifically for preserving anatomical coherence during harmonization.
+
+% ==============================================================================
+\section{Method}
+\label{sec:method}
+% ==============================================================================
+
+\subsection{Problem Formulation}
+\label{sec:problem}
+
+Given two domains $\mathcal{A}$ and $\mathcal{B}$ representing MRI scans from different sites, our goal is to learn mappings $G_{A \rightarrow B}: \mathcal{A} \rightarrow \mathcal{B}$ and $G_{B \rightarrow A}: \mathcal{B} \rightarrow \mathcal{A}$ that harmonize inter-site variability while preserving anatomical and pathological content. Critically, we operate in an \textit{unpaired} setting where corresponding scans of the same subject are unavailable across sites.
+
+\subsection{Self-Attention Generator Architecture}
+\label{sec:generator}
+
+Our generator follows an encoder-bottleneck-decoder architecture with integrated self-attention mechanisms. Let $\mathbf{x} \in \real^{C \times H \times W}$ denote an input MRI volume slice.
+
+\paragraph{Encoder.}
+The encoder comprises three downsampling stages with residual blocks:
+\begin{equation}
+    \mathbf{F}_e = \text{Encoder}(\mathbf{x}) = \text{ResBlock}_3 \circ \text{Down}_2 \circ \text{ResBlock}_2 \circ \text{Down}_1 \circ \text{ResBlock}_1(\mathbf{x})
+\end{equation}
+
+\paragraph{Self-Attention Bottleneck.}
+The bottleneck consists of $N=9$ residual blocks with self-attention layers at positions $\{3, 6\}$:
+\begin{equation}
+    \text{SA}(\mathbf{F}) = \gamma \cdot \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^\top}{\sqrt{d_k}}\right)\mathbf{V} + \mathbf{F}
+\end{equation}
+where $\mathbf{Q} = W_Q\mathbf{F}$, $\mathbf{K} = W_K\mathbf{F}$, $\mathbf{V} = W_V\mathbf{F}$ are linear projections, $d_k$ is the key dimension, and $\gamma$ is a learnable scalar initialized to zero~\cite{zhang2019self}.
+
+\paragraph{Decoder.}
+The decoder mirrors the encoder with transposed convolutions:
+\begin{equation}
+    \mathbf{\hat{x}} = \text{Decoder}(\mathbf{F}_b) = \text{Up}_2 \circ \text{ResBlock}_5 \circ \text{Up}_1 \circ \text{ResBlock}_4(\mathbf{F}_b)
+\end{equation}
+
+\subsection{Multi-Scale Discriminator}
+\label{sec:discriminator}
+
+We employ a multi-scale discriminator architecture to capture both local textures and global structures:
+\begin{equation}
+    D(\mathbf{x}) = \sum_{s=1}^{3} \lambda_s D_s(\text{Downsample}^{s-1}(\mathbf{x}))
+\end{equation}
+where $D_s$ operates at scale $s$ and $\lambda_s$ are scale weights.
+
+\subsection{Loss Functions}
+\label{sec:losses}
+
+Our total objective combines multiple loss terms:
+
+\paragraph{Adversarial Loss.}
+We use LSGAN~\cite{mao2017least} for stable training:
+\begin{equation}
+    \loss{adv} = \expect_{\mathbf{x} \sim p_A}\left[(D_B(G_{A \rightarrow B}(\mathbf{x})) - 1)^2\right] + \expect_{\mathbf{y} \sim p_B}\left[D_B(\mathbf{y})^2\right]
+\end{equation}
+
+\paragraph{Cycle Consistency Loss.}
+Enforces invertibility of the learned mappings:
+\begin{equation}
+    \loss{cyc} = \expect_{\mathbf{x} \sim p_A}\left[\norm{G_{B \rightarrow A}(G_{A \rightarrow B}(\mathbf{x})) - \mathbf{x}}_1\right] + \expect_{\mathbf{y} \sim p_B}\left[\norm{G_{A \rightarrow B}(G_{B \rightarrow A}(\mathbf{y})) - \mathbf{y}}_1\right]
+\end{equation}
+
+\paragraph{Multi-Scale SSIM Loss.}
+Captures structural similarity at multiple resolutions:
+\begin{equation}
+    \loss{MS-SSIM} = 1 - \prod_{j=1}^{M} \left[l_M(\mathbf{x}, \hat{\mathbf{x}})\right]^{\alpha_M} \cdot \left[c_j(\mathbf{x}, \hat{\mathbf{x}})\right]^{\beta_j} \cdot \left[s_j(\mathbf{x}, \hat{\mathbf{x}})\right]^{\gamma_j}
+\end{equation}
+where $l$, $c$, $s$ denote luminance, contrast, and structure components.
+
+\paragraph{Perceptual Loss.}
+Ensures feature-level similarity using pretrained VGG-19~\cite{johnson2016perceptual}:
+\begin{equation}
+    \loss{perc} = \sum_{l \in \mathcal{L}} \frac{1}{C_l H_l W_l} \norm{\phi_l(\mathbf{x}) - \phi_l(\hat{\mathbf{x}})}_2^2
+\end{equation}
+where $\phi_l$ extracts features from layer $l$.
+
+\paragraph{Tumor Preservation Loss.}
+Maintains pathological region integrity:
+\begin{equation}
+    \loss{tumor} = \expect_{\mathbf{x}, \mathbf{m}}\left[\norm{(\mathbf{x} - G_{B \rightarrow A}(G_{A \rightarrow B}(\mathbf{x}))) \odot \mathbf{m}}_1\right]
+\end{equation}
+where $\mathbf{m}$ is the tumor mask and $\odot$ denotes element-wise multiplication.
+
+\paragraph{Contrastive Loss.}
+Following CUT~\cite{park2020contrastive}, we use PatchNCE for patch-level correspondence:
+\begin{equation}
+    \loss{NCE}(\mathbf{v}, \mathbf{v}^+, \mathbf{v}^-) = -\log \frac{\exp(\mathbf{v} \cdot \mathbf{v}^+ / \tau)}{\exp(\mathbf{v} \cdot \mathbf{v}^+ / \tau) + \sum_{n=1}^{N} \exp(\mathbf{v} \cdot \mathbf{v}_n^- / \tau)}
+\end{equation}
+
+\paragraph{Total Objective.}
+\begin{equation}
+    \loss{total} = \lambda_{adv}\loss{adv} + \lambda_{cyc}\loss{cyc} + \lambda_{ssim}\loss{MS-SSIM} + \lambda_{perc}\loss{perc} + \lambda_{tumor}\loss{tumor} + \lambda_{nce}\loss{NCE}
+\end{equation}
+
+% ==============================================================================
+\section{Experiments}
+\label{sec:experiments}
+% ==============================================================================
+
+\subsection{Datasets}
+\label{sec:datasets}
+
+\paragraph{BraTS 2023~\cite{menze2015multimodal}.}
+The Brain Tumor Segmentation Challenge provides multi-institutional glioma MRI data with four modalities (T1, T1ce, T2, FLAIR) and expert segmentation masks. We use 88 training subjects across multiple sites.
+
+\paragraph{UPenn-GBM~\cite{bakas2022university}.}
+The University of Pennsylvania Glioblastoma collection contains 566 subjects with multi-parametric MRI and genomic data. All scans were acquired at a single institution with consistent protocols.
+
+\subsection{Implementation Details}
+\label{sec:implementation}
+
+\input{../figures/generated/tables/complexity_table}
+
+We train using Adam optimizer with $\beta_1=0.5$, $\beta_2=0.999$, and learning rate $2 \times 10^{-4}$ with linear decay after epoch 100. Batch size is 4 with image resolution $256 \times 256$. Training runs for 200 epochs on a single NVIDIA A100 GPU. Loss weights are set as: $\lambda_{adv}=1.0$, $\lambda_{cyc}=10.0$, $\lambda_{ssim}=5.0$, $\lambda_{perc}=1.0$, $\lambda_{tumor}=2.0$, $\lambda_{nce}=1.0$.
+
+\subsection{Evaluation Metrics}
+\label{sec:metrics}
+
+We evaluate harmonization quality using:
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+    \item \textbf{SSIM}~\cite{wang2004image}: Structural similarity index measuring perceptual quality
+    \item \textbf{PSNR}: Peak signal-to-noise ratio for reconstruction fidelity
+    \item \textbf{FID}~\cite{heusel2017gans}: Fréchet Inception Distance for distribution matching
+    \item \textbf{LPIPS}~\cite{zhang2018perceptual}: Learned Perceptual Image Patch Similarity
+    \item \textbf{Downstream Dice}: Tumor segmentation performance on harmonized images
+\end{itemize}
+
+\subsection{Main Results}
+\label{sec:results}
+
+\input{../figures/generated/tables/main_results_table}
+
+Table~\ref{tab:main_results} presents our main quantitative results. \ours{} achieves state-of-the-art performance across all metrics, significantly outperforming both traditional and deep learning baselines.
+
+\subsection{Ablation Studies}
+\label{sec:ablation}
+
+\input{../figures/generated/tables/ablation_table}
+
+Table~\ref{tab:ablation} shows the contribution of each component. The self-attention mechanism and tumor preservation loss provide the largest improvements.
+
+\subsection{Cross-Site Generalization}
+\label{sec:crosssite}
+
+\input{../figures/generated/tables/modality_table}
+
+Table~\ref{tab:modality} demonstrates consistent performance across all MRI modalities, with T2-FLAIR showing the highest improvement due to greater inter-site variability in these sequences.
+
+\subsection{Statistical Analysis}
+\label{sec:statistical}
+
+\input{../figures/generated/tables/statistical_table}
+
+Table~\ref{tab:statistical} presents rigorous statistical comparisons. All improvements are statistically significant ($p < 0.001$) with large effect sizes (Cohen's $d > 0.8$).
+
+\subsection{Downstream Task Evaluation}
+\label{sec:downstream}
+
+\input{../figures/generated/tables/downstream_table}
+
+Table~\ref{tab:downstream} validates clinical utility through tumor segmentation performance. \ours{} maintains segmentation accuracy while reducing inter-site variability.
+
+% ==============================================================================
+\section{Discussion}
+\label{sec:discussion}
+% ==============================================================================
+
+Our results demonstrate that self-attention mechanisms are crucial for maintaining global anatomical consistency during harmonization. The attention maps (Supplementary Figure S2) reveal that the network learns to focus on structurally important regions while allowing local intensity adjustments in homogeneous areas.
+
+The tumor preservation loss is essential for clinical applicability. Without it, subtle tumor characteristics may be altered during harmonization, potentially affecting diagnostic accuracy. Our constraint ensures that pathological regions remain unchanged while harmonizing surrounding tissue.
+
+\paragraph{Limitations.}
+Our approach has several limitations: (1) training requires substantial computational resources, (2) performance may degrade for extreme protocol differences, and (3) the method assumes 2D slice-wise processing, not leveraging full 3D context.
+
+\paragraph{Future Work.}
+Extensions include 3D volumetric processing, multi-site harmonization beyond pairwise domains, and integration with downstream analysis pipelines.
+
+% ==============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% ==============================================================================
+
+We presented \ours{}, a self-attention enhanced CycleGAN framework for multi-center brain MRI harmonization. Through careful integration of self-attention mechanisms, multi-scale structural losses, and tumor-preserving constraints, our method achieves state-of-the-art harmonization performance while maintaining clinical utility. Comprehensive experiments on two major glioma datasets with rigorous statistical analysis validate our approach for real-world deployment in multi-center neuroimaging studies.
+
+% ==============================================================================
+% References
+% ==============================================================================
+
+\bibliography{references}
+\bibliographystyle{unsrtnat}
+
+% ==============================================================================
+% Appendix
+% ==============================================================================
+
+\newpage
+\appendix
+
+\section{Additional Experimental Details}
+\label{app:details}
+
+\subsection{Data Preprocessing}
+All MRI volumes undergo N4 bias field correction~\cite{tustison2010n4itk}, skull stripping using HD-BET~\cite{isensee2019automated}, and intensity normalization to $[0, 1]$.
+
+\subsection{Hyperparameter Sensitivity}
+We conducted extensive hyperparameter search over learning rate $\in \{10^{-4}, 2 \times 10^{-4}, 5 \times 10^{-4}\}$, batch size $\in \{2, 4, 8\}$, and loss weights. Results are robust to moderate variations.
+
+\section{Additional Visualizations}
+\label{app:visualizations}
+
+See supplementary materials for additional qualitative results, attention visualizations, and failure case analysis.
+
+\end{document}

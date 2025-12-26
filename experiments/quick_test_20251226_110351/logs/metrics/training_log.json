@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "created": "2025-12-26T11:03:53.096887",
+    "last_updated": "2025-12-26T11:03:53.096899"
+  },
+  "config": {},
+  "history": {
+    "train": [],
+    "validation": [],
+    "epochs": []
+  },
+  "checkpoints": [],
+  "events": []
+}

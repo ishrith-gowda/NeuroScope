@@ -1,0 +1,132 @@
+# =============================================================================
+# 2.5D SA-CycleGAN Training Configuration
+# =============================================================================
+# Professional research configuration for NeurIPS/CVPR/MICCAI submission
+# Author: NeuroScope Research Team
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Experiment Identification
+# -----------------------------------------------------------------------------
+experiment_name: "sa_cyclegan_25d_full"
+seed: 42
+deterministic: true
+
+# -----------------------------------------------------------------------------
+# Data Paths
+# -----------------------------------------------------------------------------
+brats_dir: "/Volumes/usb drive/neuroscope/preprocessed/brats"
+upenn_dir: "/Volumes/usb drive/neuroscope/preprocessed/upenn"
+output_dir: "/Volumes/usb drive/neuroscope/experiments"
+
+# -----------------------------------------------------------------------------
+# Model Architecture
+# -----------------------------------------------------------------------------
+# SA-CycleGAN 2.5D with Self-Attention and CBAM
+ngf: 64                    # Generator base filters
+ndf: 64                    # Discriminator base filters
+n_residual_blocks: 9       # ResNet blocks in generator (6/9 standard)
+use_attention: true        # Self-attention in bottleneck
+use_cbam: true             # CBAM attention modules
+input_channels: 12         # 3 slices × 4 modalities
+output_channels: 4         # 4 modalities (center slice)
+
+# -----------------------------------------------------------------------------
+# Training Configuration
+# -----------------------------------------------------------------------------
+epochs: 100                # Full training
+batch_size: 8              # Increased for faster training
+image_size: 128            # Spatial resolution
+num_workers: 4             # Data loading workers
+
+# -----------------------------------------------------------------------------
+# Optimizer Configuration
+# -----------------------------------------------------------------------------
+lr_G: 0.0002               # Generator learning rate
+lr_D: 0.0002               # Discriminator learning rate
+beta1: 0.5                 # Adam beta1 (momentum)
+beta2: 0.999               # Adam beta2
+weight_decay: 0.0          # L2 regularization
+
+# -----------------------------------------------------------------------------
+# Learning Rate Scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"   # Options: cosine, linear, step
+warmup_epochs: 5           # Warmup period
+min_lr: 0.000001           # Minimum learning rate
+
+# -----------------------------------------------------------------------------
+# Loss Function Weights
+# -----------------------------------------------------------------------------
+# CycleGAN loss: GAN + λ_cycle × Cycle + λ_identity × Identity + λ_ssim × SSIM
+lambda_cycle: 10.0         # Cycle consistency weight
+lambda_identity: 5.0       # Identity mapping weight
+lambda_ssim: 1.0           # SSIM perceptual weight
+lambda_gradient: 1.0       # Edge-preserving gradient weight
+
+# -----------------------------------------------------------------------------
+# Regularization
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 1.0    # Max gradient L2 norm (0 = disabled)
+gradient_clip_value: null  # Max gradient value (null = disabled)
+
+# -----------------------------------------------------------------------------
+# Mixed Precision Training
+# -----------------------------------------------------------------------------
+use_amp: false             # AMP disabled for MPS (CUDA only)
+
+# -----------------------------------------------------------------------------
+# Validation & Checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 5          # Validation frequency (epochs)
+save_every: 10             # Checkpoint save frequency
+save_best_only: false      # Keep all checkpoints
+
+# -----------------------------------------------------------------------------
+# Early Stopping
+# -----------------------------------------------------------------------------
+early_stopping: true       # Enable early stopping
+patience: 20               # Epochs without improvement
+min_delta: 0.001           # Minimum improvement threshold
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 10      # Batch logging frequency
+sample_every: 10           # Sample generation frequency (epochs)
+figure_every: 10           # Figure generation frequency (epochs)
+verbose: 2                 # 0=silent, 1=minimal, 2=normal, 3=detailed
+
+# -----------------------------------------------------------------------------
+# Resume Training
+# -----------------------------------------------------------------------------
+resume_from: null          # Path to checkpoint (null = fresh start)
+
+# =============================================================================
+# Alternative Configurations (commented examples)
+# =============================================================================
+
+# --- Quick Debug Run ---
+# epochs: 2
+# batch_size: 2
+# validate_every: 1
+# save_every: 1
+# sample_every: 1
+# log_every_n_steps: 1
+
+# --- Fast Training (reduced model) ---
+# ngf: 32
+# ndf: 32
+# n_residual_blocks: 6
+# epochs: 50
+
+# --- Full Research Training (high quality) ---
+# epochs: 200
+# patience: 40
+# warmup_epochs: 10
+# n_residual_blocks: 9
+
+# --- High Memory Configuration ---
+# batch_size: 8
+# image_size: 256
+# num_workers: 8

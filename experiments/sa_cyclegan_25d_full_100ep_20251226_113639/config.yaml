@@ -1,0 +1,43 @@
+experiment_name: sa_cyclegan_25d_full_100ep
+seed: 42
+deterministic: true
+brats_dir: /Volumes/usb drive/neuroscope/preprocessed/brats
+upenn_dir: /Volumes/usb drive/neuroscope/preprocessed/upenn
+output_dir: /Volumes/usb drive/neuroscope/experiments
+ngf: 64
+ndf: 64
+n_residual_blocks: 9
+use_attention: true
+use_cbam: true
+input_channels: 12
+output_channels: 4
+epochs: 100
+batch_size: 8
+image_size: 128
+num_workers: 4
+lr_G: 0.0002
+lr_D: 0.0002
+beta1: 0.5
+beta2: 0.999
+weight_decay: 0.0
+scheduler_type: cosine
+warmup_epochs: 5
+min_lr: 1.0e-06
+lambda_cycle: 10.0
+lambda_identity: 5.0
+lambda_ssim: 1.0
+lambda_gradient: 1.0
+gradient_clip_norm: 1.0
+gradient_clip_value: null
+use_amp: false
+validate_every: 5
+save_every: 10
+save_best_only: false
+early_stopping: true
+patience: 20
+min_delta: 0.001
+log_every_n_steps: 10
+sample_every: 10
+figure_every: 10
+verbose: 2
+resume_from: null

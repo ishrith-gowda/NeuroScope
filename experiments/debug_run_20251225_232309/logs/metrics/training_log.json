@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "created": "2025-12-25T23:23:10.975147",
+    "last_updated": "2025-12-25T23:23:10.975155",
+    "model_name": "SACycleGAN25D",
+    "total_params": 35096836,
+    "trainable_params": 35096836,
+    "train_samples": 42110,
+    "val_samples": 5263,
+    "test_samples": 5265,
+    "batch_size": 2
+  },
+  "config": {
+    "experiment": "debug_run",
+    "model": {
+      "ngf": 64,
+      "ndf": 64,
+      "n_residual": 9
+    },
+    "training": {
+      "epochs": 2,
+      "batch_size": 2,
+      "lr_G": 0.0002,
+      "lr_D": 0.0002
+    },
+    "device": "Apple Silicon (MPS)"
+  },
+  "history": {
+    "train": [],
+    "validation": [],
+    "epochs": []
+  },
+  "checkpoints": [],
+  "events": []
+}
