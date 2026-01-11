@@ -378,9 +378,9 @@ def generate_validation_report(results: Dict[str, any]) -> None:
     logging.info(f"File structure valid: {summary['file_structure_valid']}")
     
     if summary['total_issues'] == 0:
-        logging.info("✅ ALL VALIDATIONS PASSED - Pipeline is ready for training!")
+        logging.info("+ ALL VALIDATIONS PASSED - Pipeline is ready for training!")
     else:
-        logging.warning("⚠️  ISSUES FOUND - Please review and fix before training")
+        logging.warning("warning:  ISSUES FOUND - Please review and fix before training")
 
 
 def parse_args():

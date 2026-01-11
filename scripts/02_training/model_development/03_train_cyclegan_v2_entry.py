@@ -97,11 +97,11 @@ def main():
         
         print("\nStarting v2 training...\n")
         train(args_obj, device)
-        print("\n✓ Training completed successfully!\n")
+        print("\ntraining completed successfully\n")
         
     except Exception as e:
         import traceback
-        print(f"\n✗ Training failed: {e}")
+        print(f"\ntraining failed: {e}")
         traceback.print_exc()
         sys.exit(1)
 

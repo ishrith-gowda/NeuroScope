@@ -24,7 +24,7 @@ class MRIDataset25D(Dataset):
     2.5D MRI Dataset for unpaired domain translation.
     
     For each sample, returns 3 adjacent slices stacked with all modalities:
-    - Output shape: [12, H, W] = 3 slices × 4 modalities
+    - Output shape: [12, H, W] = 3 slices x 4 modalities
     
     This enables the model to use inter-slice context for better
     anatomical consistency in the translated output.
@@ -163,11 +163,11 @@ class MRIDataset25D(Dataset):
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         """
-        Get a sample (3 adjacent slices × 4 modalities).
+        Get a sample (3 adjacent slices x 4 modalities).
         
         Returns:
             Dictionary with:
-                'image': [12, H, W] tensor (3 slices × 4 modalities)
+                'image': [12, H, W] tensor (3 slices x 4 modalities)
                 'center_slice': [4, H, W] tensor (center slice only, for reference)
                 'subject_id': subject identifier
                 'slice_idx': center slice index
@@ -187,7 +187,7 @@ class MRIDataset25D(Dataset):
                 slice_2d = self._resize_slice(slice_2d)
                 slices.append(slice_2d)
         
-        # Stack: [12, H, W] = 3 slices × 4 modalities
+        # Stack: [12, H, W] = 3 slices x 4 modalities
         # Order: [s-1_t1, s-1_t1gd, s-1_t2, s-1_flair, s_t1, ..., s+1_flair]
         image = np.stack(slices, axis=0)
         
@@ -373,8 +373,8 @@ if __name__ == '__main__':
     # Get a sample
     sample = dataset[0]
     print(f"\nSample shapes:")
-    print(f"  A (3 slices × 4 mod): {sample['A'].shape}")
-    print(f"  B (3 slices × 4 mod): {sample['B'].shape}")
+    print(f"  A (3 slices x 4 mod): {sample['A'].shape}")
+    print(f"  B (3 slices x 4 mod): {sample['B'].shape}")
     print(f"  A center slice: {sample['A_center'].shape}")
     print(f"  A subject: {sample['A_subject']}, slice: {sample['A_slice']}")
     print(f"  B subject: {sample['B_subject']}, slice: {sample['B_slice']}")

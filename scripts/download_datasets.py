@@ -184,7 +184,7 @@ class DatasetDownloader:
         # Execute download
         try:
             subprocess.run(cmd, shell=True, check=True)
-            logger.info(f"✅ OASIS-3 downloaded successfully to: {output_path}")
+            logger.info(f"+ OASIS-3 downloaded successfully to: {output_path}")
         except subprocess.CalledProcessError as e:
             logger.error(f"Download failed: {e}")
             logger.info("\nAlternative: Visit https://www.oasis-brains.org/ and download manually")
@@ -351,7 +351,7 @@ This will create a unified dataset structure suitable for training.
         with open(summary_path, 'w') as f:
             f.write(content)
 
-        logger.info(f"\n✅ Dataset summary created: {summary_path}")
+        logger.info(f"\n+ Dataset summary created: {summary_path}")
 
 
 def main():

@@ -398,7 +398,7 @@ class StatisticalAnalyzer:
                 'p-value': f"{result['p_value']:.4f}",
                 'Corrected p-value': f"{result['p_value_corrected']:.4f}",
                 "Cohen's d": f"{result['cohens_d']:.4f}",
-                'Significant': '✓' if result['significant'] else '✗',
+                'Significant': '+' if result['significant'] else '✗',
             }
 
             rows.append(row)

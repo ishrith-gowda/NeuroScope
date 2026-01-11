@@ -150,7 +150,7 @@ class BaselineOrchestrator:
         }
 
         if returncode == 0:
-            logger.info(f"✓ Baseline CycleGAN completed in {duration/3600:.2f} hours")
+            logger.info(f"+ Baseline CycleGAN completed in {duration/3600:.2f} hours")
         else:
             logger.error(f"✗ Baseline CycleGAN failed!")
 
@@ -185,7 +185,7 @@ class BaselineOrchestrator:
         }
 
         if returncode == 0:
-            logger.info(f"✓ ComBat completed in {duration/60:.2f} minutes")
+            logger.info(f"+ ComBat completed in {duration/60:.2f} minutes")
         else:
             logger.error(f"✗ ComBat failed!")
 
@@ -310,7 +310,7 @@ class BaselineOrchestrator:
         logger.info("="*80)
 
         for method, info in self.experiments.items():
-            status_symbol = "✓" if info['status'] == 'success' else "✗"
+            status_symbol = "+" if info['status'] == 'success' else "✗"
             logger.info(f"{status_symbol} {method}: {info['status']}")
 
             if 'duration' in info:

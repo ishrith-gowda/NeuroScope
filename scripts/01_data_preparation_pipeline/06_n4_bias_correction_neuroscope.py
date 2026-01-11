@@ -415,11 +415,11 @@ def print_improved_summary(results: Dict):
         print(f"  average per subject:         {avg_time:.1f} seconds")
     
     print(f"\nimproved approach features:")
-    print(f"  ✓ Conservative N4 parameters to avoid over-correction")
-    print(f"  ✓ Bias field assessment - skips N4 when unnecessary")
-    print(f"  ✓ Quality validation - rejects poor N4 results")
-    print(f"  ✓ Fallback strategy - copies original if N4 fails")
-    print(f"  ✓ Intensity range protection")
+    print(f"  - conservative n4 parameters to avoid over-correction")
+    print(f"  - bias field assessment - skips n4 when unnecessary")
+    print(f"  - quality validation - rejects poor n4 results")
+    print(f"  - fallback strategy - copies original if n4 fails")
+    print(f"  - intensity range protection")
     
     # Show sample processing details
     n4_applied_count = 0

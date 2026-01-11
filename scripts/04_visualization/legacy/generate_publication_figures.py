@@ -217,7 +217,7 @@ def create_architecture_diagram(save_dir, colors):
     plt.savefig(save_dir / 'fig1_architecture.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig1_architecture.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig1_architecture.pdf/png")
+    pprint("  saved fig1_architecture.pdf/png")
 
 
 # ============================================================================
@@ -305,7 +305,7 @@ def create_generator_diagram(save_dir, colors):
     plt.savefig(save_dir / 'fig2_generator.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig2_generator.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig2_generator.pdf/png")
+    pprint("  saved fig2_generator.pdf/png")
 
 
 # ============================================================================
@@ -390,7 +390,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     plt.savefig(save_dir / 'fig3_training_curves.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig3_training_curves.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig3_training_curves.pdf/png")
+    pprint("  saved fig3_training_curves.pdf/png")
 
 
 # ============================================================================
@@ -492,7 +492,7 @@ def create_dataset_statistics(save_dir, colors):
     plt.savefig(save_dir / 'fig4_dataset_stats.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig4_dataset_stats.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig4_dataset_stats.pdf/png")
+    pprint("  saved fig4_dataset_stats.pdf/png")
 
 
 # ============================================================================
@@ -545,7 +545,7 @@ def create_hyperparameter_table(save_dir, colors):
     plt.savefig(save_dir / 'fig5_hyperparameters.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig5_hyperparameters.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig5_hyperparameters.pdf/png")
+    pprint("  saved fig5_hyperparameters.pdf/png")
 
 
 # ============================================================================
@@ -595,7 +595,7 @@ def create_techniques_diagram(save_dir, colors):
     plt.savefig(save_dir / 'fig6_techniques.pdf', dpi=300, bbox_inches='tight')
     plt.savefig(save_dir / 'fig6_techniques.png', dpi=300, bbox_inches='tight')
     plt.close()
-    pprint("  ✓ Saved fig6_techniques.pdf/png")
+    pprint("  saved fig6_techniques.pdf/png")
 
 
 # ============================================================================

@@ -116,7 +116,7 @@ class ComprehensiveEvaluator:
         )
 
         # instantiate model
-        model = SACycleGAN25D(config_model_config)
+        model = SACycleGAN25D(model_config)
 
         # load weights
         model.load_state_dict(checkpoint['model_state_dict'])

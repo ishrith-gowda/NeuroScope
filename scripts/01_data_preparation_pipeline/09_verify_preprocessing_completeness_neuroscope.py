@@ -541,22 +541,22 @@ def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any])
     
     # Recommendations
     recommendations = summary.get('recommendations', [])
-    print(f"\nRecommendations:")
+    print(f"\nrecommendations:")
     for i, rec in enumerate(recommendations, 1):
-        rec_emoji = "✅" if "passed" in rec.lower() else "⚠️"
-        print(f"  {rec_emoji} {rec}")
-    
+        rec_symbol = "+" if "passed" in rec.lower() else "-"
+        print(f"  {rec_symbol} {rec}")
+
     # Next steps
-    print(f"\nNext Steps:")
+    print(f"\nnext steps:")
     if summary['pipeline_readiness'] in ['excellent', 'good']:
-        print(f"  ✅ Your preprocessing pipeline is working excellently!")
-        print(f"  ✅ Data is ready for CycleGAN training")
-        print(f"  ✅ Proceed to: scripts/02_model_development_pipeline/train_cyclegan.py")
-        print(f"  📊 Review detailed JSON report for specifics")
+        print(f"  + preprocessing pipeline is working excellently")
+        print(f"  + data is ready for cyclegan training")
+        print(f"  + proceed to: scripts/02_model_development_pipeline/train_cyclegan.py")
+        print(f"  + review detailed json report for specifics")
     else:
-        print(f"  ⚠️  Address quality issues before proceeding to model training")
-        print(f"  📋 Review detailed results in the JSON output file")
-        print(f"  🔧 Run preprocessing scripts again if needed")
+        print(f"  - address quality issues before proceeding to model training")
+        print(f"  - review detailed results in the json output file")
+        print(f"  - run preprocessing scripts again if needed")
     
     # Timing info
     elapsed_time = results['verification_info'].get('elapsed_time_seconds', 0)

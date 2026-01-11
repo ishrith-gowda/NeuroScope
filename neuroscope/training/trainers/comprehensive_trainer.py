@@ -438,7 +438,17 @@ class ComprehensiveTrainer:
             real_B = batch['B'].to(self.device)
             center_A = batch['A_center'].to(self.device)
             center_B = batch['B_center'].to(self.device)
-            
+
+            # Validate input data
+            if torch.isnan(real_A).any() or torch.isnan(real_B).any():
+                print(f"\nnan in input data at batch {batch_idx+1}")
+                print(f"   real_a has nan: {torch.isnan(real_A).any()}")
+                print(f"   real_b has nan: {torch.isnan(real_B).any()}")
+                raise ValueError("nan in input data")
+            if torch.isinf(real_A).any() or torch.isinf(real_B).any():
+                print(f"\ninf in input data at batch {batch_idx+1}")
+                raise ValueError("inf in input data")
+
             # ================================================================
             # Train Generators
             # ================================================================
@@ -447,7 +457,7 @@ class ComprehensiveTrainer:
             # Generate
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
-            
+
             # Cycle consistency (expand to 3-slice format)
             fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
@@ -470,7 +480,7 @@ class ComprehensiveTrainer:
             pred_fake_A = self.model.D_A(fake_A)
             loss_gan_A2B = self.losses.gan_loss.generator_loss(pred_fake_B)
             loss_gan_B2A = self.losses.gan_loss.generator_loss(pred_fake_A)
-            
+
             loss_ssim = self.losses.ssim_loss(center_A, rec_A) + self.losses.ssim_loss(center_B, rec_B)
             
             loss_G = (loss_gan_A2B + loss_gan_B2A + 
@@ -517,7 +527,19 @@ class ComprehensiveTrainer:
                 
             grad_norm_D = self.compute_gradient_norm(self.model.D_A)
             self.opt_D.step()
-            
+
+            # Check for NaN losses
+            if torch.isnan(loss_G) or torch.isnan(loss_D):
+                print(f"\nnan detected at epoch {self.current_epoch}, batch {batch_idx+1}")
+                print(f"   g_loss: {loss_G.item()}")
+                print(f"   d_loss: {loss_D.item()}")
+                print(f"   cycle_a: {loss_cycle_A.item()}, cycle_b: {loss_cycle_B.item()}")
+                print(f"   identity_a: {loss_identity_A.item()}, identity_b: {loss_identity_B.item()}")
+                print(f"   gan_a2b: {loss_gan_A2B.item()}, gan_b2a: {loss_gan_B2A.item()}")
+                print(f"   ssim: {loss_ssim.item()}")
+                print(f"   grad_norm_g: {grad_norm_G}, grad_norm_d: {grad_norm_D}")
+                raise ValueError("nan loss detected - training stopped")
+
             # Accumulate
             epoch_losses['G_loss'] += loss_G.item()
             epoch_losses['D_loss'] += loss_D.item()

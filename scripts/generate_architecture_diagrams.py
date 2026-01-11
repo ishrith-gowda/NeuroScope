@@ -80,11 +80,11 @@ def generate_generator_architecture():
             ha='center', fontsize=14, fontweight='bold')
     
     # Input
-    create_block(ax, 0, 3, 1.2, 2, '#95a5a6', 'Input\n256×256×4', fontsize=7)
+    create_block(ax, 0, 3, 1.2, 2, '#95a5a6', 'Input\n256x256x4', fontsize=7)
     
     # Encoder
     enc_x = [1.8, 3.2, 4.6]
-    enc_labels = ['Conv\n7×7\n64ch', 'Conv↓\n3×3\n128ch', 'Conv↓\n3×3\n256ch']
+    enc_labels = ['Conv\n7x7\n64ch', 'Conv↓\n3x3\n128ch', 'Conv↓\n3x3\n256ch']
     for i, (x, label) in enumerate(zip(enc_x, enc_labels)):
         create_block(ax, x, 3, 1.2, 2, COLORS['encoder'], label, fontsize=7)
         if i > 0:
@@ -149,12 +149,12 @@ def generate_attention_mechanism():
             ha='center', fontsize=14, fontweight='bold')
     
     # Input feature map
-    create_block(ax, 0, 2, 1.5, 2, '#95a5a6', 'F\n(C×H×W)', fontsize=8)
+    create_block(ax, 0, 2, 1.5, 2, '#95a5a6', 'F\n(CxHxW)', fontsize=8)
     
     # Q, K, V projections
-    create_block(ax, 2.5, 4, 1.2, 1.2, '#3498db', 'Q\n(C̄×HW)', fontsize=8)
-    create_block(ax, 2.5, 2.4, 1.2, 1.2, '#e74c3c', 'K\n(C̄×HW)', fontsize=8)
-    create_block(ax, 2.5, 0.8, 1.2, 1.2, '#2ecc71', 'V\n(C×HW)', fontsize=8)
+    create_block(ax, 2.5, 4, 1.2, 1.2, '#3498db', 'Q\n(C̄xHW)', fontsize=8)
+    create_block(ax, 2.5, 2.4, 1.2, 1.2, '#e74c3c', 'K\n(C̄xHW)', fontsize=8)
+    create_block(ax, 2.5, 0.8, 1.2, 1.2, '#2ecc71', 'V\n(CxHW)', fontsize=8)
     
     # Arrows from input to Q, K, V
     create_arrow(ax, (1.5, 4), (2.5, 4.6))
@@ -162,7 +162,7 @@ def generate_attention_mechanism():
     create_arrow(ax, (1.5, 2.5), (2.5, 1.4))
     
     # QK^T
-    create_block(ax, 5, 3.2, 1.5, 1.5, '#9b59b6', 'QK^T\n(HW×HW)', fontsize=8)
+    create_block(ax, 5, 3.2, 1.5, 1.5, '#9b59b6', 'QK^T\n(HWxHW)', fontsize=8)
     create_arrow(ax, (3.7, 4.6), (5, 4.2))
     create_arrow(ax, (3.7, 3), (5, 3.7))
     
@@ -171,7 +171,7 @@ def generate_attention_mechanism():
     create_arrow(ax, (6.5, 3.95), (7.2, 3.95))
     
     # AV multiplication
-    create_block(ax, 9.5, 2.4, 1.5, 1.5, '#1abc9c', 'A × V\n(C×HW)', fontsize=8)
+    create_block(ax, 9.5, 2.4, 1.5, 1.5, '#1abc9c', 'A x V\n(CxHW)', fontsize=8)
     create_arrow(ax, (8.7, 3.5), (9.5, 3.3))
     create_arrow(ax, (3.7, 1.4), (9.5, 2.6))
     
@@ -239,7 +239,7 @@ def generate_multi_scale_discriminator():
             ha='center', fontsize=14, fontweight='bold')
     
     # Input image
-    create_block(ax, 0, 2.5, 1.5, 2, '#95a5a6', 'Input\n256×256', fontsize=8)
+    create_block(ax, 0, 2.5, 1.5, 2, '#95a5a6', 'Input\n256x256', fontsize=8)
     
     # Scale 1 (original)
     scale1_y = 5
@@ -287,7 +287,7 @@ def generate_multi_scale_discriminator():
     create_arrow(ax, (12.5, 3.5), (13, 3.5))
     
     # Annotations
-    ax.text(6, 0.3, 'Receptive Field: 70×70 (PatchGAN)', 
+    ax.text(6, 0.3, 'Receptive Field: 70x70 (PatchGAN)', 
             ha='center', fontsize=9, style='italic')
     
     return fig
@@ -350,7 +350,7 @@ def generate_training_pipeline():
     for i, label in enumerate(loss_labels):
         create_block(ax, 2 + i*2.2, loss_y, 1.8, 0.8, COLORS['loss'], label, fontsize=7)
     
-    ax.text(8, -0.9, 'Total Loss = Σ λ_i × L_i', 
+    ax.text(8, -0.9, 'Total Loss = Σ λ_i x L_i', 
             ha='center', fontsize=10, fontweight='bold')
     
     return fig

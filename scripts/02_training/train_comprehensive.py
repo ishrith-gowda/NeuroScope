@@ -40,33 +40,24 @@ def set_environment():
     """Configure environment for optimal training."""
     # Reduce memory fragmentation
     os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
-    
+
     # For reproducibility
     os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-    
+
+    # Fix macOS malloc stack logging warnings
+    os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+    os.environ['MallocStackLogging'] = '0'
+
     # Suppress unhelpful warnings
     import warnings
     warnings.filterwarnings('ignore', category=UserWarning)
     
 
 def print_banner():
-    """Print training banner."""
-    banner = """
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║     ███╗   ██╗███████╗██╗   ██╗██████╗  ██████╗ ███████╗ ██████╗██████╗ ███████╗    ║
-║     ████╗  ██║██╔════╝██║   ██║██╔══██╗██╔═══██╗██╔════╝██╔════╝██╔══██╗██╔════╝    ║
-║     ██╔██╗ ██║█████╗  ██║   ██║██████╔╝██║   ██║███████╗██║     ██████╔╝█████╗      ║
-║     ██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██║   ██║╚════██║██║     ██╔═══╝ ██╔══╝      ║
-║     ██║ ╚████║███████╗╚██████╔╝██║  ██║╚██████╔╝███████║╚██████╗██║     ███████╗    ║
-║     ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝╚═╝     ╚══════╝    ║
-║                                                                              ║
-║              2.5D SA-CycleGAN MRI Harmonization Training                     ║
-║                    Professional Research Pipeline                            ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-    """
-    print(banner)
+    """Print simple training header."""
+    print("\n" + "="*60)
+    print("neuroscope - 2.5d sa-cyclegan training")
+    print("="*60)
 
 
 def get_device_info():
@@ -107,13 +98,13 @@ def create_config_from_args(args) -> 'TrainingConfig':
     
     if args.config:
         config = TrainingConfig.from_yaml(args.config)
-        print(f"📄 Loaded config from: {args.config}")
+        print(f"loaded config from: {args.config}")
     elif args.debug:
         config = create_debug_config()
-        print("🐛 Debug mode enabled")
+        print("debug mode enabled")
     else:
         config = TrainingConfig()
-        print("⚙️  Using default configuration")
+        print("using default configuration")
     
     # Command line overrides
     if args.epochs is not None:
@@ -131,7 +122,14 @@ def create_config_from_args(args) -> 'TrainingConfig':
         config.experiment_name = args.experiment_name
     if args.output_dir is not None:
         config.output_dir = args.output_dir
-        
+
+    # macOS-specific fix: reduce num_workers to avoid fork issues
+    import platform
+    if platform.system() == 'Darwin':  # macOS
+        if hasattr(config, 'num_workers') and config.num_workers > 2:
+            print(f"macos detected: reducing num_workers from {config.num_workers} to 2")
+            config.num_workers = 2
+
     return config
 
 
@@ -139,68 +137,68 @@ def verify_data_paths(config):
     """Verify data directories exist and contain valid MRI data."""
     brats_path = Path(config.brats_dir)
     upenn_path = Path(config.upenn_dir)
-    
-    print("\n📂 Verifying data paths...")
-    
+
+    print("\nverifying data paths...")
+
     if not brats_path.exists():
-        print(f"   ❌ BraTS directory not found: {brats_path}")
+        print(f"   brats directory not found: {brats_path}")
         return False
     else:
         # Count subject folders and NIfTI files
         brats_subjects = [d for d in brats_path.iterdir() if d.is_dir()]
         brats_nifti = list(brats_path.glob("**/*.nii.gz"))
-        print(f"   ✅ BraTS: {len(brats_subjects)} subjects, {len(brats_nifti)} NIfTI files")
+        print(f"   brats: {len(brats_subjects)} subjects, {len(brats_nifti)} nifti files")
         if len(brats_subjects) == 0:
-            print(f"   ⚠️  Warning: No subject folders found in BraTS directory")
-        
+            print(f"   warning: no subject folders found in brats directory")
+
     if not upenn_path.exists():
-        print(f"   ❌ UPenn directory not found: {upenn_path}")
+        print(f"   upenn directory not found: {upenn_path}")
         return False
     else:
         # Count subject folders and NIfTI files
         upenn_subjects = [d for d in upenn_path.iterdir() if d.is_dir()]
         upenn_nifti = list(upenn_path.glob("**/*.nii.gz"))
-        print(f"   ✅ UPenn: {len(upenn_subjects)} subjects, {len(upenn_nifti)} NIfTI files")
+        print(f"   upenn: {len(upenn_subjects)} subjects, {len(upenn_nifti)} nifti files")
         if len(upenn_subjects) == 0:
-            print(f"   ⚠️  Warning: No subject folders found in UPenn directory")
-        
+            print(f"   warning: no subject folders found in upenn directory")
+
     return True
 
 
 def print_config_summary(config):
     """Print configuration summary."""
     print("\n" + "="*60)
-    print("📋 CONFIGURATION SUMMARY")
+    print("configuration summary")
     print("="*60)
-    
-    print(f"\n🔬 Experiment: {config.experiment_name}")
-    print(f"🎲 Seed: {config.seed}")
-    
-    print("\n📊 Model:")
-    print(f"   • Generator filters: {config.ngf}")
-    print(f"   • Discriminator filters: {config.ndf}")
-    print(f"   • Residual blocks: {config.n_residual_blocks}")
-    print(f"   • Self-attention: {config.use_attention}")
-    print(f"   • CBAM: {config.use_cbam}")
-    print(f"   • Input channels: {config.input_channels} (3 slices × 4 modalities)")
-    print(f"   • Output channels: {config.output_channels}")
-    
-    print("\n🏋️ Training:")
-    print(f"   • Epochs: {config.epochs}")
-    print(f"   • Batch size: {config.batch_size}")
-    print(f"   • Image size: {config.image_size}×{config.image_size}")
-    print(f"   • Learning rate G: {config.lr_G}")
-    print(f"   • Learning rate D: {config.lr_D}")
-    print(f"   • Scheduler: {config.scheduler_type}")
-    print(f"   • Warmup epochs: {config.warmup_epochs}")
-    
-    print("\n⚖️ Loss weights:")
-    print(f"   • λ_cycle: {config.lambda_cycle}")
-    print(f"   • λ_identity: {config.lambda_identity}")
-    print(f"   • λ_ssim: {config.lambda_ssim}")
-    print(f"   • λ_gradient: {config.lambda_gradient}")
-    
-    print("\n📁 Output: {config.output_dir}")
+
+    print(f"\nexperiment: {config.experiment_name}")
+    print(f"seed: {config.seed}")
+
+    print("\nmodel:")
+    print(f"   generator filters: {config.ngf}")
+    print(f"   discriminator filters: {config.ndf}")
+    print(f"   residual blocks: {config.n_residual_blocks}")
+    print(f"   self-attention: {config.use_attention}")
+    print(f"   cbam: {config.use_cbam}")
+    print(f"   input channels: {config.input_channels} (3 slices x 4 modalities)")
+    print(f"   output channels: {config.output_channels}")
+
+    print("\ntraining:")
+    print(f"   epochs: {config.epochs}")
+    print(f"   batch size: {config.batch_size}")
+    print(f"   image size: {config.image_size}x{config.image_size}")
+    print(f"   learning rate g: {config.lr_G}")
+    print(f"   learning rate d: {config.lr_D}")
+    print(f"   scheduler: {config.scheduler_type}")
+    print(f"   warmup epochs: {config.warmup_epochs}")
+
+    print("\nloss weights:")
+    print(f"   lambda_cycle: {config.lambda_cycle}")
+    print(f"   lambda_identity: {config.lambda_identity}")
+    print(f"   lambda_ssim: {config.lambda_ssim}")
+    print(f"   lambda_gradient: {config.lambda_gradient}")
+
+    print(f"\noutput: {config.output_dir}")
     print("="*60 + "\n")
 
 
@@ -252,75 +250,75 @@ Examples:
     # Setup
     set_environment()
     print_banner()
-    
+
     # Device info
     device, device_name = get_device_info()
-    print(f"🖥️  Device: {device_name}")
-    print(f"🐍 Python: {sys.version.split()[0]}")
-    print(f"🔥 PyTorch: {torch.__version__}")
-    
+    print(f"device: {device_name}")
+    print(f"python: {sys.version.split()[0]}")
+    print(f"pytorch: {torch.__version__}")
+
     # Create config
     config = create_config_from_args(args)
-    
+
     # Verify paths
     if not verify_data_paths(config):
-        print("\n❌ Data verification failed. Exiting.")
+        print("\ndata verification failed. exiting.")
         sys.exit(1)
-        
+
     # Print summary
     print_config_summary(config)
-    
+
     # Confirm
     if not args.debug:
-        response = input("🚀 Start training? [Y/n]: ").strip().lower()
+        response = input("start training? [y/n]: ").strip().lower()
         if response and response != 'y':
-            print("Training cancelled.")
+            print("training cancelled.")
             sys.exit(0)
-    
+
     # Import trainer (after all checks to fail fast)
     from neuroscope.training.trainers.comprehensive_trainer import ComprehensiveTrainer
-    
+
     # Create trainer
-    print("\n🔧 Initializing trainer...")
+    print("\ninitializing trainer...")
     trainer = ComprehensiveTrainer(config)
-    
+
     # Model summary
-    print(f"\n📐 Model parameters: {trainer.total_params:,}")
-    print(f"   Trainable: {trainer.trainable_params:,}")
-    
+    print(f"\nmodel parameters: {trainer.total_params:,}")
+    print(f"   trainable: {trainer.trainable_params:,}")
+
     # Data summary
-    print(f"\n📊 Dataset splits:")
-    print(f"   Train: {trainer.train_samples:,} samples")
-    print(f"   Valid: {trainer.val_samples:,} samples")
-    print(f"   Test: {trainer.test_samples:,} samples")
-    
+    print(f"\ndataset splits:")
+    print(f"   train: {trainer.train_samples:,} samples")
+    print(f"   valid: {trainer.val_samples:,} samples")
+    print(f"   test: {trainer.test_samples:,} samples")
+
     # Start training
     print("\n" + "="*60)
-    print("🏁 STARTING TRAINING")
+    print("starting training")
     print("="*60 + "\n")
-    
+
     try:
         final_metrics = trainer.train()
-        
+
         print("\n" + "="*60)
-        print("✅ TRAINING COMPLETE")
+        print("training complete")
         print("="*60)
-        print(f"\n📊 Final Results:")
+        print(f"\nfinal results:")
         for k, v in final_metrics.items():
-            print(f"   • {k}: {v:.4f}")
-        print(f"\n📁 Results saved to: {trainer.run_dir}")
-        
+            print(f"   {k}: {v:.4f}")
+        print(f"\nresults saved to: {trainer.run_dir}")
+
     except KeyboardInterrupt:
-        print("\n\n⚠️  Training interrupted by user")
+        print("\n\ntraining interrupted by user")
         trainer.save_checkpoint()
-        print(f"💾 Checkpoint saved to: {trainer.checkpoints_dir}")
-        
+        print(f"checkpoint saved to: {trainer.checkpoints_dir}")
+
     except Exception as e:
-        print(f"\n❌ Training failed: {e}")
+        print(f"\ntraining failed: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
-        
+
     finally:
         trainer.close()
 

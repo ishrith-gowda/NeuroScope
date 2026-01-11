@@ -292,7 +292,7 @@ class AblationStudyOrchestrator:
         }
 
         if process.returncode == 0:
-            logger.info(f"✓ Ablation '{name}' completed in {duration/3600:.2f} hours")
+            logger.info(f"+ Ablation '{name}' completed in {duration/3600:.2f} hours")
         else:
             logger.error(f"✗ Ablation '{name}' failed!")
 
@@ -378,7 +378,7 @@ class AblationStudyOrchestrator:
 
         # List each ablation
         for name, result in self.results.items():
-            status_symbol = "✓" if result['status'] == 'success' else "✗"
+            status_symbol = "+" if result['status'] == 'success' else "✗"
             logger.info(f"{status_symbol} {name}")
             logger.info(f"   {result['description']}")
             logger.info(f"   Duration: {result['duration']/3600:.2f} hours")

@@ -58,11 +58,11 @@ class CSVLogger:
         """Initialize the CSV file with headers."""
         mode = 'a' if self.append and self.filepath.exists() else 'w'
         self._file = open(self.filepath, mode, newline='', buffering=1)
-        self._writer = csv.DictWriter(self._file, fieldnames=columns)
-        
+        self._writer = csv.DictWriter(self._file, fieldnames=columns, extrasaction='ignore')
+
         if mode == 'w':
             self._writer.writeheader()
-            
+
         self._columns = columns
         
     def log(
@@ -73,7 +73,7 @@ class CSVLogger:
     ):
         """
         Log metrics to CSV.
-        
+
         Args:
             metrics: Dictionary of metric_name -> value
             step: Global step (optional)
@@ -88,16 +88,19 @@ class CSVLogger:
                 row['epoch'] = epoch
             row['timestamp'] = datetime.now().isoformat()
             row.update(metrics)
-            
+
             # Initialize file if needed
             if self._columns is None:
                 columns = list(row.keys())
                 self._initialize_file(columns)
-            
+
+            # Check if new columns appeared - if so, only write columns we have
+            filtered_row = {k: v for k, v in row.items() if k in self._columns}
+
             # Write row
-            self._writer.writerow(row)
+            self._writer.writerow(filtered_row)
             self._write_count += 1
-            
+
             # Flush periodically
             if self._write_count % self.flush_every == 0:
                 self._file.flush()
@@ -383,7 +386,19 @@ class JSONLogger:
         
     def _serialize(self, obj: Any) -> Any:
         """Serialize object for JSON storage."""
-        if isinstance(obj, dict):
+        import numpy as np
+
+        # Handle numpy types
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        # Handle regular types
+        elif isinstance(obj, dict):
             return {k: self._serialize(v) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):
             return [self._serialize(v) for v in obj]
@@ -399,10 +414,12 @@ class JSONLogger:
     def _save(self):
         """Save log to disk."""
         with open(self.filepath, 'w') as f:
+            # Serialize to handle numpy types and other non-JSON-serializable objects
+            serialized_log = self._serialize(self._log)
             if self.pretty_print:
-                json.dump(self._log, f, indent=2)
+                json.dump(serialized_log, f, indent=2)
             else:
-                json.dump(self._log, f)
+                json.dump(serialized_log, f)
                 
     def flush(self):
         """Force save to disk."""

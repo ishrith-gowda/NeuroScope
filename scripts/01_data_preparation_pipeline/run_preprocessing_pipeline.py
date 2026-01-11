@@ -137,7 +137,7 @@ def check_outputs(entry):
         return False
         
     if entry['required_outputs']:
-        logging.info(f"Stage {entry['name']} verified {len(entry['required_outputs'])} expected outputs ✓")
+        logging.info(f"Stage {entry['name']} verified {len(entry['required_outputs'])} expected outputs +")
     return True
 
 
@@ -244,10 +244,10 @@ def main():
             status_count[status] = status_count.get(status, 0) + 1
             # Format status for display
             display_status = {
-                "ok": "✅ SUCCESS", 
-                "failed": "❌ FAILED",
+                "ok": "+ SUCCESS", 
+                "failed": "x FAILED",
                 "skipped_present": "⏩ SKIPPED (present)", 
-                "warning_outputs_missing": "⚠️ WARNING (missing outputs)"
+                "warning_outputs_missing": "warning: WARNING (missing outputs)"
             }.get(status, status)
             logging.info(f"{stage_name:<30} {display_status:<20}")
     

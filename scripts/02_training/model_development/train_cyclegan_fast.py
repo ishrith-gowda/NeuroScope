@@ -553,7 +553,7 @@ def train(args):
     with open(os.path.join(args.sample_dir, 'fast_training_loss.json'), 'w') as f:
         json.dump(loss_history, f, indent=2)
     
-    pprint("\n✓ Final models and loss history saved!")
+    pprint("\nfinal models and loss history saved")
     
     return loss_history
 

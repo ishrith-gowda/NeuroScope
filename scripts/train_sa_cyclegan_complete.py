@@ -140,7 +140,7 @@ ycleGANTrainer:
         self.use_amp = mixed_precision and torch.cuda.is_available()
         self.scaler = GradScaler() if self.use_amp else None
         if self.use_amp:
-            logger.info("✅ Automatic Mixed Precision enabled")
+            logger.info("+ Automatic Mixed Precision enabled")
 
         # Logging setup
         self.writer = SummaryWriter(log_dir=str(self.logs_dir / 'tensorboard'))
@@ -155,14 +155,14 @@ ycleGANTrainer:
                 config=config,
                 dir=str(self.output_dir)
             )
-            logger.info("✅ WandB logging enabled")
+            logger.info("+ WandB logging enabled")
 
         if self.use_mlflow:
             mlflow.set_tracking_uri(str(self.logs_dir / 'mlruns'))
             mlflow.set_experiment(config.get('experiment_name', 'sa_cyclegan'))
             mlflow.start_run()
             mlflow.log_params(config)
-            logger.info("✅ MLflow logging enabled")
+            logger.info("+ MLflow logging enabled")
 
         # Initialize model
         self.model = self._create_model()
@@ -293,7 +293,7 @@ ycleGANTrainer:
         if is_best:
             best_path = self.checkpoint_dir / 'best.pth'
             torch.save(checkpoint, best_path)
-            logger.info(f"✅ New best model saved: {best_path}")
+            logger.info(f"+ New best model saved: {best_path}")
 
     def load_checkpoint(self, checkpoint_path: str):
         """Load training checkpoint."""
@@ -315,7 +315,7 @@ ycleGANTrainer:
         self.global_step = checkpoint['global_step']
         self.best_metric = checkpoint['best_metric']
 
-        logger.info(f"✅ Resumed from epoch {self.current_epoch}, step {self.global_step}")
+        logger.info(f"+ Resumed from epoch {self.current_epoch}, step {self.global_step}")
 
     def train_epoch(self, dataloader_A, dataloader_B, epoch: int):
         """Train for one epoch."""
@@ -458,7 +458,7 @@ ycleGANTrainer:
             self.current_epoch = epoch + 1
             self.save_checkpoint(epoch + 1)
 
-        logger.info("✅ Training completed!")
+        logger.info("+ Training completed!")
 
         if self.use_wandb:
             wandb.finish()
@@ -524,7 +524,7 @@ def main():
         trainer.load_checkpoint(args.resume)
 
     # Create dataloaders (placeholder - needs actual dataset implementation)
-    logger.warning("⚠️  Using placeholder dataloaders - implement actual data loading!")
+    logger.warning("warning:  Using placeholder dataloaders - implement actual data loading!")
 
     # TODO: Implement actual data loading
     # from neuroscope.data import create_dataloader

@@ -277,4 +277,4 @@ if __name__ == '__main__':
     print(f"SSIM loss: {losses.ssim_loss(x, y).item():.4f}")
     print(f"Gradient loss: {losses.gradient_loss(x, y).item():.4f}")
     
-    print("\n✅ Loss functions test PASSED!")
+    print("\nloss functions test passed")

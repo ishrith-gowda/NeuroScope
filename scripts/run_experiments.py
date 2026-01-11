@@ -219,7 +219,7 @@ class ResultAggregator:
         lines.append("-" * 80)
         
         for comp in self.comparisons:
-            sig = "✓" if comp['significant'] else "-"
+            sig = "+" if comp['significant'] else "-"
             lines.append(
                 f"{comp['method_a']} vs {comp['method_b']:<20} "
                 f"{comp['metric']:<12} "
@@ -827,7 +827,7 @@ def main():
     elif args.mode == 'ablation':
         runner._run_ablations()
     
-    print("\n✓ Experiment completed successfully!")
+    print("\nexperiment completed successfully")
 
 
 if __name__ == '__main__':

@@ -113,7 +113,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig1_architecture.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig1_architecture.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig1_architecture.pdf")
+        print(f"saved: fig1_architecture.pdf")
     
     def _draw_generator_architecture(self, ax):
         """Draw generator block diagram"""
@@ -236,7 +236,7 @@ class PublicationFigureGenerator:
                 loss_history = json.load(f)
         
         if loss_history is None:
-            print("⚠ No loss history provided, skipping loss curves")
+            print("warning: no loss history provided, skipping loss curves")
             return
         
         fig, axes = plt.subplots(2, 3, figsize=(14, 8))
@@ -319,7 +319,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig2_training_losses.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig2_training_losses.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig2_training_losses.pdf")
+        print(f"saved: fig2_training_losses.pdf")
     
     # =========================================================================
     # Figure 3: Sample Translations with Metrics
@@ -402,7 +402,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig3_sample_translations.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig3_sample_translations.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig3_sample_translations.pdf")
+        print(f"saved: fig3_sample_translations.pdf")
         
         return metrics_A2B, metrics_B2A
     
@@ -443,7 +443,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig4_metrics_comparison.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig4_metrics_comparison.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig4_metrics_comparison.pdf")
+        print(f"saved: fig4_metrics_comparison.pdf")
     
     # =========================================================================
     # Figure 5: Dataset Distribution
@@ -516,7 +516,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig5_dataset_distribution.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig5_dataset_distribution.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig5_dataset_distribution.pdf")
+        print(f"saved: fig5_dataset_distribution.pdf")
     
     # =========================================================================
     # Table 1: Model Configuration
@@ -563,7 +563,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'table1_configuration.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'table1_configuration.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: table1_configuration.pdf")
+        print(f"saved: table1_configuration.pdf")
     
     # =========================================================================
     # Figure 6: Epoch-wise Metrics Evolution
@@ -608,7 +608,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / 'fig6_epoch_metrics.pdf', bbox_inches='tight')
         plt.savefig(self.output_dir / 'fig6_epoch_metrics.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"✓ Saved: fig6_epoch_metrics.pdf")
+        print(f"saved: fig6_epoch_metrics.pdf")
     
     # =========================================================================
     # Generate All Figures
@@ -644,7 +644,7 @@ class PublicationFigureGenerator:
             }
         self.generate_dataset_distribution(metadata)
         
-        print(f"\n✓ All figures saved to: {self.output_dir}")
+        print(f"\nall figures saved to: {self.output_dir}")
         print("=" * 60 + "\n")
 
 

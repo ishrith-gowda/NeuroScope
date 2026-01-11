@@ -46,7 +46,8 @@ class SACycleGAN25DConfig:
     n_disc_layers: int = 3
     n_disc_scales: int = 2
     use_spectral_norm: bool = True
-    
+    use_disc_attention: bool = True  # Self-attention in discriminator
+
     # Loss weights
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
@@ -56,8 +57,8 @@ class SACycleGAN25DConfig:
     
     @property
     def input_channels(self) -> int:
-        """Total input channels = slices × modalities."""
-        return self.n_input_slices * self.n_modalities  # 3 × 4 = 12
+        """Total input channels = slices x modalities."""
+        return self.n_input_slices * self.n_modalities  # 3 x 4 = 12
     
     @property
     def output_channels(self) -> int:
@@ -88,21 +89,29 @@ class SelfAttention2D(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
-        
+
         q = self.query(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, HW, C']
         k = self.key(x).view(B, -1, H * W)                      # [B, C', HW]
         v = self.value(x).view(B, -1, H * W)                    # [B, C, HW]
-        
+
+        # Compute attention with numerical stability
+        C_reduced = q.size(-1)  # Reduced channel dimension
         attn = torch.bmm(q, k)  # [B, HW, HW]
-        attn = F.softmax(attn / math.sqrt(C), dim=-1)
-        
+
+        # Clamp attention logits to prevent overflow in softmax
+        attn = torch.clamp(attn / math.sqrt(C_reduced), min=-50, max=50)
+        attn = F.softmax(attn, dim=-1)
+
         out = torch.bmm(v, attn.permute(0, 2, 1)).view(B, C, H, W)
-        return self.gamma * self.norm(out) + x
+
+        # Clamp gamma to prevent amplification of unstable outputs
+        gamma_clamped = torch.clamp(self.gamma, min=-1.0, max=1.0)
+        return gamma_clamped * self.norm(out) + x
 
 
 class ChannelAttention(nn.Module):
     """Squeeze-and-excitation style channel attention."""
-    
+
     def __init__(self, channels: int, reduction: int = 16):
         super().__init__()
         reduced = max(channels // reduction, 4)
@@ -113,9 +122,11 @@ class ChannelAttention(nn.Module):
             nn.Conv2d(reduced, channels, 1, bias=False),
             nn.Sigmoid()
         )
-        
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * self.fc(x)
+        # Clamp attention weights to prevent complete suppression
+        attn = torch.clamp(self.fc(x), min=0.01, max=1.0)
+        return x * attn
 
 
 class SpatialAttention(nn.Module):
@@ -129,6 +140,8 @@ class SpatialAttention(nn.Module):
         avg = x.mean(dim=1, keepdim=True)
         max_val, _ = x.max(dim=1, keepdim=True)
         attn = torch.sigmoid(self.conv(torch.cat([avg, max_val], dim=1)))
+        # Clamp attention weights to prevent complete suppression
+        attn = torch.clamp(attn, min=0.01, max=1.0)
         return x * attn
 
 
@@ -184,7 +197,7 @@ class SliceEncoder25D(nn.Module):
     """
     2.5D Slice Encoder: Processes 3 adjacent slices with modality awareness.
     
-    Input: [B, 12, H, W] (3 slices × 4 modalities)
+    Input: [B, 12, H, W] (3 slices x 4 modalities)
     Output: [B, ngf, H, W] with inter-slice context
     """
     
@@ -207,7 +220,7 @@ class SliceEncoder25D(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            x: [B, 12, H, W] - 3 slices × 4 modalities stacked
+            x: [B, 12, H, W] - 3 slices x 4 modalities stacked
         Returns:
             [B, ngf, H, W] - Encoded features with slice context
         """
@@ -303,7 +316,7 @@ class SAGenerator25D(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            x: [B, 12, H, W] - 3 adjacent slices × 4 modalities
+            x: [B, 12, H, W] - 3 adjacent slices x 4 modalities
         Returns:
             [B, 4, H, W] - Translated center slice (4 modalities)
         """
@@ -337,13 +350,14 @@ class SAGenerator25D(nn.Module):
 
 class PatchDiscriminator(nn.Module):
     """PatchGAN discriminator with optional spectral normalization."""
-    
+
     def __init__(
         self,
         in_channels: int,
         ndf: int = 64,
         n_layers: int = 3,
-        use_spectral_norm: bool = True
+        use_spectral_norm: bool = True,
+        use_attention: bool = True
     ):
         super().__init__()
         
@@ -367,10 +381,11 @@ class PatchDiscriminator(nn.Module):
                 nn.InstanceNorm2d(nf),
                 nn.LeakyReLU(0.2, inplace=True)
             ])
-        
-        # Self-attention before final layers
-        layers.append(SelfAttention2D(nf))
-        
+
+        # Optional self-attention before final layers
+        if use_attention:
+            layers.append(SelfAttention2D(nf))
+
         # Final layers
         nf_prev = nf
         nf = min(nf * 2, 512)
@@ -389,19 +404,20 @@ class PatchDiscriminator(nn.Module):
 
 class MultiScaleDiscriminator(nn.Module):
     """Multi-scale discriminator for multi-frequency analysis."""
-    
+
     def __init__(
         self,
         in_channels: int,
         ndf: int = 64,
         n_layers: int = 3,
         n_scales: int = 2,
-        use_spectral_norm: bool = True
+        use_spectral_norm: bool = True,
+        use_attention: bool = True
     ):
         super().__init__()
-        
+
         self.discriminators = nn.ModuleList([
-            PatchDiscriminator(in_channels, ndf, n_layers, use_spectral_norm)
+            PatchDiscriminator(in_channels, ndf, n_layers, use_spectral_norm, use_attention)
             for _ in range(n_scales)
         ])
         self.downsample = nn.AvgPool2d(3, stride=2, padding=1)
@@ -442,14 +458,16 @@ class SACycleGAN25D(nn.Module):
             ndf=self.config.ndf,
             n_layers=self.config.n_disc_layers,
             n_scales=self.config.n_disc_scales,
-            use_spectral_norm=self.config.use_spectral_norm
+            use_spectral_norm=self.config.use_spectral_norm,
+            use_attention=self.config.use_disc_attention
         )
         self.D_B = MultiScaleDiscriminator(
             in_channels=self.config.output_channels,  # 4
             ndf=self.config.ndf,
             n_layers=self.config.n_disc_layers,
             n_scales=self.config.n_disc_scales,
-            use_spectral_norm=self.config.use_spectral_norm
+            use_spectral_norm=self.config.use_spectral_norm,
+            use_attention=self.config.use_disc_attention
         )
         
     def forward(
@@ -536,7 +554,7 @@ if __name__ == '__main__':
     config = SACycleGAN25DConfig()
     model = create_model(config)
     
-    # Test input: 3 slices × 4 modalities = 12 channels
+    # Test input: 3 slices x 4 modalities = 12 channels
     x = torch.randn(2, 12, 128, 128)
     
     # Test generator

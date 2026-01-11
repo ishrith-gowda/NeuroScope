@@ -448,11 +448,21 @@ class TensorBoardLogger:
             input_shape: Shape of input tensor (without batch dimension)
             verbose: Whether to print graph info
         """
+        import inspect
         device = next(model.parameters()).device
         dummy_input = torch.zeros(1, *input_shape, device=device)
-        
         try:
-            self.writer.add_graph(model, dummy_input, verbose=verbose)
+            # Inspect the forward signature
+            sig = inspect.signature(model.forward)
+            params = list(sig.parameters.values())
+            # Exclude 'self'
+            n_args = len([p for p in params if p.name != 'self'])
+            if n_args == 2:
+                # Multi-input: pass tuple of two dummy tensors
+                dummy_input2 = torch.zeros(1, *input_shape, device=device)
+                self.writer.add_graph(model, (dummy_input, dummy_input2), verbose=verbose)
+            else:
+                self.writer.add_graph(model, dummy_input, verbose=verbose)
         except Exception as e:
             print(f"Warning: Could not log model graph: {e}")
             

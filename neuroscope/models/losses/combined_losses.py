@@ -124,7 +124,11 @@ class SSIMLoss(nn.Module):
         sigma_x_sq = F.conv2d(x * x, window, padding=self.window_size // 2, groups=channels) - mu_x_sq
         sigma_y_sq = F.conv2d(y * y, window, padding=self.window_size // 2, groups=channels) - mu_y_sq
         sigma_xy = F.conv2d(x * y, window, padding=self.window_size // 2, groups=channels) - mu_xy
-        
+
+        # Clamp variances to prevent numerical instability (variance should never be negative)
+        sigma_x_sq = torch.clamp(sigma_x_sq, min=0)
+        sigma_y_sq = torch.clamp(sigma_y_sq, min=0)
+
         ssim = ((2 * mu_xy + self.C1) * (2 * sigma_xy + self.C2)) / \
                ((mu_x_sq + mu_y_sq + self.C1) * (sigma_x_sq + sigma_y_sq + self.C2))
         
@@ -277,4 +281,4 @@ if __name__ == '__main__':
     print(f"SSIM loss: {losses.ssim_loss(x, y).item():.4f}")
     print(f"Gradient loss: {losses.gradient_loss(x, y).item():.4f}")
     
-    print("\n✅ Loss functions test PASSED!")
+    print("\nloss functions test passed")

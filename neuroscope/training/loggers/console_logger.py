@@ -127,10 +127,10 @@ class ConsoleLogger:
             
         banner = f"""
 {self._color('=' * 70, Colors.CYAN)}
-{self._color('  NEUROSCOPE - 2.5D SA-CycleGAN Training', Colors.BOLD + Colors.CYAN)}
+{self._color('  neuroscope - 2.5d sa-cyclegan training', Colors.BOLD + Colors.CYAN)}
 {self._color('  ' + '=' * 66, Colors.CYAN)}
-{self._color(f'  Experiment: {self.experiment_name}', Colors.WHITE)}
-{self._color(f'  Started: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', Colors.GRAY)}
+{self._color(f'  experiment: {self.experiment_name}', Colors.WHITE)}
+{self._color(f'  started: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', Colors.GRAY)}
 {self._color('=' * 70, Colors.CYAN)}
 """
         self._write(banner)
@@ -140,7 +140,7 @@ class ConsoleLogger:
         if self.verbose < 2:
             return
             
-        self._write(f"\n{self._color('📋 Configuration:', Colors.BOLD)}")
+        self._write(f"\n{self._color('configuration:', Colors.BOLD)}")
         self._write(self._color('-' * 50, Colors.GRAY))
         
         for key, value in config.items():
@@ -163,11 +163,11 @@ class ConsoleLogger:
         if self.verbose < 1:
             return
             
-        self._write(f"\n{self._color('🧠 Model Summary:', Colors.BOLD)}")
-        self._write(f"  Name: {model_name}")
-        self._write(f"  Total parameters: {total_params:,}")
-        self._write(f"  Trainable parameters: {trainable_params:,}")
-        self._write(f"  Size: ~{total_params * 4 / 1e6:.1f} MB\n")
+        self._write(f"\n{self._color('model summary:', Colors.BOLD)}")
+        self._write(f"  name: {model_name}")
+        self._write(f"  total parameters: {total_params:,}")
+        self._write(f"  trainable parameters: {trainable_params:,}")
+        self._write(f"  size: ~{total_params * 4 / 1e6:.1f} MB\n")
         
     def print_data_summary(
         self,
@@ -183,11 +183,11 @@ class ConsoleLogger:
         train_batches = (train_samples + batch_size - 1) // batch_size
         val_batches = (val_samples + batch_size - 1) // batch_size
         
-        self._write(f"\n{self._color('📊 Data Summary:', Colors.BOLD)}")
-        self._write(f"  Training samples: {train_samples:,} ({train_batches} batches)")
-        self._write(f"  Validation samples: {val_samples:,} ({val_batches} batches)")
-        self._write(f"  Test samples: {test_samples:,}")
-        self._write(f"  Batch size: {batch_size}\n")
+        self._write(f"\n{self._color('data summary:', Colors.BOLD)}")
+        self._write(f"  training samples: {train_samples:,} ({train_batches} batches)")
+        self._write(f"  validation samples: {val_samples:,} ({val_batches} batches)")
+        self._write(f"  test samples: {test_samples:,}")
+        self._write(f"  batch size: {batch_size}\n")
         
     # =========================================================================
     # Training Progress
@@ -199,7 +199,7 @@ class ConsoleLogger:
         self._total_epochs = total_epochs
         
         if self.verbose >= 1:
-            self._write(f"\n{self._color('🚀 Starting training for', Colors.GREEN)} "
+            self._write(f"\n{self._color('starting training for', Colors.GREEN)} "
                        f"{self._color(str(total_epochs), Colors.BOLD)} "
                        f"{self._color('epochs', Colors.GREEN)}\n")
             
@@ -211,11 +211,11 @@ class ConsoleLogger:
         total_time = time.time() - self._start_time if self._start_time else 0
         
         self._write(f"\n{self._color('=' * 70, Colors.GREEN)}")
-        self._write(f"{self._color('✅ Training Complete!', Colors.BOLD + Colors.GREEN)}")
-        self._write(f"  Total time: {self._format_time(total_time)}")
-        
+        self._write(f"{self._color('training complete', Colors.BOLD + Colors.GREEN)}")
+        self._write(f"  total time: {self._format_time(total_time)}")
+
         if final_metrics:
-            self._write(f"  Final metrics:")
+            self._write(f"  final metrics:")
             for name, value in final_metrics.items():
                 self._write(f"    {self._format_metric(name, value)}")
                 
@@ -229,7 +229,7 @@ class ConsoleLogger:
         
         if self.verbose >= 1:
             progress = f"[{epoch}/{total_epochs}]"
-            self._write(f"\n{self._color('📈 Epoch', Colors.BOLD)} "
+            self._write(f"\n{self._color('epoch', Colors.BOLD)} "
                        f"{self._color(progress, Colors.CYAN)}")
             
     def on_epoch_end(
@@ -257,28 +257,28 @@ class ConsoleLogger:
             pct = progress * 100
             
             self._write(f"  {self._color(bar, Colors.GREEN)} {pct:.1f}%")
-            self._write(f"  Time: {self._format_time(epoch_time)} | "
-                       f"ETA: {self._format_time(eta)}")
+            self._write(f"  time: {self._format_time(epoch_time)} | "
+                       f"eta: {self._format_time(eta)}")
             
         if self.verbose >= 2:
             # Training metrics
             train_str = " | ".join([
-                self._format_metric(k, v) 
+                self._format_metric(k, v)
                 for k, v in train_metrics.items()
             ])
-            self._write(f"  {self._color('Train:', Colors.BLUE)} {train_str}")
-            
+            self._write(f"  {self._color('train:', Colors.BLUE)} {train_str}")
+
             # Validation metrics
             if val_metrics:
                 val_str = " | ".join([
                     self._format_metric(k, v)
                     for k, v in val_metrics.items()
                 ])
-                self._write(f"  {self._color('Val:', Colors.YELLOW)} {val_str}")
-                
+                self._write(f"  {self._color('val:', Colors.YELLOW)} {val_str}")
+
             # Learning rate
             if lr is not None:
-                self._write(f"  {self._color('LR:', Colors.GRAY)} {lr:.2e}")
+                self._write(f"  {self._color('lr:', Colors.GRAY)} {lr:.2e}")
                 
     def on_batch_end(
         self,
@@ -299,7 +299,7 @@ class ConsoleLogger:
         
         # Overwrite line for progress
         progress = f"[{batch}/{total_batches}]"
-        line = f"\r  Batch {progress}: {metrics_str}{speed_str}"
+        line = f"\r  batch {progress}: {metrics_str}{speed_str}"
         self._write(line, end='')
         
         if batch == total_batches:
@@ -320,9 +320,9 @@ class ConsoleLogger:
             return
             
         if is_best:
-            msg = self._color('⭐ Best model saved: ', Colors.YELLOW)
+            msg = self._color('best model saved: ', Colors.YELLOW)
         else:
-            msg = self._color('💾 Checkpoint saved: ', Colors.GRAY)
+            msg = self._color('checkpoint saved: ', Colors.GRAY)
             
         self._write(f"  {msg}{path}")
         
@@ -332,17 +332,17 @@ class ConsoleLogger:
                 
     def log_early_stop(self, epoch: int, patience: int, best_metric: float):
         """Log early stopping."""
-        self._write(f"\n{self._color('⚠️ Early stopping triggered!', Colors.YELLOW)}")
-        self._write(f"  Epoch: {epoch}")
-        self._write(f"  Patience: {patience} epochs without improvement")
-        self._write(f"  Best metric: {best_metric:.4f}\n")
+        self._write(f"\n{self._color('warning: early stopping triggered', Colors.YELLOW)}")
+        self._write(f"  epoch: {epoch}")
+        self._write(f"  patience: {patience} epochs without improvement")
+        self._write(f"  best metric: {best_metric:.4f}\n")
         
     def log_lr_update(self, old_lr: float, new_lr: float, reason: str = ""):
         """Log learning rate update."""
         if self.verbose < 2:
             return
             
-        msg = f"  {self._color('📉 LR:', Colors.GRAY)} {old_lr:.2e} → {new_lr:.2e}"
+        msg = f"  {self._color('lr:', Colors.GRAY)} {old_lr:.2e} → {new_lr:.2e}"
         if reason:
             msg += f" ({reason})"
         self._write(msg)
@@ -352,24 +352,24 @@ class ConsoleLogger:
         if self.verbose < 2:
             return
             
-        self._write(f"  {self._color('🖼️ Samples saved:', Colors.GRAY)} {path}")
-        
+        self._write(f"  {self._color('samples saved:', Colors.GRAY)} {path}")
+
     def log_info(self, message: str):
         """Log info message."""
         if self.verbose >= 1:
-            self._write(f"  {self._color('ℹ️', Colors.BLUE)} {message}")
+            self._write(f"  {self._color('info:', Colors.BLUE)} {message}")
             
     def log_warning(self, message: str):
         """Log warning message."""
-        self._write(f"  {self._color('⚠️ Warning:', Colors.YELLOW)} {message}")
-        
+        self._write(f"  {self._color('warning:', Colors.YELLOW)} {message}")
+
     def log_error(self, message: str):
         """Log error message."""
-        self._write(f"  {self._color('❌ Error:', Colors.RED)} {message}")
+        self._write(f"  {self._color('error:', Colors.RED)} {message}")
         
     def log_success(self, message: str):
         """Log success message."""
-        self._write(f"  {self._color('✅', Colors.GREEN)} {message}")
+        self._write(f"  {self._color('+', Colors.GREEN)} {message}")
         
     # =========================================================================
     # Tables
