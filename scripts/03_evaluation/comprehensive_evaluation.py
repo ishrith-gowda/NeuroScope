@@ -186,39 +186,44 @@ class ComprehensiveEvaluator:
         """compute mean squared error."""
         return float(np.mean((img1 - img2) ** 2))
 
-    def compute_lpips(self, img1: torch.Tensor, img2: torch.Tensor) -> float:
-        """compute lpips perceptual similarity."""
+    def compute_lpips(self, img1: torch.Tensor, img2: torch.Tensor) -> List[float]:
+        """compute lpips perceptual similarity for a batch."""
         if self.lpips_model is None:
-            return -1.0
+            return [-1.0] * img1.size(0)
 
         with torch.no_grad():
             # lpips expects images in [-1, 1] range
             img1 = img1.to(self.device)
             img2 = img2.to(self.device)
 
-            # normalize to [-1, 1]
-            img1 = 2 * (img1 - img1.min()) / (img1.max() - img1.min() + 1e-8) - 1
-            img2 = 2 * (img2 - img2.min()) / (img2.max() - img2.min() + 1e-8) - 1
+            # normalize to [-1, 1] per sample
+            batch_size = img1.size(0)
+            for i in range(batch_size):
+                img1[i] = 2 * (img1[i] - img1[i].min()) / (img1[i].max() - img1[i].min() + 1e-8) - 1
+                img2[i] = 2 * (img2[i] - img2[i].min()) / (img2[i].max() - img2[i].min() + 1e-8) - 1
 
-            # lpips expects 3-channel images, so replicate if needed
-            if img1.size(1) == 1:
-                img1 = img1.repeat(1, 3, 1, 1)
-            if img2.size(1) == 1:
-                img2 = img2.repeat(1, 3, 1, 1)
-            elif img1.size(1) == 4:
-                # for 4-channel MRI, compute lpips on each channel and average
+            # for 4-channel MRI, compute lpips on each channel and average
+            if img1.size(1) == 4:
                 lpips_scores = []
                 for c in range(4):
                     score = self.lpips_model(
                         img1[:, c:c+1].repeat(1, 3, 1, 1),
                         img2[:, c:c+1].repeat(1, 3, 1, 1)
                     )
-                    lpips_scores.append(score.item())
-                return float(np.mean(lpips_scores))
+                    # score is [batch_size, 1, 1, 1], squeeze and convert
+                    if c == 0:
+                        lpips_scores = score.squeeze().cpu().numpy()
+                    else:
+                        lpips_scores += score.squeeze().cpu().numpy()
+                # average across channels
+                lpips_scores = lpips_scores / 4.0
+                return lpips_scores.tolist() if hasattr(lpips_scores, 'tolist') else [float(lpips_scores)]
+            else:
+                # for other channel counts
+                lpips_score = self.lpips_model(img1, img2)
+                return lpips_score.squeeze().cpu().numpy().tolist()
 
-            lpips_score = self.lpips_model(img1, img2)
-
-        return float(lpips_score.mean().item())
+        return [-1.0] * img1.size(0)
 
     def run_evaluation(self) -> Dict:
         """run comprehensive evaluation on test set."""
@@ -296,12 +301,11 @@ class ComprehensiveEvaluator:
 
                 # compute lpips on batch (more efficient)
                 if self.lpips_model is not None:
-                    lpips_a2b = self.compute_lpips(center_b, fake_b)
-                    lpips_b2a = self.compute_lpips(center_a, fake_a)
+                    lpips_a2b_batch = self.compute_lpips(center_b, fake_b)
+                    lpips_b2a_batch = self.compute_lpips(center_a, fake_a)
 
-                    for _ in range(center_a.size(0)):
-                        metrics_a2b['lpips'].append(lpips_a2b)
-                        metrics_b2a['lpips'].append(lpips_b2a)
+                    metrics_a2b['lpips'].extend(lpips_a2b_batch)
+                    metrics_b2a['lpips'].extend(lpips_b2a_batch)
 
                 # collect images for fid (use first channel of center slices)
                 for i in range(center_a.size(0)):
