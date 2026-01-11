@@ -255,58 +255,60 @@ class ComprehensiveEvaluator:
         logger.info("running inference on test set...")
         with torch.no_grad():
             for batch_idx, batch in enumerate(tqdm(test_loader, desc="evaluating")):
-                real_a = batch['A'].to(self.device)
-                real_b = batch['B'].to(self.device)
+                real_a = batch['A'].to(self.device)  # [B, 12, H, W] - 3 slices
+                real_b = batch['B'].to(self.device)  # [B, 12, H, W] - 3 slices
+                center_a = batch['A_center'].to(self.device)  # [B, 4, H, W] - center slice only
+                center_b = batch['B_center'].to(self.device)  # [B, 4, H, W] - center slice only
 
-                # forward pass
-                fake_b = model.G_A2B(real_a)
-                fake_a = model.G_B2A(real_b)
+                # forward pass (generators output center slice only)
+                fake_b = model.G_A2B(real_a)  # [B, 4, H, W]
+                fake_a = model.G_B2A(real_b)  # [B, 4, H, W]
 
                 # move to cpu for metric computation
-                real_a_cpu = real_a.cpu()
-                real_b_cpu = real_b.cpu()
+                center_a_cpu = center_a.cpu()
+                center_b_cpu = center_b.cpu()
                 fake_a_cpu = fake_a.cpu()
                 fake_b_cpu = fake_b.cpu()
 
                 # compute metrics for each sample in batch
-                for i in range(real_a.size(0)):
+                for i in range(center_a.size(0)):
                     # convert to numpy for ssim/psnr
-                    ra_np = real_a_cpu[i].numpy()
-                    rb_np = real_b_cpu[i].numpy()
-                    fa_np = fake_a_cpu[i].numpy()
-                    fb_np = fake_b_cpu[i].numpy()
+                    ca_np = center_a_cpu[i].numpy()  # center slice of A
+                    cb_np = center_b_cpu[i].numpy()  # center slice of B
+                    fa_np = fake_a_cpu[i].numpy()    # generated A
+                    fb_np = fake_b_cpu[i].numpy()    # generated B
 
                     # debug logging for first batch
                     if batch_idx == 0 and i == 0:
-                        logger.info(f"debug shapes - ra: {ra_np.shape}, rb: {rb_np.shape}, fa: {fa_np.shape}, fb: {fb_np.shape}")
+                        logger.info(f"debug shapes - ca: {ca_np.shape}, cb: {cb_np.shape}, fa: {fa_np.shape}, fb: {fb_np.shape}")
 
-                    # a -> b metrics (brats -> upenn)
-                    metrics_a2b['ssim'].append(self.compute_ssim(rb_np, fb_np))
-                    metrics_a2b['psnr'].append(self.compute_psnr(rb_np, fb_np))
-                    metrics_a2b['mae'].append(self.compute_mae(rb_np, fb_np))
-                    metrics_a2b['mse'].append(self.compute_mse(rb_np, fb_np))
+                    # a -> b metrics (brats -> upenn): compare generated B with real center B
+                    metrics_a2b['ssim'].append(self.compute_ssim(cb_np, fb_np))
+                    metrics_a2b['psnr'].append(self.compute_psnr(cb_np, fb_np))
+                    metrics_a2b['mae'].append(self.compute_mae(cb_np, fb_np))
+                    metrics_a2b['mse'].append(self.compute_mse(cb_np, fb_np))
 
-                    # b -> a metrics (upenn -> brats)
-                    metrics_b2a['ssim'].append(self.compute_ssim(ra_np, fa_np))
-                    metrics_b2a['psnr'].append(self.compute_psnr(ra_np, fa_np))
-                    metrics_b2a['mae'].append(self.compute_mae(ra_np, fa_np))
-                    metrics_b2a['mse'].append(self.compute_mse(ra_np, fa_np))
+                    # b -> a metrics (upenn -> brats): compare generated A with real center A
+                    metrics_b2a['ssim'].append(self.compute_ssim(ca_np, fa_np))
+                    metrics_b2a['psnr'].append(self.compute_psnr(ca_np, fa_np))
+                    metrics_b2a['mae'].append(self.compute_mae(ca_np, fa_np))
+                    metrics_b2a['mse'].append(self.compute_mse(ca_np, fa_np))
 
                 # compute lpips on batch (more efficient)
                 if self.lpips_model is not None:
-                    lpips_a2b = self.compute_lpips(real_b, fake_b)
-                    lpips_b2a = self.compute_lpips(real_a, fake_a)
+                    lpips_a2b = self.compute_lpips(center_b, fake_b)
+                    lpips_b2a = self.compute_lpips(center_a, fake_a)
 
-                    for _ in range(real_a.size(0)):
+                    for _ in range(center_a.size(0)):
                         metrics_a2b['lpips'].append(lpips_a2b)
                         metrics_b2a['lpips'].append(lpips_b2a)
 
-                # collect images for fid (use center slice of 4 channels)
-                # take first channel for fid computation
-                real_b_images.extend([rb_np[0] for rb_np in real_b_cpu[:, 0].numpy()])
-                fake_b_images.extend([fb_np[0] for fb_np in fake_b_cpu[:, 0].numpy()])
-                real_a_images.extend([ra_np[0] for ra_np in real_a_cpu[:, 0].numpy()])
-                fake_a_images.extend([fa_np[0] for fa_np in fake_a_cpu[:, 0].numpy()])
+                # collect images for fid (use first channel of center slices)
+                for i in range(center_a.size(0)):
+                    real_b_images.append(center_b_cpu[i, 0].numpy())
+                    fake_b_images.append(fake_b_cpu[i, 0].numpy())
+                    real_a_images.append(center_a_cpu[i, 0].numpy())
+                    fake_a_images.append(fake_a_cpu[i, 0].numpy())
 
         logger.info("computing fid scores...")
         fid_a2b = self.compute_fid(real_b_images, fake_b_images)
