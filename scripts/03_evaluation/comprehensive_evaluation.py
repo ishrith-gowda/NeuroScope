@@ -150,26 +150,32 @@ class ComprehensiveEvaluator:
     def compute_ssim(self, img1: np.ndarray, img2: np.ndarray) -> float:
         """compute ssim between two images."""
         # handle multi-channel images (compute per channel and average)
-        if img1.ndim == 3:
+        if img1.ndim == 3 and img1.shape[0] > 1:
             ssim_scores = []
-            for c in range(img1.shape[0]):
+            n_channels = min(img1.shape[0], img2.shape[0])  # use minimum to avoid index errors
+            for c in range(n_channels):
+                # ensure slices have correct shape
+                slice1 = img1[c]
+                slice2 = img2[c]
+                if slice1.size == 0 or slice2.size == 0:
+                    continue
                 score = ssim_func(
-                    img1[c],
-                    img2[c],
-                    data_range=max(img1[c].max() - img1[c].min(), img2[c].max() - img2[c].min())
+                    slice1,
+                    slice2,
+                    data_range=max(slice1.max() - slice1.min(), slice2.max() - slice2.min()) + 1e-8
                 )
                 ssim_scores.append(score)
-            return float(np.mean(ssim_scores))
+            return float(np.mean(ssim_scores)) if ssim_scores else 0.0
         else:
             return float(ssim_func(
                 img1,
                 img2,
-                data_range=max(img1.max() - img1.min(), img2.max() - img2.min())
+                data_range=max(img1.max() - img1.min(), img2.max() - img2.min()) + 1e-8
             ))
 
     def compute_psnr(self, img1: np.ndarray, img2: np.ndarray) -> float:
         """compute psnr between two images."""
-        data_range = max(img1.max() - img1.min(), img2.max() - img2.min())
+        data_range = max(img1.max() - img1.min(), img2.max() - img2.min()) + 1e-8
         return float(psnr_func(img1, img2, data_range=data_range))
 
     def compute_mae(self, img1: np.ndarray, img2: np.ndarray) -> float:
@@ -269,6 +275,10 @@ class ComprehensiveEvaluator:
                     rb_np = real_b_cpu[i].numpy()
                     fa_np = fake_a_cpu[i].numpy()
                     fb_np = fake_b_cpu[i].numpy()
+
+                    # debug logging for first batch
+                    if batch_idx == 0 and i == 0:
+                        logger.info(f"debug shapes - ra: {ra_np.shape}, rb: {rb_np.shape}, fa: {fa_np.shape}, fb: {fb_np.shape}")
 
                     # a -> b metrics (brats -> upenn)
                     metrics_a2b['ssim'].append(self.compute_ssim(rb_np, fb_np))
