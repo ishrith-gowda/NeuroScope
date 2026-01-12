@@ -1,0 +1,103 @@
+# =============================================================================
+# Baseline 2.5D CycleGAN Training Configuration (No Attention)
+# =============================================================================
+# Standard CycleGAN baseline for ablation study comparison
+# Identical to SA-CycleGAN except NO attention mechanisms
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Experiment Identification
+# -----------------------------------------------------------------------------
+experiment_name: "baseline_cyclegan_25d_full"
+seed: 42
+deterministic: true
+
+# -----------------------------------------------------------------------------
+# Data Paths
+# -----------------------------------------------------------------------------
+brats_dir: "/home/cc/neuroscope/preprocessed/brats"
+upenn_dir: "/home/cc/neuroscope/preprocessed/upenn"
+output_dir: "/home/cc/neuroscope/experiments"
+
+# -----------------------------------------------------------------------------
+# Model Architecture
+# -----------------------------------------------------------------------------
+# Standard CycleGAN 2.5D WITHOUT attention mechanisms
+ngf: 64                    # Generator base filters
+ndf: 64                    # Discriminator base filters
+n_residual_blocks: 9       # ResNet blocks in generator (same as SA-CycleGAN)
+use_attention: false       # NO self-attention (baseline)
+use_cbam: false            # NO CBAM (baseline)
+input_channels: 12         # 3 slices × 4 modalities
+output_channels: 4         # 4 modalities (center slice)
+
+# -----------------------------------------------------------------------------
+# Training Configuration
+# -----------------------------------------------------------------------------
+epochs: 100                # Same as SA-CycleGAN for fair comparison
+batch_size: 8              # Same as SA-CycleGAN
+image_size: 128            # Spatial resolution
+num_workers: 4             # Data loading workers
+
+# -----------------------------------------------------------------------------
+# Optimizer Configuration
+# -----------------------------------------------------------------------------
+lr_G: 0.0002               # Generator learning rate
+lr_D: 0.0002               # Discriminator learning rate
+beta1: 0.5                 # Adam beta1 (momentum)
+beta2: 0.999               # Adam beta2
+weight_decay: 0.0          # L2 regularization
+
+# -----------------------------------------------------------------------------
+# Learning Rate Scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"   # Options: cosine, linear, step
+warmup_epochs: 5           # Warmup period
+min_lr: 0.000001           # Minimum learning rate
+
+# -----------------------------------------------------------------------------
+# Loss Function Weights
+# -----------------------------------------------------------------------------
+# CycleGAN loss: GAN + λ_cycle × Cycle + λ_identity × Identity + λ_ssim × SSIM
+lambda_cycle: 10.0         # Cycle consistency weight
+lambda_identity: 5.0       # Identity mapping weight
+lambda_ssim: 1.0           # SSIM perceptual weight
+lambda_gradient: 1.0       # Edge-preserving gradient weight
+
+# -----------------------------------------------------------------------------
+# Regularization
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 1.0    # Max gradient L2 norm (0 = disabled)
+gradient_clip_value: null  # Max gradient value (null = disabled)
+
+# -----------------------------------------------------------------------------
+# Mixed Precision Training
+# -----------------------------------------------------------------------------
+use_amp: true              # Use AMP on CUDA GPU
+
+# -----------------------------------------------------------------------------
+# Validation & Checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 5          # Validation frequency (epochs)
+save_every: 10             # Checkpoint save frequency
+save_best_only: false      # Keep all checkpoints
+
+# -----------------------------------------------------------------------------
+# Early Stopping
+# -----------------------------------------------------------------------------
+early_stopping: true       # Enable early stopping
+patience: 20               # Epochs without improvement
+min_delta: 0.001           # Minimum improvement threshold
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 10      # Batch logging frequency
+sample_every: 10           # Sample generation frequency (epochs)
+figure_every: 10           # Figure generation frequency (epochs)
+verbose: 2                 # 0=silent, 1=minimal, 2=normal, 3=detailed
+
+# -----------------------------------------------------------------------------
+# Resume Training
+# -----------------------------------------------------------------------------
+resume_from: null          # Path to checkpoint (null = fresh start)
