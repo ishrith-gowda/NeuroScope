@@ -82,6 +82,10 @@ class ComprehensiveEvaluator:
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+        # store checkpoint metadata
+        self.checkpoint_epoch = None
+        self.checkpoint_best_metric = None
+
         logger.info(f"device: {self.device}")
         logger.info(f"checkpoint: {self.checkpoint_path}")
 
@@ -105,8 +109,13 @@ class ComprehensiveEvaluator:
 
         # extract config
         config_dict = checkpoint.get('config', {})
-        logger.info(f"checkpoint epoch: {checkpoint['epoch']}")
-        logger.info(f"best metric: {checkpoint.get('best_metric', 'N/A')}")
+
+        # store checkpoint metadata
+        self.checkpoint_epoch = checkpoint['epoch']
+        self.checkpoint_best_metric = checkpoint.get('best_metric', None)
+
+        logger.info(f"checkpoint epoch: {self.checkpoint_epoch}")
+        logger.info(f"best metric: {self.checkpoint_best_metric}")
 
         # create model config
         model_config = SACycleGAN25DConfig(
@@ -322,7 +331,8 @@ class ComprehensiveEvaluator:
         logger.info("computing statistics...")
         results = {
             'checkpoint': str(self.checkpoint_path),
-            'checkpoint_epoch': checkpoint['epoch'],
+            'checkpoint_epoch': self.checkpoint_epoch,
+            'checkpoint_best_metric': self.checkpoint_best_metric,
             'test_samples': len(test_loader.dataset),
             'evaluation_timestamp': datetime.now().isoformat(),
             'a2b': self._compute_statistics(metrics_a2b, fid_a2b),
