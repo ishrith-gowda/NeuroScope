@@ -679,11 +679,13 @@ def main():
     config = BaselineCycleGAN25DConfig(
         ngf=args.ngf,
         ndf=args.ndf,
-        n_residual_blocks=args.n_residual,
-        lambda_cycle=args.lambda_cycle,
-        lambda_identity=args.lambda_identity,
-        lambda_ssim=args.lambda_ssim
+        n_residual_blocks=args.n_residual
     )
+
+    # Store loss weights for later use
+    config.lambda_cycle = args.lambda_cycle
+    config.lambda_identity = args.lambda_identity
+    config.lambda_ssim = args.lambda_ssim
     
     # Create trainer
     trainer = BaselineCycleGAN25DTrainer(
