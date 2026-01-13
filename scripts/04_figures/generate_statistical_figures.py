@@ -56,7 +56,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
 
     shows mean ± std for all metrics comparing both directions
     """
-    fig, axes = plt.subplots(2, 3, figsize=(7, 5))
+    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     axes = axes.flatten()
 
     metric_info = [
@@ -87,7 +87,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
         ax.set_xticks(x)
         ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
         ax.set_ylabel(name)
-        ax.set_title(f'\\textbf{{({chr(97+idx)})}} {name}')
+        ax.set_title(f'({chr(97+idx)}) {name}')
         ax.grid(True, alpha=0.3, axis='y')
 
         # add value labels
@@ -118,7 +118,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     ax.set_xticks(x)
     ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
     ax.set_ylabel('FID')
-    ax.set_title(r'\textbf{(f)} FID (lower better)')
+    ax.set_title(r'(f) FID (lower better)')
     ax.grid(True, alpha=0.3, axis='y')
 
     # add value labels
@@ -133,6 +133,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     ax.scatter(better_idx, fid_vals[better_idx] * 1.05,
               marker='v', s=50, color=colors[better_idx], alpha=0.8)
 
+    plt.subplots_adjust(hspace=0.35, wspace=0.3)
     plt.tight_layout()
     save_figure(fig, 'fig15_comprehensive_comparison', output_dir=OUTPUT_DIR)
     plt.close()
@@ -146,7 +147,7 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
 
     uses min, q25, median, q75, max to approximate distributions
     """
-    fig, axes = plt.subplots(2, 3, figsize=(7, 5))
+    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     axes = axes.flatten()
 
     metric_info = [
@@ -236,7 +237,7 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
         ax.set_xticks(positions)
         ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
         ax.set_ylabel(name)
-        ax.set_title(f'\\textbf{{({chr(97+idx)})}} {name}')
+        ax.set_title(f'({chr(97+idx)}) {name}')
         ax.grid(True, alpha=0.3, axis='y')
         ax.set_xlim(0.5, 2.5)
 
@@ -254,6 +255,7 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
     # remove extra subplot
     axes[5].remove()
 
+    plt.subplots_adjust(hspace=0.35, wspace=0.3)
     plt.tight_layout()
     save_figure(fig, 'fig16_approximated_distributions', output_dir=OUTPUT_DIR)
     plt.close()
@@ -267,7 +269,7 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
 
     normalizes all metrics to 0-1 scale for visual comparison
     """
-    fig = plt.figure(figsize=(7, 3.5))
+    fig = plt.figure(figsize=(10, 5))
 
     metric_names = ['SSIM', 'PSNR', 'MAE\n(inv)', 'LPIPS\n(inv)', 'MSE\n(inv)']
     metric_keys = ['ssim', 'psnr', 'mae', 'lpips', 'mse']
@@ -328,6 +330,7 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
     ax.grid(True, alpha=0.3)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
 
+    plt.subplots_adjust(wspace=0.3)
     plt.tight_layout()
     save_figure(fig, 'fig17_performance_radar', output_dir=OUTPUT_DIR)
     plt.close()
@@ -416,7 +419,7 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
 
     shows standardized difference between directions
     """
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     metric_names = ['SSIM', 'PSNR', 'MAE', 'LPIPS', 'MSE']
     metric_keys = ['ssim', 'psnr', 'mae', 'lpips', 'mse']
@@ -474,6 +477,7 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
            transform=ax.transAxes, fontsize=8,
            verticalalignment='top', horizontalalignment='right')
 
+    plt.subplots_adjust(wspace=0.3)
     plt.tight_layout()
     save_figure(fig, 'fig19_effect_size_analysis', output_dir=OUTPUT_DIR)
     plt.close()
