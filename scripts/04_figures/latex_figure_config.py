@@ -11,79 +11,59 @@ Date: January 2026
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 import numpy as np
 
-# Use pgf backend for LaTeX rendering
-matplotlib.use('Agg')  # Non-interactive backend
+# use agg backend for non-interactive rendering
+matplotlib.use('Agg')
 
-# Configure matplotlib for LaTeX rendering
+# use matplotlib default style, then configure
+plt.style.use('default')
+
+# configure matplotlib for latex rendering and publication quality
+# matching your exact working configuration with proper font hierarchy
 plt.rcParams.update({
-    # LaTeX configuration
     'text.usetex': True,
-    'text.latex.preamble': r'\usepackage{amsmath} \usepackage{amssymb}',
-
-    # Font configuration
     'font.family': 'serif',
     'font.serif': ['Computer Modern Roman'],
-    'font.sans-serif': ['Computer Modern Sans Serif'],
-    'font.monospace': ['Computer Modern Typewriter'],
+    'font.size': 12,
+    'axes.labelsize': 14,
+    'axes.titlesize': 16,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 12,
+    'figure.titlesize': 16,
 
-    # Font sizes (matching LaTeX document)
-    'font.size': 10,
-    'axes.labelsize': 11,
-    'axes.titlesize': 12,
-    'xtick.labelsize': 9,
-    'ytick.labelsize': 9,
-    'legend.fontsize': 9,
-    'figure.titlesize': 13,
-
-    # Figure sizing (IEEE two-column format)
-    'figure.figsize': (7, 5),  # Default size
-    'figure.dpi': 300,  # High resolution
+    # high resolution output
+    'figure.dpi': 300,
     'savefig.dpi': 300,
-    'savefig.format': 'pdf',  # Vector format for publication
     'savefig.bbox': 'tight',
-    'savefig.pad_inches': 0.05,
+    'savefig.pad_inches': 0.1,
 
-    # Line widths and markers
-    'lines.linewidth': 1.5,
-    'lines.markersize': 6,
-    'patch.linewidth': 1.0,
-    'axes.linewidth': 0.8,
-    'grid.linewidth': 0.5,
-
-    # Grid and spines
+    # aesthetics
     'axes.grid': True,
     'grid.alpha': 0.3,
     'grid.linestyle': '--',
+    'lines.linewidth': 2,
     'axes.axisbelow': True,
-
-    # Legend
-    'legend.frameon': True,
-    'legend.framealpha': 0.9,
-    'legend.fancybox': True,
-    'legend.edgecolor': '0.8',
-
-    # Colors - using colorblind-friendly palette
-    'axes.prop_cycle': plt.cycler('color', [
-        '#0173B2',  # Blue
-        '#DE8F05',  # Orange
-        '#029E73',  # Green
-        '#CC78BC',  # Purple
-        '#CA9161',  # Brown
-        '#949494',  # Gray
-        '#ECE133',  # Yellow
-        '#56B4E9',  # Light blue
-    ]),
+    'savefig.format': 'pdf',
 })
 
-# Configure seaborn for statistical plots
-sns.set_palette("colorblind")
-sns.set_style("whitegrid", {
-    'grid.linestyle': '--',
-    'grid.alpha': 0.3,
-})
+# define consistent color palette (colorblind-friendly)
+palette = sns.color_palette('colorblind')
+COLORS_LIST = palette
+
+# maintain backward compatibility with existing scripts
+COLORS = {
+    'primary': palette[0],    # blue
+    'secondary': palette[1],  # orange
+    'success': palette[2],    # green
+    'danger': palette[3],     # red
+    'warning': palette[4],    # purple
+    'info': palette[5],       # brown
+    'gray': palette[7],       # gray
+}
 
 
 def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
@@ -186,11 +166,11 @@ def create_colormap(name='viridis', reverse=False):
     return cmap
 
 
-# Column widths for IEEE format
+# column widths for ieee format
 COLUMNWIDTH = 3.5  # inches
 TEXTWIDTH = 7.0    # inches
 
-# Common figure sizes
+# common figure sizes
 FIGURE_SIZES = {
     'single': get_figure_size('columnwidth', 1.0),
     'single_tall': get_figure_size('columnwidth', 1.0, aspect_ratio=1.0),
@@ -198,18 +178,7 @@ FIGURE_SIZES = {
     'double_tall': get_figure_size('textwidth', 1.0, aspect_ratio=1.0),
 }
 
-# Color schemes
-COLORS = {
-    'primary': '#0173B2',
-    'secondary': '#DE8F05',
-    'success': '#029E73',
-    'danger': '#D55E00',
-    'warning': '#F0E442',
-    'info': '#56B4E9',
-    'gray': '#949494',
-}
-
-# Statistical significance markers
+# statistical significance markers
 SIGNIFICANCE = {
     'ns': 'n.s.',
     'p<0.05': r'$^*$',
