@@ -60,7 +60,7 @@ def generate_loss_curves_figure(history):
     print("Generating Figure 1: Training Loss Curves...")
 
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    fig.suptitle(r'SA-CycleGAN-2.5D Training Loss Progression', y=1.02)
+    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Loss Progression}', y=1.02)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
 
@@ -112,7 +112,8 @@ def generate_loss_curves_figure(history):
     ax.grid(True, alpha=0.3)
     ax.legend()
 
-    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.35, wspace=0.3)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     save_figure(fig, 'fig01_training_losses', OUTPUT_DIR)
     plt.close()
 
@@ -128,7 +129,7 @@ def generate_validation_metrics_figure(history):
     print("Generating Figure 2: Validation Metrics...")
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    fig.suptitle(r'SA-CycleGAN-2.5D Validation Metrics', y=1.02)
+    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Validation Metrics}', y=1.02)
 
     # Plot all epochs
     val_epochs = np.arange(1, len(history['val_ssim_A2B']) + 1)
@@ -166,7 +167,8 @@ def generate_validation_metrics_figure(history):
     ax.grid(True, alpha=0.3)
     ax.legend()
 
-    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.3)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     save_figure(fig, 'fig02_validation_metrics', OUTPUT_DIR)
     plt.close()
 
