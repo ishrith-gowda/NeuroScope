@@ -25,6 +25,7 @@ plt.style.use('default')
 # matching your exact working configuration with proper font hierarchy
 plt.rcParams.update({
     'text.usetex': True,
+    'text.latex.preamble': r'\usepackage{amsmath}\usepackage{amssymb}',
     'font.family': 'serif',
     'font.serif': ['Computer Modern Roman'],
     'font.size': 12,

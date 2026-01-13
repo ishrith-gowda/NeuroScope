@@ -38,8 +38,8 @@ def generate_dataset_statistics_figure():
     """
     print("Generating: Dataset Statistics...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(7, 3))
-    fig.suptitle(r'\textbf{Dataset Statistics and Experimental Setup}', fontsize=12)
+    fig, axes = plt.subplots(1, 3, figsize=(12, 5))
+    fig.suptitle(r'\textbf{Dataset Statistics and Experimental Setup}', y=1.02)
 
     # Dataset sizes
     ax = axes[0]
@@ -49,7 +49,7 @@ def generate_dataset_statistics_figure():
 
     bars = ax.bar(datasets, samples, color=colors_list, alpha=0.7, width=0.6)
     ax.set_ylabel('Number of 2.5D Slices')
-    ax.set_title(r'\textbf{(a)} Dataset Sizes')
+    ax.set_title(r'(a) Dataset Sizes')
     ax.grid(True, alpha=0.3, axis='y')
 
     # Add value labels on bars
@@ -74,7 +74,7 @@ def generate_dataset_statistics_figure():
 
     bars = ax.bar(splits, split_samples, color=split_colors, alpha=0.7, width=0.6)
     ax.set_ylabel('Number of Samples')
-    ax.set_title(r'\textbf{(b)} Data Splits')
+    ax.set_title(r'(b) Data Splits')
     ax.grid(True, alpha=0.3, axis='y')
 
     # Add value labels and percentages
@@ -94,7 +94,7 @@ def generate_dataset_statistics_figure():
 
     bars = ax.bar(components, values, color=bar_colors, alpha=0.7, width=0.6)
     ax.set_ylabel('Count')
-    ax.set_title(r'\textbf{(c)} Training Configuration')
+    ax.set_title(r'(c) Training Configuration')
     ax.grid(True, alpha=0.3, axis='y')
     ax.set_yscale('log')
 
@@ -105,7 +105,8 @@ def generate_dataset_statistics_figure():
                 f'{val:,}',
                 ha='center', va='bottom', fontsize=8)
 
-    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.3)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     save_figure(fig, 'fig08_dataset_statistics', OUTPUT_DIR)
     plt.close()
 
@@ -118,14 +119,14 @@ def generate_preprocessing_pipeline_figure():
     """
     print("Generating: Preprocessing Pipeline...")
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 8)
     ax.axis('off')
 
     # Title
     fig.suptitle(r'\textbf{Preprocessing Pipeline: Raw MRI to 2.5D Slice Triplets}',
-                 fontsize=12, y=0.98)
+                 y=0.98)
 
     # Define pipeline stages
     stages = [
@@ -195,13 +196,13 @@ def generate_25d_processing_figure():
     """
     print("Generating: 2.5D Processing Illustration...")
 
-    fig, ax = plt.subplots(figsize=(7, 3.5))
+    fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_xlim(0, 12)
     ax.set_ylim(0, 6)
     ax.axis('off')
 
     fig.suptitle(r'\textbf{2.5D Processing: Context-Aware Slice Translation}',
-                 fontsize=12, y=0.96)
+                 y=0.96)
 
     # Input: 3 slices
     input_y = 4
@@ -291,14 +292,14 @@ def generate_training_overview_figure():
     """
     print("Generating: Training Overview...")
 
-    fig = plt.figure(figsize=(7, 5))
+    fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111)
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis('off')
 
     fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Configuration}',
-                 fontsize=12, y=0.98)
+                 y=0.98)
 
     # Hyperparameters box
     hp_text = [
