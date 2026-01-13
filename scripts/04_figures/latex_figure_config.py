@@ -29,11 +29,11 @@ plt.rcParams.update({
     'font.serif': ['Computer Modern Roman'],
     'font.size': 12,
     'axes.labelsize': 14,
-    'axes.titlesize': 16,
+    'axes.titlesize': 14,
     'xtick.labelsize': 12,
     'ytick.labelsize': 12,
     'legend.fontsize': 12,
-    'figure.titlesize': 16,
+    'figure.titlesize': 18,
 
     # high resolution output
     'figure.dpi': 300,

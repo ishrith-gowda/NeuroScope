@@ -59,8 +59,8 @@ def generate_loss_curves_figure(history):
     """
     print("Generating Figure 1: Training Loss Curves...")
 
-    fig, axes = plt.subplots(2, 2, figsize=(7, 6))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Loss Progression}', fontsize=12)
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    fig.suptitle(r'SA-CycleGAN-2.5D Training Loss Progression', y=1.02)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
 
@@ -72,7 +72,7 @@ def generate_loss_curves_figure(history):
     ax.plot(epochs, g_loss_smooth, color=COLORS['primary'], linewidth=2, label='Generator')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
-    ax.set_title(r'\textbf{(a)} Generator Loss')
+    ax.set_title(r'(a) Generator Loss')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -84,7 +84,7 @@ def generate_loss_curves_figure(history):
     ax.plot(epochs, d_loss_smooth, color=COLORS['secondary'], linewidth=2, label='Discriminator')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
-    ax.set_title(r'\textbf{(b)} Discriminator Loss')
+    ax.set_title(r'(b) Discriminator Loss')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -96,7 +96,7 @@ def generate_loss_curves_figure(history):
     ax.plot(epochs, cycle_loss_smooth, color=COLORS['success'], linewidth=2, label='Cycle Consistency')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
-    ax.set_title(r'\textbf{(c)} Cycle Consistency Loss')
+    ax.set_title(r'(c) Cycle Consistency Loss')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -108,7 +108,7 @@ def generate_loss_curves_figure(history):
     ax.plot(epochs, identity_loss_smooth, color=COLORS['info'], linewidth=2, label='Identity')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
-    ax.set_title(r'\textbf{(d)} Identity Loss')
+    ax.set_title(r'(d) Identity Loss')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -127,8 +127,8 @@ def generate_validation_metrics_figure(history):
     """
     print("Generating Figure 2: Validation Metrics...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(7, 3.5))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Validation Metrics}', fontsize=12)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig.suptitle(r'SA-CycleGAN-2.5D Validation Metrics', y=1.02)
 
     # Plot all epochs
     val_epochs = np.arange(1, len(history['val_ssim_A2B']) + 1)
@@ -145,7 +145,7 @@ def generate_validation_metrics_figure(history):
     ax.plot(val_epochs, ssim_b2a_smooth, linewidth=2, color=COLORS['secondary'], label=r'$B \rightarrow A$')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('SSIM')
-    ax.set_title(r'\textbf{(a)} Structural Similarity (SSIM)')
+    ax.set_title(r'(a) Structural Similarity (SSIM)')
     ax.set_ylim([0.9, 1.0])
     ax.grid(True, alpha=0.3)
     ax.legend()
@@ -162,7 +162,7 @@ def generate_validation_metrics_figure(history):
     ax.plot(val_epochs, psnr_b2a_smooth, linewidth=2, color=COLORS['secondary'], label=r'$B \rightarrow A$')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('PSNR (dB)')
-    ax.set_title(r'\textbf{(b)} Peak Signal-to-Noise Ratio (PSNR)')
+    ax.set_title(r'(b) Peak Signal-to-Noise Ratio (PSNR)')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -183,7 +183,7 @@ def generate_combined_losses_figure(history):
     """
     print("Generating Figure 3: Combined Loss Components...")
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
 
@@ -200,7 +200,7 @@ def generate_combined_losses_figure(history):
 
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss Value')
-    ax.set_title(r'\textbf{Loss Components During Training}')
+    ax.set_title(r'Loss Components During Training')
     ax.grid(True, alpha=0.3)
     ax.legend(loc='upper right')
 
@@ -217,7 +217,7 @@ def generate_learning_rate_figure(history):
     """
     print("Generating Figure 4: Learning Rate Schedule...")
 
-    fig, ax = plt.subplots(figsize=(7, 3))
+    fig, ax = plt.subplots(figsize=(10, 4))
 
     epochs = np.arange(1, len(history['learning_rate']) + 1)
     lr = history['learning_rate']
@@ -225,7 +225,7 @@ def generate_learning_rate_figure(history):
     ax.plot(epochs, lr, linewidth=2, color=COLORS['danger'])
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Learning Rate')
-    ax.set_title(r'\textbf{Learning Rate Schedule (Cosine Annealing)}')
+    ax.set_title(r'Learning Rate Schedule (Cosine Annealing)')
     ax.grid(True, alpha=0.3)
     ax.set_yscale('log')
 
@@ -242,7 +242,7 @@ def generate_gradient_norms_figure(history):
     """
     print("Generating Figure 5: Gradient Norms...")
 
-    fig, ax = plt.subplots(figsize=(7, 3.5))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     epochs = np.arange(1, len(history['gradient_norm_G']) + 1)
     grad_g = smooth_curve(history['gradient_norm_G'])
@@ -252,7 +252,7 @@ def generate_gradient_norms_figure(history):
     ax.plot(epochs, grad_d, linewidth=2, label='Discriminator', color=COLORS['secondary'])
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Gradient L2 Norm')
-    ax.set_title(r'\textbf{Gradient Magnitudes (Training Stability Indicator)}')
+    ax.set_title(r'Gradient Magnitudes (Training Stability Indicator)')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
