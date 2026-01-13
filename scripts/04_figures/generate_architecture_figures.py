@@ -35,15 +35,15 @@ def generate_architecture_comparison():
     """
     print("Generating: Architecture Comparison...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(7, 4.5))
-    fig.suptitle(r'\textbf{Model Architecture Comparison}', fontsize=12)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5.5))
+    fig.suptitle(r'\textbf{Model Architecture Comparison}', y=1.02)
 
     # Baseline CycleGAN (left)
     ax = axes[0]
     ax.set_xlim(0, 5)
     ax.set_ylim(0, 10)
     ax.axis('off')
-    ax.set_title(r'\textbf{(a)} Baseline CycleGAN-2.5D', fontsize=11)
+    ax.set_title(r'(a) Baseline CycleGAN-2.5D', fontsize=11)
 
     # Baseline components
     baseline_blocks = [
@@ -81,7 +81,7 @@ def generate_architecture_comparison():
     ax.set_xlim(0, 5)
     ax.set_ylim(0, 10)
     ax.axis('off')
-    ax.set_title(r'\textbf{(b)} SA-CycleGAN-2.5D (Ours)', fontsize=11)
+    ax.set_title(r'(b) SA-CycleGAN-2.5D (Ours)', fontsize=11)
 
     # SA-CycleGAN components (with attention)
     sa_blocks = [
@@ -136,6 +136,7 @@ def generate_architecture_comparison():
     fig.legend(handles=legend_elements, loc='lower center', ncol=3,
               bbox_to_anchor=(0.5, -0.05), fontsize=8)
 
+    fig.subplots_adjust(top=0.92)
     plt.tight_layout()
     save_figure(fig, 'fig12_architecture_comparison', OUTPUT_DIR)
     plt.close()
@@ -149,15 +150,15 @@ def generate_attention_mechanism_diagram():
     """
     print("Generating: Attention Mechanisms Diagram...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(7, 4))
-    fig.suptitle(r'\textbf{Attention Mechanisms in SA-CycleGAN-2.5D}', fontsize=12)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig.suptitle(r'\textbf{Attention Mechanisms in SA-CycleGAN-2.5D}', y=1.02)
 
     # CBAM (left)
     ax = axes[0]
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 8)
     ax.axis('off')
-    ax.set_title(r'\textbf{(a)} CBAM (Channel and Spatial)', fontsize=10)
+    ax.set_title(r'(a) CBAM (Channel and Spatial)', fontsize=10)
 
     # CBAM flow
     cbam_blocks = [
@@ -195,7 +196,7 @@ def generate_attention_mechanism_diagram():
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 8)
     ax.axis('off')
-    ax.set_title(r'\textbf{(b)} Self-Attention (Bottleneck)', fontsize=10)
+    ax.set_title(r'(b) Self-Attention (Bottleneck)', fontsize=10)
 
     # Self-attention flow
     sa_y = 7
@@ -259,6 +260,7 @@ def generate_attention_mechanism_diagram():
         ax.text(3, y_pos, text, ha='center', fontsize=7)
         y_pos -= 0.3
 
+    fig.subplots_adjust(top=0.92)
     plt.tight_layout()
     save_figure(fig, 'fig13_attention_mechanisms', OUTPUT_DIR)
     plt.close()
@@ -272,8 +274,8 @@ def generate_parameter_breakdown():
     """
     print("Generating: Parameter Breakdown...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(7, 3.5))
-    fig.suptitle(r'\textbf{Model Complexity Analysis}', fontsize=12)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig.suptitle(r'\textbf{Model Complexity Analysis}', y=1.02)
 
     # SA-CycleGAN parameter breakdown (pie chart)
     ax = axes[0]
@@ -291,7 +293,7 @@ def generate_parameter_breakdown():
         autotext.set_fontweight('bold')
         autotext.set_fontsize(9)
 
-    ax.set_title(r'\textbf{(a)} SA-CycleGAN-2.5D (35.1M total)', fontsize=10)
+    ax.set_title(r'(a) SA-CycleGAN-2.5D (35.1M total)', fontsize=10)
 
     # Comparison bar chart
     ax = axes[1]
@@ -301,7 +303,7 @@ def generate_parameter_breakdown():
 
     bars = ax.barh(models, params, color=colors_list, alpha=0.7, height=0.5)
     ax.set_xlabel('Parameters (Millions)')
-    ax.set_title(r'\textbf{(b)} Model Size Comparison', fontsize=10)
+    ax.set_title(r'(b) Model Size Comparison', fontsize=10)
     ax.grid(True, alpha=0.3, axis='x')
 
     # Add value labels
@@ -318,6 +320,7 @@ def generate_parameter_breakdown():
            transform=ax.transAxes, ha='right', va='bottom', fontsize=8,
            bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.4))
 
+    fig.subplots_adjust(top=0.92)
     plt.tight_layout()
     save_figure(fig, 'fig14_parameter_breakdown', OUTPUT_DIR)
     plt.close()
@@ -331,12 +334,12 @@ def generate_cyclegan_workflow():
     """
     print("Generating: CycleGAN Workflow...")
 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_xlim(0, 12)
     ax.set_ylim(0, 10)
     ax.axis('off')
 
-    fig.suptitle(r'\textbf{CycleGAN Training Workflow}', fontsize=12, y=0.96)
+    fig.suptitle(r'\textbf{CycleGAN Training Workflow}', y=0.96)
 
     # Domain A (top)
     a_y = 8.5
@@ -344,7 +347,7 @@ def generate_cyclegan_workflow():
                                 facecolor=COLORS['primary'],
                                 edgecolor='black', alpha=0.6, linewidth=2)
     ax.add_patch(rect_a)
-    ax.text(2, a_y, r'Real $A$\n(BraTS)', ha='center', va='center', fontsize=9, fontweight='bold')
+    ax.text(2, a_y, r'Real $A$\\ (BraTS)', ha='center', va='center', fontsize=9, fontweight='bold')
 
     # Domain B (top)
     b_y = 8.5
@@ -352,7 +355,7 @@ def generate_cyclegan_workflow():
                                 facecolor=COLORS['secondary'],
                                 edgecolor='black', alpha=0.6, linewidth=2)
     ax.add_patch(rect_b)
-    ax.text(10, b_y, r'Real $B$\n(UPenn)', ha='center', va='center', fontsize=9, fontweight='bold')
+    ax.text(10, b_y, r'Real $B$\\ (UPenn)', ha='center', va='center', fontsize=9, fontweight='bold')
 
     # Generator A→B
     gen_ab_y = 6.5
@@ -445,6 +448,7 @@ def generate_cyclegan_workflow():
            ha='center', fontsize=8,
            bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', alpha=0.5))
 
+    fig.subplots_adjust(top=0.92)
     plt.tight_layout()
     save_figure(fig, 'fig15_cyclegan_workflow', OUTPUT_DIR)
     plt.close()
