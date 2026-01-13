@@ -49,8 +49,8 @@ def generate_box_plots_figure(eval_results):
     """
     print("Generating: Metric Distribution Box Plots...")
 
-    fig, axes = plt.subplots(2, 3, figsize=(7, 6))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D: Test Set Metric Distributions}', fontsize=12)
+    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D: Test Set Metric Distributions}', y=1.02)
 
     metrics = ['ssim', 'psnr', 'mae', 'lpips', 'mse', 'fid']
     titles = ['SSIM', 'PSNR (dB)', 'MAE', 'LPIPS', 'MSE', 'FID']
@@ -99,10 +99,11 @@ def generate_box_plots_figure(eval_results):
 
             ax.set_ylabel(title)
 
-        ax.set_title(f'\\textbf{{({chr(97+idx)})}} {title}')
+        ax.set_title(f'({chr(97+idx)}) {title}')
         ax.grid(True, alpha=0.3, axis='y')
 
-    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.35, wspace=0.3)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     save_figure(fig, 'fig06_metric_distributions', OUTPUT_DIR)
     plt.close()
 
@@ -115,8 +116,8 @@ def generate_cycle_consistency_figure(cycle_results):
     """
     print("Generating: Cycle Consistency Comparison...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(7, 3))
-    fig.suptitle(r'\textbf{Cycle Consistency Reconstruction Quality}', fontsize=12)
+    fig, axes = plt.subplots(1, 3, figsize=(12, 5))
+    fig.suptitle(r'\textbf{Cycle Consistency Reconstruction Quality}', y=1.02)
 
     metrics = ['ssim', 'psnr', 'mae']
     titles = ['SSIM', 'PSNR (dB)', 'MAE']
@@ -140,7 +141,7 @@ def generate_cycle_consistency_figure(cycle_results):
         ax.set_xticks(x)
         ax.set_xticklabels([r'Cycle A', r'Cycle B'])
         ax.set_ylabel(title)
-        ax.set_title(f'\\textbf{{({chr(97+idx)})}} {title}')
+        ax.set_title(f'({chr(97+idx)}) {title}')
         ax.grid(True, alpha=0.3, axis='y')
 
         # Add value labels on bars
@@ -150,7 +151,8 @@ def generate_cycle_consistency_figure(cycle_results):
                     f'{height:.3f}',
                     ha='center', va='bottom', fontsize=8)
 
-    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.3)
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
     save_figure(fig, 'fig07_cycle_consistency', OUTPUT_DIR)
     plt.close()
 
