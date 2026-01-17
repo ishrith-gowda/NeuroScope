@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """
-Baseline Training Script for 2.5D CycleGAN (No Attention) - Ablation Study.
+baseline training script for 2.5d cyclegan (no attention) - ablation study.
 
-Standard CycleGAN baseline WITHOUT attention mechanisms for comparison.
-Identical architecture to SA-CycleGAN except no self-attention and no CBAM.
+standard cyclegan baseline without attention mechanisms for comparison.
+identical architecture to sa-cyclegan except no self-attention and no cbam.
 
-Usage:
+usage:
     python train_baseline_cyclegan_25d.py --config configs/training/baseline.yaml
     python train_baseline_cyclegan_25d.py --epochs 100 --batch_size 4 --image_size 128
-
-Author: NeuroScope Research Team
-Date: January 2026
 """
 
 import os
@@ -18,6 +15,7 @@ import sys
 import argparse
 import time
 import json
+import yaml
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Tuple, List
@@ -467,7 +465,7 @@ class BaselineCycleGAN25DTrainer:
             torch.save(checkpoint, ckpt_dir / 'checkpoint_best.pth')
             # Also save to main checkpoints folder
             torch.save(checkpoint, PROJECT_ROOT / 'checkpoints' / 'best_model.pth')
-            print(f"  ⭐ New best model saved (SSIM: {self.best_val_ssim:.4f})")
+            print(f"  [best] new best model saved (ssim: {self.best_val_ssim:.4f})")
     
     def load_checkpoint(self, path: str):
         """Load model from checkpoint."""
@@ -616,78 +614,104 @@ class BaselineCycleGAN25DTrainer:
         return self.history
 
 
+def load_config(config_path: str) -> dict:
+    """load configuration from yaml file."""
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Train 2.5D SA-CycleGAN for MRI Harmonization',
+        description='train baseline 2.5d cyclegan for mri harmonization',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    
-    # Data arguments
-    parser.add_argument('--brats_dir', type=str, 
+
+    # config file (takes precedence)
+    parser.add_argument('--config', type=str, default=None,
+                        help='path to yaml config file')
+
+    # data arguments
+    parser.add_argument('--brats_dir', type=str,
                         default=str(PROJECT_ROOT / 'preprocessed' / 'brats'),
-                        help='Path to BraTS data')
+                        help='path to brats data')
     parser.add_argument('--upenn_dir', type=str,
                         default=str(PROJECT_ROOT / 'preprocessed' / 'upenn'),
-                        help='Path to UPenn data')
+                        help='path to upenn data')
     parser.add_argument('--output_dir', type=str,
                         default=str(PROJECT_ROOT / 'experiments'),
-                        help='Output directory for experiments')
-    
-    # Training arguments
-    parser.add_argument('--epochs', type=int, default=100, 
-                        help='Number of training epochs')
-    parser.add_argument('--batch_size', type=int, default=4, 
-                        help='Training batch size')
-    parser.add_argument('--image_size', type=int, default=128, 
-                        help='Image size (height and width)')
-    parser.add_argument('--lr', type=float, default=2e-4, 
-                        help='Learning rate')
-    parser.add_argument('--num_workers', type=int, default=4, 
-                        help='Number of data loader workers')
-    
-    # Model arguments
-    parser.add_argument('--ngf', type=int, default=64, 
-                        help='Number of generator filters')
-    parser.add_argument('--ndf', type=int, default=64, 
-                        help='Number of discriminator filters')
-    parser.add_argument('--n_residual', type=int, default=9, 
-                        help='Number of residual blocks')
-    
-    # Loss weights
+                        help='output directory for experiments')
+
+    # training arguments
+    parser.add_argument('--epochs', type=int, default=100,
+                        help='number of training epochs')
+    parser.add_argument('--batch_size', type=int, default=4,
+                        help='training batch size')
+    parser.add_argument('--image_size', type=int, default=128,
+                        help='image size (height and width)')
+    parser.add_argument('--lr', type=float, default=2e-4,
+                        help='learning rate')
+    parser.add_argument('--num_workers', type=int, default=4,
+                        help='number of data loader workers')
+
+    # model arguments
+    parser.add_argument('--ngf', type=int, default=64,
+                        help='number of generator filters')
+    parser.add_argument('--ndf', type=int, default=64,
+                        help='number of discriminator filters')
+    parser.add_argument('--n_residual', type=int, default=9,
+                        help='number of residual blocks')
+
+    # loss weights
     parser.add_argument('--lambda_cycle', type=float, default=10.0,
-                        help='Cycle consistency loss weight')
+                        help='cycle consistency loss weight')
     parser.add_argument('--lambda_identity', type=float, default=5.0,
-                        help='Identity loss weight')
+                        help='identity loss weight')
     parser.add_argument('--lambda_ssim', type=float, default=1.0,
-                        help='SSIM loss weight')
-    
-    # Training settings
+                        help='ssim loss weight')
+
+    # training settings
     parser.add_argument('--validate_every', type=int, default=5,
-                        help='Validate every N epochs')
+                        help='validate every n epochs')
     parser.add_argument('--save_every', type=int, default=10,
-                        help='Save checkpoint every N epochs')
+                        help='save checkpoint every n epochs')
     parser.add_argument('--experiment_name', type=str, default=None,
-                        help='Experiment name (default: timestamp)')
-    
-    # Resume training
-    parser.add_argument('--resume', type=str, default=None, 
-                        help='Path to checkpoint to resume from')
-    
+                        help='experiment name (default: timestamp)')
+
+    # resume training
+    parser.add_argument('--resume', type=str, default=None,
+                        help='path to checkpoint to resume from')
+
     args = parser.parse_args()
-    
-    # Create config
+
+    # load config from yaml if provided
+    if args.config:
+        print(f"[config] loading from {args.config}")
+        cfg = load_config(args.config)
+
+        # override args with config values
+        for key, value in cfg.items():
+            if hasattr(args, key):
+                setattr(args, key, value)
+
+        # handle special mappings
+        if 'lr_G' in cfg:
+            args.lr = cfg['lr_G']
+        if 'n_residual_blocks' in cfg:
+            args.n_residual = cfg['n_residual_blocks']
+
+    # create config
     config = BaselineCycleGAN25DConfig(
         ngf=args.ngf,
         ndf=args.ndf,
         n_residual_blocks=args.n_residual
     )
 
-    # Store loss weights for later use
+    # store loss weights for later use
     config.lambda_cycle = args.lambda_cycle
     config.lambda_identity = args.lambda_identity
     config.lambda_ssim = args.lambda_ssim
-    
-    # Create trainer
+
+    # create trainer
     trainer = BaselineCycleGAN25DTrainer(
         config=config,
         brats_dir=args.brats_dir,
@@ -699,12 +723,12 @@ def main():
         num_workers=args.num_workers,
         experiment_name=args.experiment_name
     )
-    
-    # Resume if specified
+
+    # resume if specified
     if args.resume:
         trainer.load_checkpoint(args.resume)
-    
-    # Train
+
+    # train
     trainer.train(
         epochs=args.epochs,
         validate_every=args.validate_every,

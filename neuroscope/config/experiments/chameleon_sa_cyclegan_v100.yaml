@@ -1,0 +1,119 @@
+# =============================================================================
+# sa-cyclegan 2.5d - chameleon cloud v100 training
+# =============================================================================
+# self-attention cyclegan with cbam for medical image domain translation
+# full attention mechanisms enabled for production training
+# optimized for nvidia v100 gpu on chameleon cloud
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# experiment identification
+# -----------------------------------------------------------------------------
+experiment_name: "sa_cyclegan_25d_v100"
+seed: 42
+deterministic: true
+
+# -----------------------------------------------------------------------------
+# data paths - chameleon cloud standard layout
+# -----------------------------------------------------------------------------
+brats_dir: "/home/cc/neuroscope/data/preprocessed/brats"
+upenn_dir: "/home/cc/neuroscope/data/preprocessed/upenn"
+output_dir: "/home/cc/neuroscope/experiments"
+
+# -----------------------------------------------------------------------------
+# model architecture - full attention
+# -----------------------------------------------------------------------------
+ngf: 64                    # generator base filters
+ndf: 64                    # discriminator base filters
+n_residual_blocks: 9       # resnet blocks in generator
+use_attention: true        # self-attention in bottleneck
+use_cbam: true             # cbam in encoder/decoder
+use_disc_attention: true   # self-attention discriminator
+input_channels: 12         # 3 slices x 4 modalities
+output_channels: 4         # 4 modalities (center slice)
+
+# attention-specific settings
+attention_layers: [3, 4, 5]  # which residual blocks get attention
+
+# -----------------------------------------------------------------------------
+# training configuration - optimized for v100
+# -----------------------------------------------------------------------------
+epochs: 100                # full training
+batch_size: 8              # conservative for attention memory overhead
+image_size: 128            # spatial resolution
+num_workers: 8             # parallel data loading
+
+# -----------------------------------------------------------------------------
+# optimizer configuration - tuned for attention stability
+# -----------------------------------------------------------------------------
+lr_G: 0.0001               # slightly lower for attention stability
+lr_D: 0.0001               # matched with generator
+beta1: 0.5                 # adam beta1 (momentum)
+beta2: 0.999               # adam beta2
+weight_decay: 0.0          # l2 regularization
+
+# -----------------------------------------------------------------------------
+# learning rate scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"   # cosine annealing
+warmup_epochs: 10          # longer warmup for attention
+min_lr: 0.000001           # minimum learning rate
+
+# -----------------------------------------------------------------------------
+# loss function weights
+# -----------------------------------------------------------------------------
+lambda_cycle: 10.0         # cycle consistency weight
+lambda_identity: 5.0       # identity mapping weight
+lambda_ssim: 1.0           # ssim perceptual weight
+lambda_gradient: 1.0       # edge-preserving gradient weight
+
+# -----------------------------------------------------------------------------
+# regularization - strengthened for attention stability
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 0.5    # stronger clipping for attention
+gradient_clip_value: null  # max gradient value (null = disabled)
+
+# -----------------------------------------------------------------------------
+# mixed precision training - enabled for v100
+# -----------------------------------------------------------------------------
+use_amp: true              # automatic mixed precision
+
+# -----------------------------------------------------------------------------
+# validation & checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 5          # validation frequency (epochs)
+save_every: 10             # checkpoint save frequency
+save_best_only: false      # keep all checkpoints for analysis
+
+# -----------------------------------------------------------------------------
+# early stopping
+# -----------------------------------------------------------------------------
+early_stopping: true       # enable early stopping
+patience: 25               # slightly more patience for attention convergence
+min_delta: 0.001           # minimum improvement threshold
+
+# -----------------------------------------------------------------------------
+# logging configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 50      # batch logging frequency
+sample_every: 5            # sample generation frequency (epochs)
+figure_every: 10           # figure generation frequency (epochs)
+verbose: 2                 # 0=silent, 1=minimal, 2=normal, 3=detailed
+
+# -----------------------------------------------------------------------------
+# resume training
+# -----------------------------------------------------------------------------
+resume_from: null          # path to checkpoint (null = fresh start)
+
+# =============================================================================
+# expected performance on v100
+# =============================================================================
+# gpu: nvidia v100 (16gb or 32gb)
+# batch_size: 8 (attention requires more memory)
+# speed: ~0.5-0.8 sec/iteration with amp
+# time per epoch: ~45-90 minutes
+# total for 100 epochs: ~3-6 days
+#
+# note: attention adds ~10-15% compute overhead vs baseline
+# but provides significant quality improvements
+# =============================================================================
