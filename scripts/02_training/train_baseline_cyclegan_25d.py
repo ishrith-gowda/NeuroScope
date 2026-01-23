@@ -23,6 +23,7 @@ from typing import Dict, Optional, Tuple, List
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
@@ -122,9 +123,15 @@ class BaselineCycleGAN25DTrainer:
                 self.device = torch.device('cpu')
         else:
             self.device = torch.device(device)
-        
+
+        # Multi-GPU detection
+        self.num_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 1
+        self.use_multi_gpu = self.num_gpus > 1
+
         self._print_header()
         print(f"Device: {self.device}")
+        if self.use_multi_gpu:
+            print(f"Multi-GPU: {self.num_gpus} GPUs available (DataParallel enabled)")
         print(f"Experiment: {experiment_name}")
         print(f"Output: {self.experiment_dir}")
         
@@ -137,6 +144,14 @@ class BaselineCycleGAN25DTrainer:
         print("=" * 60)
         self.model = create_baseline_model(config)
         self.model = self.model.to(self.device)
+
+        # Wrap with DataParallel for multi-GPU training
+        if self.use_multi_gpu:
+            print(f"Wrapping model with DataParallel across {self.num_gpus} GPUs")
+            self.model.G_A2B = DataParallel(self.model.G_A2B)
+            self.model.G_B2A = DataParallel(self.model.G_B2A)
+            self.model.D_A = DataParallel(self.model.D_A)
+            self.model.D_B = DataParallel(self.model.D_B)
         
         # Create dataloaders
         print("\n" + "=" * 60)

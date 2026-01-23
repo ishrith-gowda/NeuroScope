@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Main Training Script for 2.5D SA-CycleGAN MRI Harmonization.
+main training script for 2.5d sa-cyclegan mri harmonization.
 
-This is the primary training entry point for the NeuroScope project.
-Trains a 2.5D Self-Attention CycleGAN for cross-site MRI harmonization
-between BraTS (multi-institutional) and UPenn-GBM (single-institution).
+this is the primary training entry point for the neuroscope project.
+trains a 2.5d self-attention cyclegan for cross-site mri harmonization
+between brats (multi-institutional) and upenn-gbm (single-institution).
 
-Usage:
+usage:
     python train_sa_cyclegan_25d.py --config configs/training/default.yaml
     python train_sa_cyclegan_25d.py --epochs 100 --batch_size 4 --image_size 128
 
-Author: NeuroScope Research Team
-Date: December 2025
+author: neuroscope research team
+date: december 2025
 """
 
 import os
@@ -19,6 +19,7 @@ import sys
 import argparse
 import time
 import json
+import yaml
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Tuple, List
@@ -26,8 +27,10 @@ from typing import Dict, Optional, Tuple, List
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast, GradScaler
 import numpy as np
 from tqdm import tqdm
 
@@ -125,9 +128,15 @@ class SACycleGAN25DTrainer:
                 self.device = torch.device('cpu')
         else:
             self.device = torch.device(device)
-        
+
+        # Multi-GPU detection
+        self.num_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 1
+        self.use_multi_gpu = self.num_gpus > 1
+
         self._print_header()
         print(f"Device: {self.device}")
+        if self.use_multi_gpu:
+            print(f"Multi-GPU: {self.num_gpus} GPUs available (DataParallel enabled)")
         print(f"Experiment: {experiment_name}")
         print(f"Output: {self.experiment_dir}")
         
@@ -140,7 +149,15 @@ class SACycleGAN25DTrainer:
         print("=" * 60)
         self.model = create_model(config)
         self.model = self.model.to(self.device)
-        
+
+        # Wrap with DataParallel for multi-GPU training
+        if self.use_multi_gpu:
+            print(f"Wrapping model with DataParallel across {self.num_gpus} GPUs")
+            self.model.G_A2B = DataParallel(self.model.G_A2B)
+            self.model.G_B2A = DataParallel(self.model.G_B2A)
+            self.model.D_A = DataParallel(self.model.D_A)
+            self.model.D_B = DataParallel(self.model.D_B)
+
         # Create dataloaders
         print("\n" + "=" * 60)
         print("Creating Dataloaders")
@@ -190,11 +207,18 @@ class SACycleGAN25DTrainer:
             lambda_gradient=1.0
         ).to(self.device)
         
-        # Replay buffers for discriminator
+        # replay buffers for discriminator
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
-        
-        # Training history
+
+        # automatic mixed precision for faster training on v100
+        self.use_amp = torch.cuda.is_available()
+        self.scaler_G = GradScaler(enabled=self.use_amp)
+        self.scaler_D = GradScaler(enabled=self.use_amp)
+        if self.use_amp:
+            print("automatic mixed precision (amp) enabled")
+
+        # training history
         self.history = {
             'train': {'G_loss': [], 'D_loss': [], 'cycle_loss': [], 'identity_loss': []},
             'val': {'ssim_A2B': [], 'ssim_B2A': [], 'psnr_A2B': [], 'psnr_B2A': []},
@@ -255,83 +279,88 @@ class SACycleGAN25DTrainer:
         return 10 * np.log10(1.0 / mse)
     
     def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
-        """Execute single training step."""
+        """execute single training step with amp support."""
         real_A = batch['A'].to(self.device)
         real_B = batch['B'].to(self.device)
         center_A = batch['A_center'].to(self.device)
         center_B = batch['B_center'].to(self.device)
-        
+
         # ================================================================
-        # Train Generators
+        # train generators with amp
         # ================================================================
         self.opt_G.zero_grad()
-        
-        # Generate fake images
-        fake_B = self.model.G_A2B(real_A)
-        fake_A = self.model.G_B2A(real_B)
-        
-        # Create 3-slice input for cycle consistency
-        fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
-        fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
-        fake_A_3slice = fake_A.unsqueeze(2).repeat(1, 1, 3, 1, 1)
-        fake_A_3slice = fake_A_3slice.view(fake_A.size(0), -1, fake_A.size(2), fake_A.size(3))
-        
-        # Cycle consistency
-        rec_A = self.model.G_B2A(fake_B_3slice)
-        rec_B = self.model.G_A2B(fake_A_3slice)
-        
-        loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
-        loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
-        
-        # Identity loss
-        identity_A = self.model.G_B2A(real_A)
-        identity_B = self.model.G_A2B(real_B)
-        
-        loss_identity_A = self.losses.identity_loss(center_A, identity_A)
-        loss_identity_B = self.losses.identity_loss(center_B, identity_B)
-        
-        # GAN loss
-        pred_fake_B = self.model.D_B(fake_B)
-        pred_fake_A = self.model.D_A(fake_A)
-        
-        loss_gan_A2B = self.losses.gan_loss.generator_loss(pred_fake_B)
-        loss_gan_B2A = self.losses.gan_loss.generator_loss(pred_fake_A)
-        
-        # SSIM loss
-        loss_ssim = self.losses.ssim_loss(center_A, rec_A) + \
-                    self.losses.ssim_loss(center_B, rec_B)
-        
-        # Total generator loss
-        loss_G = (loss_gan_A2B + loss_gan_B2A + 
-                  loss_cycle_A + loss_cycle_B + 
-                  loss_identity_A + loss_identity_B +
-                  loss_ssim)
-        
-        loss_G.backward()
-        self.opt_G.step()
-        
+
+        with autocast(enabled=self.use_amp):
+            # generate fake images
+            fake_B = self.model.G_A2B(real_A)
+            fake_A = self.model.G_B2A(real_B)
+
+            # create 3-slice input for cycle consistency
+            fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
+            fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
+            fake_A_3slice = fake_A.unsqueeze(2).repeat(1, 1, 3, 1, 1)
+            fake_A_3slice = fake_A_3slice.view(fake_A.size(0), -1, fake_A.size(2), fake_A.size(3))
+
+            # cycle consistency
+            rec_A = self.model.G_B2A(fake_B_3slice)
+            rec_B = self.model.G_A2B(fake_A_3slice)
+
+            loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
+            loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
+
+            # identity loss
+            identity_A = self.model.G_B2A(real_A)
+            identity_B = self.model.G_A2B(real_B)
+
+            loss_identity_A = self.losses.identity_loss(center_A, identity_A)
+            loss_identity_B = self.losses.identity_loss(center_B, identity_B)
+
+            # gan loss
+            pred_fake_B = self.model.D_B(fake_B)
+            pred_fake_A = self.model.D_A(fake_A)
+
+            loss_gan_A2B = self.losses.gan_loss.generator_loss(pred_fake_B)
+            loss_gan_B2A = self.losses.gan_loss.generator_loss(pred_fake_A)
+
+            # ssim loss
+            loss_ssim = self.losses.ssim_loss(center_A, rec_A) + \
+                        self.losses.ssim_loss(center_B, rec_B)
+
+            # total generator loss
+            loss_G = (loss_gan_A2B + loss_gan_B2A +
+                      loss_cycle_A + loss_cycle_B +
+                      loss_identity_A + loss_identity_B +
+                      loss_ssim)
+
+        self.scaler_G.scale(loss_G).backward()
+        self.scaler_G.step(self.opt_G)
+        self.scaler_G.update()
+
         # ================================================================
-        # Train Discriminators
+        # train discriminators with amp
         # ================================================================
         self.opt_D.zero_grad()
-        
-        # Use replay buffer for stability
+
+        # use replay buffer for stability
         fake_A_buffer = self.fake_A_buffer.push_and_pop(fake_A.detach())
         fake_B_buffer = self.fake_B_buffer.push_and_pop(fake_B.detach())
-        
-        # D_A loss
-        pred_real_A = self.model.D_A(center_A)
-        pred_fake_A = self.model.D_A(fake_A_buffer)
-        loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A)
-        
-        # D_B loss
-        pred_real_B = self.model.D_B(center_B)
-        pred_fake_B = self.model.D_B(fake_B_buffer)
-        loss_D_B = self.losses.gan_loss.discriminator_loss(pred_real_B, pred_fake_B)
-        
-        loss_D = (loss_D_A + loss_D_B) * 0.5
-        loss_D.backward()
-        self.opt_D.step()
+
+        with autocast(enabled=self.use_amp):
+            # d_a loss
+            pred_real_A = self.model.D_A(center_A)
+            pred_fake_A = self.model.D_A(fake_A_buffer)
+            loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A)
+
+            # d_b loss
+            pred_real_B = self.model.D_B(center_B)
+            pred_fake_B = self.model.D_B(fake_B_buffer)
+            loss_D_B = self.losses.gan_loss.discriminator_loss(pred_real_B, pred_fake_B)
+
+            loss_D = (loss_D_A + loss_D_B) * 0.5
+
+        self.scaler_D.scale(loss_D).backward()
+        self.scaler_D.step(self.opt_D)
+        self.scaler_D.update()
         
         return {
             'G_loss': loss_G.item(),
@@ -617,14 +646,24 @@ class SACycleGAN25DTrainer:
         return self.history
 
 
+def load_config(config_path: str) -> dict:
+    """Load configuration from yaml file."""
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Train 2.5D SA-CycleGAN for MRI Harmonization',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    
+
+    # Config file (takes precedence)
+    parser.add_argument('--config', type=str, default=None,
+                        help='Path to yaml config file')
+
     # Data arguments
-    parser.add_argument('--brats_dir', type=str, 
+    parser.add_argument('--brats_dir', type=str,
                         default=str(PROJECT_ROOT / 'preprocessed' / 'brats'),
                         help='Path to BraTS data')
     parser.add_argument('--upenn_dir', type=str,
@@ -675,7 +714,23 @@ def main():
                         help='Path to checkpoint to resume from')
     
     args = parser.parse_args()
-    
+
+    # Load config from yaml if provided
+    if args.config:
+        print(f"[config] loading from {args.config}")
+        cfg = load_config(args.config)
+
+        # Override args with config values
+        for key, value in cfg.items():
+            if hasattr(args, key):
+                setattr(args, key, value)
+
+        # Handle special mappings
+        if 'lr_G' in cfg:
+            args.lr = cfg['lr_G']
+        if 'n_residual_blocks' in cfg:
+            args.n_residual = cfg['n_residual_blocks']
+
     # Create config
     config = SACycleGAN25DConfig(
         ngf=args.ngf,

@@ -215,40 +215,73 @@ class MRIDataset25D(Dataset):
 class UnpairedMRIDataset25D(Dataset):
     """
     Unpaired dataset for CycleGAN training.
-    
+
     Returns samples from both domains A (BraTS) and B (UPenn)
     without explicit pairing.
     """
-    
+
     def __init__(
         self,
         domain_a_dir: str,
         domain_b_dir: str,
         slice_range: Tuple[int, int] = (30, 125),
         image_size: Tuple[int, int] = (128, 128),
-        transform: Optional[Callable] = None
+        transform: Optional[Callable] = None,
+        cache_in_memory: bool = True
     ):
+        # Enable volume caching to eliminate disk I/O during training
         self.dataset_a = MRIDataset25D(
             root_dir=domain_a_dir,
             slice_range=slice_range,
             image_size=image_size,
-            transform=transform
+            transform=transform,
+            cache_volumes=cache_in_memory
         )
         self.dataset_b = MRIDataset25D(
             root_dir=domain_b_dir,
             slice_range=slice_range,
             image_size=image_size,
-            transform=transform
+            transform=transform,
+            cache_volumes=cache_in_memory
         )
+
+        # Pre-cache all volumes if caching enabled
+        if cache_in_memory:
+            self._precache_all_volumes()
         
         # Match lengths by cycling through smaller dataset
         self.len_a = len(self.dataset_a)
         self.len_b = len(self.dataset_b)
         self.length = max(self.len_a, self.len_b)
-        
+
         print(f"Domain A samples: {self.len_a}")
         print(f"Domain B samples: {self.len_b}")
         print(f"Epoch length: {self.length}")
+
+    def _precache_all_volumes(self):
+        """pre-cache all volumes into memory to eliminate disk I/O during training."""
+        import time
+        print("\n[cache] pre-loading all volumes into memory...")
+        start = time.time()
+
+        # Cache domain A
+        print(f"[cache] loading domain A ({len(self.dataset_a.subjects)} subjects)...")
+        for i, subj in enumerate(self.dataset_a.subjects):
+            self.dataset_a._load_volume(subj)
+            if (i + 1) % 20 == 0:
+                print(f"[cache] domain A: {i + 1}/{len(self.dataset_a.subjects)}")
+
+        # Cache domain B
+        print(f"[cache] loading domain B ({len(self.dataset_b.subjects)} subjects)...")
+        for i, subj in enumerate(self.dataset_b.subjects):
+            self.dataset_b._load_volume(subj)
+            if (i + 1) % 100 == 0:
+                print(f"[cache] domain B: {i + 1}/{len(self.dataset_b.subjects)}")
+
+        elapsed = time.time() - start
+        cache_size_a = sum(v.nbytes for v in self.dataset_a._cache.values()) / 1e9
+        cache_size_b = sum(v.nbytes for v in self.dataset_b._cache.values()) / 1e9
+        print(f"[cache] complete: {cache_size_a + cache_size_b:.1f} GB cached in {elapsed:.1f}s")
         
     def __len__(self) -> int:
         return self.length
@@ -324,29 +357,37 @@ def create_dataloaders(
     print(f"  Val: {len(val_dataset)}")
     print(f"  Test: {len(test_dataset)}")
     
-    # Create dataloaders
+    # Create dataloaders - optimized to avoid synchronization stalls
+    # persistent_workers=False prevents periodic stalls every num_workers batches
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        prefetch_factor=2 if num_workers > 0 else None,
+        persistent_workers=False,
+        drop_last=True
     )
-    
+
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        prefetch_factor=2 if num_workers > 0 else None,
+        persistent_workers=False
     )
-    
+
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=True,
+        prefetch_factor=2 if num_workers > 0 else None,
+        persistent_workers=False
     )
     
     return train_loader, val_loader, test_loader

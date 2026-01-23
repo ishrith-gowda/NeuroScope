@@ -16,8 +16,8 @@ deterministic: true
 # -----------------------------------------------------------------------------
 # data paths - chameleon cloud standard layout
 # -----------------------------------------------------------------------------
-brats_dir: "/home/cc/neuroscope/data/preprocessed/brats"
-upenn_dir: "/home/cc/neuroscope/data/preprocessed/upenn"
+brats_dir: "/home/cc/neuroscope/preprocessed/brats"
+upenn_dir: "/home/cc/neuroscope/preprocessed/upenn"
 output_dir: "/home/cc/neuroscope/experiments"
 
 # -----------------------------------------------------------------------------
@@ -36,12 +36,12 @@ output_channels: 4         # 4 modalities (center slice)
 attention_layers: [3, 4, 5]  # which residual blocks get attention
 
 # -----------------------------------------------------------------------------
-# training configuration - optimized for v100
+# training configuration - optimized for 4x v100 multi-gpu
 # -----------------------------------------------------------------------------
 epochs: 100                # full training
-batch_size: 8              # conservative for attention memory overhead
+batch_size: 32             # 4x v100 (8 per gpu) - stable with amp
 image_size: 128            # spatial resolution
-num_workers: 8             # parallel data loading
+num_workers: 4             # minimal workers - data cached in memory
 
 # -----------------------------------------------------------------------------
 # optimizer configuration - tuned for attention stability
@@ -106,13 +106,13 @@ verbose: 2                 # 0=silent, 1=minimal, 2=normal, 3=detailed
 resume_from: null          # path to checkpoint (null = fresh start)
 
 # =============================================================================
-# expected performance on v100
+# expected performance on 4x v100 (multi-gpu dataparallel)
 # =============================================================================
-# gpu: nvidia v100 (16gb or 32gb)
-# batch_size: 8 (attention requires more memory)
-# speed: ~0.5-0.8 sec/iteration with amp
-# time per epoch: ~45-90 minutes
-# total for 100 epochs: ~3-6 days
+# gpu: 4x nvidia v100-sxm2-32gb (chameleon cloud)
+# batch_size: 32 total (8 per gpu, conservative for attention memory)
+# speed: ~0.2-0.35 sec/iteration with amp + multi-gpu
+# time per epoch: ~20-30 minutes
+# total for 100 epochs: ~35-50 hours
 #
 # note: attention adds ~10-15% compute overhead vs baseline
 # but provides significant quality improvements

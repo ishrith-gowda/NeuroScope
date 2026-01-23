@@ -16,8 +16,8 @@ deterministic: true
 # -----------------------------------------------------------------------------
 # data paths - chameleon cloud standard layout
 # -----------------------------------------------------------------------------
-brats_dir: "/home/cc/neuroscope/data/preprocessed/brats"
-upenn_dir: "/home/cc/neuroscope/data/preprocessed/upenn"
+brats_dir: "/home/cc/neuroscope/preprocessed/brats"
+upenn_dir: "/home/cc/neuroscope/preprocessed/upenn"
 output_dir: "/home/cc/neuroscope/experiments"
 
 # -----------------------------------------------------------------------------
@@ -33,12 +33,12 @@ input_channels: 12         # 3 slices x 4 modalities
 output_channels: 4         # 4 modalities (center slice)
 
 # -----------------------------------------------------------------------------
-# training configuration - optimized for v100
+# training configuration - optimized for 4x v100 multi-gpu
 # -----------------------------------------------------------------------------
 epochs: 100                # full training
-batch_size: 16             # v100 32gb can handle larger batches
+batch_size: 32             # smaller batch for better data loading overlap
 image_size: 128            # spatial resolution
-num_workers: 8             # parallel data loading
+num_workers: 4             # reduced - data is cached in memory
 
 # -----------------------------------------------------------------------------
 # optimizer configuration
@@ -103,11 +103,11 @@ verbose: 2                 # 0=silent, 1=minimal, 2=normal, 3=detailed
 resume_from: null          # path to checkpoint (null = fresh start)
 
 # =============================================================================
-# expected performance on v100
+# expected performance on 4x v100 (multi-gpu dataparallel)
 # =============================================================================
-# gpu: nvidia v100 (16gb or 32gb)
-# batch_size: 16 (32gb) or 8 (16gb)
-# speed: ~0.3-0.5 sec/iteration with amp
-# time per epoch: ~30-60 minutes
-# total for 100 epochs: ~2-4 days
+# gpu: 4x nvidia v100-sxm2-32gb (chameleon cloud)
+# batch_size: 64 total (16 per gpu)
+# speed: ~0.15-0.25 sec/iteration with amp + multi-gpu
+# time per epoch: ~10-15 minutes
+# total for 100 epochs: ~20-30 hours
 # =============================================================================
