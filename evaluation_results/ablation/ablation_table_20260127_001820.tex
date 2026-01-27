@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+\centering
+\caption{Ablation Study: Baseline CycleGAN vs SA-CycleGAN with Attention}
+\label{tab:ablation}
+\begin{tabular}{lcccccc}
+\toprule
+Metric & Baseline & SA-CycleGAN & $\Delta$ & $p$-value & Cohen's $d$ \\
+\midrule
+Cycle SSIM (A) & 0.9325$\pm$0.0143 & 0.9261$\pm$0.0148 & -0.0064$^{*}$ & 0.0000 & -1.955 \\
+Cycle SSIM (B) & 0.9282$\pm$0.0171 & 0.9392$\pm$0.0123 & +0.0110$^{*}$ & 0.0000 & 1.132 \\
+Cycle PSNR (A) & 28.3504$\pm$1.3655 & 27.9035$\pm$1.3759 & -0.4469$^{*}$ & 0.0000 & -1.439 \\
+Cycle PSNR (B) & 27.7228$\pm$1.3006 & 28.7332$\pm$1.1458 & +1.0104$^{*}$ & 0.0000 & 1.325 \\
+Identity SSIM (A) & 0.9542$\pm$0.0125 & 0.9476$\pm$0.0111 & -0.0066$^{*}$ & 0.0000 & -1.085 \\
+Identity SSIM (B) & 0.9535$\pm$0.0108 & 0.9476$\pm$0.0115 & -0.0060$^{*}$ & 0.0000 & -1.260 \\
+\midrule
+\multicolumn{6}{l}{\textit{Per-Modality Cycle SSIM (A$\rightarrow$B$\rightarrow$A)}} \\
+\quad T1 & 0.9447 & 0.9405 & -0.0043$^{*}$ & 0.0000 & -1.066 \\
+\quad T1CE & 0.9249 & 0.9169 & -0.0080$^{*}$ & 0.0000 & -1.637 \\
+\quad T2 & 0.9374 & 0.9317 & -0.0057$^{*}$ & 0.0000 & -1.233 \\
+\quad FLAIR & 0.9230 & 0.9154 & -0.0076$^{*}$ & 0.0000 & -1.539 \\
+\bottomrule
+\multicolumn{6}{l}{\footnotesize $^{*}$ Significant at $p < 0.05$} \\
+\end{tabular}
+\end{table}

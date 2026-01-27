@@ -101,14 +101,16 @@ class AblationStudy:
 
         model = BaselineCycleGAN25D(config)
 
-        # handle dataparallel state dict
+        # handle dataparallel state dict - components were individually wrapped
         state_dict = checkpoint['model_state_dict']
         new_state_dict = {}
         for k, v in state_dict.items():
-            if k.startswith('module.'):
-                new_state_dict[k[7:]] = v
-            else:
-                new_state_dict[k] = v
+            # remove .module. from component-level wrapping (e.g., G_A2B.module.xxx -> G_A2B.xxx)
+            new_key = k.replace('.module.', '.')
+            # also handle if whole model was wrapped
+            if new_key.startswith('module.'):
+                new_key = new_key[7:]
+            new_state_dict[new_key] = v
 
         model.load_state_dict(new_state_dict)
         model = model.to(self.device)
@@ -136,14 +138,16 @@ class AblationStudy:
 
         model = SACycleGAN25D(config)
 
-        # handle dataparallel state dict
+        # handle dataparallel state dict - components were individually wrapped
         state_dict = checkpoint['model_state_dict']
         new_state_dict = {}
         for k, v in state_dict.items():
-            if k.startswith('module.'):
-                new_state_dict[k[7:]] = v
-            else:
-                new_state_dict[k] = v
+            # remove .module. from component-level wrapping (e.g., G_A2B.module.xxx -> G_A2B.xxx)
+            new_key = k.replace('.module.', '.')
+            # also handle if whole model was wrapped
+            if new_key.startswith('module.'):
+                new_key = new_key[7:]
+            new_state_dict[new_key] = v
 
         model.load_state_dict(new_state_dict)
         model = model.to(self.device)
@@ -393,7 +397,7 @@ class AblationStudy:
                 'cohens_d': float(cohens_d),
                 'ci_95_low': float(ci_low),
                 'ci_95_high': float(ci_high),
-                'significant': p_value < 0.05,
+                'significant': bool(p_value < 0.05),
             }
 
         return stats_results
