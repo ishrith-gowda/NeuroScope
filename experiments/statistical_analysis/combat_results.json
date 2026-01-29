@@ -1,0 +1,18 @@
+{
+  "raw": {
+    "mmd": 0.005871564149856567,
+    "mean_difference": 0.11625964939594269,
+    "cosine_similarity": 0.9999397993087769
+  },
+  "combat": {
+    "mmd": 0.002743221209388358,
+    "mean_difference": 0.012618864820520943,
+    "cosine_similarity": 0.9999992695427634
+  },
+  "improvement": {
+    "mmd_reduction": 0.0031283429404682095,
+    "mmd_reduction_percent": 53.279549718359625,
+    "mean_diff_reduction": 0.10364078457542175,
+    "cosine_improvement": 5.947023398655826e-05
+  }
+}

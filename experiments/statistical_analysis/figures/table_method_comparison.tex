@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\caption{Quantitative Comparison of Harmonization Methods}
+\label{tab:method_comparison}
+\begin{tabular}{lcccc}
+\toprule
+Method & Domain Acc. $\downarrow$ & Domain AUC $\downarrow$ & MMD $\downarrow$ & Cosine Sim. $\uparrow$ \\
+\midrule
+No Harmonization & 0.984 & 0.995 & 1.7292 & 0.6656 \\
+SA-CycleGAN-2.5D (Ours) & 0.597 & 0.613 & 0.0153 & 0.9996 \\
+ComBat & 0.750 & 0.800 & 0.0027 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
