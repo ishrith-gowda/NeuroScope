@@ -1,0 +1,29 @@
+{
+  "raw": {
+    "fid": 0.14589439008824995,
+    "kid_mean": 0.00010254621156491339,
+    "kid_std": 6.120246780483285e-06,
+    "mmd_rbf": 0.004302561283111572,
+    "mmd_linear": 0.0145721435546875,
+    "sliced_wasserstein": 0.0046608300836070374,
+    "mmd_permutation_p_value": 0.009900990099009901
+  },
+  "n_samples_a": 1056,
+  "n_samples_b": 6792,
+  "harmonized": {
+    "fid": 0.2180276734637679,
+    "kid_mean": 0.0006191825959831476,
+    "kid_std": 1.2332760888966732e-05,
+    "mmd_rbf": 0.018715858459472656,
+    "mmd_linear": 0.0728912353515625,
+    "sliced_wasserstein": 0.009733126994657688,
+    "mmd_permutation_p_value": 0.009900990099009901
+  },
+  "improvement": {
+    "fid_reduction": -0.07213328337551794,
+    "fid_reduction_percent": -49.4421227107398,
+    "kid_reduction": -0.0005166363844182342,
+    "mmd_reduction": -0.014413297176361084,
+    "swd_reduction": -0.00507229691105065
+  }
+}

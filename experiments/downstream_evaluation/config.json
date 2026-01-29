@@ -1,0 +1,9 @@
+{
+  "domain_a_dir": "/home/cc/neuroscope/preprocessed/brats",
+  "domain_b_dir": "/home/cc/neuroscope/preprocessed/upenn",
+  "harmonization_model": "/home/cc/neuroscope/experiments/sa_cyclegan_25d_v100/checkpoints/checkpoint_best.pth",
+  "n_epochs": 30,
+  "batch_size": 32,
+  "device": "cuda",
+  "timestamp": "20260129_000434"
+}

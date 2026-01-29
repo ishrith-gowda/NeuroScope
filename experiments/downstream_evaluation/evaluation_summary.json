@@ -1,0 +1,92 @@
+{
+  "timestamp": "20260129_000434",
+  "configuration": {
+    "domain_a_dir": "/home/cc/neuroscope/preprocessed/brats",
+    "domain_b_dir": "/home/cc/neuroscope/preprocessed/upenn",
+    "harmonization_model": "/home/cc/neuroscope/experiments/sa_cyclegan_25d_v100/checkpoints/checkpoint_best.pth",
+    "n_epochs": 30,
+    "batch_size": 32,
+    "device": "cuda",
+    "timestamp": "20260129_000434"
+  },
+  "results": {
+    "domain_classification": {
+      "raw": {
+        "accuracy": 0.9842767295597484,
+        "auc": 0.9950920245398773,
+        "f1": 0.9844236760124611,
+        "confusion_matrix": [
+          [
+            155,
+            0
+          ],
+          [
+            5,
+            158
+          ]
+        ],
+        "feature_statistics": {
+          "mean_difference": 3.5501697063446045,
+          "cosine_similarity": 0.6656085848808289,
+          "mmd": 1.7291638851165771,
+          "mean_ks_statistic": 0.9730061349693251
+        }
+      },
+      "harmonized": {
+        "accuracy": 0.5974842767295597,
+        "auc": 0.6131802889372651,
+        "f1": 0.6893203883495146,
+        "confusion_matrix": [
+          [
+            48,
+            107
+          ],
+          [
+            21,
+            142
+          ]
+        ],
+        "feature_statistics": {
+          "mean_difference": 0.1597946137189865,
+          "cosine_similarity": 0.9996315836906433,
+          "mmd": 0.015343546867370605,
+          "mean_ks_statistic": 0.13103898674055017
+        }
+      },
+      "improvement": {
+        "accuracy_reduction": 0.3867924528301887,
+        "auc_reduction": 0.38191173560261227,
+        "mmd_reduction": 1.7138203382492065
+      }
+    },
+    "feature_distribution": {
+      "raw": {
+        "fid": 0.14589439008824995,
+        "kid_mean": 0.00010254621156491339,
+        "kid_std": 6.120246780483285e-06,
+        "mmd_rbf": 0.004302561283111572,
+        "mmd_linear": 0.0145721435546875,
+        "sliced_wasserstein": 0.0046608300836070374,
+        "mmd_permutation_p_value": 0.009900990099009901
+      },
+      "n_samples_a": 1056,
+      "n_samples_b": 6792,
+      "harmonized": {
+        "fid": 0.2180276734637679,
+        "kid_mean": 0.0006191825959831476,
+        "kid_std": 1.2332760888966732e-05,
+        "mmd_rbf": 0.018715858459472656,
+        "mmd_linear": 0.0728912353515625,
+        "sliced_wasserstein": 0.009733126994657688,
+        "mmd_permutation_p_value": 0.009900990099009901
+      },
+      "improvement": {
+        "fid_reduction": -0.07213328337551794,
+        "fid_reduction_percent": -49.4421227107398,
+        "kid_reduction": -0.0005166363844182342,
+        "mmd_reduction": -0.014413297176361084,
+        "swd_reduction": -0.00507229691105065
+      }
+    }
+  }
+}

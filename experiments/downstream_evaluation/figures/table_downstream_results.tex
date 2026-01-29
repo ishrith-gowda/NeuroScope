@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Downstream Task Evaluation Results}
+\label{tab:downstream_evaluation}
+\begin{tabular}{lccc}
+\toprule
+Metric & Raw & Harmonized & Improvement \\
+\midrule
+\multicolumn{4}{l}{\textit{Domain Classification}} \\
+Accuracy & 0.984 & 0.597 & +39.3\% \\
+AUC-ROC & 0.995 & 0.613 & +38.4\% \\
+F1-Score & 0.984 & 0.689 & +30.0\% \\
+\midrule
+\multicolumn{4}{l}{\textit{Feature Distribution}} \\
+FID & 0.146 & 0.218 & -49.4\% \\
+KID & 0.000 & 0.001 & -503.8\% \\
+MMD & 0.004 & 0.019 & -335.0\% \\
+SWD & 0.005 & 0.010 & -108.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
