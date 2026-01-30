@@ -1,0 +1,19 @@
+\begin{table*}[htbp]
+\centering
+\caption{Comprehensive Evaluation Results for SA-CycleGAN-2.5D Harmonization}
+\label{tab:comprehensive_results}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{Raw (No Harm.)} & \textbf{SA-CycleGAN-2.5D} & \textbf{ComBat} & \textbf{Improvement} \\
+\midrule
+\multicolumn{5}{l}{\textit{Domain Classification}} \\
+\quad Accuracy $\downarrow$ & 0.984 & 0.597 & 0.750 & 38.7\% \\
+\quad AUC $\downarrow$ & 0.995 & 0.613 & 0.800 & 38.2\% \\
+\midrule
+\multicolumn{5}{l}{\textit{Feature Distribution}} \\
+\quad MMD $\downarrow$ & 1.7292 & 0.0153 & 0.0027 & 99.1\% \\
+\quad Cosine Similarity $\uparrow$ & 0.6656 & 0.9996 & 1.0000 & +0.3340 \\
+\quad Mean Difference $\downarrow$ & 3.5502 & 0.1598 & 0.0126 & 95.5\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
