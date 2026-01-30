@@ -1,0 +1,42 @@
+[
+  {
+    "method_name": "zscore",
+    "inference_time_per_slice_ms": 1.5866943961009383,
+    "inference_time_std_ms": 0.0870237425623655,
+    "inference_time_per_volume_ms": 245.93763139564544,
+    "throughput_slices_per_sec": 630.2410864104322,
+    "peak_memory_mb": 0.0,
+    "model_size_mb": 0.0,
+    "parameter_count": 0
+  },
+  {
+    "method_name": "histogram_matching",
+    "inference_time_per_slice_ms": 6.469723081681877,
+    "inference_time_std_ms": 0.22105410947595028,
+    "inference_time_per_volume_ms": 1002.807077660691,
+    "throughput_slices_per_sec": 154.56612089493615,
+    "peak_memory_mb": 0.0,
+    "model_size_mb": 0.0,
+    "parameter_count": 0
+  },
+  {
+    "method_name": "nyul",
+    "inference_time_per_slice_ms": 3.4071080572903156,
+    "inference_time_std_ms": 0.005879256022060533,
+    "inference_time_per_volume_ms": 528.1017488799989,
+    "throughput_slices_per_sec": 293.50404600765825,
+    "peak_memory_mb": 0.0,
+    "model_size_mb": 0.0,
+    "parameter_count": 0
+  },
+  {
+    "method_name": "whitestripe",
+    "inference_time_per_slice_ms": 584.9484458356164,
+    "inference_time_std_ms": 13.8577168058949,
+    "inference_time_per_volume_ms": 90667.00910452055,
+    "throughput_slices_per_sec": 1.7095523667414312,
+    "peak_memory_mb": 0.0,
+    "model_size_mb": 0.0,
+    "parameter_count": 0
+  }
+]
