@@ -38,44 +38,48 @@ def generate_dataset_statistics_figure():
     """
     print("Generating: Dataset Statistics...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(12, 5))
-    fig.suptitle(r'\textbf{Dataset Statistics and Experimental Setup}', y=1.02)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    plt.subplots_adjust(wspace=0.3, top=0.88)
 
-    # Dataset sizes
+    # Dataset sizes - sapphire and coral
     ax = axes[0]
     datasets = ['BraTS\n(Domain A)', 'UPenn-GBM\n(Domain B)']
     samples = [8184, 52638]
-    colors_list = [COLORS['primary'], COLORS['secondary']]
+    colors_list = ['#0F52BA', '#FF6F61']  # sapphire, coral
 
-    bars = ax.bar(datasets, samples, color=colors_list, alpha=0.7, width=0.6)
-    ax.set_ylabel('Number of 2.5D Slices')
-    ax.set_title(r'(a) Dataset Sizes')
+    bars = ax.bar(datasets, samples, color=colors_list, alpha=0.8, width=0.6,
+                  edgecolor='black', linewidth=0.7)
+    ax.set_ylabel('Number of 2.5D Slices', fontsize=13)
+    ax.set_title(r'(a) Dataset Sizes', fontsize=14, pad=10)
     ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     # Add value labels on bars
     for bar, val in zip(bars, samples):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
                 f'{val:,}',
-                ha='center', va='bottom', fontsize=9)
+                ha='center', va='bottom', fontsize=11)
 
     # Add imbalance ratio annotation
     ratio = samples[1] / samples[0]
     ax.text(0.5, 0.95, f'Imbalance ratio: {ratio:.1f}:1',
             transform=ax.transAxes, ha='center', va='top',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3),
-            fontsize=8)
+            fontsize=10)
 
-    # Train/Val/Test splits
+    # Train/Val/Test splits - marigold, sage, slate
     ax = axes[1]
     splits = ['Train', 'Val', 'Test']
     split_samples = [42110, 5263, 5265]
-    split_colors = [COLORS['success'], COLORS['warning'], COLORS['danger']]
+    split_colors = ['#E8A317', '#8DB600', '#708090']  # marigold, apple green, slate
 
-    bars = ax.bar(splits, split_samples, color=split_colors, alpha=0.7, width=0.6)
-    ax.set_ylabel('Number of Samples')
-    ax.set_title(r'(b) Data Splits')
+    bars = ax.bar(splits, split_samples, color=split_colors, alpha=0.8, width=0.6,
+                  edgecolor='black', linewidth=0.7)
+    ax.set_ylabel('Number of Samples', fontsize=13)
+    ax.set_title(r'(b) Data Splits', fontsize=14, pad=10)
     ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     # Add value labels and percentages
     total = sum(split_samples)
@@ -84,29 +88,31 @@ def generate_dataset_statistics_figure():
         pct = (val / total) * 100
         ax.text(bar.get_x() + bar.get_width()/2., height,
                 f'{val:,}\n({pct:.1f}\%)',
-                ha='center', va='bottom', fontsize=8)
+                ha='center', va='bottom', fontsize=10)
 
     # Epoch length comparison
     ax = axes[2]
     components = ['Smaller\nDomain', 'Larger\nDomain\n(Epoch Length)', 'Training\nBatches']
-    values = [8184, 52638, 5264]  # batch_size=8, so 52638/8 ≈ 6580, but actual is 5264 after splits
-    bar_colors = [COLORS['primary'], COLORS['secondary'], COLORS['info']]
+    values = [8184, 52638, 5264]
+    bar_colors = ['#0F52BA', '#FF6F61', '#5B5EA6']  # sapphire, coral, ultra violet
 
-    bars = ax.bar(components, values, color=bar_colors, alpha=0.7, width=0.6)
-    ax.set_ylabel('Count')
-    ax.set_title(r'(c) Training Configuration')
+    bars = ax.bar(components, values, color=bar_colors, alpha=0.8, width=0.6,
+                  edgecolor='black', linewidth=0.7)
+    ax.set_ylabel('Count', fontsize=13)
+    ax.set_title(r'(c) Training Configuration', fontsize=14, pad=10)
     ax.grid(True, alpha=0.3, axis='y')
     ax.set_yscale('log')
+    ax.set_axisbelow(True)
 
     # Add value labels
     for bar, val in zip(bars, values):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
                 f'{val:,}',
-                ha='center', va='bottom', fontsize=8)
+                ha='center', va='bottom', fontsize=10)
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    fig.suptitle(r'\textbf{Dataset Statistics and Experimental Setup}',
+                 fontsize=16, y=0.98)
     save_figure(fig, 'fig08_dataset_statistics', OUTPUT_DIR)
     plt.close()
 
@@ -119,24 +125,24 @@ def generate_preprocessing_pipeline_figure():
     """
     print("Generating: Preprocessing Pipeline...")
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(14, 7))
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 8)
     ax.axis('off')
 
     # Title
     fig.suptitle(r'\textbf{Preprocessing Pipeline: Raw MRI to 2.5D Slice Triplets}',
-                 y=0.98)
+                 fontsize=16, y=0.98)
 
-    # Define pipeline stages
+    # Define pipeline stages - unique colors: plum, tawny, pine, mulberry, cadet, brick, pewter
     stages = [
-        {'name': 'Raw NIfTI\nVolumes', 'y': 7, 'color': COLORS['primary']},
-        {'name': 'Skull\nStripping', 'y': 6, 'color': COLORS['secondary']},
-        {'name': 'Normalization\n(0-1)', 'y': 5, 'color': COLORS['success']},
-        {'name': 'Intensity\nClipping', 'y': 4, 'color': COLORS['warning']},
-        {'name': '2.5D Slice\nExtraction', 'y': 3, 'color': COLORS['info']},
-        {'name': 'Triplet\nFormation', 'y': 2, 'color': COLORS['danger']},
-        {'name': 'Output:\n[B, 12, H, W]', 'y': 1, 'color': COLORS['gray']},
+        {'name': 'Raw NIfTI\nVolumes', 'y': 7, 'color': '#8E4585'},       # plum
+        {'name': 'Skull\nStripping', 'y': 6, 'color': '#CF6A4C'},         # tawny
+        {'name': 'Normalization\n(0-1)', 'y': 5, 'color': '#2E8B57'},     # pine/sea green
+        {'name': 'Intensity\nClipping', 'y': 4, 'color': '#C54B8C'},      # mulberry
+        {'name': '2.5D Slice\nExtraction', 'y': 3, 'color': '#5F9EA0'},   # cadet blue
+        {'name': 'Triplet\nFormation', 'y': 2, 'color': '#CB4154'},       # brick red
+        {'name': 'Output:\n[B, 12, H, W]', 'y': 1, 'color': '#8F8F8F'},  # pewter
     ]
 
     # Draw pipeline boxes and arrows
@@ -153,7 +159,7 @@ def generate_preprocessing_pipeline_figure():
         # Text
         ax.text(2.5, stage['y'], stage['name'],
                 ha='center', va='center',
-                fontsize=9, fontweight='bold')
+                fontsize=10, fontweight='bold')
 
         # Arrow to next stage
         if i < len(stages) - 1:
@@ -172,15 +178,15 @@ def generate_preprocessing_pipeline_figure():
     ]
 
     for y, text in details:
-        ax.text(5.5, y, text, ha='left', va='center', fontsize=8,
+        ax.text(5.5, y, text, ha='left', va='center', fontsize=10,
                bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.3))
 
     # Add data shape evolution
-    ax.text(8.5, 7, r'$[H, W, D, 4]$', ha='center', fontsize=9,
+    ax.text(8.5, 7, r'$[H, W, D, 4]$', ha='center', fontsize=11,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
-    ax.text(8.5, 3, r'$[D-2, 4, 3, H, W]$', ha='center', fontsize=9,
+    ax.text(8.5, 3, r'$[D-2, 4, 3, H, W]$', ha='center', fontsize=11,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
-    ax.text(8.5, 1, r'$[B, 12, H, W]$', ha='center', fontsize=9,
+    ax.text(8.5, 1, r'$[B, 12, H, W]$', ha='center', fontsize=11,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
 
     plt.tight_layout()
@@ -196,68 +202,69 @@ def generate_25d_processing_figure():
     """
     print("Generating: 2.5D Processing Illustration...")
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(14, 6))
     ax.set_xlim(0, 12)
     ax.set_ylim(0, 6)
     ax.axis('off')
 
     fig.suptitle(r'\textbf{2.5D Processing: Context-Aware Slice Translation}',
-                 y=0.96)
+                 fontsize=16, y=0.98)
 
-    # Input: 3 slices
+    # Input: 3 slices - indigo
     input_y = 4
     slice_positions = [1, 2, 3]
     slice_labels = [r'Slice $i-1$', r'Slice $i$', r'Slice $i+1$']
+    color_input = '#4B0082'  # indigo
 
     for pos, label in zip(slice_positions, slice_labels):
         rect = mpatches.Rectangle((pos, input_y-0.4), 0.8, 2,
-                                  facecolor=COLORS['primary'],
+                                  facecolor=color_input,
                                   edgecolor='black',
                                   alpha=0.5,
                                   linewidth=2)
         ax.add_patch(rect)
-        ax.text(pos+0.4, input_y-0.7, label, ha='center', fontsize=8)
+        ax.text(pos+0.4, input_y-0.7, label, ha='center', fontsize=10)
 
     # Stack annotation
     ax.text(2, input_y+1.8, r'Input: 3 slices $\times$ 4 modalities = 12 channels',
-           ha='center', fontsize=9,
-           bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', alpha=0.4))
+           ha='center', fontsize=11,
+           bbox=dict(boxstyle='round,pad=0.3', facecolor='#D6C4E0', alpha=0.4))
 
     # Arrow to generator
     ax.annotate('', xy=(5, input_y+0.5), xytext=(4, input_y+0.5),
                arrowprops=dict(arrowstyle='->', lw=3, color='black'))
 
-    # Generator box
+    # Generator box - teal green
     gen_rect = mpatches.FancyBboxPatch((5, input_y-0.2), 2, 1.4,
                                        boxstyle="round,pad=0.1",
-                                       facecolor=COLORS['success'],
+                                       facecolor='#008080',
                                        edgecolor='black',
                                        alpha=0.7,
                                        linewidth=2)
     ax.add_patch(gen_rect)
     ax.text(6, input_y+0.5, r'\textbf{Generator}', ha='center', va='center',
-           fontsize=10, fontweight='bold')
+           fontsize=12, fontweight='bold')
     ax.text(6, input_y+0.1, r'(with attention)', ha='center', va='center',
-           fontsize=8)
+           fontsize=10)
 
     # Arrow to output
     ax.annotate('', xy=(8, input_y+0.5), xytext=(7.2, input_y+0.5),
                arrowprops=dict(arrowstyle='->', lw=3, color='black'))
 
-    # Output: center slice
+    # Output: center slice - terracotta
     output_x = 8.5
     out_rect = mpatches.Rectangle((output_x, input_y-0.1), 1, 1.2,
-                                  facecolor=COLORS['secondary'],
+                                  facecolor='#CC6644',
                                   edgecolor='black',
                                   alpha=0.6,
                                   linewidth=2)
     ax.add_patch(out_rect)
-    ax.text(output_x+0.5, input_y-0.5, r'Translated Slice $i$', ha='center', fontsize=8)
+    ax.text(output_x+0.5, input_y-0.5, r'Translated Slice $i$', ha='center', fontsize=10)
 
     # Output annotation
     ax.text(9, input_y+1.3, r'Output: 1 slice $\times$ 4 modalities',
-           ha='center', fontsize=9,
-           bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgreen', alpha=0.4))
+           ha='center', fontsize=11,
+           bbox=dict(boxstyle='round,pad=0.3', facecolor='#C1E1C1', alpha=0.4))
 
     # Add advantage boxes at bottom
     advantages = [
@@ -270,13 +277,13 @@ def generate_25d_processing_figure():
 
     y_pos = 2
     for adv in advantages:
-        ax.text(2, y_pos, adv, ha='left', fontsize=8)
+        ax.text(2, y_pos, adv, ha='left', fontsize=10)
         y_pos -= 0.4
 
     # Add dimensions
-    ax.text(10.5, input_y+0.5, r'Input: $[B, 12, H, W]$', ha='left', fontsize=8,
+    ax.text(10.5, input_y+0.5, r'Input: $[B, 12, H, W]$', ha='left', fontsize=10,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='gray'))
-    ax.text(10.5, input_y-0.2, r'Output: $[B, 4, H, W]$', ha='left', fontsize=8,
+    ax.text(10.5, input_y-0.2, r'Output: $[B, 4, H, W]$', ha='left', fontsize=10,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='gray'))
 
     plt.tight_layout()
@@ -292,14 +299,14 @@ def generate_training_overview_figure():
     """
     print("Generating: Training Overview...")
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(14, 7))
     ax = fig.add_subplot(111)
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis('off')
 
     fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Configuration}',
-                 y=0.98)
+                 fontsize=16, y=0.98)
 
     # Hyperparameters box
     hp_text = [
@@ -314,7 +321,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 9
     for text in hp_text:
-        ax.text(0.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
     # Loss weights box
@@ -327,7 +334,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 9
     for text in loss_text:
-        ax.text(5.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(5.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.5
 
     # Architecture specs
@@ -342,7 +349,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 5.5
     for text in arch_text:
-        ax.text(0.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
     # Training stats
@@ -358,7 +365,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 5.5
     for text in stats_text:
-        ax.text(5.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(5.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
     # Data augmentation
@@ -371,7 +378,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 2.5
     for text in aug_text:
-        ax.text(0.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
     # Regularization
@@ -384,7 +391,7 @@ def generate_training_overview_figure():
     ]
     y_pos = 2.5
     for text in reg_text:
-        ax.text(5.5, y_pos, text, ha='left', fontsize=7.5)
+        ax.text(5.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
     plt.tight_layout()

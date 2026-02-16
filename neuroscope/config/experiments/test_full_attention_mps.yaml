@@ -1,0 +1,103 @@
+# =============================================================================
+# ATTENTION STRESS TEST - MPS
+# =============================================================================
+# Test full complexity model on MPS before GPU transfer
+# Ultra-conservative settings to see if attention can work at all
+# Run for ~50 batches to validate stability
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Data Paths
+# -----------------------------------------------------------------------------
+brats_dir: "/Volumes/usb drive/neuroscope/preprocessed/brats"
+upenn_dir: "/Volumes/usb drive/neuroscope/preprocessed/upenn"
+output_dir: "/Volumes/usb drive/neuroscope/experiments"
+
+# -----------------------------------------------------------------------------
+# Model Architecture - FULL COMPLEXITY (GPU Config)
+# -----------------------------------------------------------------------------
+ngf: 64
+ndf: 64
+n_residual_blocks: 9
+use_attention: true        # ENABLED - testing full model
+use_cbam: true             # ENABLED - testing full model
+use_disc_attention: true   # ENABLED - testing full model
+input_channels: 12
+output_channels: 4
+
+# -----------------------------------------------------------------------------
+# Training Configuration - MINIMAL TEST
+# -----------------------------------------------------------------------------
+epochs: 1                  # Just 1 epoch
+batch_size: 4
+image_size: 128
+num_workers: 0
+
+# -----------------------------------------------------------------------------
+# Optimizer Configuration - ULTRA CONSERVATIVE FOR MPS TEST
+# -----------------------------------------------------------------------------
+lr_G: 0.000005             # 40x lower than standard (extreme safety)
+lr_D: 0.000005             # Testing if attention can work at any lr
+beta1: 0.5
+beta2: 0.999
+weight_decay: 0.0
+
+# -----------------------------------------------------------------------------
+# Learning Rate Scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"
+warmup_epochs: 0           # No warmup for quick test
+min_lr: 0.000001
+
+# -----------------------------------------------------------------------------
+# Loss Function Weights - FULL QUALITY
+# -----------------------------------------------------------------------------
+lambda_cycle: 10.0
+lambda_identity: 5.0       # All losses enabled
+lambda_ssim: 1.0           # With variance clamping
+lambda_gradient: 1.0
+
+# -----------------------------------------------------------------------------
+# Regularization
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 0.5
+gradient_clip_value: null
+
+# -----------------------------------------------------------------------------
+# Mixed Precision Training
+# -----------------------------------------------------------------------------
+use_amp: false
+
+# -----------------------------------------------------------------------------
+# Validation & Checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 1
+save_every: 1
+save_best_only: false
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 10
+sample_every: 1
+figure_every: 1
+verbose: 3
+
+# -----------------------------------------------------------------------------
+# Resume Training
+# -----------------------------------------------------------------------------
+resume_from: null
+
+# =============================================================================
+# TEST INSTRUCTIONS
+# =============================================================================
+# 1. Stop current training (Ctrl+C)
+# 2. Run: python scripts/02_training/train_comprehensive.py --config neuroscope/config/experiments/test_full_attention_mps.yaml
+# 3. Watch for 50-100 batches (~10-15 minutes)
+# 4. Success criteria:
+#    - No NaN losses
+#    - Losses decreasing or stable
+#    - Generated outputs not blank
+# 5. If passes → confident for GPU transfer
+#    If fails → document and proceed to GPU anyway (CUDA more stable)
+# =============================================================================

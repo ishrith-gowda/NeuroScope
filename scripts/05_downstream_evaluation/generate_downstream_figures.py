@@ -158,6 +158,15 @@ def plot_domain_classification_comparison(
     print(f'[fig] saved domain classification comparison to {output_path}')
 
 
+# t-SNE visualization color palette
+COLORS_TSNE = {
+    'brats_raw': '#E8703C',      # vibrant orange
+    'upenn_raw': '#6B5A9F',      # deep purple
+    'brats_harm': '#2A9D8F',     # teal
+    'upenn_harm': '#E76F51',     # burnt sienna
+}
+
+
 def plot_tsne_visualization(
     tsne_raw: np.ndarray,
     labels: np.ndarray,
@@ -165,12 +174,15 @@ def plot_tsne_visualization(
     output_path: Path
 ):
     """
-    plot t-sne visualization of feature space.
+    plot publication-quality t-sne visualization of feature space.
 
-    shows domain separation before/after harmonization.
+    shows domain separation before/after harmonization with full latex rendering.
     """
+    setup_latex_style_publication()
+    
     n_cols = 2 if tsne_harmonized is not None else 1
-    fig, axes = plt.subplots(1, n_cols, figsize=(5 * n_cols, 4.5))
+    fig, axes = plt.subplots(1, n_cols, figsize=(6 * n_cols + 2, 7))
+    plt.subplots_adjust(wspace=0.25, top=0.85)
 
     if n_cols == 1:
         axes = [axes]
@@ -180,14 +192,19 @@ def plot_tsne_visualization(
     mask_b = labels == 1
 
     axes[0].scatter(tsne_raw[mask_a, 0], tsne_raw[mask_a, 1],
-                   c=COLORS['domain_a'], alpha=0.5, s=15, label='BraTS')
+                   c=COLORS_TSNE['brats_raw'], alpha=0.6, s=35, 
+                   label='BraTS', edgecolors='black', linewidth=0.3)
     axes[0].scatter(tsne_raw[mask_b, 0], tsne_raw[mask_b, 1],
-                   c=COLORS['domain_b'], alpha=0.5, s=15, label='UPenn')
+                   c=COLORS_TSNE['upenn_raw'], alpha=0.6, s=35, 
+                   label='UPenn', edgecolors='black', linewidth=0.3)
 
-    axes[0].set_xlabel('t-SNE Dimension 1')
-    axes[0].set_ylabel('t-SNE Dimension 2')
-    axes[0].set_title('Raw Features')
-    axes[0].legend(loc='best', frameon=True, fancybox=False, edgecolor='black')
+    axes[0].set_xlabel(r't-SNE Dimension 1', fontsize=12)
+    axes[0].set_ylabel(r't-SNE Dimension 2', fontsize=12)
+    axes[0].set_title(r'(a) Raw Features', fontsize=13, pad=10)
+    axes[0].legend(loc='best', frameon=True, fancybox=False, 
+                  edgecolor='black', fontsize=11, markerscale=1.2)
+    axes[0].grid(True, alpha=0.2, linestyle='--', linewidth=0.5)
+    axes[0].set_axisbelow(True)
 
     # remove axis ticks (t-sne coordinates are not meaningful)
     axes[0].set_xticks([])
@@ -196,23 +213,30 @@ def plot_tsne_visualization(
     # harmonized features
     if tsne_harmonized is not None:
         axes[1].scatter(tsne_harmonized[mask_a, 0], tsne_harmonized[mask_a, 1],
-                       c=COLORS['domain_a'], alpha=0.5, s=15, label='BraTS (Harmonized)')
+                       c=COLORS_TSNE['brats_harm'], alpha=0.6, s=35, 
+                       label='BraTS (Harmonized)', edgecolors='black', linewidth=0.3)
         axes[1].scatter(tsne_harmonized[mask_b, 0], tsne_harmonized[mask_b, 1],
-                       c=COLORS['domain_b'], alpha=0.5, s=15, label='UPenn')
+                       c=COLORS_TSNE['upenn_harm'], alpha=0.6, s=35, 
+                       label='UPenn (Harmonized)', edgecolors='black', linewidth=0.3)
 
-        axes[1].set_xlabel('t-SNE Dimension 1')
-        axes[1].set_ylabel('t-SNE Dimension 2')
-        axes[1].set_title('Harmonized Features')
-        axes[1].legend(loc='best', frameon=True, fancybox=False, edgecolor='black')
+        axes[1].set_xlabel(r't-SNE Dimension 1', fontsize=12)
+        axes[1].set_ylabel(r't-SNE Dimension 2', fontsize=12)
+        axes[1].set_title(r'(b) Harmonized Features', fontsize=13, pad=10)
+        axes[1].legend(loc='best', frameon=True, fancybox=False, 
+                      edgecolor='black', fontsize=11, markerscale=1.2)
+        axes[1].grid(True, alpha=0.2, linestyle='--', linewidth=0.5)
+        axes[1].set_axisbelow(True)
         axes[1].set_xticks([])
         axes[1].set_yticks([])
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    # main figure title
+    fig.suptitle(r'\textbf{Feature Space Visualization (t-SNE)}',
+                 fontsize=16, fontweight='bold', y=0.98)
+
+    plt.savefig(output_path, format='pdf', bbox_inches='tight')
     plt.close()
 
-    print(f'[fig] saved t-sne visualization to {output_path}')
+    print(f'[fig] saved publication-quality t-sne visualization to {output_path}')
 
 
 def plot_feature_distribution_metrics(
@@ -304,26 +328,60 @@ def plot_feature_distribution_metrics(
     print(f'[fig] saved feature distribution metrics to {output_path}')
 
 
+def setup_latex_style_publication():
+    """configure matplotlib for publication-quality latex rendering."""
+    sns.set_theme(style='whitegrid')
+    
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "axes.labelsize": 14,
+        "font.size": 12,
+        "legend.fontsize": 11,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "figure.titlesize": 18,
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "axes.grid": True,
+        "grid.alpha": 0.3
+    })
+
+
+# vibrant professional color palette for harmonization summary
+COLORS_ENHANCED = {
+    'raw': '#D97F0F',        # burnt orange
+    'harmonized': '#2E5090', # deep blue
+    'positive': '#3FA796',   # teal green
+    'negative': '#A05050',   # dusty red
+}
+
+
 def plot_harmonization_effect_summary(
     domain_results: Dict,
     feature_results: Dict,
     output_path: Path
 ):
     """
-    create summary figure showing overall harmonization effect.
+    create publication-quality summary figure showing overall harmonization effect.
 
-    combines domain classification and feature distribution results.
+    combines domain classification and feature distribution results with
+    professional styling matching reference figures.
     """
-    fig = plt.figure(figsize=(12, 5))
+    setup_latex_style_publication()
+    
+    fig = plt.figure(figsize=(16, 9))
 
     # grid spec for complex layout
-    gs = fig.add_gridspec(2, 4, hspace=0.4, wspace=0.4)
+    gs = fig.add_gridspec(2, 4, hspace=0.35, wspace=0.3)
 
-    # domain classification metrics
+    # (a) domain classification metrics
     ax1 = fig.add_subplot(gs[0, 0:2])
 
     metrics = ['accuracy', 'auc', 'f1']
-    labels = ['Accuracy', 'AUC', 'F1']
+    labels = ['Accuracy', 'AUC-ROC', 'F1-Score']
 
     raw_vals = [domain_results['raw'].get(m, 0) for m in metrics]
 
@@ -332,23 +390,38 @@ def plot_harmonization_effect_summary(
 
     if 'harmonized' in domain_results:
         harm_vals = [domain_results['harmonized'].get(m, 0) for m in metrics]
-        ax1.bar(x - width/2, raw_vals, width, label='Raw', color=COLORS['raw'],
-               edgecolor='black', linewidth=0.5)
-        ax1.bar(x + width/2, harm_vals, width, label='Harmonized', color=COLORS['harmonized'],
-               edgecolor='black', linewidth=0.5)
+        bars1 = ax1.bar(x - width/2, raw_vals, width, label='Raw (Before)',
+                       color=COLORS_ENHANCED['raw'],
+                       edgecolor='black', linewidth=0.7)
+        bars2 = ax1.bar(x + width/2, harm_vals, width, label='Harmonized (After)',
+                       color=COLORS_ENHANCED['harmonized'],
+                       edgecolor='black', linewidth=0.7)
+        
+        # add value labels
+        for bar, val in zip(bars1, raw_vals):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+                    f'{val:.3f}', ha='center', va='bottom', fontsize=11, fontweight='normal')
+        for bar, val in zip(bars2, harm_vals):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+                    f'{val:.3f}', ha='center', va='bottom', fontsize=11, fontweight='normal')
     else:
-        ax1.bar(x, raw_vals, width, label='Raw', color=COLORS['raw'],
-               edgecolor='black', linewidth=0.5)
+        bars1 = ax1.bar(x, raw_vals, width, label='Raw',
+                       color=COLORS_ENHANCED['raw'],
+                       edgecolor='black', linewidth=0.7)
+        for bar, val in zip(bars1, raw_vals):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+                    f'{val:.3f}', ha='center', va='bottom', fontsize=11)
 
-    ax1.axhline(y=0.5, color='gray', linestyle='--', linewidth=0.8, alpha=0.7)
+    ax1.axhline(y=0.5, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(labels)
-    ax1.set_ylim(0, 1.1)
-    ax1.set_ylabel('Score')
-    ax1.set_title('(a) Domain Classification')
-    ax1.legend(loc='upper right', frameon=True, fancybox=False, edgecolor='black', fontsize=8)
+    ax1.set_xticklabels(labels, fontsize=12)
+    ax1.set_ylim(0, 1.2)
+    ax1.set_ylabel('Score', fontsize=13)
+    ax1.set_title(r'(a) Domain Classification Metrics', fontsize=14, pad=10)
+    ax1.legend(loc='lower right', frameon=True, fancybox=False, edgecolor='black', fontsize=10)
+    ax1.set_axisbelow(True)
 
-    # feature distribution metrics
+    # (b) feature distribution metrics
     ax2 = fig.add_subplot(gs[0, 2:4])
 
     feat_metrics = ['fid', 'kid_mean', 'mmd_rbf']
@@ -358,21 +431,39 @@ def plot_harmonization_effect_summary(
 
     if 'harmonized' in feature_results:
         harm_feat = [feature_results['harmonized'].get(m, 0) for m in feat_metrics]
-        ax2.bar(x[:3] - width/2, raw_feat, width, label='Raw', color=COLORS['raw'],
-               edgecolor='black', linewidth=0.5)
-        ax2.bar(x[:3] + width/2, harm_feat, width, label='Harmonized', color=COLORS['harmonized'],
-               edgecolor='black', linewidth=0.5)
+        bars1 = ax2.bar(x[:3] - width/2, raw_feat, width, label='Raw (Before)',
+                       color=COLORS_ENHANCED['raw'],
+                       edgecolor='black', linewidth=0.7)
+        bars2 = ax2.bar(x[:3] + width/2, harm_feat, width, label='Harmonized (After)',
+                       color=COLORS_ENHANCED['harmonized'],
+                       edgecolor='black', linewidth=0.7)
+        
+        # add value labels with rotation for readability
+        for bar, val in zip(bars1, raw_feat):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
+                    f'{val:.4f}', ha='center', va='bottom', fontsize=9, rotation=25)
+        for bar, val in zip(bars2, harm_feat):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
+                    f'{val:.4f}', ha='center', va='bottom', fontsize=9, rotation=25)
     else:
-        ax2.bar(x[:3], raw_feat, width, label='Raw', color=COLORS['raw'],
-               edgecolor='black', linewidth=0.5)
+        bars1 = ax2.bar(x[:3], raw_feat, width, label='Raw',
+                       color=COLORS_ENHANCED['raw'],
+                       edgecolor='black', linewidth=0.7)
+        for bar, val in zip(bars1, raw_feat):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
+                    f'{val:.4f}', ha='center', va='bottom', fontsize=9, rotation=25)
 
     ax2.set_xticks(x[:3])
-    ax2.set_xticklabels(feat_labels)
-    ax2.set_ylabel('Distance')
-    ax2.set_title('(b) Feature Distribution')
-    ax2.legend(loc='upper right', frameon=True, fancybox=False, edgecolor='black', fontsize=8)
+    ax2.set_xticklabels(feat_labels, fontsize=12)
+    ax2.set_ylabel('Distance', fontsize=13)
+    ax2.set_title(r'(b) Feature Distribution Distances', fontsize=14, pad=10)
+    ax2.legend(loc='upper right', frameon=True, fancybox=False, edgecolor='black', fontsize=10)
+    ax2.set_axisbelow(True)
+    # set y-axis limit with extra space for value labels
+    max_feat = max(raw_feat + (harm_feat if 'harmonized' in feature_results else []))
+    ax2.set_ylim(0, max_feat * 1.25)
 
-    # improvement summary (bottom row)
+    # (c) improvement summary (bottom row)
     ax3 = fig.add_subplot(gs[1, :])
 
     if 'improvement' in domain_results or 'improvement' in feature_results:
@@ -385,7 +476,7 @@ def plot_harmonization_effect_summary(
                 imp.get('accuracy_reduction', 0) * 100,
                 imp.get('auc_reduction', 0) * 100,
             ])
-            improvement_labels.extend(['Domain Acc.', 'Domain AUC'])
+            improvement_labels.extend(['Domain Accuracy', 'Domain AUC'])
 
         if 'improvement' in feature_results:
             imp = feature_results['improvement']
@@ -393,40 +484,51 @@ def plot_harmonization_effect_summary(
                 imp.get('fid_reduction_percent', 0),
                 imp.get('kid_reduction', 0) * 100 if imp.get('kid_reduction', 0) else 0,
             ])
-            improvement_labels.extend(['FID', 'KID'])
+            improvement_labels.extend(['FID Reduction', 'KID Reduction'])
 
-        colors = [COLORS['harmonized'] if v > 0 else COLORS['raw'] for v in improvements]
+        colors = [COLORS_ENHANCED['positive'] if v > 0 else COLORS_ENHANCED['negative'] for v in improvements]
 
         bars = ax3.barh(range(len(improvements)), improvements, color=colors,
-                       edgecolor='black', linewidth=0.5)
+                       edgecolor='black', linewidth=0.7)
 
-        ax3.axvline(x=0, color='black', linestyle='-', linewidth=0.5)
+        ax3.axvline(x=0, color='black', linestyle='-', linewidth=0.8)
         ax3.set_yticks(range(len(improvements)))
-        ax3.set_yticklabels(improvement_labels)
-        ax3.set_xlabel('Improvement (%)')
-        ax3.set_title('(c) Harmonization Improvement Summary')
-
-        # add value labels
-        for bar, val in zip(bars, improvements):
-            width = bar.get_width()
-            xpos = width + 1 if width >= 0 else width - 1
-            ha = 'left' if width >= 0 else 'right'
+        ax3.set_yticklabels(improvement_labels, fontsize=12)
+        ax3.set_xlabel(r'Improvement (\%)', fontsize=13)
+        ax3.set_title(r'(c) Harmonization Effect Summary', fontsize=14, pad=10)
+        
+        # add value labels on bars
+        for i, (bar, val) in enumerate(zip(bars, improvements)):
+            width_bar = bar.get_width()
+            xpos = width_bar + 1.5 if width_bar >= 0 else width_bar - 1.5
+            ha = 'left' if width_bar >= 0 else 'right'
             ax3.text(xpos, bar.get_y() + bar.get_height()/2,
-                    f'{val:.1f}%', ha=ha, va='center', fontsize=9)
+                    f'{val:.1f}\\%', ha=ha, va='center', fontsize=11, fontweight='normal')
 
-        # add legend explanation
-        ax3.text(0.98, 0.02, 'positive = better harmonization',
-                transform=ax3.transAxes, ha='right', va='bottom', fontsize=8, color='gray')
+        ax3.set_axisbelow(True)
+        ax3.set_xlim(min(improvements) - 5, max(improvements) + 5)
     else:
         ax3.text(0.5, 0.5, 'harmonized results not available',
                 transform=ax3.transAxes, ha='center', va='center', fontsize=12, color='gray')
         ax3.axis('off')
 
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    # main figure title
+    fig.suptitle(r'\textbf{Harmonization Effect Summary}',
+                 fontsize=16, fontweight='bold', y=0.98)
+
+    plt.savefig(output_path, format='pdf', bbox_inches='tight')
     plt.close()
 
-    print(f'[fig] saved harmonization effect summary to {output_path}')
+    print(f'[fig] saved publication-quality harmonization summary to {output_path}')
+
+
+# vibrant training curves color palette
+COLORS_TRAINING = {
+    'train': '#C94D3F',      # warm red
+    'val': '#5A8FBA',        # slate blue
+    'auc': '#6FBC5F',        # forest green
+    'grid': '#E8E8E8',       # light gray
+}
 
 
 def plot_training_curves(
@@ -434,41 +536,64 @@ def plot_training_curves(
     output_path: Path
 ):
     """
-    plot domain classifier training curves.
+    plot domain classifier training curves with publication-quality styling.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    setup_latex_style_publication()
+    
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    plt.subplots_adjust(wspace=0.25, top=0.85)
 
     epochs = range(1, len(history['train_loss']) + 1)
 
-    # loss
-    axes[0].plot(epochs, history['train_loss'], label='Train', color=COLORS['domain_a'], linewidth=1.5)
-    axes[0].plot(epochs, history['val_loss'], label='Val', color=COLORS['domain_b'], linewidth=1.5)
-    axes[0].set_xlabel('Epoch')
-    axes[0].set_ylabel('Loss')
-    axes[0].set_title('Training Loss')
-    axes[0].legend(frameon=True, fancybox=False, edgecolor='black')
-    axes[0].grid(True, alpha=0.3)
+    # (a) loss curves
+    ax = axes[0]
+    ax.plot(epochs, history['train_loss'], label='Train Loss', 
+           color=COLORS_TRAINING['train'], linewidth=2.2, marker='o', 
+           markersize=3, alpha=0.8)
+    ax.plot(epochs, history['val_loss'], label='Validation Loss', 
+           color=COLORS_TRAINING['val'], linewidth=2.2, marker='s', 
+           markersize=3, alpha=0.8)
+    
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss', fontsize=13)
+    ax.set_title(r'(a) Training Loss', fontsize=14, pad=10)
+    ax.legend(loc='upper right', frameon=True, fancybox=False, 
+             edgecolor='black', fontsize=11)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_axisbelow(True)
 
-    # accuracy
-    axes[1].plot(epochs, history['train_acc'], label='Train', color=COLORS['domain_a'], linewidth=1.5)
-    axes[1].plot(epochs, history['val_acc'], label='Val', color=COLORS['domain_b'], linewidth=1.5)
+    # (b) accuracy curves
+    ax = axes[1]
+    ax.plot(epochs, history['train_acc'], label='Train Accuracy', 
+           color=COLORS_TRAINING['train'], linewidth=2.2, marker='o', 
+           markersize=3, alpha=0.8)
+    ax.plot(epochs, history['val_acc'], label='Validation Accuracy', 
+           color=COLORS_TRAINING['val'], linewidth=2.2, marker='s', 
+           markersize=3, alpha=0.8)
+    
     if 'val_auc' in history:
-        axes[1].plot(epochs, history['val_auc'], label='Val AUC', color=COLORS['harmonized'],
-                    linewidth=1.5, linestyle='--')
-    axes[1].axhline(y=0.5, color='gray', linestyle='--', linewidth=0.8, alpha=0.7)
-    axes[1].set_xlabel('Epoch')
-    axes[1].set_ylabel('Score')
-    axes[1].set_title('Training Accuracy')
-    axes[1].legend(frameon=True, fancybox=False, edgecolor='black')
-    axes[1].grid(True, alpha=0.3)
-    axes[1].set_ylim(0.4, 1.05)
+        ax.plot(epochs, history['val_auc'], label='Validation AUC-ROC', 
+               color=COLORS_TRAINING['auc'], linewidth=2.2, marker='^', 
+               markersize=3, alpha=0.8, linestyle='-')
+    
+    ax.axhline(y=0.5, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Score', fontsize=13)
+    ax.set_title(r'(b) Training Accuracy \& AUC-ROC', fontsize=14, pad=10)
+    ax.legend(loc='lower right', frameon=True, fancybox=False, 
+             edgecolor='black', fontsize=11)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_axisbelow(True)
+    ax.set_ylim(0.4, 1.05)
+    
+    # main figure title
+    fig.suptitle(r'\textbf{Domain Classifier Training Curves}',
+                 fontsize=16, fontweight='bold', y=0.98)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    plt.savefig(output_path, format='pdf', bbox_inches='tight')
     plt.close()
 
-    print(f'[fig] saved training curves to {output_path}')
+    print(f'[fig] saved publication-quality training curves to {output_path}')
 
 
 def create_latex_table(

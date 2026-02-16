@@ -27,17 +27,24 @@ import random
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D
 
-# publication-quality settings
+# publication-quality settings (matching gold standard)
 plt.rcParams.update({
+    'text.usetex': True,
     'font.family': 'serif',
-    'font.serif': ['Times New Roman', 'DejaVu Serif', 'serif'],
-    'font.size': 9,
-    'axes.titlesize': 10,
-    'axes.labelsize': 9,
+    'font.serif': ['Computer Modern Roman'],
+    'font.size': 12,
+    'axes.titlesize': 14,
+    'axes.labelsize': 14,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 11,
+    'legend.fontsize': 11,
+    'figure.titlesize': 18,
     'figure.dpi': 300,
     'savefig.dpi': 300,
     'savefig.bbox': 'tight',
     'savefig.pad_inches': 0.02,
+    'axes.grid': True,
+    'grid.alpha': 0.3,
 })
 
 
@@ -174,18 +181,18 @@ def create_translation_figure(
     """
     modality_idx = {'T1': 0, 'T1CE': 1, 'T2': 2, 'FLAIR': 3}[modality]
 
-    fig = plt.figure(figsize=(14, 10))
+    fig = plt.figure(figsize=(16, 11))
     gs = gridspec.GridSpec(4, 6, figure=fig, hspace=0.15, wspace=0.05)
 
     # row labels
     row_labels = ['Input', 'Translated', 'Reconstructed', 'Difference']
 
     # a->b direction (top half)
-    fig.text(0.02, 0.77, 'A→B→A\n(BraTS)', fontsize=11, fontweight='bold',
+    fig.text(0.02, 0.77, r'A$\rightarrow$B$\rightarrow$A\\(BraTS)', fontsize=12, fontweight='bold',
              rotation=90, va='center', ha='center')
 
     # b->a direction (bottom half)
-    fig.text(0.02, 0.27, 'B→A→B\n(UPenn)', fontsize=11, fontweight='bold',
+    fig.text(0.02, 0.27, r'B$\rightarrow$A$\rightarrow$B\\(UPenn)', fontsize=12, fontweight='bold',
              rotation=90, va='center', ha='center')
 
     images_to_show = []
@@ -220,28 +227,28 @@ def create_translation_figure(
     # row 0: input A, fake B baseline, fake B attention
     ax = fig.add_subplot(gs[0, 0:2])
     ax.imshow(real_A, cmap='gray')
-    ax.set_title(f'Input A ({modality})', fontsize=9)
+    ax.set_title(f'Input A ({modality})', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[0, 2:4])
     ax.imshow(fake_B_base, cmap='gray')
-    ax.set_title('→B (Baseline)', fontsize=9)
+    ax.set_title(r'$\rightarrow$B (Baseline)', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[0, 4:6])
     ax.imshow(fake_B_attn, cmap='gray')
-    ax.set_title('→B (SA-CycleGAN)', fontsize=9)
+    ax.set_title(r'$\rightarrow$B (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
     # row 1: reconstructed A
     ax = fig.add_subplot(gs[1, 0:2])
     ax.imshow(rec_A_base, cmap='gray')
-    ax.set_title('Rec A (Baseline)', fontsize=9)
+    ax.set_title('Rec A (Baseline)', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[1, 2:4])
     ax.imshow(rec_A_attn, cmap='gray')
-    ax.set_title('Rec A (SA-CycleGAN)', fontsize=9)
+    ax.set_title('Rec A (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
     # difference maps
@@ -250,34 +257,34 @@ def create_translation_figure(
     diff_combined = diff_combined / (diff_combined.max() + 1e-8) * 2  # enhance visibility
     diff_combined = np.clip(diff_combined, 0, 1)
     ax.imshow(diff_combined)
-    ax.set_title('Diff (R=Base, G=Attn)', fontsize=9)
+    ax.set_title('Diff (R=Base, G=Attn)', fontsize=12)
     ax.axis('off')
 
     # b->a->b section (rows 2-3)
     ax = fig.add_subplot(gs[2, 0:2])
     ax.imshow(real_B, cmap='gray')
-    ax.set_title(f'Input B ({modality})', fontsize=9)
+    ax.set_title(f'Input B ({modality})', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[2, 2:4])
     ax.imshow(fake_A_base, cmap='gray')
-    ax.set_title('→A (Baseline)', fontsize=9)
+    ax.set_title(r'$\rightarrow$A (Baseline)', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[2, 4:6])
     ax.imshow(fake_A_attn, cmap='gray')
-    ax.set_title('→A (SA-CycleGAN)', fontsize=9)
+    ax.set_title(r'$\rightarrow$A (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
     # row 3: reconstructed B
     ax = fig.add_subplot(gs[3, 0:2])
     ax.imshow(rec_B_base, cmap='gray')
-    ax.set_title('Rec B (Baseline)', fontsize=9)
+    ax.set_title('Rec B (Baseline)', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[3, 2:4])
     ax.imshow(rec_B_attn, cmap='gray')
-    ax.set_title('Rec B (SA-CycleGAN)', fontsize=9)
+    ax.set_title('Rec B (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
     ax = fig.add_subplot(gs[3, 4:6])
@@ -285,17 +292,15 @@ def create_translation_figure(
     diff_combined = diff_combined / (diff_combined.max() + 1e-8) * 2
     diff_combined = np.clip(diff_combined, 0, 1)
     ax.imshow(diff_combined)
-    ax.set_title('Diff (R=Base, G=Attn)', fontsize=9)
+    ax.set_title('Diff (R=Base, G=Attn)', fontsize=12)
     ax.axis('off')
 
     # main title
     fig.suptitle(f'Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, Sample {sample_idx})',
-                fontsize=12, fontweight='bold', y=0.98)
+                fontsize=16, fontweight='bold', y=0.98)
 
-    plt.tight_layout(rect=[0.03, 0, 1, 0.96])
-
-    for fmt in ['pdf', 'png']:
-        fig.savefig(output_path.with_suffix(f'.{fmt}'), format=fmt)
+    # PDF only
+    fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
 
     plt.close(fig)
 
@@ -311,7 +316,8 @@ def create_multimodality_figure(
     """
     modalities = ['T1', 'T1CE', 'T2', 'FLAIR']
 
-    fig, axes = plt.subplots(4, 6, figsize=(15, 10))
+    fig, axes = plt.subplots(4, 6, figsize=(16, 11))
+    plt.subplots_adjust(hspace=0.12, wspace=0.05)
 
     for i, mod in enumerate(modalities):
         mod_idx = i
@@ -327,43 +333,41 @@ def create_multimodality_figure(
 
         # plot row
         axes[i, 0].imshow(real_A, cmap='gray')
-        axes[i, 0].set_ylabel(mod, fontsize=10, fontweight='bold')
+        axes[i, 0].set_ylabel(mod, fontsize=12, fontweight='bold')
         if i == 0:
-            axes[i, 0].set_title('Input A', fontsize=9)
+            axes[i, 0].set_title('Input A', fontsize=12)
         axes[i, 0].axis('off')
 
         axes[i, 1].imshow(fake_B_base, cmap='gray')
         if i == 0:
-            axes[i, 1].set_title('→B (Base)', fontsize=9)
+            axes[i, 1].set_title(r'$\rightarrow$B (Base)', fontsize=12)
         axes[i, 1].axis('off')
 
         axes[i, 2].imshow(fake_B_attn, cmap='gray')
         if i == 0:
-            axes[i, 2].set_title('→B (Attn)', fontsize=9)
+            axes[i, 2].set_title(r'$\rightarrow$B (Attn)', fontsize=12)
         axes[i, 2].axis('off')
 
         axes[i, 3].imshow(rec_A_base, cmap='gray')
         if i == 0:
-            axes[i, 3].set_title('Rec (Base)', fontsize=9)
+            axes[i, 3].set_title('Rec (Base)', fontsize=12)
         axes[i, 3].axis('off')
 
         axes[i, 4].imshow(rec_A_attn, cmap='gray')
         if i == 0:
-            axes[i, 4].set_title('Rec (Attn)', fontsize=9)
+            axes[i, 4].set_title('Rec (Attn)', fontsize=12)
         axes[i, 4].axis('off')
 
         axes[i, 5].imshow(diff_attn, cmap='hot', vmin=0, vmax=0.3)
         if i == 0:
-            axes[i, 5].set_title('|Diff| (Attn)', fontsize=9)
+            axes[i, 5].set_title('|Diff| (Attn)', fontsize=12)
         axes[i, 5].axis('off')
 
-    fig.suptitle(f'Multi-Modality Translation: A→B→A Direction (Sample {sample_idx})',
-                fontsize=12, fontweight='bold')
+    fig.suptitle(f'Multi-Modality Translation: A$\\rightarrow$B$\\rightarrow$A Direction (Sample {sample_idx})',
+                fontsize=16, fontweight='bold', y=0.98)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-
-    for fmt in ['pdf', 'png']:
-        fig.savefig(output_path.with_suffix(f'.{fmt}'), format=fmt)
+    # PDF only
+    fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
 
     plt.close(fig)
 

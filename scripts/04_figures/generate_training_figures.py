@@ -59,61 +59,70 @@ def generate_loss_curves_figure(history):
     """
     print("Generating Figure 1: Training Loss Curves...")
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Loss Progression}', y=1.02)
+    fig, axes = plt.subplots(2, 2, figsize=(16, 11))
+    plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.93)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
+
+    # Distinct color palette: garnet, navy, emerald, amber
+    color_gen = '#9B2335'      # garnet
+    color_disc = '#1B3A5C'     # navy
+    color_cycle = '#2E8B57'    # sea green
+    color_identity = '#D4A017' # goldenrod
 
     # Generator Loss
     ax = axes[0, 0]
     g_loss = history['G_loss']
     g_loss_smooth = smooth_curve(g_loss)
-    ax.plot(epochs, g_loss, alpha=0.3, color=COLORS['primary'], linewidth=0.5)
-    ax.plot(epochs, g_loss_smooth, color=COLORS['primary'], linewidth=2, label='Generator')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    ax.set_title(r'(a) Generator Loss')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.plot(epochs, g_loss, alpha=0.2, color=color_gen, linewidth=0.7)
+    ax.plot(epochs, g_loss_smooth, color=color_gen, linewidth=2.2, label='Generator Loss')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss', fontsize=13)
+    ax.set_title(r'(a) Generator Loss', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
     # Discriminator Loss
     ax = axes[0, 1]
     d_loss = history['D_loss']
     d_loss_smooth = smooth_curve(d_loss)
-    ax.plot(epochs, d_loss, alpha=0.3, color=COLORS['secondary'], linewidth=0.5)
-    ax.plot(epochs, d_loss_smooth, color=COLORS['secondary'], linewidth=2, label='Discriminator')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    ax.set_title(r'(b) Discriminator Loss')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.plot(epochs, d_loss, alpha=0.2, color=color_disc, linewidth=0.7)
+    ax.plot(epochs, d_loss_smooth, color=color_disc, linewidth=2.2, label='Discriminator Loss')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss', fontsize=13)
+    ax.set_title(r'(b) Discriminator Loss', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
     # Cycle Consistency Loss
     ax = axes[1, 0]
     cycle_loss = history['cycle_loss']
     cycle_loss_smooth = smooth_curve(cycle_loss)
-    ax.plot(epochs, cycle_loss, alpha=0.3, color=COLORS['success'], linewidth=0.5)
-    ax.plot(epochs, cycle_loss_smooth, color=COLORS['success'], linewidth=2, label='Cycle Consistency')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    ax.set_title(r'(c) Cycle Consistency Loss')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.plot(epochs, cycle_loss, alpha=0.2, color=color_cycle, linewidth=0.7)
+    ax.plot(epochs, cycle_loss_smooth, color=color_cycle, linewidth=2.2, label='Cycle Consistency Loss')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss', fontsize=13)
+    ax.set_title(r'(c) Cycle Consistency Loss', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
     # Identity Loss
     ax = axes[1, 1]
     identity_loss = history['identity_loss']
     identity_loss_smooth = smooth_curve(identity_loss)
-    ax.plot(epochs, identity_loss, alpha=0.3, color=COLORS['info'], linewidth=0.5)
-    ax.plot(epochs, identity_loss_smooth, color=COLORS['info'], linewidth=2, label='Identity')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    ax.set_title(r'(d) Identity Loss')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.plot(epochs, identity_loss, alpha=0.2, color=color_identity, linewidth=0.7)
+    ax.plot(epochs, identity_loss_smooth, color=color_identity, linewidth=2.2, label='Identity Loss')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss', fontsize=13)
+    ax.set_title(r'(d) Identity Loss', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
-    plt.subplots_adjust(hspace=0.35, wspace=0.3)
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    fig.suptitle(r'\textbf{Training Loss Progression}', fontsize=16, y=0.98)
     save_figure(fig, 'fig01_training_losses', OUTPUT_DIR)
     plt.close()
 
@@ -128,11 +137,15 @@ def generate_validation_metrics_figure(history):
     """
     print("Generating Figure 2: Validation Metrics...")
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Validation Metrics}', y=1.02)
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    plt.subplots_adjust(wspace=0.25, top=0.85)
 
     # Plot all epochs
     val_epochs = np.arange(1, len(history['val_ssim_A2B']) + 1)
+
+    # Unique colors: raspberry, steel blue
+    color_a2b = '#8B2252'      # raspberry
+    color_b2a = '#4682B4'      # steel blue
 
     # SSIM
     ax = axes[0]
@@ -140,16 +153,17 @@ def generate_validation_metrics_figure(history):
     ssim_b2a = history['val_ssim_B2A']
     ssim_a2b_smooth = smooth_curve(ssim_a2b, window=5)
     ssim_b2a_smooth = smooth_curve(ssim_b2a, window=5)
-    ax.plot(val_epochs, ssim_a2b, alpha=0.2, color=COLORS['primary'], linewidth=0.5)
-    ax.plot(val_epochs, ssim_a2b_smooth, linewidth=2, color=COLORS['primary'], label=r'$A \rightarrow B$')
-    ax.plot(val_epochs, ssim_b2a, alpha=0.2, color=COLORS['secondary'], linewidth=0.5)
-    ax.plot(val_epochs, ssim_b2a_smooth, linewidth=2, color=COLORS['secondary'], label=r'$B \rightarrow A$')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('SSIM')
-    ax.set_title(r'(a) Structural Similarity (SSIM)')
+    ax.plot(val_epochs, ssim_a2b, alpha=0.15, color=color_a2b, linewidth=0.6)
+    ax.plot(val_epochs, ssim_a2b_smooth, linewidth=2.2, color=color_a2b, label=r'BraTS $\rightarrow$ UPenn')
+    ax.plot(val_epochs, ssim_b2a, alpha=0.15, color=color_b2a, linewidth=0.6)
+    ax.plot(val_epochs, ssim_b2a_smooth, linewidth=2.2, color=color_b2a, label=r'UPenn $\rightarrow$ BraTS')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('SSIM', fontsize=13)
+    ax.set_title(r'(a) Structural Similarity Index (SSIM)', fontsize=14, pad=10)
     ax.set_ylim([0.9, 1.0])
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
     # PSNR
     ax = axes[1]
@@ -157,18 +171,18 @@ def generate_validation_metrics_figure(history):
     psnr_b2a = history['val_psnr_B2A']
     psnr_a2b_smooth = smooth_curve(psnr_a2b, window=5)
     psnr_b2a_smooth = smooth_curve(psnr_b2a, window=5)
-    ax.plot(val_epochs, psnr_a2b, alpha=0.2, color=COLORS['primary'], linewidth=0.5)
-    ax.plot(val_epochs, psnr_a2b_smooth, linewidth=2, color=COLORS['primary'], label=r'$A \rightarrow B$')
-    ax.plot(val_epochs, psnr_b2a, alpha=0.2, color=COLORS['secondary'], linewidth=0.5)
-    ax.plot(val_epochs, psnr_b2a_smooth, linewidth=2, color=COLORS['secondary'], label=r'$B \rightarrow A$')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('PSNR (dB)')
-    ax.set_title(r'(b) Peak Signal-to-Noise Ratio (PSNR)')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.plot(val_epochs, psnr_a2b, alpha=0.15, color=color_a2b, linewidth=0.6)
+    ax.plot(val_epochs, psnr_a2b_smooth, linewidth=2.2, color=color_a2b, label=r'BraTS $\rightarrow$ UPenn')
+    ax.plot(val_epochs, psnr_b2a, alpha=0.15, color=color_b2a, linewidth=0.6)
+    ax.plot(val_epochs, psnr_b2a_smooth, linewidth=2.2, color=color_b2a, label=r'UPenn $\rightarrow$ BraTS')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('PSNR (dB)', fontsize=13)
+    ax.set_title(r'(b) Peak Signal-to-Noise Ratio (PSNR)', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    fig.suptitle(r'\textbf{Validation Metrics Progression}', fontsize=16, y=0.98)
     save_figure(fig, 'fig02_validation_metrics', OUTPUT_DIR)
     plt.close()
 
@@ -185,9 +199,16 @@ def generate_combined_losses_figure(history):
     """
     print("Generating Figure 3: Combined Loss Components...")
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(16, 6))
+    plt.subplots_adjust(top=0.85)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
+
+    # Unique colors: vermillion, jade, tangerine, cobalt
+    color_gan = '#CC3311'       # vermillion
+    color_cycle = '#228B22'     # forest green
+    color_identity = '#E68A00'  # tangerine
+    color_ssim = '#0047AB'      # cobalt
 
     # Plot each component
     gan_loss = smooth_curve(history['gan_loss'])
@@ -195,18 +216,19 @@ def generate_combined_losses_figure(history):
     identity_loss = smooth_curve(history['identity_loss'])
     ssim_loss = smooth_curve(history['ssim_loss'])
 
-    ax.plot(epochs, gan_loss, linewidth=2, label='GAN Loss', color=COLORS['primary'])
-    ax.plot(epochs, cycle_loss, linewidth=2, label=r'Cycle Loss ($\lambda=10$)', color=COLORS['success'])
-    ax.plot(epochs, identity_loss, linewidth=2, label=r'Identity Loss ($\lambda=5$)', color=COLORS['secondary'])
-    ax.plot(epochs, ssim_loss, linewidth=2, label=r'SSIM Loss ($\lambda=1$)', color=COLORS['info'])
+    ax.plot(epochs, gan_loss, linewidth=2.2, label='GAN Loss', color=color_gan, marker='o', markersize=2, alpha=0.8)
+    ax.plot(epochs, cycle_loss, linewidth=2.2, label=r'Cycle Loss ($\lambda=10$)', color=color_cycle, marker='s', markersize=2, alpha=0.8)
+    ax.plot(epochs, identity_loss, linewidth=2.2, label=r'Identity Loss ($\lambda=5$)', color=color_identity, marker='^', markersize=2, alpha=0.8)
+    ax.plot(epochs, ssim_loss, linewidth=2.2, label=r'SSIM Loss ($\lambda=1$)', color=color_ssim, marker='d', markersize=2, alpha=0.8)
 
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss Value')
-    ax.set_title(r'Loss Components During Training')
-    ax.grid(True, alpha=0.3)
-    ax.legend(loc='upper right')
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Loss Value', fontsize=13)
+    ax.set_title(r'(a) Weighted Loss Components', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(loc='upper right', fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
 
-    plt.tight_layout()
+    fig.suptitle(r'\textbf{Loss Components During Training}', fontsize=16, y=0.98)
     save_figure(fig, 'fig03_loss_components', OUTPUT_DIR)
     plt.close()
 
@@ -219,19 +241,24 @@ def generate_learning_rate_figure(history):
     """
     print("Generating Figure 4: Learning Rate Schedule...")
 
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(16, 6))
+    plt.subplots_adjust(top=0.85)
 
     epochs = np.arange(1, len(history['learning_rate']) + 1)
     lr = history['learning_rate']
 
-    ax.plot(epochs, lr, linewidth=2, color=COLORS['danger'])
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Learning Rate')
-    ax.set_title(r'Learning Rate Schedule (Cosine Annealing)')
-    ax.grid(True, alpha=0.3)
-    ax.set_yscale('log')
+    color_lr = '#7D3C98'  # plum
 
-    plt.tight_layout()
+    ax.plot(epochs, lr, linewidth=2.5, color=color_lr, marker='o', markersize=1.5, alpha=0.85)
+    ax.fill_between(epochs, lr, alpha=0.15, color=color_lr)
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Learning Rate', fontsize=13)
+    ax.set_title(r'(a) Cosine Annealing Schedule', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_yscale('log')
+    ax.set_axisbelow(True)
+
+    fig.suptitle(r'\textbf{Learning Rate Schedule}', fontsize=16, y=0.98)
     save_figure(fig, 'fig04_learning_rate', OUTPUT_DIR)
     plt.close()
 
@@ -244,21 +271,26 @@ def generate_gradient_norms_figure(history):
     """
     print("Generating Figure 5: Gradient Norms...")
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(16, 6))
+    plt.subplots_adjust(top=0.85)
 
     epochs = np.arange(1, len(history['gradient_norm_G']) + 1)
     grad_g = smooth_curve(history['gradient_norm_G'])
     grad_d = smooth_curve(history['gradient_norm_D'])
 
-    ax.plot(epochs, grad_g, linewidth=2, label='Generator', color=COLORS['primary'])
-    ax.plot(epochs, grad_d, linewidth=2, label='Discriminator', color=COLORS['secondary'])
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Gradient L2 Norm')
-    ax.set_title(r'Gradient Magnitudes (Training Stability Indicator)')
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    color_gen_grad = '#007BA7'   # cerulean
+    color_disc_grad = '#CC5500'  # burnt orange
 
-    plt.tight_layout()
+    ax.plot(epochs, grad_g, linewidth=2.2, label='Generator Gradient', color=color_gen_grad, marker='o', markersize=1.5, alpha=0.8)
+    ax.plot(epochs, grad_d, linewidth=2.2, label='Discriminator Gradient', color=color_disc_grad, marker='s', markersize=1.5, alpha=0.8)
+    ax.set_xlabel('Epoch', fontsize=13)
+    ax.set_ylabel('Gradient L2 Norm', fontsize=13)
+    ax.set_title(r'(a) Gradient Magnitudes', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
+    ax.set_axisbelow(True)
+
+    fig.suptitle(r'\textbf{Training Stability Monitoring}', fontsize=16, y=0.98)
     save_figure(fig, 'fig05_gradient_norms', OUTPUT_DIR)
     plt.close()
 

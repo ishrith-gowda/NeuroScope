@@ -1,0 +1,116 @@
+# =============================================================================
+# 2.5D SA-CycleGAN - FULL GPU Training (Purdue Cluster)
+# =============================================================================
+# Full-quality training configuration for CUDA GPUs
+# After MPS validation: Run this for final results
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Experiment Identification
+# -----------------------------------------------------------------------------
+experiment_name: "sa_cyclegan_25d_gpu_full"
+seed: 42
+deterministic: true
+
+# -----------------------------------------------------------------------------
+# Data Paths - UPDATE THESE FOR PURDUE CLUSTER
+# -----------------------------------------------------------------------------
+brats_dir: "/path/to/purdue/preprocessed/brats"      # UPDATE THIS
+upenn_dir: "/path/to/purdue/preprocessed/upenn"      # UPDATE THIS
+output_dir: "/path/to/purdue/experiments"            # UPDATE THIS
+
+# -----------------------------------------------------------------------------
+# Model Architecture - FULL QUALITY
+# -----------------------------------------------------------------------------
+ngf: 64                    # Same as validation
+ndf: 64                    # Same as validation
+n_residual_blocks: 9       # Same as validation
+use_attention: true
+use_cbam: true
+use_disc_attention: true   # Full complexity - discriminator self-attention enabled
+input_channels: 12
+output_channels: 4
+
+# -----------------------------------------------------------------------------
+# Training Configuration - FULL TRAINING
+# -----------------------------------------------------------------------------
+epochs: 100                # Full training
+batch_size: 8              # Increased for GPU (was 4 on MPS)
+image_size: 128
+num_workers: 8             # More workers on GPU cluster
+
+# -----------------------------------------------------------------------------
+# Optimizer Configuration - OPTIMIZED WITH NUMERICAL STABILITY
+# -----------------------------------------------------------------------------
+lr_G: 0.00005              # With attention stability fixes (clamping), this should be safe
+lr_D: 0.00005              # Can increase to 0.0001 if training stable after 10 epochs
+beta1: 0.5
+beta2: 0.999
+weight_decay: 0.0
+
+# -----------------------------------------------------------------------------
+# Learning Rate Scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"
+warmup_epochs: 5
+min_lr: 0.000001
+
+# -----------------------------------------------------------------------------
+# Loss Function Weights
+# -----------------------------------------------------------------------------
+lambda_cycle: 10.0
+lambda_identity: 5.0
+lambda_ssim: 1.0
+lambda_gradient: 1.0
+
+# -----------------------------------------------------------------------------
+# Regularization - STRENGTHENED FOR STABILITY
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 0.5            # Stronger clipping prevents gradient explosion
+gradient_clip_value: null
+
+# -----------------------------------------------------------------------------
+# Mixed Precision Training - ENABLED FOR CUDA
+# -----------------------------------------------------------------------------
+use_amp: true              # Mixed precision on CUDA (2x faster!)
+
+# -----------------------------------------------------------------------------
+# Validation & Checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 5
+save_every: 10
+save_best_only: false
+
+# -----------------------------------------------------------------------------
+# Early Stopping
+# -----------------------------------------------------------------------------
+early_stopping: true
+patience: 20
+min_delta: 0.001
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 10
+sample_every: 10
+figure_every: 10
+verbose: 2
+
+# -----------------------------------------------------------------------------
+# Resume Training - OPTIONAL
+# -----------------------------------------------------------------------------
+# If continuing from MPS validation:
+# resume_from: "/path/to/checkpoint_epoch_5.pth"
+resume_from: null
+
+# =============================================================================
+# EXPECTED PERFORMANCE ON NVIDIA GPU
+# =============================================================================
+# GPU: RTX 3090 / A100 / similar
+# Speed: ~0.5-1 second per iteration (20x faster than MPS!)
+# Time per epoch: ~1.5-3 hours
+# Total for 100 epochs: ~6-12 days
+#
+# With multiple GPUs: Even faster
+# With A100 + mixed precision: ~12-24 hours total!
+# =============================================================================

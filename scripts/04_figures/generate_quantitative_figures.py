@@ -116,8 +116,12 @@ def generate_cycle_consistency_figure(cycle_results):
     """
     print("Generating: Cycle Consistency Comparison...")
 
-    fig, axes = plt.subplots(1, 3, figsize=(12, 5))
-    fig.suptitle(r'\textbf{Cycle Consistency Reconstruction Quality}', y=1.02)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    plt.subplots_adjust(wspace=0.3, top=0.85)
+
+    # Colors: cerulean blue and fern green
+    c_cycle_a = '#2A52BE'  # cerulean blue
+    c_cycle_b = '#4F7942'  # fern green
 
     metrics = ['ssim', 'psnr', 'mae']
     titles = ['SSIM', 'PSNR (dB)', 'MAE']
@@ -135,24 +139,25 @@ def generate_cycle_consistency_figure(cycle_results):
 
         bars = ax.bar(x, [cycle_a_mean, cycle_b_mean],
                       yerr=[cycle_a_std, cycle_b_std],
-                      color=[COLORS['primary'], COLORS['success']],
-                      alpha=0.7, width=width, capsize=5)
+                      color=[c_cycle_a, c_cycle_b],
+                      alpha=0.8, width=width, capsize=5,
+                      edgecolor='black', linewidth=0.7)
 
         ax.set_xticks(x)
         ax.set_xticklabels([r'Cycle A', r'Cycle B'])
-        ax.set_ylabel(title)
-        ax.set_title(f'({chr(97+idx)}) {title}')
+        ax.set_ylabel(title, fontsize=13)
+        ax.set_title(f'({chr(97+idx)}) {title}', fontsize=14, pad=10)
         ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
 
-        # Add value labels on bars
         for bar in bars:
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
                     f'{height:.3f}',
-                    ha='center', va='bottom', fontsize=8)
+                    ha='center', va='bottom', fontsize=11)
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    fig.suptitle(r'\textbf{Cycle Consistency Reconstruction Quality}',
+                 fontsize=16, y=0.98)
     save_figure(fig, 'fig07_cycle_consistency', OUTPUT_DIR)
     plt.close()
 

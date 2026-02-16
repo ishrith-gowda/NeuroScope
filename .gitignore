@@ -64,3 +64,31 @@ samples/._*
 *.log
 nohup.out
 scripts_new/
+
+# Large experiment directories (too big for git, keep locally)
+experiments_from_gpu/
+final_trained_model/
+baseline_training_progress/
+experiments/baseline_cyclegan_25d_v100/
+experiments/baseline_cyclegan_25d_v100_old_single_gpu/
+experiments/sa_cyclegan_25d_*/
+experiments/downstream_evaluation/combat/
+unified/
+
+# Large result files
+results/ablation/
+
+# MLflow and TensorBoard
+mlruns/
+runs/
+
+# Checkpoint files (large)
+*.pth
+!checkpoints/README.md
+
+# NumPy arrays (can be large)
+*.npy
+
+# Temporary files
+*.tmp
+*.temp

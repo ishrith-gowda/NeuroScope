@@ -3,7 +3,7 @@
 generate publication figure for ablation study results.
 
 creates bar charts comparing baseline cyclegan vs sa-cyclegan-2.5d
-with statistical significance markers.
+with statistical significance markers using proper latex rendering.
 """
 
 import argparse
@@ -14,29 +14,38 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+import seaborn as sns
 
 
-# publication style
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'DejaVu Sans'],
-    'font.size': 10,
-    'axes.labelsize': 11,
-    'axes.titlesize': 12,
-    'xtick.labelsize': 9,
-    'ytick.labelsize': 9,
-    'legend.fontsize': 9,
-    'figure.dpi': 300,
-    'savefig.dpi': 300,
-    'savefig.bbox': 'tight',
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-})
+def setup_latex_style():
+    """configure matplotlib for proper latex rendering."""
+    # set basic theme
+    sns.set_theme(style='whitegrid')
 
+    # configure matplotlib for latex rendering and publication quality
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "axes.labelsize": 14,
+        "font.size": 12,
+        "legend.fontsize": 12,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
+        "figure.titlesize": 18,
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "axes.grid": True,
+        "grid.alpha": 0.3
+    })
+
+
+# define consistent color palette
+PALETTE = sns.color_palette('colorblind')
 COLORS = {
-    'baseline': '#E74C3C',
-    'attention': '#2E86AB',
+    'baseline': PALETTE[1],  # orange-ish
+    'attention': PALETTE[0],  # blue-ish
 }
 
 
@@ -48,7 +57,7 @@ def load_ablation_results(results_path: Path) -> dict:
 
 def create_ablation_figure(results: dict, output_path: Path):
     """
-    create comprehensive ablation study figure.
+    create comprehensive ablation study figure with latex rendering.
 
     4-panel layout:
     - (a) cycle ssim comparison
@@ -56,7 +65,10 @@ def create_ablation_figure(results: dict, output_path: Path):
     - (c) per-modality ssim
     - (d) effect sizes
     """
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    setup_latex_style()
+
+    fig, axes = plt.subplots(2, 2, figsize=(20, 18))
+    plt.subplots_adjust(hspace=0.4, wspace=0.35, top=0.90)
 
     baseline = results['baseline_results']
     attention = results['attention_results']
@@ -64,7 +76,12 @@ def create_ablation_figure(results: dict, output_path: Path):
 
     # (a) cycle ssim comparison
     ax = axes[0, 0]
-    metrics = ['Cycle SSIM\n(A→B→A)', 'Cycle SSIM\n(B→A→B)', 'Identity SSIM\n(A)', 'Identity SSIM\n(B)']
+    metrics = [
+        r'Cycle SSIM' + '\n' + r'($A \rightarrow B \rightarrow A$)',
+        r'Cycle SSIM' + '\n' + r'($B \rightarrow A \rightarrow B$)',
+        r'Identity SSIM' + '\n' + r'(A)',
+        r'Identity SSIM' + '\n' + r'(B)'
+    ]
     baseline_vals = [
         baseline['cycle_ssim_A']['mean'],
         baseline['cycle_ssim_B']['mean'],
@@ -101,7 +118,7 @@ def create_ablation_figure(results: dict, output_path: Path):
                    edgecolor='black', linewidth=0.5, capsize=3)
 
     ax.set_ylabel('SSIM Score')
-    ax.set_title('(a) Structural Similarity Comparison')
+    ax.set_title(r'\textbf{(a) Structural Similarity Comparison}')
     ax.set_xticks(x)
     ax.set_xticklabels(metrics)
     ax.set_ylim(0.9, 0.98)
@@ -117,7 +134,10 @@ def create_ablation_figure(results: dict, output_path: Path):
 
     # (b) cycle psnr comparison
     ax = axes[0, 1]
-    metrics_psnr = ['Cycle PSNR\n(A→B→A)', 'Cycle PSNR\n(B→A→B)']
+    metrics_psnr = [
+        r'Cycle PSNR' + '\n' + r'($A \rightarrow B \rightarrow A$)',
+        r'Cycle PSNR' + '\n' + r'($B \rightarrow A \rightarrow B$)'
+    ]
     baseline_psnr = [baseline['cycle_psnr_A']['mean'], baseline['cycle_psnr_B']['mean']]
     baseline_psnr_std = [baseline['cycle_psnr_A']['std'], baseline['cycle_psnr_B']['std']]
     attention_psnr = [attention['cycle_psnr_A']['mean'], attention['cycle_psnr_B']['mean']]
@@ -133,7 +153,7 @@ def create_ablation_figure(results: dict, output_path: Path):
                    edgecolor='black', linewidth=0.5, capsize=3)
 
     ax.set_ylabel('PSNR (dB)')
-    ax.set_title('(b) Peak Signal-to-Noise Ratio Comparison')
+    ax.set_title(r'\textbf{(b) Peak Signal-to-Noise Ratio Comparison}')
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_psnr)
     ax.set_ylim(25, 32)
@@ -171,8 +191,8 @@ def create_ablation_figure(results: dict, output_path: Path):
                    label='SA-CycleGAN-2.5D', color=COLORS['attention'],
                    edgecolor='black', linewidth=0.5)
 
-    ax.set_ylabel('Cycle SSIM (B→A→B)')
-    ax.set_title('(c) Per-Modality Reconstruction Quality')
+    ax.set_ylabel(r'Cycle SSIM ($B \rightarrow A \rightarrow B$)')
+    ax.set_title(r'\textbf{(c) Per-Modality Reconstruction Quality}')
     ax.set_xticks(x)
     ax.set_xticklabels(modalities)
     ax.set_ylim(0.9, 0.98)
@@ -182,12 +202,17 @@ def create_ablation_figure(results: dict, output_path: Path):
     for i in range(len(modalities)):
         improvement = (attention_mod[i] - baseline_mod[i]) * 100
         if improvement > 0:
-            ax.annotate(f'+{improvement:.1f}%', xy=(i + width/2, attention_mod[i] + 0.003),
-                       ha='center', fontsize=8, color='green')
+            ax.annotate(f'+{improvement:.1f}\\%', xy=(i + width/2, attention_mod[i] + 0.003),
+                       ha='center', fontsize=10, color='green')
 
     # (d) effect sizes (cohen's d)
     ax = axes[1, 1]
-    effect_metrics = ['SSIM\n(A→B→A)', 'SSIM\n(B→A→B)', 'PSNR\n(A→B→A)', 'PSNR\n(B→A→B)']
+    effect_metrics = [
+        r'SSIM ($A \rightarrow B \rightarrow A$)',
+        r'SSIM ($B \rightarrow A \rightarrow B$)',
+        r'PSNR ($A \rightarrow B \rightarrow A$)',
+        r'PSNR ($B \rightarrow A \rightarrow B$)'
+    ]
     effect_sizes = [
         stats['cycle_ssim_A']['cohens_d'],
         stats['cycle_ssim_B']['cohens_d'],
@@ -195,25 +220,22 @@ def create_ablation_figure(results: dict, output_path: Path):
         stats['cycle_psnr_B']['cohens_d']
     ]
 
-    colors = ['green' if d > 0 else 'red' for d in effect_sizes]
+    colors = [PALETTE[2] if d > 0 else PALETTE[3] for d in effect_sizes]
     bars = ax.barh(effect_metrics, effect_sizes, color=colors, edgecolor='black', linewidth=0.5)
 
     ax.axvline(x=0, color='black', linestyle='-', linewidth=0.5)
     ax.axvline(x=0.8, color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
     ax.axvline(x=-0.8, color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
 
-    ax.set_xlabel("Cohen's d Effect Size")
-    ax.set_title("(d) Effect Sizes (SA-CycleGAN vs Baseline)")
+    ax.set_xlabel(r"Cohen's $d$ Effect Size")
+    ax.set_title(r"\textbf{(d) Effect Sizes (SA-CycleGAN vs Baseline)}")
 
-    # add interpretation guide
-    ax.text(1.5, 3.5, 'Large\nEffect', fontsize=8, ha='center', color='gray')
-    ax.text(-1.5, 3.5, 'Large\nEffect', fontsize=8, ha='center', color='gray')
-
-    plt.tight_layout()
+    # main figure title
+    fig.suptitle(r'\textbf{Ablation Study: Self-Attention Impact on Harmonization Quality}',
+                 fontsize=18, fontweight='bold', y=0.95)
 
     # save
     plt.savefig(output_path, format='pdf', bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.png'), format='png', bbox_inches='tight')
     plt.close()
 
     print(f'[fig] saved ablation figure to {output_path}')

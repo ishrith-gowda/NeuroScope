@@ -56,8 +56,13 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
 
     shows mean ± std for all metrics comparing both directions
     """
-    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.92)
     axes = axes.flatten()
+
+    # Colors: malachite and amethyst
+    c_a2b = '#0BDA51'  # malachite
+    c_b2a = '#9966CC'  # amethyst
 
     metric_info = [
         ('ssim', 'SSIM', True),
@@ -70,7 +75,6 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     for idx, (key, name, higher_better) in enumerate(metric_info):
         ax = axes[idx]
 
-        # extract mean and std
         mean_a2b = metrics_a2b[key]['mean']
         std_a2b = metrics_a2b[key]['std']
         mean_b2a = metrics_b2a[key]['mean']
@@ -79,23 +83,24 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
         x = np.arange(2)
         means = [mean_a2b, mean_b2a]
         stds = [std_a2b, std_b2a]
-        colors = [COLORS['primary'], COLORS['secondary']]
+        colors = [c_a2b, c_b2a]
 
         bars = ax.bar(x, means, yerr=stds, capsize=5, alpha=0.8,
-                     color=colors, error_kw={'linewidth': 2})
+                     color=colors, edgecolor='black', linewidth=0.7,
+                     error_kw={'linewidth': 2})
 
         ax.set_xticks(x)
         ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
-        ax.set_ylabel(name)
-        ax.set_title(f'({chr(97+idx)}) {name}')
+        ax.set_ylabel(name, fontsize=13)
+        ax.set_title(f'({chr(97+idx)}) {name}', fontsize=14, pad=10)
         ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
 
-        # add value labels
         for i, (bar, mean, std) in enumerate(zip(bars, means, stds)):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height + std,
                    f'{mean:.4f}' if key in ['ssim', 'mae', 'lpips', 'mse'] else f'{mean:.2f}',
-                   ha='center', va='bottom', fontsize=7)
+                   ha='center', va='bottom', fontsize=10)
 
         # mark better direction with arrow
         if higher_better:
@@ -111,30 +116,30 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     ax = axes[5]
     x = np.arange(2)
     fid_vals = [fid_scores['a2b'], fid_scores['b2a']]
-    colors = [COLORS['primary'], COLORS['secondary']]
+    colors = [c_a2b, c_b2a]
 
-    bars = ax.bar(x, fid_vals, alpha=0.8, color=colors)
+    bars = ax.bar(x, fid_vals, alpha=0.8, color=colors,
+                  edgecolor='black', linewidth=0.7)
 
     ax.set_xticks(x)
     ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
-    ax.set_ylabel('FID')
-    ax.set_title(r'(f) FID (lower better)')
+    ax.set_ylabel('FID', fontsize=13)
+    ax.set_title(r'(f) FID (lower better)', fontsize=14, pad=10)
     ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
-    # add value labels
     for bar, val in zip(bars, fid_vals):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
                f'{val:.2f}',
-               ha='center', va='bottom', fontsize=7)
+               ha='center', va='bottom', fontsize=10)
 
-    # mark better
     better_idx = 0 if fid_scores['a2b'] < fid_scores['b2a'] else 1
     ax.scatter(better_idx, fid_vals[better_idx] * 1.05,
               marker='v', s=50, color=colors[better_idx], alpha=0.8)
 
-    plt.subplots_adjust(hspace=0.35, wspace=0.3)
-    plt.tight_layout()
+    fig.suptitle(r'\textbf{Comprehensive Metric Comparison with Error Bars}',
+                 fontsize=16, y=0.98)
     save_figure(fig, 'fig15_comprehensive_comparison', output_dir=OUTPUT_DIR)
     plt.close()
 
@@ -147,8 +152,14 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
 
     uses min, q25, median, q75, max to approximate distributions
     """
-    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.92)
     axes = axes.flatten()
+
+    # Colors: viridian and heliotrope
+    c_a2b = '#40826D'  # viridian
+    c_b2a = '#DF73FF'  # heliotrope
+    c_mean = '#C41E3A'  # cardinal red for mean markers
 
     metric_info = [
         ('ssim', 'SSIM'),
@@ -160,24 +171,6 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
 
     for idx, (key, name) in enumerate(metric_info):
         ax = axes[idx]
-
-        # create box plot data structure
-        # [min, q25, median, q75, max]
-        box_data_a2b = [
-            [metrics_a2b[key]['min']],
-            [metrics_a2b[key]['q25']],
-            [metrics_a2b[key]['median']],
-            [metrics_a2b[key]['q75']],
-            [metrics_a2b[key]['max']]
-        ]
-
-        box_data_b2a = [
-            [metrics_b2a[key]['min']],
-            [metrics_b2a[key]['q25']],
-            [metrics_b2a[key]['median']],
-            [metrics_b2a[key]['q75']],
-            [metrics_b2a[key]['max']]
-        ]
 
         # manual box plot
         positions = [1, 2]
@@ -201,11 +194,11 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
         # draw boxes
         box_a2b = plt.Rectangle((positions[0] - width/2, q25_a2b),
                                 width, q75_a2b - q25_a2b,
-                                facecolor=COLORS['primary'], alpha=0.6,
+                                facecolor=c_a2b, alpha=0.6,
                                 edgecolor='black', linewidth=1.5)
         box_b2a = plt.Rectangle((positions[1] - width/2, q25_b2a),
                                 width, q75_b2a - q25_b2a,
-                                facecolor=COLORS['secondary'], alpha=0.6,
+                                facecolor=c_b2a, alpha=0.6,
                                 edgecolor='black', linewidth=1.5)
 
         ax.add_patch(box_a2b)
@@ -236,27 +229,29 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
 
         ax.set_xticks(positions)
         ax.set_xticklabels([r'$A \rightarrow B$', r'$B \rightarrow A$'])
-        ax.set_ylabel(name)
-        ax.set_title(f'({chr(97+idx)}) {name}')
+        ax.set_ylabel(name, fontsize=13)
+        ax.set_title(f'({chr(97+idx)}) {name}', fontsize=14, pad=10)
         ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
         ax.set_xlim(0.5, 2.5)
 
         # add mean markers
         mean_a2b = metrics_a2b[key]['mean']
         mean_b2a = metrics_b2a[key]['mean']
-        ax.plot(positions[0], mean_a2b, 'D', color=COLORS['danger'],
+        ax.plot(positions[0], mean_a2b, 'D', color=c_mean,
                markersize=6, label='Mean')
-        ax.plot(positions[1], mean_b2a, 'D', color=COLORS['danger'],
+        ax.plot(positions[1], mean_b2a, 'D', color=c_mean,
                markersize=6)
 
         if idx == 0:
-            ax.legend(fontsize=8, loc='upper right')
+            ax.legend(fontsize=11, loc='upper right',
+                     frameon=True, fancybox=False, edgecolor='black')
 
     # remove extra subplot
     axes[5].remove()
 
-    plt.subplots_adjust(hspace=0.35, wspace=0.3)
-    plt.tight_layout()
+    fig.suptitle(r'\textbf{Approximated Metric Distributions}',
+                 fontsize=16, y=0.98)
     save_figure(fig, 'fig16_approximated_distributions', output_dir=OUTPUT_DIR)
     plt.close()
 
@@ -269,7 +264,11 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
 
     normalizes all metrics to 0-1 scale for visual comparison
     """
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(10, 8))
+
+    # Colors: dark cyan and tangerine
+    c_a2b = '#008B8B'  # dark cyan
+    c_b2a = '#FF9966'  # tangerine
 
     metric_names = ['SSIM', 'PSNR', 'MAE\n(inv)', 'LPIPS\n(inv)', 'MSE\n(inv)']
     metric_keys = ['ssim', 'psnr', 'mae', 'lpips', 'mse']
@@ -314,24 +313,24 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
 
     # plot
     ax.plot(angles, normalized_a2b, 'o-', linewidth=2,
-           color=COLORS['primary'], label=r'$A \rightarrow B$')
-    ax.fill(angles, normalized_a2b, alpha=0.25, color=COLORS['primary'])
+           color=c_a2b, label=r'$A \rightarrow B$')
+    ax.fill(angles, normalized_a2b, alpha=0.25, color=c_a2b)
 
     ax.plot(angles, normalized_b2a, 'o-', linewidth=2,
-           color=COLORS['secondary'], label=r'$B \rightarrow A$')
-    ax.fill(angles, normalized_b2a, alpha=0.25, color=COLORS['secondary'])
+           color=c_b2a, label=r'$B \rightarrow A$')
+    ax.fill(angles, normalized_b2a, alpha=0.25, color=c_b2a)
 
-    # styling
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(metric_names)
+    ax.set_xticklabels(metric_names, fontsize=11)
     ax.set_ylim(0, 1)
     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
-    ax.set_yticklabels(['0.2', '0.4', '0.6', '0.8', '1.0'])
+    ax.set_yticklabels(['0.2', '0.4', '0.6', '0.8', '1.0'], fontsize=10)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=11,
+             frameon=True, fancybox=False, edgecolor='black')
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.tight_layout()
+    fig.suptitle(r'\textbf{Normalized Performance Radar}',
+                 fontsize=16, y=1.02)
     save_figure(fig, 'fig17_performance_radar', output_dir=OUTPUT_DIR)
     plt.close()
 
@@ -419,7 +418,11 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
 
     shows standardized difference between directions
     """
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(14, 6))
+
+    # Colors: sea green positive, orchid negative
+    c_pos = '#2E8B57'  # sea green
+    c_neg = '#DA70D6'  # orchid
 
     metric_names = ['SSIM', 'PSNR', 'MAE', 'LPIPS', 'MSE']
     metric_keys = ['ssim', 'psnr', 'mae', 'lpips', 'mse']
@@ -432,18 +435,15 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
         std_a2b = metrics_a2b[key]['std']
         std_b2a = metrics_b2a[key]['std']
 
-        # pooled standard deviation
         pooled_std = np.sqrt((std_a2b**2 + std_b2a**2) / 2)
-
-        # cohen's d
         d = (mean_a2b - mean_b2a) / pooled_std
         cohens_d.append(d)
 
-    # plot
     y = np.arange(len(metric_names))
-    colors_list = [COLORS['primary'] if d > 0 else COLORS['secondary'] for d in cohens_d]
+    colors_list = [c_pos if d > 0 else c_neg for d in cohens_d]
 
-    bars = ax.barh(y, cohens_d, color=colors_list, alpha=0.8)
+    bars = ax.barh(y, cohens_d, color=colors_list, alpha=0.8,
+                   edgecolor='black', linewidth=0.7)
 
     # add vertical line at 0
     ax.axvline(0, color='black', linewidth=1.5, linestyle='-')
@@ -458,27 +458,26 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
 
     ax.set_yticks(y)
     ax.set_yticklabels(metric_names)
-    ax.set_xlabel("Cohen's $d$ (Effect Size)")
-    ax.set_title("Effect Size: $A \\rightarrow B$ vs $B \\rightarrow A$")
+    ax.set_xlabel("Cohen's $d$ (Effect Size)", fontsize=13)
     ax.grid(True, alpha=0.3, axis='x')
+    ax.set_axisbelow(True)
 
-    # add value labels
     for i, (bar, d) in enumerate(zip(bars, cohens_d)):
         width = bar.get_width()
         ax.text(width + 0.05 if width > 0 else width - 0.05, bar.get_y() + bar.get_height()/2.,
                f'{d:.3f}',
-               ha='left' if width > 0 else 'right', va='center', fontsize=9)
+               ha='left' if width > 0 else 'right', va='center', fontsize=11)
 
-    # add interpretation text
     ax.text(0.02, 0.98, r'$A \rightarrow B$ favored $\rightarrow$',
-           transform=ax.transAxes, fontsize=8,
+           transform=ax.transAxes, fontsize=10,
            verticalalignment='top', horizontalalignment='left')
     ax.text(0.98, 0.98, r'$\leftarrow$ $B \rightarrow A$ favored',
-           transform=ax.transAxes, fontsize=8,
+           transform=ax.transAxes, fontsize=10,
            verticalalignment='top', horizontalalignment='right')
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.tight_layout()
+    fig.suptitle(r'\textbf{Effect Size Analysis (Cohen\'s $d$)}',
+                 fontsize=16, y=0.98)
+    plt.subplots_adjust(top=0.88)
     save_figure(fig, 'fig19_effect_size_analysis', output_dir=OUTPUT_DIR)
     plt.close()
 

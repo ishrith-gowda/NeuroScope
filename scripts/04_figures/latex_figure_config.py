@@ -31,9 +31,9 @@ plt.rcParams.update({
     'font.size': 12,
     'axes.labelsize': 14,
     'axes.titlesize': 14,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 11,
+    'legend.fontsize': 11,
     'figure.titlesize': 18,
 
     # high resolution output
@@ -106,7 +106,7 @@ def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
     return (fig_width, fig_height)
 
 
-def save_figure(fig, filename, output_dir='figures/main', formats=['pdf', 'png']):
+def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
     """
     Save figure in multiple formats with consistent settings.
 
@@ -127,7 +127,6 @@ def save_figure(fig, filename, output_dir='figures/main', formats=['pdf', 'png']
         fig.savefig(
             output_path,
             format=fmt,
-            dpi=300 if fmt == 'png' else None,
             bbox_inches='tight',
             pad_inches=0.05,
         )
@@ -202,7 +201,7 @@ if __name__ == '__main__':
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    save_figure(fig, 'test_latex_rendering', output_dir='figures/main')
+    save_figure(fig, 'test_latex_rendering', output_dir='figures/main', formats=['pdf'])
     plt.close()
 
     print("LaTeX configuration test complete!")

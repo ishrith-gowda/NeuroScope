@@ -1,0 +1,140 @@
+# =============================================================================
+# Validation Run Before GPU Transfer
+# =============================================================================
+# 5-epoch validation with FULL model architecture
+# Purpose: Verify pipeline works before sending to Purdue GPUs
+# After validation: Transfer to GPU cluster for full 100-epoch training
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Experiment Identification
+# -----------------------------------------------------------------------------
+experiment_name: "sa_cyclegan_25d_validation"
+seed: 42
+deterministic: true
+
+# -----------------------------------------------------------------------------
+# Data Paths
+# -----------------------------------------------------------------------------
+brats_dir: "/Volumes/usb drive/neuroscope/preprocessed/brats"
+upenn_dir: "/Volumes/usb drive/neuroscope/preprocessed/upenn"
+output_dir: "/Volumes/usb drive/neuroscope/experiments"
+
+# -----------------------------------------------------------------------------
+# Model Architecture - MPS VALIDATION (Simplified for Stability)
+# -----------------------------------------------------------------------------
+ngf: 64                    # FULL model
+ndf: 64                    # FULL model
+n_residual_blocks: 9       # FULL depth - same as final training
+use_attention: false       # DISABLED for MPS - will enable on GPU
+use_cbam: false            # DISABLED for MPS - will enable on GPU
+use_disc_attention: false  # DISABLED for MPS - will enable on GPU
+input_channels: 12         # 3 slices × 4 modalities
+output_channels: 4         # 4 modalities
+
+# -----------------------------------------------------------------------------
+# Training Configuration - VALIDATION ONLY
+# -----------------------------------------------------------------------------
+epochs: 5                  # Just for validation
+batch_size: 4              # Same as will be used on GPU
+image_size: 128            # Standard
+num_workers: 0             # No multiprocessing warnings on macOS
+
+# -----------------------------------------------------------------------------
+# Optimizer Configuration - VANILLA CYCLEGAN (No Attention)
+# -----------------------------------------------------------------------------
+lr_G: 0.0001               # Standard CycleGAN lr (no attention = more stable)
+lr_D: 0.0001               # Can use higher lr without attention mechanisms
+beta1: 0.5
+beta2: 0.999
+weight_decay: 0.0
+
+# -----------------------------------------------------------------------------
+# Learning Rate Scheduler
+# -----------------------------------------------------------------------------
+scheduler_type: "cosine"
+warmup_epochs: 2           # Standard warmup for vanilla CycleGAN
+min_lr: 0.00001
+
+# -----------------------------------------------------------------------------
+# Loss Function Weights - FULL QUALITY (All Components)
+# -----------------------------------------------------------------------------
+lambda_cycle: 10.0
+lambda_identity: 5.0           # All losses enabled with stability fixes
+lambda_ssim: 1.0               # Variance clamping prevents NaN
+lambda_gradient: 1.0           # Anatomical consistency
+
+# -----------------------------------------------------------------------------
+# Regularization
+# -----------------------------------------------------------------------------
+gradient_clip_norm: 0.5            # Stronger clipping for stability
+gradient_clip_value: null
+
+# -----------------------------------------------------------------------------
+# Mixed Precision Training
+# -----------------------------------------------------------------------------
+use_amp: false             # Will be true on CUDA GPU
+
+# -----------------------------------------------------------------------------
+# Validation & Checkpointing
+# -----------------------------------------------------------------------------
+validate_every: 1          # Validate every epoch (debugging)
+save_every: 1              # Save every checkpoint
+save_best_only: false      # Keep all for inspection
+
+# -----------------------------------------------------------------------------
+# Early Stopping
+# -----------------------------------------------------------------------------
+early_stopping: false      # Disabled for validation run
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+log_every_n_steps: 10      # Frequent logging
+sample_every: 1            # Generate samples every epoch
+figure_every: 1            # Generate figures every epoch
+verbose: 3                 # Maximum verbosity for debugging
+
+# -----------------------------------------------------------------------------
+# Resume Training
+# -----------------------------------------------------------------------------
+resume_from: null
+
+# =============================================================================
+# VALIDATION CHECKLIST
+# =============================================================================
+# After 5 epochs (~2-3 days on MPS), verify:
+#
+# ✅ No crashes or errors
+# ✅ Losses are decreasing (not NaN)
+# ✅ Generated samples look reasonable (not noise)
+# ✅ Checkpoints are being saved
+# ✅ TensorBoard logs are created
+# ✅ Validation metrics are calculated
+# ✅ No memory leaks (memory stable)
+#
+# If all above pass → Ready for GPU transfer!
+# =============================================================================
+
+# =============================================================================
+# GPU TRANSFER INSTRUCTIONS
+# =============================================================================
+# After validation passes, for GPU training at Purdue:
+#
+# 1. Change in this config:
+#    epochs: 100             # Full training
+#    use_amp: true          # Enable mixed precision on CUDA
+#    num_workers: 8         # More workers on Linux GPU
+#    batch_size: 8          # Can increase on GPU
+#
+# 2. Transfer to GPU cluster:
+#    - Copy entire /neuroscope directory
+#    - Copy /preprocessed data directory
+#    - Install requirements.txt
+#    - Run same script with updated config
+#
+# 3. Resume from epoch 5 (optional):
+#    resume_from: "/path/to/validation/checkpoint_epoch_5.pth"
+#
+# This will continue training from where MPS left off!
+# =============================================================================
