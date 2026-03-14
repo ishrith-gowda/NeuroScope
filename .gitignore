@@ -92,3 +92,24 @@ runs/
 # Temporary files
 *.tmp
 *.temp
+
+# arxiv template files (not part of our paper)
+arxiv/template.*
+arxiv/License.txt
+arxiv/README.md
+arxiv/orcid.pdf
+
+# miccai template (downloadable from conference site)
+neuroscope paper/
+
+# stale paper drafts
+paper/
+
+# latex build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.out
