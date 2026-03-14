@@ -29,10 +29,11 @@ def setup_latex_style():
         "font.serif": ["Computer Modern Roman"],
         "axes.labelsize": 14,
         "font.size": 12,
-        "legend.fontsize": 12,
-        "xtick.labelsize": 12,
-        "ytick.labelsize": 12,
-        "figure.titlesize": 18,
+        "axes.titlesize": 13,
+        "legend.fontsize": 11,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "figure.titlesize": 15,
         "figure.dpi": 300,
         "savefig.dpi": 300,
         "savefig.bbox": "tight",
@@ -41,11 +42,13 @@ def setup_latex_style():
     })
 
 
-# define consistent color palette
+# define consistent color palette (lighter tones)
 PALETTE = sns.color_palette('colorblind')
 COLORS = {
-    'baseline': PALETTE[1],  # orange-ish
-    'attention': PALETTE[0],  # blue-ish
+    'baseline': '#F0A860',   # warm peach/orange
+    'attention': '#7BB3D0',  # medium soft blue
+    'positive': '#8DC58A',   # medium soft green
+    'negative': '#F0A860',   # warm peach
 }
 
 
@@ -67,8 +70,8 @@ def create_ablation_figure(results: dict, output_path: Path):
     """
     setup_latex_style()
 
-    fig, axes = plt.subplots(2, 2, figsize=(20, 18))
-    plt.subplots_adjust(hspace=0.4, wspace=0.35, top=0.90)
+    fig, axes = plt.subplots(2, 2, figsize=(20, 16))
+    plt.subplots_adjust(hspace=0.28, wspace=0.35, top=0.92)
 
     baseline = results['baseline_results']
     attention = results['attention_results']
@@ -220,7 +223,7 @@ def create_ablation_figure(results: dict, output_path: Path):
         stats['cycle_psnr_B']['cohens_d']
     ]
 
-    colors = [PALETTE[2] if d > 0 else PALETTE[3] for d in effect_sizes]
+    colors = [COLORS['positive'] if d > 0 else COLORS['negative'] for d in effect_sizes]
     bars = ax.barh(effect_metrics, effect_sizes, color=colors, edgecolor='black', linewidth=0.5)
 
     ax.axvline(x=0, color='black', linestyle='-', linewidth=0.5)
@@ -232,10 +235,10 @@ def create_ablation_figure(results: dict, output_path: Path):
 
     # main figure title
     fig.suptitle(r'\textbf{Ablation Study: Self-Attention Impact on Harmonization Quality}',
-                 fontsize=18, fontweight='bold', y=0.95)
+                 fontsize=15, y=0.97)
 
     # save
-    plt.savefig(output_path, format='pdf', bbox_inches='tight')
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved ablation figure to {output_path}')
