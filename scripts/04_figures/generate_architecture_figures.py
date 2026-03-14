@@ -274,59 +274,65 @@ def generate_parameter_breakdown():
     print("Generating: Parameter Breakdown...")
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-    plt.subplots_adjust(wspace=0.3, top=0.88)
+    plt.subplots_adjust(wspace=0.35, top=0.85)
 
-    # Custom colors: persian blue, celadon, saffron, dusty rose
-    c_gen_ab = '#1C39BB'   # persian blue
-    c_gen_ba = '#ACE1AF'   # celadon
-    c_disc_a = '#F4C430'   # saffron
-    c_disc_b = '#DCAE96'   # dusty rose
+    # Lighter, publication-quality colors
+    c_gen_ab = '#7BB3D0'   # soft blue
+    c_gen_ba = '#F0A860'   # warm peach
+    c_disc_a = '#8DC58A'   # soft green
+    c_disc_b = '#D4A0C0'   # soft mauve
 
-    # SA-CycleGAN parameter breakdown (pie chart)
+    # (a) SA-CycleGAN parameter breakdown (pie chart)
     ax = axes[0]
-    components = ['Generator A→B\n(11.68M)', 'Generator B→A\n(11.68M)',
-                  'Discriminator A\n(5.87M)', 'Discriminator B\n(5.87M)']
+    components = [r'Generator A$\rightarrow$B' + '\n(11.68M)',
+                  r'Generator B$\rightarrow$A' + '\n(11.68M)',
+                  'Discriminator A\n(5.87M)',
+                  'Discriminator B\n(5.87M)']
     sizes = [11.68, 11.68, 5.87, 5.87]
     colors_list = [c_gen_ab, c_gen_ba, c_disc_a, c_disc_b]
 
     wedges, texts, autotexts = ax.pie(sizes, labels=components, colors=colors_list,
-                                       autopct='%1.1f%%', startangle=90,
-                                       textprops={'fontsize': 10})
+                                       autopct=r'%1.1f\%%', startangle=90,
+                                       textprops={'fontsize': 11},
+                                       wedgeprops={'edgecolor': 'white', 'linewidth': 1.5})
     for autotext in autotexts:
-        autotext.set_color('white')
+        autotext.set_color('black')
         autotext.set_fontweight('bold')
         autotext.set_fontsize(11)
 
-    ax.set_title(r'(a) SA-CycleGAN-2.5D (35.1M total)', fontsize=14, pad=10)
+    ax.set_title(r'(a) SA-CycleGAN-2.5D (35.1M total)', fontsize=13, pad=12)
 
-    # Comparison bar chart
+    # (b) Comparison bar chart
     ax = axes[1]
-    models = ['Baseline\nCycleGAN', 'SA-CycleGAN\n(Ours)']
+    models = ['Baseline\nCycleGAN', 'SA-CycleGAN-2.5D']
     params = [33.88, 35.1]
-    bar_colors = ['#8B8C89', '#1C39BB']  # ash, persian blue
+    bar_colors = ['#B0B0B0', c_gen_ab]
 
-    bars = ax.barh(models, params, color=bar_colors, alpha=0.8, height=0.5,
-                   edgecolor='black', linewidth=0.7)
+    bars = ax.barh(models, params, color=bar_colors, height=0.65,
+                   edgecolor='black', linewidth=0.5)
+    ax.set_ylim(-0.5, 1.5)
     ax.set_xlabel('Parameters (Millions)', fontsize=13)
-    ax.set_title(r'(b) Model Size Comparison', fontsize=14, pad=10)
+    ax.set_title(r'(b) Model Size Comparison', fontsize=13, pad=12)
+    ax.set_xlim(0, 42)
     ax.grid(True, alpha=0.3, axis='x')
     ax.set_axisbelow(True)
 
     for bar, val in zip(bars, params):
         width = bar.get_width()
-        ax.text(width + 0.5, bar.get_y() + bar.get_height()/2.,
+        ax.text(width + 0.3, bar.get_y() + bar.get_height()/2.,
                 f'{val:.2f}M',
                 ha='left', va='center', fontsize=11)
 
     diff = params[1] - params[0]
     pct_increase = (diff / params[0]) * 100
-    ax.text(0.98, 0.05, f'+{diff:.2f}M (+{pct_increase:.1f}\%) for attention',
+    ax.text(0.98, 0.05, r'+' + f'{diff:.2f}M (+{pct_increase:.1f}' + r'\%) for attention',
            transform=ax.transAxes, ha='right', va='bottom', fontsize=10,
-           bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.4))
+           bbox=dict(boxstyle='round', facecolor='#D4ECD0', alpha=0.6))
 
     fig.suptitle(r'\textbf{Model Complexity Analysis}',
-                 fontsize=16, y=0.98)
-    save_figure(fig, 'fig14_parameter_breakdown', OUTPUT_DIR)
+                 fontsize=15, y=0.97)
+    fig.savefig(OUTPUT_DIR / 'fig14_parameter_breakdown.pdf',
+                format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
 

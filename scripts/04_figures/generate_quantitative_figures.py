@@ -50,7 +50,7 @@ def generate_box_plots_figure(eval_results):
     print("Generating: Metric Distribution Box Plots...")
 
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
-    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D: Test Set Metric Distributions}', y=1.02)
+    fig.suptitle(r'\textbf{SA-CycleGAN-2.5D: Test Set Metric Distributions}', y=1)
 
     metrics = ['ssim', 'psnr', 'mae', 'lpips', 'mse', 'fid']
     titles = ['SSIM', 'PSNR (dB)', 'MAE', 'LPIPS', 'MSE', 'FID']
@@ -102,9 +102,10 @@ def generate_box_plots_figure(eval_results):
         ax.set_title(f'({chr(97+idx)}) {title}')
         ax.grid(True, alpha=0.3, axis='y')
 
-    plt.subplots_adjust(hspace=0.35, wspace=0.3)
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
-    save_figure(fig, 'fig06_metric_distributions', OUTPUT_DIR)
+    plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.90)
+    output_path = OUTPUT_DIR / 'fig06_metric_distributions.pdf'
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
+    print(f"Saved: {output_path}")
     plt.close()
 
 
@@ -150,15 +151,11 @@ def generate_cycle_consistency_figure(cycle_results):
         ax.grid(True, alpha=0.3, axis='y')
         ax.set_axisbelow(True)
 
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:.3f}',
-                    ha='center', va='bottom', fontsize=11)
-
     fig.suptitle(r'\textbf{Cycle Consistency Reconstruction Quality}',
-                 fontsize=16, y=0.98)
-    save_figure(fig, 'fig07_cycle_consistency', OUTPUT_DIR)
+                 fontsize=16, y=0.97)
+    output_path = OUTPUT_DIR / 'fig07_cycle_consistency.pdf'
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
+    print(f"Saved: {output_path}")
     plt.close()
 
 
