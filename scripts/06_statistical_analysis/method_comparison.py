@@ -61,7 +61,7 @@ METHOD_NAMES = {
     'raw': 'No Harmonization',
     'combat': 'ComBat',
     'baseline': 'CycleGAN (Baseline)',
-    'sa_cyclegan': 'SA-CycleGAN-2.5D (Ours)',
+    'sa_cyclegan': 'SA-CycleGAN-2.5D',
 }
 
 
@@ -152,79 +152,96 @@ def plot_method_comparison_bar(
     """
     create bar chart comparing methods across metrics.
 
+    publication-quality with latex rendering.
+
     key metrics:
     - domain classification accuracy (lower = better harmonization)
     - mmd (lower = better)
     - cosine similarity (higher = better)
     """
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    import matplotlib
+    matplotlib.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 10,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 11,
+        'figure.dpi': 300,
+        'savefig.dpi': 300,
+    })
+
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5.5))
+    plt.subplots_adjust(wspace=0.35, top=0.82)
 
     method_names = [METHOD_NAMES[m.name] for m in methods]
     colors = [COLORS[m.name] for m in methods]
     x = np.arange(len(methods))
-    width = 0.6
+    width = 0.5
 
     # domain classification accuracy (lower is better for harmonization)
     ax = axes[0]
     accuracies = [m.domain_accuracy for m in methods]
-    bars = ax.bar(x, accuracies, width, color=colors, edgecolor='black', linewidth=0.5)
+    bars = ax.bar(x, accuracies, width, color=colors, edgecolor='black',
+                  linewidth=0.7, alpha=0.85)
 
-    # add value labels
     for bar, val in zip(bars, accuracies):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-               f'{val:.2f}', ha='center', va='bottom', fontsize=8)
+               f'{val:.2f}', ha='center', va='bottom', fontsize=10)
 
     ax.axhline(y=0.5, color='gray', linestyle='--', linewidth=0.8, alpha=0.7)
-    ax.text(len(methods)-0.5, 0.51, 'Chance', fontsize=8, color='gray')
+    ax.text(len(methods)-0.5, 0.51, r'\textit{Chance}', fontsize=9, color='gray')
 
     ax.set_xticks(x)
-    ax.set_xticklabels(method_names, rotation=15, ha='right')
-    ax.set_ylabel('Domain Classification Accuracy')
-    ax.set_title('(a) Domain Discriminability')
+    ax.set_xticklabels(method_names, rotation=0, ha='center', fontsize=10)
+    ax.set_ylabel(r'Domain Classification Accuracy', fontsize=12)
+    ax.set_title(r'(a) Domain Discriminability', fontsize=14, pad=10)
     ax.set_ylim(0, 1.15)
-
-    # add annotation: lower is better
-    ax.annotate('Lower is Better', xy=(0.5, 0.02), xycoords='axes fraction',
-               fontsize=8, color='gray', ha='center')
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     # mmd (lower is better)
     ax = axes[1]
     mmds = [m.mmd for m in methods]
-    bars = ax.bar(x, mmds, width, color=colors, edgecolor='black', linewidth=0.5)
+    bars = ax.bar(x, mmds, width, color=colors, edgecolor='black',
+                  linewidth=0.7, alpha=0.85)
 
     for bar, val in zip(bars, mmds):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-               f'{val:.3f}', ha='center', va='bottom', fontsize=8, rotation=45)
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+               f'{val:.3f}', ha='center', va='bottom', fontsize=10)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(method_names, rotation=15, ha='right')
-    ax.set_ylabel('Maximum Mean Discrepancy')
-    ax.set_title('(b) Distribution Distance')
-
-    ax.annotate('Lower is Better', xy=(0.5, 0.02), xycoords='axes fraction',
-               fontsize=8, color='gray', ha='center')
+    ax.set_xticklabels(method_names, rotation=0, ha='center', fontsize=10)
+    ax.set_ylabel(r'Maximum Mean Discrepancy', fontsize=12)
+    ax.set_title(r'(b) Distribution Distance', fontsize=14, pad=10)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     # cosine similarity (higher is better)
     ax = axes[2]
     cosines = [m.cosine_similarity for m in methods]
-    bars = ax.bar(x, cosines, width, color=colors, edgecolor='black', linewidth=0.5)
+    bars = ax.bar(x, cosines, width, color=colors, edgecolor='black',
+                  linewidth=0.7, alpha=0.85)
 
     for bar, val in zip(bars, cosines):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-               f'{val:.3f}', ha='center', va='bottom', fontsize=8)
+               f'{val:.3f}', ha='center', va='bottom', fontsize=10)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(method_names, rotation=15, ha='right')
-    ax.set_ylabel('Cosine Similarity')
-    ax.set_title('(c) Feature Alignment')
+    ax.set_xticklabels(method_names, rotation=0, ha='center', fontsize=10)
+    ax.set_ylabel(r'Cosine Similarity', fontsize=12)
+    ax.set_title(r'(c) Feature Alignment', fontsize=14, pad=10)
     ax.set_ylim(0, 1.15)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
-    ax.annotate('Higher is Better', xy=(0.5, 0.02), xycoords='axes fraction',
-               fontsize=8, color='gray', ha='center')
+    fig.suptitle(r'\textbf{Harmonization Method Comparison Across Evaluation Metrics}',
+                 fontsize=16, y=0.97)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved method comparison to {output_path}')
@@ -236,8 +253,26 @@ def plot_improvement_waterfall(
 ):
     """
     create waterfall chart showing progressive improvement.
+
+    publication-quality with latex rendering.
     """
-    fig, ax = plt.subplots(figsize=(10, 5))
+    import matplotlib
+    matplotlib.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.titlesize': 14,
+        'axes.labelsize': 14,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 11,
+        'figure.dpi': 300,
+        'savefig.dpi': 300,
+    })
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    plt.subplots_adjust(top=0.88)
 
     # get raw as baseline
     raw = next((m for m in methods if m.name == 'raw'), None)
@@ -255,36 +290,54 @@ def plot_improvement_waterfall(
             'acc_reduction': (raw.domain_accuracy - m.domain_accuracy) * 100,
             'mmd_reduction': (raw.mmd - m.mmd) / raw.mmd * 100,
             'cosine_improvement': (m.cosine_similarity - raw.cosine_similarity) * 100,
-            'color': COLORS[m.name]
         }
         improvements.append(imp)
 
     # sort by overall improvement
     improvements.sort(key=lambda x: x['acc_reduction'], reverse=False)
 
+    # lighter colors for three metrics
+    c_acc = '#92C5DE'    # soft blue
+    c_mmd = '#FDBE85'    # soft peach
+    c_cos = '#A8D5A2'    # soft green
+
     # create grouped bar chart
     n_methods = len(improvements)
     x = np.arange(n_methods)
-    width = 0.25
+    width = 0.22
 
     metrics = ['acc_reduction', 'mmd_reduction', 'cosine_improvement']
-    metric_labels = ['Accuracy Reduction (%)', 'MMD Reduction (%)', 'Cosine Improvement (%)']
+    metric_labels = [r'Accuracy Reduction (\%)', r'MMD Reduction (\%)',
+                     r'Cosine Improvement (\%)']
+    bar_colors = [c_acc, c_mmd, c_cos]
 
-    for i, (metric, label) in enumerate(zip(metrics, metric_labels)):
+    all_bars = []
+    for i, (metric, label, color) in enumerate(zip(metrics, metric_labels, bar_colors)):
         values = [imp[metric] for imp in improvements]
         bars = ax.bar(x + i * width, values, width, label=label,
-                     edgecolor='black', linewidth=0.5)
+                     color=color, edgecolor='black', linewidth=0.7, alpha=0.85)
+        all_bars.append((bars, values))
+
+    # add value labels above bars
+    for bars, values in all_bars:
+        for bar, val in zip(bars, values):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width() / 2., height + 1.0,
+                    f'{val:.1f}',
+                    ha='center', va='bottom', fontsize=9)
 
     ax.set_xticks(x + width)
-    ax.set_xticklabels([imp['name'] for imp in improvements])
-    ax.set_ylabel('Improvement (%)')
-    ax.set_title('Harmonization Method Comparison: Improvement over No Harmonization')
-    ax.legend(loc='upper left', frameon=True, fancybox=False, edgecolor='black')
+    ax.set_xticklabels([imp['name'] for imp in improvements], fontsize=12)
+    ax.set_ylabel(r'Improvement (\%)', fontsize=13)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
+    ax.legend(loc='lower right', frameon=True, fancybox=False, edgecolor='black')
     ax.axhline(y=0, color='black', linewidth=0.5)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    fig.suptitle(r'\textbf{Harmonization Improvement over Unprocessed Baseline}',
+                 fontsize=16, y=0.97)
+
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved improvement waterfall to {output_path}')
@@ -296,7 +349,24 @@ def plot_radar_comparison(
 ):
     """
     create radar/spider chart comparing methods across metrics.
+
+    publication-quality with latex rendering.
     """
+    import matplotlib
+    matplotlib.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.titlesize': 14,
+        'axes.labelsize': 14,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 11,
+        'figure.dpi': 300,
+        'savefig.dpi': 300,
+    })
+
     # normalize metrics to [0, 1] where 1 is best
     raw = next((m for m in methods if m.name == 'raw'), None)
     if raw is None:
@@ -314,6 +384,7 @@ def plot_radar_comparison(
     angles += angles[:1]  # close the polygon
 
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    plt.subplots_adjust(top=0.85)
 
     for method in methods:
         values = []
@@ -340,18 +411,24 @@ def plot_radar_comparison(
 
         ax.plot(angles, values, 'o-', linewidth=2, label=METHOD_NAMES[method.name],
                color=COLORS[method.name])
-        ax.fill(angles, values, alpha=0.1, color=COLORS[method.name])
+        ax.fill(angles, values, alpha=0.15, color=COLORS[method.name])
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(list(metrics.keys()))
+    labels = ax.set_xticklabels(list(metrics.keys()), fontsize=11)
+    ax.tick_params(axis='x', pad=15)
+    # extra padding for "Domain Separation Reduction" label (first label)
+    labels[0].set_y(labels[0].get_position()[1] - 0.04)
     ax.set_ylim(0, 1)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0),
+    ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels(['0.2', '0.4', '0.6', '0.8', '1.0'], fontsize=10)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='lower right', bbox_to_anchor=(1.2, 0.0), fontsize=11,
              frameon=True, fancybox=False, edgecolor='black')
 
-    plt.title('Method Comparison: Normalized Performance', y=1.08)
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    fig.suptitle(r'\textbf{Normalized Method Comparison Across Harmonization Metrics}',
+                 fontsize=16, x=0.58, y=0.97, ha='center')
+
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved radar comparison to {output_path}')
@@ -402,86 +479,118 @@ def plot_statistical_summary(
 ):
     """
     create comprehensive statistical summary figure.
-    """
-    fig = plt.figure(figsize=(14, 10))
 
-    # create grid
-    gs = fig.add_gridspec(3, 3, hspace=0.4, wspace=0.3)
+    publication-quality with latex rendering.
+    """
+    import matplotlib
+    import matplotlib.gridspec as gridspec
+    matplotlib.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 11,
+        'figure.dpi': 300,
+        'savefig.dpi': 300,
+    })
+
+    fig = plt.figure(figsize=(16, 9))
+
+    # Top row: 3 plots spanning full width
+    gs_top = gridspec.GridSpec(2, 3, figure=fig, hspace=0.4, wspace=0.35,
+                                top=0.88, bottom=0.06)
+    # Bottom row: 7-col grid for centering 2 plots
+    gs_bot = gridspec.GridSpec(2, 7, figure=fig, hspace=0.4, wspace=0.35,
+                                top=0.88, bottom=0.06)
 
     # 1. domain classification comparison
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs_top[0, 0])
 
     if 'domain_classification' in results:
         dc = results['domain_classification']
-        methods = ['Raw', 'Harmonized']
+        methods_list = ['Raw', 'Harmonized']
         accs = [dc['raw']['accuracy'], dc['harmonized']['accuracy']]
-        colors = [COLORS['raw'], COLORS['sa_cyclegan']]
+        bar_colors = [COLORS['raw'], COLORS['sa_cyclegan']]
 
-        bars = ax1.bar(methods, accs, color=colors, edgecolor='black', linewidth=0.5)
+        bars = ax1.bar(methods_list, accs, color=bar_colors, edgecolor='black',
+                       linewidth=0.7, alpha=0.85, width=0.5)
         ax1.axhline(y=0.5, color='gray', linestyle='--', alpha=0.7)
 
         for bar, val in zip(bars, accs):
             ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                    f'{val:.2f}', ha='center', fontsize=9)
+                    f'{val:.2f}', ha='center', fontsize=10)
 
-        ax1.set_ylabel('Accuracy')
-        ax1.set_title('(a) Domain Classification')
-        ax1.set_ylim(0, 1.1)
+        ax1.set_ylabel(r'Accuracy', fontsize=12)
+        ax1.set_title(r'(a) Domain Classification', fontsize=14, pad=10)
+        ax1.set_ylim(0, 1.15)
+        ax1.grid(True, alpha=0.3, axis='y')
+        ax1.set_axisbelow(True)
 
     # 2. feature statistics comparison
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = fig.add_subplot(gs_top[0, 1])
 
     if 'domain_classification' in results:
         dc = results['domain_classification']
-        metrics = ['MMD', 'Cosine']
+        metric_names = ['MMD', 'Cosine']
         raw_vals = [dc['raw']['feature_statistics']['mmd'],
                    dc['raw']['feature_statistics']['cosine_similarity']]
         harm_vals = [dc['harmonized']['feature_statistics']['mmd'],
                     dc['harmonized']['feature_statistics']['cosine_similarity']]
 
-        x = np.arange(len(metrics))
-        width = 0.35
+        x = np.arange(len(metric_names))
+        width = 0.3
 
         ax2.bar(x - width/2, raw_vals, width, label='Raw', color=COLORS['raw'],
-               edgecolor='black', linewidth=0.5)
+               edgecolor='black', linewidth=0.7, alpha=0.85)
         ax2.bar(x + width/2, harm_vals, width, label='Harmonized', color=COLORS['sa_cyclegan'],
-               edgecolor='black', linewidth=0.5)
+               edgecolor='black', linewidth=0.7, alpha=0.85)
 
         ax2.set_xticks(x)
-        ax2.set_xticklabels(metrics)
-        ax2.set_ylabel('Value')
-        ax2.set_title('(b) Feature Statistics')
+        ax2.set_xticklabels(metric_names)
+        ax2.set_ylabel(r'Value', fontsize=12)
+        ax2.set_title(r'(b) Feature Statistics', fontsize=14, pad=10)
         ax2.legend(frameon=True, fancybox=False, edgecolor='black')
+        ax2.grid(True, alpha=0.3, axis='y')
+        ax2.set_axisbelow(True)
 
     # 3. improvement summary
-    ax3 = fig.add_subplot(gs[0, 2])
+    ax3 = fig.add_subplot(gs_top[0, 2])
 
     if 'domain_classification' in results:
         dc = results['domain_classification']
         imp = dc.get('improvement', {})
 
-        metrics = ['Acc.\nReduction', 'AUC\nReduction', 'MMD\nReduction']
+        metric_names_imp = [r'Acc.' + '\n' + r'Reduction',
+                            r'AUC' + '\n' + r'Reduction',
+                            r'MMD' + '\n' + r'Reduction']
         values = [
             imp.get('accuracy_reduction', 0) * 100,
             imp.get('auc_reduction', 0) * 100,
             imp.get('mmd_reduction', 0) * 100
         ]
 
-        colors = [COLORS['sa_cyclegan'] if v > 0 else COLORS['raw'] for v in values]
-        bars = ax3.bar(metrics, values, color=colors, edgecolor='black', linewidth=0.5)
+        bar_colors = [COLORS['sa_cyclegan'] if v > 0 else COLORS['raw'] for v in values]
+        bars = ax3.bar(metric_names_imp, values, color=bar_colors, edgecolor='black',
+                       linewidth=0.7, alpha=0.85, width=0.5)
 
         ax3.axhline(y=0, color='black', linewidth=0.5)
-        ax3.set_ylabel('Improvement (%)')
-        ax3.set_title('(c) Harmonization Improvement')
+        ax3.set_ylabel(r'Improvement (\%)', fontsize=12)
+        ax3.set_title(r'(c) Harmonization Improvement', fontsize=14, pad=10)
+        ax3.grid(True, alpha=0.3, axis='y')
+        ax3.set_axisbelow(True)
 
         for bar, val in zip(bars, values):
             ypos = val + 1 if val >= 0 else val - 3
             ax3.text(bar.get_x() + bar.get_width()/2, ypos,
-                    f'{val:.1f}%', ha='center', fontsize=8)
+                    f'{val:.1f}\\%', ha='center', fontsize=9)
 
-    # 4-6. confusion matrices
-    ax4 = fig.add_subplot(gs[1, 0])
-    ax5 = fig.add_subplot(gs[1, 1])
+    # 4-5. confusion matrices centered in bottom row
+    ax4 = fig.add_subplot(gs_bot[1, 1:3])
+    ax5 = fig.add_subplot(gs_bot[1, 4:6])
 
     if 'domain_classification' in results:
         dc = results['domain_classification']
@@ -489,70 +598,41 @@ def plot_statistical_summary(
         # raw confusion matrix
         if 'confusion_matrix' in dc['raw']:
             cm = np.array(dc['raw']['confusion_matrix'])
-            im = ax4.imshow(cm, cmap='Reds')
+            ax4.imshow(cm, cmap='Reds')
             ax4.set_xticks([0, 1])
             ax4.set_yticks([0, 1])
             ax4.set_xticklabels(['BraTS', 'UPenn'])
             ax4.set_yticklabels(['BraTS', 'UPenn'])
-            ax4.set_xlabel('Predicted')
-            ax4.set_ylabel('Actual')
-            ax4.set_title('(d) Raw Confusion Matrix')
+            ax4.set_xlabel(r'Predicted', fontsize=12)
+            ax4.set_ylabel(r'Actual', fontsize=12)
+            ax4.set_title(r'(d) Raw Confusion Matrix', fontsize=14, pad=10)
 
             for i in range(2):
                 for j in range(2):
                     ax4.text(j, i, f'{cm[i, j]}', ha='center', va='center',
-                            fontsize=12, color='white' if cm[i, j] > cm.max()/2 else 'black')
+                            fontsize=13, color='white' if cm[i, j] > cm.max()/2 else 'black')
 
         # harmonized confusion matrix
         if 'confusion_matrix' in dc['harmonized']:
             cm = np.array(dc['harmonized']['confusion_matrix'])
-            im = ax5.imshow(cm, cmap='Blues')
+            ax5.imshow(cm, cmap='Blues')
             ax5.set_xticks([0, 1])
             ax5.set_yticks([0, 1])
             ax5.set_xticklabels(['BraTS', 'UPenn'])
             ax5.set_yticklabels(['BraTS', 'UPenn'])
-            ax5.set_xlabel('Predicted')
-            ax5.set_ylabel('Actual')
-            ax5.set_title('(e) Harmonized Confusion Matrix')
+            ax5.set_xlabel(r'Predicted', fontsize=12)
+            ax5.set_ylabel(r'Actual', fontsize=12)
+            ax5.set_title(r'(e) Harmonized Confusion Matrix', fontsize=14, pad=10)
 
             for i in range(2):
                 for j in range(2):
                     ax5.text(j, i, f'{cm[i, j]}', ha='center', va='center',
-                            fontsize=12, color='white' if cm[i, j] > cm.max()/2 else 'black')
+                            fontsize=13, color='white' if cm[i, j] > cm.max()/2 else 'black')
 
-    # 6. key findings text box
-    ax6 = fig.add_subplot(gs[1, 2])
-    ax6.axis('off')
+    fig.suptitle(r'\textbf{Feature Distribution t-SNE Visualization}',
+                 fontsize=16, y=0.97)
 
-    if 'domain_classification' in results:
-        dc = results['domain_classification']
-        text = (
-            "Key Findings:\n\n"
-            f"1. Domain accuracy dropped from\n"
-            f"   {dc['raw']['accuracy']:.1%} to {dc['harmonized']['accuracy']:.1%}\n\n"
-            f"2. MMD reduced by\n"
-            f"   {(1 - dc['harmonized']['feature_statistics']['mmd']/dc['raw']['feature_statistics']['mmd'])*100:.1f}%\n\n"
-            f"3. Feature alignment improved\n"
-            f"   cosine: {dc['raw']['feature_statistics']['cosine_similarity']:.3f} -> "
-            f"{dc['harmonized']['feature_statistics']['cosine_similarity']:.3f}\n\n"
-            "Interpretation:\n"
-            "Harmonization effectively removes\n"
-            "domain-specific features while\n"
-            "preserving anatomical content."
-        )
-        ax6.text(0.1, 0.9, text, transform=ax6.transAxes, fontsize=10,
-                verticalalignment='top', fontfamily='monospace',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-
-    # 7-9. bottom row - feature distribution visualization placeholder
-    ax7 = fig.add_subplot(gs[2, :])
-    ax7.text(0.5, 0.5, 'Feature Distribution t-SNE Visualization\n(See fig_tsne_visualization.pdf)',
-            transform=ax7.transAxes, ha='center', va='center', fontsize=14, color='gray')
-    ax7.set_title('(f) Feature Space Visualization')
-    ax7.axis('off')
-
-    plt.savefig(output_path, format='pdf')
-    plt.savefig(output_path.with_suffix('.png'), format='png', dpi=300)
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved statistical summary to {output_path}')
