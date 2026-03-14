@@ -71,6 +71,19 @@ def plot_correlation_heatmap(
         output_path: path to save figure
         title: figure title
     """
+    # LaTeX rendering
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 10,
+    })
+
     per_feature = preservation_results.get('per_feature', {})
 
     if not per_feature:
@@ -78,54 +91,77 @@ def plot_correlation_heatmap(
         return
 
     feature_names = list(per_feature.keys())
-    n_features = len(feature_names)
 
-    if n_features > 50:
-        # sample features if too many
-        step = n_features // 50
-        feature_names = feature_names[::step]
+    # extract metrics for all features
+    all_cccs = np.array([per_feature[f]['ccc'] for f in feature_names])
+    all_iccs = np.array([per_feature[f]['icc'] for f in feature_names])
+    all_corrs = np.array([per_feature[f]['pearson_r'] for f in feature_names])
 
-    # extract metrics
-    cccs = [per_feature[f]['ccc'] for f in feature_names]
-    iccs = [per_feature[f]['icc'] for f in feature_names]
-    correlations = [per_feature[f]['pearson_r'] for f in feature_names]
+    # group features by category
+    categories = {'First Order': [], 'GLCM': [], 'Shape': []}
+    for i, fn in enumerate(feature_names):
+        if '_fo_' in fn:
+            categories['First Order'].append(i)
+        elif '_glcm_' in fn:
+            categories['GLCM'].append(i)
+        elif '_shape_' in fn:
+            categories['Shape'].append(i)
 
-    # create figure
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+    # build sorted heatmap matrix (features grouped by category)
+    sorted_indices = []
+    category_boundaries = []
+    category_labels = []
+    for cat_name, indices in categories.items():
+        if indices:
+            category_labels.append(cat_name)
+            category_boundaries.append(len(sorted_indices))
+            # sort within category by CCC value
+            cat_indices = sorted(indices, key=lambda i: all_cccs[i], reverse=True)
+            sorted_indices.extend(cat_indices)
 
-    # ccc heatmap
-    ax = axes[0]
-    ccc_matrix = np.array(cccs).reshape(-1, 1)
-    im = ax.imshow(ccc_matrix, aspect='auto', cmap='RdYlGn', vmin=0, vmax=1)
-    ax.set_title('(a) Concordance Correlation')
-    ax.set_xlabel('CCC')
-    ax.set_ylabel('Features')
-    ax.set_xticks([])
-    plt.colorbar(im, ax=ax, shrink=0.8)
+    heatmap_data = np.column_stack([
+        all_cccs[sorted_indices],
+        all_iccs[sorted_indices],
+        all_corrs[sorted_indices]
+    ])
 
-    # icc heatmap
-    ax = axes[1]
-    icc_matrix = np.array(iccs).reshape(-1, 1)
-    im = ax.imshow(icc_matrix, aspect='auto', cmap='RdYlGn', vmin=0, vmax=1)
-    ax.set_title('(b) Intraclass Correlation')
-    ax.set_xlabel('ICC')
-    ax.set_ylabel('Features')
-    ax.set_xticks([])
-    plt.colorbar(im, ax=ax, shrink=0.8)
+    # determine symmetric color range
+    vmax = max(abs(heatmap_data.min()), abs(heatmap_data.max()))
+    vmax = np.ceil(vmax * 10) / 10  # round up to nearest 0.1
 
-    # correlation heatmap
-    ax = axes[2]
-    corr_matrix = np.array(correlations).reshape(-1, 1)
-    im = ax.imshow(corr_matrix, aspect='auto', cmap='RdYlGn', vmin=0, vmax=1)
-    ax.set_title('(c) Pearson Correlation')
-    ax.set_xlabel('r')
-    ax.set_ylabel('Features')
-    ax.set_xticks([])
-    plt.colorbar(im, ax=ax, shrink=0.8)
+    fig = plt.figure(figsize=(10, 9))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1, 0.03], wspace=0.03)
+    ax = fig.add_subplot(gs[0])
+    cax = fig.add_subplot(gs[1])
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf', bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.png'), format='png', bbox_inches='tight')
+    fig.suptitle(r'\textbf{Radiomics Feature Preservation Heatmap}',
+                 fontsize=15, y=0.97)
+    fig.subplots_adjust(top=0.90)
+
+    im = ax.imshow(heatmap_data, aspect='auto', cmap='RdBu_r',
+                   vmin=-vmax, vmax=vmax, interpolation='nearest')
+
+    # column labels
+    ax.set_xticks([0, 1, 2])
+    ax.set_xticklabels(['CCC', 'ICC', r'Pearson $r$'])
+    ax.xaxis.set_ticks_position('top')
+    ax.xaxis.set_label_position('top')
+
+    # category annotations on y-axis
+    ax.set_yticks([])
+    for i, (cat_name, start) in enumerate(zip(category_labels, category_boundaries)):
+        end = category_boundaries[i + 1] if i + 1 < len(category_boundaries) else len(sorted_indices)
+        mid = (start + end) / 2
+        ax.text(-0.3, mid, cat_name, ha='right', va='center', fontsize=12,
+                fontweight='bold', transform=ax.get_yaxis_transform())
+        if i > 0:
+            ax.axhline(y=start - 0.5, color='black', linewidth=1.0)
+
+    ax.set_ylabel('Features (sorted by CCC within category)')
+
+    plt.colorbar(im, cax=cax, label='Coefficient Value')
+
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved correlation heatmap to {output_path}')
@@ -144,6 +180,19 @@ def plot_preservation_by_category(
         output_path: path to save figure
         method_name: name of harmonization method
     """
+    # LaTeX rendering
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 10,
+    })
+
     per_category = preservation_results.get('per_category', {})
 
     if not per_category:
@@ -161,52 +210,58 @@ def plot_preservation_by_category(
     std_cccs = [per_category[c]['std_ccc'] for c in categories]
     mean_iccs = [per_category[c]['mean_icc'] for c in categories]
     std_iccs = [per_category[c]['std_icc'] for c in categories]
+    mean_corrs = [per_category[c]['mean_correlation'] for c in categories]
+    std_corrs = [per_category[c]['std_correlation'] for c in categories]
     n_features = [per_category[c]['n_features'] for c in categories]
 
     # format category names
-    category_labels = [c.replace('_', ' ').title() for c in categories]
+    label_map = {'first_order': 'First Order', 'glcm': 'GLCM', 'shape': 'Shape'}
+    category_labels = [label_map.get(c, c.replace('_', ' ').title()) for c in categories]
 
-    # create figure
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    # determine appropriate y-axis limits based on actual data
+    all_vals = mean_cccs + mean_iccs + mean_corrs
+    all_errs = std_cccs + std_iccs + std_corrs
+    y_max = max(v + e for v, e in zip(all_vals, all_errs)) * 1.3
+    y_min = min(v - e for v, e in zip(all_vals, all_errs))
+    if y_min < 0:
+        y_min = y_min * 1.3
+    else:
+        y_min = 0
+
+    # create figure with 3 subplots
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    fig.suptitle(r'\textbf{Radiomics Feature Preservation by Category}',
+                 fontsize=15, y=0.97)
+    fig.subplots_adjust(top=0.83, wspace=0.35)
 
     x = np.arange(len(categories))
-    width = 0.35
-
-    # ccc bar chart
-    ax = axes[0]
+    width = 0.5
     colors = [CATEGORY_COLORS.get(c, COLORS['neutral']) for c in categories]
-    bars = ax.bar(x, mean_cccs, width, yerr=std_cccs, capsize=3,
-                  color=colors, edgecolor='black', linewidth=0.5)
-    ax.axhline(y=0.9, color='green', linestyle='--', alpha=0.7, label='Excellent (>0.9)')
-    ax.axhline(y=0.75, color='orange', linestyle='--', alpha=0.7, label='Good (>0.75)')
-    ax.set_ylabel('Concordance Correlation Coefficient')
-    ax.set_title(f'(a) CCC by Feature Category')
-    ax.set_xticks(x)
-    ax.set_xticklabels(category_labels, rotation=45, ha='right')
-    ax.set_ylim(0, 1.05)
-    ax.legend(loc='lower right', fontsize=8)
 
-    # add n_features labels
-    for i, (bar, n) in enumerate(zip(bars, n_features)):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                f'n={n}', ha='center', va='bottom', fontsize=8)
+    metric_data = [
+        ('(a) CCC by Feature Category', 'Concordance Correlation Coefficient', mean_cccs, std_cccs),
+        ('(b) ICC by Feature Category', 'Intraclass Correlation Coefficient', mean_iccs, std_iccs),
+        (r'(c) Pearson $r$ by Feature Category', 'Pearson Correlation Coefficient', mean_corrs, std_corrs),
+    ]
 
-    # icc bar chart
-    ax = axes[1]
-    bars = ax.bar(x, mean_iccs, width, yerr=std_iccs, capsize=3,
-                  color=colors, edgecolor='black', linewidth=0.5)
-    ax.axhline(y=0.9, color='green', linestyle='--', alpha=0.7, label='Excellent (>0.9)')
-    ax.axhline(y=0.75, color='orange', linestyle='--', alpha=0.7, label='Good (>0.75)')
-    ax.set_ylabel('Intraclass Correlation Coefficient')
-    ax.set_title(f'(b) ICC by Feature Category')
-    ax.set_xticks(x)
-    ax.set_xticklabels(category_labels, rotation=45, ha='right')
-    ax.set_ylim(0, 1.05)
-    ax.legend(loc='lower right', fontsize=8)
+    for ax, (title, ylabel, means, stds) in zip(axes, metric_data):
+        bars = ax.bar(x, means, width, yerr=stds, capsize=4,
+                      color=colors, edgecolor='black', linewidth=0.5)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.set_xticks(x)
+        ax.set_xticklabels(category_labels, rotation=0, ha='center')
+        ax.set_ylim(y_min, y_max)
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf', bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.png'), format='png', bbox_inches='tight')
+        # add n_features labels above error bars
+        for bar, n, mean, std in zip(bars, n_features, means, stds):
+            label_y = mean + std + y_max * 0.03
+            ax.text(bar.get_x() + bar.get_width() / 2, label_y,
+                    f'$n={n}$', ha='center', va='bottom', fontsize=9)
+
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved preservation by category to {output_path}')
@@ -242,8 +297,24 @@ def plot_bland_altman(
     step = len(sorted_indices) // n_features
     selected_indices = sorted_indices[::step][:n_features]
 
+    # LaTeX rendering
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 9,
+    })
+
     # create figure
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    fig, axes = plt.subplots(2, 2, figsize=(13, 10))
+    fig.suptitle(r'\textbf{Bland--Altman Analysis of Radiomics Feature Preservation}',
+                 fontsize=15, y=0.97)
+    fig.subplots_adjust(top=0.90, hspace=0.30, wspace=0.28)
     axes = axes.flatten()
 
     for idx, (ax, feature_idx) in enumerate(zip(axes, selected_indices)):
@@ -270,23 +341,25 @@ def plot_bland_altman(
         ax.axhline(y=mean_diff, color=COLORS['secondary'], linestyle='-',
                    label=f'Mean: {mean_diff:.3f}')
         ax.axhline(y=loa_upper, color=COLORS['tertiary'], linestyle='--',
-                   label=f'+1.96 SD: {loa_upper:.3f}')
+                   label=f'$+1.96$ SD: {loa_upper:.3f}')
         ax.axhline(y=loa_lower, color=COLORS['tertiary'], linestyle='--',
-                   label=f'-1.96 SD: {loa_lower:.3f}')
+                   label=f'$-1.96$ SD: {loa_lower:.3f}')
 
         feature_name = feature_names[feature_idx] if feature_idx < len(feature_names) else f'Feature {feature_idx}'
         # truncate long names
         if len(feature_name) > 25:
             feature_name = feature_name[:22] + '...'
+        # escape underscores for LaTeX
+        feature_name = feature_name.replace('_', r'\_')
 
         ax.set_title(f'({chr(97+idx)}) {feature_name}')
         ax.set_xlabel('Mean of Original and Harmonized')
-        ax.set_ylabel('Difference (Harmonized - Original)')
+        ax.set_ylabel('Difference (Harmonized $-$ Original)')
         ax.legend(fontsize=7, loc='upper right')
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf', bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.png'), format='png', bbox_inches='tight')
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved bland-altman plots to {output_path}')
@@ -327,8 +400,24 @@ def plot_preservation_scatter(
         if idx not in selected_indices:
             selected_indices.append(idx)
 
+    # LaTeX rendering
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': ['Computer Modern Roman'],
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 9,
+    })
+
     # create figure
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    fig, axes = plt.subplots(2, 2, figsize=(13, 10))
+    fig.suptitle(r'\textbf{Original vs.\ Harmonized Radiomics Feature Scatter Plots}',
+                 fontsize=15, y=0.97)
+    fig.subplots_adjust(top=0.90, hspace=0.30, wspace=0.28)
     axes = axes.flatten()
 
     for idx, (ax, feature_idx) in enumerate(zip(axes, selected_indices)):
@@ -350,7 +439,7 @@ def plot_preservation_scatter(
         x_line = np.array([orig.min(), orig.max()])
         y_line = slope * x_line + intercept
         ax.plot(x_line, y_line, color=COLORS['secondary'], linewidth=2,
-                label=f'r = {r_value:.3f}')
+                label=f'$r = {r_value:.3f}$')
 
         # identity line
         ax.plot(x_line, x_line, color=COLORS['neutral'], linestyle='--',
@@ -359,15 +448,17 @@ def plot_preservation_scatter(
         feature_name = feature_names[feature_idx] if feature_idx < len(feature_names) else f'Feature {feature_idx}'
         if len(feature_name) > 25:
             feature_name = feature_name[:22] + '...'
+        # escape underscores for LaTeX
+        feature_name = feature_name.replace('_', r'\_')
 
         ax.set_title(f'({chr(97+idx)}) {feature_name}')
         ax.set_xlabel('Original Value')
         ax.set_ylabel('Harmonized Value')
-        ax.legend(fontsize=8, loc='upper left')
+        ax.legend(fontsize=9, loc='upper left')
+        ax.grid(True, alpha=0.3)
+        ax.set_axisbelow(True)
 
-    plt.tight_layout()
-    plt.savefig(output_path, format='pdf', bbox_inches='tight')
-    plt.savefig(output_path.with_suffix('.png'), format='png', bbox_inches='tight')
+    fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
     plt.close()
 
     print(f'[fig] saved preservation scatter plots to {output_path}')
