@@ -1,0 +1,461 @@
+% ============================================================
+% SA-CycleGAN-2.5D References
+% ============================================================
+
+% ---- Statistical harmonization ----
+
+@article{johnson2007combat,
+  title   = {Adjusting batch effects in microarray expression data using empirical {Bayes} methods},
+  author  = {Johnson, W. Evan and Li, Cheng and Rabinovic, Ariel},
+  journal = {Biostatistics},
+  volume  = {8},
+  number  = {1},
+  pages   = {118--127},
+  year    = {2007},
+  doi     = {10.1093/biostatistics/kxj037}
+}
+
+@article{fortin2017harmonization,
+  title   = {Harmonization of cortical thickness measurements across scanners and sites},
+  author  = {Fortin, Jean-Philippe and Cullen, Nicholas and Sheline, Yvette I. and Taylor, Warren D. and Aselcioglu, Irem and Cook, Philip A. and Adams, Phil and Cooper, Crystal and Fava, Maurizio and McGrath, Patrick J. and McInnis, Melvin and Phillips, Mary L. and Trivedi, Madhukar H. and Weissman, Myrna M. and Shinohara, Russell T.},
+  journal = {NeuroImage},
+  volume  = {167},
+  pages   = {104--120},
+  year    = {2018},
+  doi     = {10.1016/j.neuroimage.2017.11.024}
+}
+
+@article{fortin2018harmonization,
+  title   = {Harmonization of multi-site diffusion tensor imaging data},
+  author  = {Fortin, Jean-Philippe and Parker, Drew and Tun\c{c}, Birkan and Watanabe, Takanori and Elliott, Mark A. and Ruparel, Kosha and Roalf, David R. and Satterthwaite, Theodore D. and Gur, Ruben C. and Gur, Raquel E. and Schultz, Robert T. and Shinohara, Russell T. and Bassett, Danielle S.},
+  journal = {NeuroImage},
+  volume  = {161},
+  pages   = {149--170},
+  year    = {2017},
+  doi     = {10.1016/j.neuroimage.2017.08.047}
+}
+
+@article{chen2022covbat,
+  title   = {Removal of scanner effects in covariance improves multivariate pattern analysis in neuroimaging data},
+  author  = {Chen, Andrew A. and Beer, Joanne C. and Tustison, Nicholas J. and Cook, Philip A. and Shinohara, Russell T. and Shou, Haochang},
+  journal = {NeuroImage},
+  volume  = {277},
+  pages   = {120011},
+  year    = {2023},
+  doi     = {10.1016/j.neuroimage.2023.120011}
+}
+
+% ---- Deep learning harmonization ----
+
+@article{dewey2019deepharmony,
+  title   = {{DeepHarmony}: a deep learning approach to contrast harmonization across scanner changes},
+  author  = {Dewey, Blake E. and Zhao, Can and Reinhold, Jacob C. and Carass, Aaron and Fitzgerald, Kathryn C. and Sotirchos, Elias S. and Saidha, Shiv and Oh, Jiwon and Pham, Dzung L. and Calabresi, Peter A. and van Zijl, Peter C. M. and Prince, Jerry L.},
+  journal = {Magnetic Resonance Imaging},
+  volume  = {64},
+  pages   = {160--170},
+  year    = {2019},
+  doi     = {10.1016/j.mri.2019.05.041}
+}
+
+@inproceedings{modanwal2020mri,
+  title     = {{MRI} image harmonization using cycle-consistent generative adversarial network},
+  author    = {Modanwal, Gourav and Vellal, Adithya and Bhatt, Meera and Strigel, Roberta M. and Conlin, Christopher C. and Wu, Ji and Gillan, Barry E. and Mahoney, Maryellen C. and Burnside, Elizabeth S. and Monga, Nikita},
+  booktitle = {Proceedings of SPIE Medical Imaging},
+  volume    = {11314},
+  pages     = {1131413},
+  year      = {2020},
+  doi       = {10.1117/12.2551301}
+}
+
+@inproceedings{zhao2019harmonization,
+  title     = {Harmonization of infant cortical thickness using surface-to-surface cycle-consistent adversarial networks},
+  author    = {Zhao, Fenqiang and Xia, Shunren and Wu, Zhengwang and Duan, Dongrong and Wang, Li and Lin, Weili and Gilmore, John H. and Shen, Dinggang and Li, Gang},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention -- {MICCAI} 2019},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {11767},
+  pages     = {475--483},
+  publisher = {Springer, Cham},
+  year      = {2019},
+  doi       = {10.1007/978-3-030-32251-9_52}
+}
+
+@article{zuo2021calamiti,
+  title   = {Unsupervised {MR} harmonization by learning disentangled representations using information bottleneck theory},
+  author  = {Zuo, Lianrui and Dewey, Blake E. and Liu, Yihao and He, Yufan and Newsome, Scott D. and Mowry, Ellen M. and Resnick, Susan M. and Prince, Jerry L. and Carass, Aaron},
+  journal = {NeuroImage},
+  volume  = {243},
+  pages   = {118569},
+  year    = {2021},
+  doi     = {10.1016/j.neuroimage.2021.118569}
+}
+
+@article{zuo2023haca3,
+  title   = {{HACA3}: a unified approach for multi-site {MR} image harmonization},
+  author  = {Zuo, Lianrui and Carass, Aaron and Dewey, Blake E. and He, Yufan and Liu, Yihao and Mowry, Ellen M. and Newsome, Scott D. and Resnick, Susan M. and Prince, Jerry L.},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {109},
+  pages   = {102285},
+  year    = {2023},
+  doi     = {10.1016/j.compmedimag.2023.102285}
+}
+
+@article{dinsdale2021deep,
+  title   = {Deep learning-based unlearning of dataset bias for {MRI} harmonisation and confound removal},
+  author  = {Dinsdale, Nicola K. and Jenkinson, Mark and Namburete, Ana I. L.},
+  journal = {NeuroImage},
+  volume  = {228},
+  pages   = {117689},
+  year    = {2021},
+  doi     = {10.1016/j.neuroimage.2020.117689}
+}
+
+% ---- Generative adversarial networks ----
+
+@inproceedings{goodfellow2014gan,
+  title     = {Generative adversarial nets},
+  author    = {Goodfellow, Ian and Pouget-Abadie, Jean and Mirza, Mehdi and Xu, Bing and Warde-Farley, David and Ozair, Sherjil and Courville, Aaron and Bengio, Yoshua},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {27},
+  pages     = {2672--2680},
+  year      = {2014}
+}
+
+@inproceedings{zhu2017cyclegan,
+  title     = {Unpaired image-to-image translation using cycle-consistent adversarial networks},
+  author    = {Zhu, Jun-Yan and Park, Taesung and Isola, Phillip and Efros, Alexei A.},
+  booktitle = {Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+  pages     = {2223--2232},
+  year      = {2017},
+  doi       = {10.1109/ICCV.2017.244}
+}
+
+@inproceedings{isola2017pix2pix,
+  title     = {Image-to-image translation with conditional adversarial networks},
+  author    = {Isola, Phillip and Zhu, Jun-Yan and Zhou, Tinghui and Efros, Alexei A.},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {1125--1134},
+  year      = {2017},
+  doi       = {10.1109/CVPR.2017.632}
+}
+
+@inproceedings{mao2017lsgan,
+  title     = {Least squares generative adversarial networks},
+  author    = {Mao, Xudong and Li, Qing and Xie, Haoran and Lau, Raymond Y. K. and Wang, Zhen and Smolley, Stephen Paul},
+  booktitle = {Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+  pages     = {2794--2802},
+  year      = {2017},
+  doi       = {10.1109/ICCV.2017.304}
+}
+
+@inproceedings{choi2018stargan,
+  title     = {{StarGAN}: unified generative adversarial networks for multi-domain image-to-image translation},
+  author    = {Choi, Yunjey and Choi, Minje and Kim, Munyoung and Ha, Jung-Woo and Kim, Sunghun and Choo, Jaegul},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {8789--8797},
+  year      = {2018},
+  doi       = {10.1109/CVPR.2018.00916}
+}
+
+@inproceedings{park2020cut,
+  title     = {Contrastive learning for unpaired image-to-image translation},
+  author    = {Park, Taesung and Efros, Alexei A. and Zhang, Richard and Zhu, Jun-Yan},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12354},
+  pages     = {319--345},
+  publisher = {Springer, Cham},
+  year      = {2020},
+  doi       = {10.1007/978-3-030-58545-7_19}
+}
+
+% ---- Attention mechanisms ----
+
+@inproceedings{zhang2019sagan,
+  title     = {Self-attention generative adversarial networks},
+  author    = {Zhang, Han and Goodfellow, Ian and Metaxas, Dimitris and Odena, Augustus},
+  booktitle = {Proceedings of the International Conference on Machine Learning (ICML)},
+  pages     = {7354--7363},
+  year      = {2019}
+}
+
+@inproceedings{woo2018cbam,
+  title     = {{CBAM}: convolutional block attention module},
+  author    = {Woo, Sanghyun and Park, Jongchan and Lee, Joon-Young and Kweon, In So},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {11211},
+  pages     = {3--19},
+  publisher = {Springer, Cham},
+  year      = {2018},
+  doi       = {10.1007/978-3-030-01234-2_1}
+}
+
+@article{chen2021transunet,
+  title   = {{TransUNet}: transformers make strong encoders for medical image segmentation},
+  author  = {Chen, Jieneng and Lu, Yongyi and Yu, Qihang and Luo, Xiangde and Adeli, Ehsan and Wang, Yan and Lu, Le and Yuille, Alan L. and Zhou, Yuyin},
+  journal = {arXiv preprint arXiv:2102.04306},
+  year    = {2021}
+}
+
+@inproceedings{cao2022swinunet,
+  title     = {{Swin-Unet}: {Unet}-like pure transformer for medical image segmentation},
+  author    = {Cao, Hu and Wang, Yueyue and Chen, Joy and Jiang, Dongsheng and Zhang, Xiaopeng and Tian, Qi and Wang, Manning},
+  booktitle = {European Conference on Computer Vision Workshops},
+  pages     = {205--218},
+  publisher = {Springer, Cham},
+  year      = {2022},
+  doi       = {10.1007/978-3-031-25066-8_9}
+}
+
+@inproceedings{miyato2018spectral,
+  title     = {Spectral normalization for generative adversarial networks},
+  author    = {Miyato, Takeru and Kataoka, Toshiki and Koyama, Masanori and Yoshida, Yuichi},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018}
+}
+
+% ---- Network architectures ----
+
+@inproceedings{ronneberger2015unet,
+  title     = {{U-Net}: convolutional networks for biomedical image segmentation},
+  author    = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention -- {MICCAI} 2015},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {9351},
+  pages     = {234--241},
+  publisher = {Springer, Cham},
+  year      = {2015},
+  doi       = {10.1007/978-3-319-24574-4_28}
+}
+
+@misc{ulyanov2016instance,
+  title  = {Instance normalization: the missing ingredient for fast stylization},
+  author = {Ulyanov, Dmitry and Vedaldi, Andrea and Lempitsky, Victor},
+  year   = {2016},
+  eprint = {1607.08022},
+  archivePrefix = {arXiv}
+}
+
+% ---- Loss functions and evaluation ----
+
+@article{wang2004ssim,
+  title   = {Image quality assessment: from error visibility to structural similarity},
+  author  = {Wang, Zhou and Bovik, Alan C. and Sheikh, Hamid R. and Simoncelli, Eero P.},
+  journal = {IEEE Transactions on Image Processing},
+  volume  = {13},
+  number  = {4},
+  pages   = {600--612},
+  year    = {2004},
+  doi     = {10.1109/TIP.2003.819861}
+}
+
+@inproceedings{zhang2018lpips,
+  title     = {The unreasonable effectiveness of deep features as a perceptual metric},
+  author    = {Zhang, Richard and Isola, Phillip and Efros, Alexei A. and Shechtman, Eli and Wang, Oliver},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {586--595},
+  year      = {2018},
+  doi       = {10.1109/CVPR.2018.00068}
+}
+
+@article{gretton2012mmd,
+  title   = {A kernel two-sample test},
+  author  = {Gretton, Arthur and Borgwardt, Karsten M. and Rasch, Malte J. and Sch{\"o}lkopf, Bernhard and Smola, Alexander},
+  journal = {Journal of Machine Learning Research},
+  volume  = {13},
+  pages   = {723--773},
+  year    = {2012}
+}
+
+@article{lin1989ccc,
+  title   = {A concordance correlation coefficient to evaluate reproducibility},
+  author  = {Lin, Lawrence I-Kuei},
+  journal = {Biometrics},
+  volume  = {45},
+  number  = {1},
+  pages   = {255--268},
+  year    = {1989},
+  doi     = {10.2307/2532051}
+}
+
+@article{shrout1979icc,
+  title   = {Intraclass correlations: uses in assessing rater reliability},
+  author  = {Shrout, Patrick E. and Fleiss, Joseph L.},
+  journal = {Psychological Bulletin},
+  volume  = {86},
+  number  = {2},
+  pages   = {420--428},
+  year    = {1979},
+  doi     = {10.1037/0033-2909.86.2.420}
+}
+
+% ---- Datasets ----
+
+@article{menze2015brats,
+  title   = {The multimodal brain tumor image segmentation benchmark ({BRATS})},
+  author  = {Menze, Bjoern H. and Jakab, Andras and Bauer, Stefan and Kalpathy-Cramer, Jayashree and Farahani, Keyvan and Kirby, Justin and Burren, Yuliya and Porz, Nicole and Slotboom, Johannes and Wiest, Roland and Lanczi, Levente and Gerstner, Elizabeth and Weber, Marc-Andre and Arbel, Tal and Avants, Brian B. and Ayache, Nicholas and Buendia, Patricia and Collins, D. Louis and Cordier, Nicolas and Corso, Jason J. and Criminisi, Antonio and Das, Tilak and Delingette, Herv{\'e} and Demiralp, {\c{C}}a{\u{g}}atay and Durst, Christopher R. and Dojat, Michel and Doyle, Senan and Festa, Joana and Forbes, Florence and Geremia, Ezequiel and Glocker, Ben and Golland, Polina and Guo, Xiaotao and Hamamci, Andac and Iftekharuddin, Khan M. and Jena, Raj and John, Nigel M. and Konukoglu, Ender and Lashkari, Danial and Mariz, Jos{\'e} Antonio and Meier, Raphael and Pereira, S{\'e}rgio and Precup, Doina and Price, Stephen J. and Raviv, Tammy Riklin and Reza, Syed M. S. and Ryan, Michael and Sarikaya, Duygu and Schwartz, Lawrence and Shin, Hoo-Chang and Shotton, Jamie and Silva, Carlos A. and Sousa, Nuno and Subbanna, Nagesh K. and Szekely, Gabor and Taylor, Thomas J. and Thomas, Owen M. and Tustison, Nicholas J. and Unal, Gozde and Vasseur, Flor and Wintermark, Max and Ye, Dong Hye and Zhao, Liang and Zhao, Binsheng and Zikic, Darko and Prastawa, Marcel and Reyes, Mauricio and Van Leemput, Koen},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume  = {34},
+  number  = {10},
+  pages   = {1993--2024},
+  year    = {2015},
+  doi     = {10.1109/TMI.2014.2377694}
+}
+
+@article{bakas2017advancing,
+  title   = {Advancing {The Cancer Genome Atlas} glioma {MRI} collections with expert segmentation labels and radiomic features},
+  author  = {Bakas, Spyridon and Akbari, Hamed and Sotiras, Aristeidis and Bilello, Michel and Rozycki, Martin and Kirby, Justin S. and Freymann, John B. and Farahani, Keyvan and Davatzikos, Christos},
+  journal = {Scientific Data},
+  volume  = {4},
+  pages   = {170117},
+  year    = {2017},
+  doi     = {10.1038/sdata.2017.117}
+}
+
+@article{bakas2022upenn,
+  title   = {The {University of Pennsylvania} glioblastoma ({UPenn-GBM}) cohort: advanced {MRI}, clinical, genomics, \& radiomics},
+  author  = {Bakas, Spyridon and Sako, Chiharu and Akbari, Hamed and Bilello, Michel and Da, Xiao and Rustam, Sana and McGill, Allison and Kirschbaum, Tom and Rudie, Jeffrey D. and Davatzikos, Christos},
+  journal = {Scientific Data},
+  volume  = {9},
+  number  = {1},
+  pages   = {453},
+  year    = {2022},
+  doi     = {10.1038/s41597-022-01560-7}
+}
+
+% ---- Radiomics ----
+
+@article{zwanenburg2020ibsi,
+  title   = {The image biomarker standardization initiative: standardized quantitative radiomics for high-throughput image-based phenotyping},
+  author  = {Zwanenburg, Alex and Valli{\`e}res, Martin and Abdalah, Mahmoud A. and Aerts, Hugo J. W. L. and Andrearczyk, Vincent and Apte, Aditya and Ashrafinia, Saeed and Bakas, Spyridon and Beukinga, Roelof J. and Boellaard, Ronald and Bogowicz, Marta and Boldrini, Luca and Buvat, Ir{\`e}ne and Cook, Gary J. R. and Davatzikos, Christos and Depeursinge, Adrien and Desseroit, Marie-Charlotte and Dinapoli, Nicola and Dinh, Cu Vinh and Echegaray, Sebastian and El Naqa, Issam and Fedorov, Andrey Y. and Gatta, Roberto and Gillies, Robert J. and Goh, Vicky and G{\"o}tz, Michael and Guckenberger, Matthias and Ha, Sang Mo and Hatt, Mathieu and Isensee, Fabian and Lambin, Philippe and Leger, Stefan and Leijenaar, Ralph T. H. and Lenkowicz, Jacopo and Lippert, Fiona and Losneg{\aa}rd, Are and Maier-Hein, Klaus H. and Morin, Olivier and M{\"u}ller, Henning and Napel, Sandy and Nioche, Christophe and Orlhac, Fanny and Pati, Sarthak and Pfaehler, Elisabeth A. G. and Rahmim, Arman and Rao, Arvind U. K. and Scherer, Jonas and Siddique, Md Minhazul and Sijtsema, Nanna M. and Socarras Fernandez, Jairo and Spezi, Emiliano and Steenbakkers, Roel J. H. M. and Tanadini-Lang, Stephanie and Thorwarth, Daniela and Troost, Esther G. C. and Upadhaya, Taman and Valentini, Vincenzo and van Dijk, Lisanne V. and van Griethuysen, Joost and van Velden, Floris H. P. and Whybra, Philip and Richter, Christoph and L{\"o}ck, Steffen},
+  journal = {Radiology},
+  volume  = {295},
+  number  = {2},
+  pages   = {328--338},
+  year    = {2020},
+  doi     = {10.1148/radiol.2020191145}
+}
+
+% ---- Preprocessing ----
+
+@article{tustison2010n4itk,
+  title   = {{N4ITK}: improved {N3} bias correction},
+  author  = {Tustison, Nicholas J. and Avants, Brian B. and Cook, Philip A. and Zheng, Yuanjie and Egan, Alexander and Yushkevich, Paul A. and Gee, James C.},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume  = {29},
+  number  = {6},
+  pages   = {1310--1320},
+  year    = {2010},
+  doi     = {10.1109/TMI.2010.2046908}
+}
+
+% ---- Domain adaptation theory ----
+
+@article{ben2010theory,
+  title   = {A theory of learning from different domains},
+  author  = {Ben-David, Shai and Blitzer, John and Crammer, Koby and Kulesza, Alex and Pereira, Fernando and Vaughan, Jennifer Wortman},
+  journal = {Machine Learning},
+  volume  = {79},
+  number  = {1-2},
+  pages   = {151--175},
+  year    = {2010},
+  doi     = {10.1007/s10994-009-5152-4}
+}
+
+% ---- Optimization ----
+
+@inproceedings{kingma2015adam,
+  title     = {Adam: {A} Method for Stochastic Optimization},
+  author    = {Kingma, Diederik P. and Ba, Jimmy},
+  booktitle = {International Conference on Learning Representations ({ICLR})},
+  editor    = {Bengio, Yoshua and LeCun, Yann},
+  year      = {2015},
+  url       = {https://arxiv.org/abs/1412.6980}
+}
+
+% ---- Skull stripping ----
+
+@article{isensee2019hdbet,
+  title     = {Automated brain extraction of multisequence {MRI} using artificial neural networks},
+  author    = {Isensee, Fabian and Schell, Marianne and Pflueger, Irada and Brugnara, Gianluca and Bonekamp, David and Neuberger, Ulf and Wick, Antje and Schlemmer, Heinz-Peter and Heiland, Sabine and Wick, Wolfgang and Bendszus, Martin and Maier-Hein, Klaus H. and Kickingereder, Philipp},
+  journal   = {Human Brain Mapping},
+  volume    = {40},
+  number    = {17},
+  pages     = {4952--4964},
+  year      = {2019},
+  doi       = {10.1002/hbm.24750}
+}
+
+% ---- Atlas ----
+
+@article{rohlfing2010sri24,
+  title     = {The {SRI24} Multichannel Atlas of Normal Adult Human Brain Structure},
+  author    = {Rohlfing, Torsten and Zahr, Natalie M. and Sullivan, Edith V. and Pfefferbaum, Adolf},
+  journal   = {Human Brain Mapping},
+  volume    = {31},
+  number    = {5},
+  pages     = {798--819},
+  year      = {2010},
+  doi       = {10.1002/hbm.20906}
+}
+
+% ---- Classic deep learning architectures ----
+
+@inproceedings{he2016resnet,
+  title     = {Deep Residual Learning for Image Recognition},
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {Proceedings of the {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.90}
+}
+
+% ---- Visualization ----
+
+@article{vandermaaten2008tsne,
+  title   = {Visualizing Data using {t-SNE}},
+  author  = {van der Maaten, Laurens and Hinton, Geoffrey},
+  journal = {Journal of Machine Learning Research},
+  volume  = {9},
+  number  = {86},
+  pages   = {2579--2605},
+  year    = {2008},
+  url     = {https://www.jmlr.org/papers/v9/vandermaaten08a.html}
+}
+
+% ---- Radiomics software ----
+
+@article{vangriethuysen2017pyradiomics,
+  title     = {Computational Radiomics System to Decode the Radiographic Phenotype},
+  author    = {van Griethuysen, Joost J. M. and Fedorov, Andriy and Parmar, Chintan and Hosny, Ahmed and Aucoin, Nicole and Narayan, Vivek and Beets-Tan, Regina G. H. and Fillon-Robin, Jean-Christophe and Pieper, Steve and Aerts, Hugo J. W. L.},
+  journal   = {Cancer Research},
+  volume    = {77},
+  number    = {21},
+  pages     = {e104--e107},
+  year      = {2017},
+  doi       = {10.1158/0008-5472.CAN-17-0339}
+}
+
+% ---- 2.5D approach ----
+
+@inproceedings{roth2014twopointfived,
+  title     = {A New 2.5{D} Representation for Lymph Node Detection Using Random Sets of Deep Convolutional Neural Network Observations},
+  author    = {Roth, Holger R. and Lu, Le and Seff, Ari and Cherry, Kevin M. and Hoffman, Joanne and Wang, Shijun and Liu, Jiamin and Turkbey, Evrim and Summers, Ronald M.},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention -- {MICCAI} 2014},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {8673},
+  pages     = {520--527},
+  year      = {2014},
+  publisher = {Springer, Cham},
+  doi       = {10.1007/978-3-319-10404-1_65}
+}
+
+% ---- Receptive field ----
+
+@inproceedings{luo2016erf,
+  title     = {Understanding the effective receptive field in deep convolutional neural networks},
+  author    = {Luo, Wenjie and Li, Yujia and Urtasun, Raquel and Zemel, Richard},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  pages     = {4898--4906},
+  year      = {2016}
+}
