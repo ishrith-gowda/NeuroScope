@@ -54,6 +54,9 @@ class SACycleGAN25DConfig:
     lambda_perceptual: float = 1.0
     lambda_ssim: float = 1.0
     lambda_tumor: float = 2.0
+
+    # patchnce feature extraction layers (bottleneck block indices for nce)
+    nce_feature_layers: Tuple[int, ...] = (2, 5)
     
     @property
     def input_channels(self) -> int:
@@ -313,35 +316,58 @@ class SAGenerator25D(nn.Module):
             nn.Tanh()
         )
         
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, encode_only: bool = False
+    ) -> torch.Tensor:
         """
-        Args:
+        args:
             x: [B, 12, H, W] - 3 adjacent slices x 4 modalities
-        Returns:
-            [B, 4, H, W] - Translated center slice (4 modalities)
+            encode_only: if true, return list of intermediate encoder features
+                         for patchnce contrastive loss computation
+        returns:
+            if encode_only: list of feature tensors at multiple encoder depths
+            otherwise: [B, 4, H, W] - translated center slice (4 modalities)
         """
-        # Initial encoding with slice awareness
+        features = []
+
+        # initial encoding with slice awareness
         x = self.encoder_initial(x)
-        
-        # Encoder with skip connections
+        features.append(x)  # layer 0: ngf=64 channels
+
+        # encoder with skip connections
         skips = [x]
         for enc in self.encoder:
             x = enc(x)
             skips.append(x)
-        
-        # Bottleneck
-        for block in self.bottleneck:
+            features.append(x)  # layer 1: ngf*2=128, layer 2: ngf*4=256
+
+        # bottleneck with optional feature extraction
+        for i, block in enumerate(self.bottleneck):
             x = block(x)
+            if i in self.config.nce_feature_layers:
+                features.append(x)  # bottleneck features: ngf*4=256
+
+        if encode_only:
+            return features
+
         x = self.global_attention(x)
-        
-        # Decoder with skip connections
+
+        # decoder with skip connections
         for i, dec in enumerate(self.decoder):
             x = dec(x)
             skip = self.skip_fuse[i](skips[-(i+1)])
             skip = F.interpolate(skip, size=x.shape[2:], mode='bilinear', align_corners=False)
             x = x + skip
-        
+
         return self.output(x)
+
+    def get_nce_feature_channels(self) -> List[int]:
+        """return channel dimensions for each nce feature extraction layer."""
+        ngf = self.config.ngf
+        # initial: ngf, down1: ngf*2, down2: ngf*4, then bottleneck layers: ngf*4
+        channels = [ngf, ngf * 2, ngf * 4]
+        channels.extend([ngf * 4] * len(self.config.nce_feature_layers))
+        return channels
 
 
 # =============================================================================
