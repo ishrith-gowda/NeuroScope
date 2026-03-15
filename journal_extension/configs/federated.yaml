@@ -1,0 +1,50 @@
+# federated learning simulation configuration
+# extension e: federated sa-cyclegan-2.5d feasibility study
+
+experiment_name: sa_cyclegan_25d_federated
+seed: 42
+deterministic: false
+
+# data paths
+brats_dir: /home/cc/neuroscope/preprocessed/brats
+upenn_dir: /home/cc/neuroscope/preprocessed/upenn
+output_dir: /home/cc/neuroscope/experiments/journal_extension/federated
+
+# federated settings
+n_clients: 2  # brats site + upenn site
+local_epochs: 5  # local training epochs per round
+communication_rounds: 40  # total federated rounds (40 rounds * 5 epochs = 200 total)
+aggregation_strategy: fedavg  # fedavg, fedprox, scaffold
+share_discriminators: false  # recommended: keep discriminators local
+fedprox_mu: 0.01  # proximal regularization (for fedprox only)
+
+# generator architecture (same as base)
+ngf: 64
+ndf: 64
+n_residual_blocks: 9
+use_attention: true
+use_cbam: true
+input_channels: 12
+output_channels: 4
+attention_layers: [3, 4, 5]
+
+# training
+batch_size: 16
+image_size: 128
+num_workers: 32
+lr_G: 5.0e-05
+lr_D: 5.0e-05
+beta1: 0.5
+beta2: 0.999
+
+# loss weights
+lambda_cycle: 10.0
+lambda_identity: 5.0
+lambda_ssim: 1.0
+
+# training stability
+gradient_clip_norm: 1.0
+use_amp: true
+
+# evaluation
+eval_every_n_rounds: 5  # evaluate global model every N rounds

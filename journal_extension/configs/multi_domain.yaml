@@ -1,0 +1,58 @@
+# multi-domain sa-cyclegan-2.5d configuration
+# extension c: n>2 domain harmonization with adain conditioning
+
+experiment_name: sa_cyclegan_25d_multidomain
+seed: 42
+deterministic: false
+
+# data paths
+data_dirs:
+  brats_siemens: /home/cc/neuroscope/preprocessed/brats_siemens
+  brats_ge: /home/cc/neuroscope/preprocessed/brats_ge
+  brats_philips: /home/cc/neuroscope/preprocessed/brats_philips
+  upenn: /home/cc/neuroscope/preprocessed/upenn
+output_dir: /home/cc/neuroscope/experiments/journal_extension/multi_domain
+
+# domain configuration
+n_domains: 4
+domain_names: [brats_siemens, brats_ge, brats_philips, upenn]
+domain_embed_dim: 64
+style_dim: 256
+
+# generator architecture
+ngf: 64
+ndf: 64
+n_residual_blocks: 9
+use_attention: true
+use_cbam: true
+input_channels: 12
+output_channels: 4
+attention_layers: [3, 4, 5]
+
+# training
+epochs: 200
+batch_size: 16
+image_size: 128
+num_workers: 32
+lr_G: 5.0e-05
+lr_D: 5.0e-05
+beta1: 0.5
+beta2: 0.999
+scheduler_type: cosine
+warmup_epochs: 5
+min_lr: 1.0e-06
+
+# loss weights
+lambda_cycle: 10.0
+lambda_identity: 5.0
+lambda_ssim: 1.0
+lambda_cls: 1.0  # domain classification loss weight
+lambda_rec: 10.0  # reconstruction loss weight
+
+# training stability
+gradient_clip_norm: 1.0
+use_amp: true
+
+# logging
+validate_every: 1
+save_every: 5

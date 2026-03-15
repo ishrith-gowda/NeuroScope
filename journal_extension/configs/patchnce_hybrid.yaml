@@ -1,0 +1,59 @@
+# sa-cyclegan-2.5d + patchnce hybrid configuration
+# extension a: contrastive hybrid loss for journal extension
+
+experiment_name: sa_cyclegan_25d_patchnce_hybrid
+seed: 42
+deterministic: false
+
+# data paths (chameleon cloud)
+brats_dir: /home/cc/neuroscope/preprocessed/brats
+upenn_dir: /home/cc/neuroscope/preprocessed/upenn
+output_dir: /home/cc/neuroscope/experiments/journal_extension/patchnce_hybrid
+
+# generator architecture (same as base model)
+ngf: 64
+ndf: 64
+n_residual_blocks: 9
+use_attention: true
+use_cbam: true
+input_channels: 12
+output_channels: 4
+attention_layers: [3, 4, 5]
+nce_feature_layers: [2, 5]
+
+# training
+epochs: 200
+batch_size: 16
+image_size: 128
+num_workers: 32
+lr_G: 5.0e-05
+lr_D: 5.0e-05
+beta1: 0.5
+beta2: 0.999
+weight_decay: 0.0
+scheduler_type: cosine
+warmup_epochs: 5
+min_lr: 1.0e-06
+
+# loss weights (same as base + patchnce)
+lambda_cycle: 10.0
+lambda_identity: 5.0
+lambda_ssim: 1.0
+lambda_gradient: 1.0
+lambda_nce: 1.0
+
+# patchnce hyperparameters
+nce_num_patches: 256
+nce_temperature: 0.07
+nce_projection_dim: 256
+
+# training stability
+gradient_clip_norm: 1.0
+use_amp: true
+
+# logging and checkpointing
+validate_every: 1
+save_every: 5
+save_best_only: false
+log_every_n_steps: 100
+sample_every: 1000
