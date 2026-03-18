@@ -1,0 +1,263 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuroscope"
+version = "0.2.0"
+description = "self-attention cyclegan with tri-planar context for multi-site mri harmonization"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Ishrith Gowda", email = "ishrithgowda@berkeley.edu"},
+]
+keywords = [
+    "mri harmonization",
+    "cyclegan",
+    "self-attention",
+    "domain adaptation",
+    "medical imaging",
+    "glioma",
+    "neuroimaging",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.23.0",
+    "scipy>=1.9.0",
+    "scikit-image>=0.19.0",
+    "scikit-learn>=1.1.0",
+    "nibabel>=4.0.0",
+    "simpleitk>=2.2.0",
+    "pandas>=1.4.0",
+    "matplotlib>=3.5.0",
+    "tensorboard>=2.8.0",
+    "tqdm>=4.64.0",
+    "pyyaml>=6.0",
+    "h5py>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.3.0",
+    "pytest-timeout>=2.1.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "flake8-bugbear>=23.0.0",
+    "flake8-comprehensions>=3.14.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+    "ruff>=0.1.0",
+]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+    "myst-parser>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ishrith-gowda/NeuroScope"
+Repository = "https://github.com/ishrith-gowda/NeuroScope"
+Issues = "https://github.com/ishrith-gowda/NeuroScope/issues"
+
+# ---------------------------------------------------------------------------
+# black
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.venv
+  | build
+  | dist
+  | preprocessed
+  | preprocessed_registered
+  | arxiv
+)/
+'''
+
+# ---------------------------------------------------------------------------
+# isort
+# ---------------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_first_party = ["neuroscope"]
+known_third_party = ["torch", "torchvision", "numpy", "scipy", "nibabel", "matplotlib", "pandas", "sklearn", "tqdm", "yaml", "tensorboard"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_glob = ["*.venv*", "preprocessed/*"]
+
+# ---------------------------------------------------------------------------
+# ruff (fast python linter, replaces flake8 + isort + pyflakes + more)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "preprocessed",
+    "preprocessed_registered",
+    "arxiv",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B905",   # zip without strict= (python 3.9 compat)
+    "UP007",  # use X | Y for union types (python 3.9 compat)
+    "SIM108", # ternary operator (readability)
+    "E741",   # ambiguous variable names (common in math-heavy code: l, I, O)
+    "B008",   # function call in default argument (common in pytorch)
+    "RUF012", # mutable class attributes (dataclass pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports in __init__ are intentional re-exports
+"tests/*" = ["B011", "SIM"]  # assert usage in tests is fine
+
+[tool.ruff.lint.isort]
+known-first-party = ["neuroscope"]
+
+# ---------------------------------------------------------------------------
+# flake8 (configured via .flake8 file since pyproject.toml not supported)
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# mypy
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+ignore_missing_imports = true
+exclude = [
+    "build",
+    "dist",
+    ".venv",
+    "preprocessed",
+    "arxiv",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "torchvision.*",
+    "nibabel.*",
+    "simpleitk.*",
+    "scipy.*",
+    "sklearn.*",
+    "skimage.*",
+    "matplotlib.*",
+    "seaborn.*",
+    "pandas.*",
+    "tensorboard.*",
+    "tqdm.*",
+    "yaml.*",
+    "h5py.*",
+    "monai.*",
+    "pyradiomics.*",
+]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["neuroscope/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "-x",
+    "--timeout=120",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests requiring gpu",
+    "integration: marks integration tests",
+    "data: marks tests requiring real data",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+
+# ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["neuroscope"]
+omit = [
+    "neuroscope/tests/*",
+    "neuroscope/*/__init__.py",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.",
+    "raise NotImplementedError",
+    "pass",
+    "except ImportError",
+]
+show_missing = true
+fail_under = 0
+
+# ---------------------------------------------------------------------------
+# bandit (security linter)
+# ---------------------------------------------------------------------------
+[tool.bandit]
+exclude_dirs = ["neuroscope/tests", ".venv", "build", "dist"]
+skips = ["B101"]  # assert usage is fine in non-production code
