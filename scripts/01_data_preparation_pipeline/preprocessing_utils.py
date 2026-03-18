@@ -5,13 +5,13 @@ from typing import Any, Dict, Optional
 import numpy as np
 import SimpleITK as sitk
 
-# ---- Intensity / MRI helpers -------------------------------------------------
+# ---- intensity / mri helpers -------------------------------------------------
 
 def is_probable_mri_image(image: sitk.Image) -> bool:
     try:
         arr = sitk.GetArrayFromImage(image).astype(np.float32)
         unique_vals = np.unique(arr)
-        # Reject near-binary or extremely low variation
+        # reject near-binary or extremely low variation
         if len(unique_vals) <= 4 and np.all(np.isin(unique_vals, [0, 1, 2, 3])):
             return False
         if arr.std() < 0.005:
@@ -29,11 +29,11 @@ def verify_mri_path(path: Path) -> bool:
     except Exception:
         return False
 
-# ---- Brain mask utilities (unified) -----------------------------------------
+# ---- brain mask utilities (unified) -----------------------------------------
 
 def generate_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -> sitk.Image:
-    """Unified robust brain mask creation used across scripts.
-    Strategy: Otsu with validation -> fallback threshold -> morphological cleanup.
+    """unified robust brain mask creation used across scripts.
+    strategy: otsu with validation -> fallback threshold -> morphological cleanup.
     """
     arr = sitk.GetArrayFromImage(image)
     try:
@@ -48,7 +48,7 @@ def generate_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -
         simple = (arr > background_threshold).astype(np.uint8)
         mask = sitk.GetImageFromArray(simple)
         mask.CopyInformation(image)
-    # Cleanup
+    # cleanup
     try:
         mask = sitk.BinaryFillhole(mask)
         mask = sitk.BinaryOpeningByReconstruction(mask, [2, 2, 2])
@@ -56,12 +56,12 @@ def generate_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -
         pass
     return mask
 
-# ---- JSON helpers -----------------------------------------------------------
+# ---- json helpers -----------------------------------------------------------
 
 def write_json_with_schema(data: Dict[str, Any], path: Path, schema: Optional[Dict[str, Any]] = None, summary: bool = False) -> None:
-    """Write JSON after optional lightweight schema validation.
-    Schema (if provided) format: {'required_keys': [...]} for shallow validation.
-    If summary=True, trims large subtrees where possible.
+    """write json after optional lightweight schema validation.
+    schema (if provided) format: {'required_keys': [...]} for shallow validation.
+    if summary=true, trims large subtrees where possible.
     """
     if schema:
         missing = [k for k in schema.get('required_keys', []) if k not in data]
@@ -77,16 +77,16 @@ def write_json_with_schema(data: Dict[str, Any], path: Path, schema: Optional[Di
 
 def generate_summary_view(data: Dict[str, Any]) -> Dict[str, Any]:
     summary = dict(data)
-    # Drop or shrink heavy fields if present
+    # drop or shrink heavy fields if present
     for heavy_key in ['detailed_results', 'processing_details', 'detailed_diagnoses']:
         if heavy_key in summary:
             summary[heavy_key] = f"omitted_in_summary (see full file for {heavy_key})"
     return summary
 
-# ---- N4 support utilities ---------------------------------------------------
+# ---- n4 support utilities ---------------------------------------------------
 
 def evaluate_bias_need(image: sitk.Image, mask: sitk.Image) -> float:
-    """Return median slice CV to decide if N4 is warranted."""
+    """return median slice cv to decide if n4 is warranted."""
     arr = sitk.GetArrayFromImage(image)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
     cvs = []
@@ -103,7 +103,7 @@ def evaluate_bias_need(image: sitk.Image, mask: sitk.Image) -> float:
 
 
 def acceptable_n4_change(orig_stats: Dict[str, float], corr_stats: Dict[str, float]) -> bool:
-    """Decide if corrected stats are acceptable relative to original."""
+    """decide if corrected stats are acceptable relative to original."""
     try:
         range_ratio = corr_stats['range'] / max(1e-6, orig_stats['range'])
         mean_ratio = corr_stats['mean'] / max(1e-6, orig_stats['mean'])
@@ -115,7 +115,7 @@ def acceptable_n4_change(orig_stats: Dict[str, float], corr_stats: Dict[str, flo
     except KeyError:
         return False
 
-# ---- Small stat helpers -----------------------------------------------------
+# ---- small stat helpers -----------------------------------------------------
 
 def basic_intensity_stats(image: sitk.Image, mask: Optional[sitk.Image] = None) -> Dict[str, float]:
     arr = sitk.GetArrayFromImage(image).astype(np.float32)

@@ -1,6 +1,6 @@
-"""Pipeline scripts for NeuroScope.
+"""pipeline scripts for neuroscope.
 
-This module provides pipeline scripts for complete workflows.
+this module provides pipeline scripts for complete workflows.
 """
 
-# Pipeline script initialization
+# pipeline script initialization

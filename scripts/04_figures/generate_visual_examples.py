@@ -73,7 +73,7 @@ def load_model(checkpoint_path: Path, model_type: str, device: torch.device) -> 
 
     # note: the model architecture is the same for both but attention layers
     # are controlled by attention_layers config. for baseline, the attention
-    # was disabled during training. both models use same SACycleGAN25D class
+    # was disabled during training. both models use same sacyclegan25d class
     # but the baseline was trained with attention weights zeroed or removed.
     model = SACycleGAN25D(config)
 
@@ -86,7 +86,7 @@ def load_model(checkpoint_path: Path, model_type: str, device: torch.device) -> 
             new_key = new_key[7:]
         new_state_dict[new_key] = v
 
-    # use strict=False to allow loading models with different attention configs
+    # use strict=false to allow loading models with different attention configs
     model.load_state_dict(new_state_dict, strict=False)
     model.to(device)
     model.eval()
@@ -108,10 +108,10 @@ def generate_translations(
     we repeat the 4-channel output to 12 channels.
 
     returns dict with:
-        - fake_B: a translated to b
-        - fake_A: b translated to a
-        - rec_A: reconstructed a (a->b->a)
-        - rec_B: reconstructed b (b->a->b)
+        - fake_b: a translated to b
+        - fake_a: b translated to a
+        - rec_a: reconstructed a (a->b->a)
+        - rec_b: reconstructed b (b->a->b)
     """
     with torch.no_grad():
         real_A = real_A.to(device)
@@ -148,7 +148,7 @@ def tensor_to_image(tensor: torch.Tensor, modality_idx: int = 0) -> np.ndarray:
 
     args:
         tensor: [b, c, h, w] tensor
-        modality_idx: which modality channel to extract (0-3 for T1, T1CE, T2, FLAIR)
+        modality_idx: which modality channel to extract (0-3 for t1, t1ce, t2, flair)
 
     returns:
         normalized numpy array for display
@@ -198,14 +198,14 @@ def create_translation_figure(
     images_to_show = []
 
     # a->b->a direction
-    # row 0: input A
+    # row 0: input a
     real_A = tensor_to_image(baseline_outputs['real_A'], modality_idx)
 
-    # row 1: fake B (baseline vs attention)
+    # row 1: fake b (baseline vs attention)
     fake_B_base = tensor_to_image(baseline_outputs['fake_B'], modality_idx)
     fake_B_attn = tensor_to_image(attention_outputs['fake_B'], modality_idx)
 
-    # row 2: reconstructed A
+    # row 2: reconstructed a
     rec_A_base = tensor_to_image(baseline_outputs['rec_A'], modality_idx)
     rec_A_attn = tensor_to_image(attention_outputs['rec_A'], modality_idx)
 
@@ -224,7 +224,7 @@ def create_translation_figure(
 
     # create subplots
     # a->b->a section (rows 0-1)
-    # row 0: input A, fake B baseline, fake B attention
+    # row 0: input a, fake b baseline, fake b attention
     ax = fig.add_subplot(gs[0, 0:2])
     ax.imshow(real_A, cmap='gray')
     ax.set_title(f'Input A ({modality})', fontsize=12)
@@ -240,7 +240,7 @@ def create_translation_figure(
     ax.set_title(r'$\rightarrow$B (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
-    # row 1: reconstructed A
+    # row 1: reconstructed a
     ax = fig.add_subplot(gs[1, 0:2])
     ax.imshow(rec_A_base, cmap='gray')
     ax.set_title('Rec A (Baseline)', fontsize=12)
@@ -276,7 +276,7 @@ def create_translation_figure(
     ax.set_title(r'$\rightarrow$A (SA-CycleGAN)', fontsize=12)
     ax.axis('off')
 
-    # row 3: reconstructed B
+    # row 3: reconstructed b
     ax = fig.add_subplot(gs[3, 0:2])
     ax.imshow(rec_B_base, cmap='gray')
     ax.set_title('Rec B (Baseline)', fontsize=12)
@@ -299,7 +299,7 @@ def create_translation_figure(
     fig.suptitle(f'Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, Sample {sample_idx})',
                 fontsize=16, fontweight='bold', y=0.98)
 
-    # PDF only
+    # pdf only
     fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
 
     plt.close(fig)
@@ -366,7 +366,7 @@ def create_multimodality_figure(
     fig.suptitle(f'Multi-Modality Translation: A$\\rightarrow$B$\\rightarrow$A Direction (Sample {sample_idx})',
                 fontsize=16, fontweight='bold', y=0.98)
 
-    # PDF only
+    # pdf only
     fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
 
     plt.close(fig)

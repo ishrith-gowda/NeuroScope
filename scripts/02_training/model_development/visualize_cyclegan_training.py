@@ -18,7 +18,7 @@ from train_cyclegan import ResNetGenerator
 
 
 # -----------------------------
-# Utility and Logging Setup
+# utility and logging setup
 # -----------------------------
 
 def setup_logging():
@@ -37,7 +37,7 @@ def save_figure(fig, output_dir, name):
 
 
 # -----------------------------
-# Visualization Functions
+# visualization functions
 # -----------------------------
 
 
@@ -100,14 +100,14 @@ def evaluate_metrics(loader, G, device, output_dir):
 
 
 # -----------------------------
-# Main
+# main
 # -----------------------------
 
 if __name__ == '__main__':
     setup_logging()
 
     # -----------------------------
-    # Config
+    # config
     # -----------------------------
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     CHECKPOINT = os.path.expanduser('~/Downloads/neuroscope/checkpoints/G_A2B_100.pth')
@@ -118,20 +118,20 @@ if __name__ == '__main__':
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # -----------------------------
-    # Load Model
+    # load model
     # -----------------------------
     logging.info("Loading trained generator...")
     G = load_model_weights(ResNetGenerator().to(DEVICE), CHECKPOINT)
 
     # -----------------------------
-    # Dataset
+    # dataset
     # -----------------------------
     logging.info("Loading dataset...")
     loaders = get_cycle_domain_loaders(DATA_ROOT, META, batch_size=4, num_workers=0)
     val_loader = loaders['val_A']
 
     # -----------------------------
-    # Figures
+    # figures
     # -----------------------------
     logging.info("Generating architecture summary...")
     model_summary_visual(ResNetGenerator, 'G_A2B_architecture', OUTPUT_DIR)

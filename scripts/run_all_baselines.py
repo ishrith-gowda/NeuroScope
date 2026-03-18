@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Orchestration Script for Running All Baseline Methods.
+orchestration script for running all baseline methods.
 
-Automatically runs all baseline harmonization methods:
-1. Baseline CycleGAN (no self-attention)
-2. ComBat (statistical harmonization)
-3. CUT (Contrastive Unpaired Translation)
-4. Histogram Matching
-5. UNIT (Unsupervised Image-to-Image Translation)
+automatically runs all baseline harmonization methods:
+1. baseline cyclegan (no self-attention)
+2. combat (statistical harmonization)
+3. cut (contrastive unpaired translation)
+4. histogram matching
+5. unit (unsupervised image-to-image translation)
 
-This script orchestrates the entire baseline experiment pipeline,
+this script orchestrates the entire baseline experiment pipeline,
 allowing for reproducible and automated comparison.
 
-Usage:
+usage:
     python scripts/run_all_baselines.py \
         --data-dir ./data/processed \
         --output-dir ./experiments \
@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# Setup logging
+# setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaselineOrchestrator:
-    """Orchestrates execution of all baseline methods."""
+    """orchestrates execution of all baseline methods."""
 
     def __init__(
         self,
@@ -51,14 +51,14 @@ class BaselineOrchestrator:
         gpus: Optional[List[int]] = None,
     ):
         """
-        Initialize orchestrator.
+        initialize orchestrator.
 
-        Args:
-            data_dir: Directory with preprocessed data
-            output_dir: Output directory for experiments
-            epochs: Number of training epochs
-            batch_size: Batch size for training
-            gpus: List of GPU IDs to use
+        args:
+            data_dir: directory with preprocessed data
+            output_dir: output directory for experiments
+            epochs: number of training epochs
+            batch_size: batch size for training
+            gpus: list of gpu ids to use
         """
         self.data_dir = Path(data_dir)
         self.output_dir = Path(output_dir)
@@ -70,7 +70,7 @@ class BaselineOrchestrator:
 
         self.scripts_dir = Path(__file__).parent
 
-        # Experiment tracking
+        # experiment tracking
         self.experiments = {}
         self.start_time = None
 
@@ -81,23 +81,23 @@ class BaselineOrchestrator:
         log_file: Optional[Path] = None
     ) -> int:
         """
-        Execute a command and log output.
+        execute a command and log output.
 
-        Args:
-            cmd: Command as list of strings
-            env: Environment variables
-            log_file: Optional log file path
+        args:
+            cmd: command as list of strings
+            env: environment variables
+            log_file: optional log file path
 
-        Returns:
-            Return code
+        returns:
+            return code
         """
         logger.info(f"Running: {' '.join(cmd)}")
 
-        # Prepare environment
+        # prepare environment
         if env is None:
             env = os.environ.copy()
 
-        # Setup logging
+        # setup logging
         if log_file:
             log_file.parent.mkdir(parents=True, exist_ok=True)
             with open(log_file, 'w') as f:
@@ -114,7 +114,7 @@ class BaselineOrchestrator:
         return process.returncode
 
     def run_baseline_cyclegan(self):
-        """Run baseline CycleGAN (no self-attention)."""
+        """run baseline cyclegan (no self-attention)."""
         logger.info("\n" + "="*80)
         logger.info("Running Baseline CycleGAN")
         logger.info("="*80 + "\n")
@@ -134,7 +134,7 @@ class BaselineOrchestrator:
             '--save-freq', '10',
         ]
 
-        # Set GPU
+        # set gpu
         env = os.environ.copy()
         env['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, self.gpus))
 
@@ -155,7 +155,7 @@ class BaselineOrchestrator:
             logger.error(f"✗ Baseline CycleGAN failed!")
 
     def run_combat(self):
-        """Run ComBat statistical harmonization."""
+        """run combat statistical harmonization."""
         logger.info("\n" + "="*80)
         logger.info("Running ComBat Harmonization")
         logger.info("="*80 + "\n")
@@ -190,7 +190,7 @@ class BaselineOrchestrator:
             logger.error(f"✗ ComBat failed!")
 
     def run_histogram_matching(self):
-        """Run histogram matching baseline."""
+        """run histogram matching baseline."""
         logger.info("\n" + "="*80)
         logger.info("Running Histogram Matching")
         logger.info("="*80 + "\n")
@@ -198,8 +198,8 @@ class BaselineOrchestrator:
         output_dir = self.output_dir / 'histogram_matching'
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Simple histogram matching implementation
-        # This would be implemented as a separate script
+        # simple histogram matching implementation
+        # this would be implemented as a separate script
         logger.info("Histogram matching implementation needed")
         logger.info("(Can be implemented as simple intensity transformation)")
 
@@ -210,7 +210,7 @@ class BaselineOrchestrator:
         }
 
     def run_cut(self):
-        """Run CUT (Contrastive Unpaired Translation)."""
+        """run cut (contrastive unpaired translation)."""
         logger.info("\n" + "="*80)
         logger.info("Running CUT")
         logger.info("="*80 + "\n")
@@ -226,7 +226,7 @@ class BaselineOrchestrator:
         }
 
     def run_unit(self):
-        """Run UNIT (Unsupervised Image-to-Image Translation)."""
+        """run unit (unsupervised image-to-image translation)."""
         logger.info("\n" + "="*80)
         logger.info("Running UNIT")
         logger.info("="*80 + "\n")
@@ -241,7 +241,7 @@ class BaselineOrchestrator:
         }
 
     def save_experiment_log(self):
-        """Save experiment tracking log."""
+        """save experiment tracking log."""
         log_file = self.output_dir / 'baseline_experiments.json'
 
         log_data = {
@@ -264,10 +264,10 @@ class BaselineOrchestrator:
 
     def run_all(self, methods: Optional[List[str]] = None):
         """
-        Run all baseline methods.
+        run all baseline methods.
 
-        Args:
-            methods: List of methods to run (if None, runs all)
+        args:
+            methods: list of methods to run (if none, runs all)
         """
         self.start_time = time.time()
 
@@ -285,7 +285,7 @@ class BaselineOrchestrator:
         logger.info(f"GPUs: {self.gpus}")
         logger.info("="*80 + "\n")
 
-        # Run each method
+        # run each method
         if 'baseline_cyclegan' in methods:
             self.run_baseline_cyclegan()
 
@@ -301,10 +301,10 @@ class BaselineOrchestrator:
         if 'unit' in methods:
             self.run_unit()
 
-        # Save experiment log
+        # save experiment log
         self.save_experiment_log()
 
-        # Print summary
+        # print summary
         logger.info("\n" + "="*80)
         logger.info("BASELINE EXPERIMENTS SUMMARY")
         logger.info("="*80)
@@ -325,7 +325,7 @@ class BaselineOrchestrator:
 
 
 def main():
-    """Main execution function."""
+    """main execution function."""
     parser = argparse.ArgumentParser(
         description='Run all baseline harmonization methods'
     )
@@ -375,10 +375,10 @@ def main():
 
     args = parser.parse_args()
 
-    # Parse GPU list
+    # parse gpu list
     gpus = [int(g) for g in args.gpus.split(',')]
 
-    # Initialize orchestrator
+    # initialize orchestrator
     orchestrator = BaselineOrchestrator(
         data_dir=Path(args.data_dir),
         output_dir=Path(args.output_dir),
@@ -387,7 +387,7 @@ def main():
         gpus=gpus,
     )
 
-    # Run all baselines
+    # run all baselines
     orchestrator.run_all(methods=args.methods)
 
 

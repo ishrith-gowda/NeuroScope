@@ -9,22 +9,22 @@ import datetime
 import os
 from pathlib import Path
 
-# Use PATHS for defaults
+# use paths for defaults
 HERE = Path(__file__).resolve().parent
 PREP_DIR = HERE.parent / '01_data_preparation_pipeline'
 sys.path.insert(0, str(PREP_DIR))
 import neuroscope_preprocessing_config as npc  # type: ignore
 PATHS = npc.PATHS
 
-# Print banner to make it obvious the script is starting
+# print banner to make it obvious the script is starting
 print("\n" + "="*80)
-print(f"NEUROSCOPE TRAINING PIPELINE - STARTED AT {datetime.datetime.now()}")
+print(f"neuroscope training pipeline - started at {datetime.datetime.now()}")
 print("="*80 + "\n")
 
-# Check Python interpreter to help with debugging
-print(f"Using Python interpreter: {sys.executable}")
-print(f"Python version: {sys.version}")
-print(f"Working directory: {os.getcwd()}")
+# check python interpreter to help with debugging
+print(f"using python interpreter: {sys.executable}")
+print(f"python version: {sys.version}")
+print(f"working directory: {os.getcwd()}")
 print()
 
 
@@ -78,16 +78,16 @@ def run_py(script_path: Path, args: list) -> int:
     logging.info('Executing command: %s', ' '.join(str(x) for x in cmd))
     
     try:
-        # Run the process and capture output
+        # run the process and capture output
         res = subprocess.run(
             cmd, 
             stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE,
             text=True,
-            check=False  # Don't raise exception on non-zero exit
+            check=False  # don't raise exception on non-zero exit
         )
         
-        # Log stdout
+        # log stdout
         if res.stdout:
             for line in res.stdout.split('\n'):
                 if line.strip():
@@ -128,13 +128,13 @@ def main():
     args = parse_args()
     setup_logging(args.verbose)
     
-    # Use virtual environment python if available
+    # use virtual environment python if available
     venv_path = Path("/Volumes/usb drive/neuroscope/.venv/bin/python")
     if venv_path.exists():
         logging.info(f"Using virtual environment Python: {venv_path}")
         sys.executable = str(venv_path)
         
-    # Check for required dependencies
+    # check for required dependencies
     required_packages = ['tensorboard', 'torch', 'seaborn', 'matplotlib']
     missing_packages = []
     
@@ -147,7 +147,7 @@ def main():
         logging.error(f"Please install them using: pip install {' '.join(missing_packages)}")
         return 1
 
-    # 1) Prepare manifest
+    # 1) prepare manifest
     stage = STAGES[0]
     script = HERE / stage['script']
     if args.force or not all(Path(p).exists() for p in stage['outputs']):
@@ -157,7 +157,7 @@ def main():
     else:
         logging.info('skip prepare_manifest (outputs present)')
 
-    # 2) Comprehensive validation (optional)
+    # 2) comprehensive validation (optional)
     if not args.skip_validation:
         stage = STAGES[1]
         if args.force or not all(Path(p).exists() for p in stage['outputs']):
@@ -170,13 +170,13 @@ def main():
     else:
         logging.info('skip comprehensive_validation by flag')
 
-    # 3) Smoke test
+    # 3) smoke test
     stage = STAGES[2]
     rc = run_py(HERE / stage['script'], stage['args'])
     if rc != 0:
         sys.exit(1)
 
-    # 4) Train
+    # 4) train
     if not args.skip_train:
         stage = STAGES[3]
         rc = run_py(HERE / stage['script'], stage['args'])
@@ -185,7 +185,7 @@ def main():
     else:
         logging.info('skip train stage by flag')
 
-    # 5) Evaluate latest
+    # 5) evaluate latest
     if not args.skip_eval:
         ckpt = latest_checkpoint(Path(PATHS['checkpoints_dir']))
         if ckpt is None:

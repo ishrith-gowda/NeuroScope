@@ -1,6 +1,6 @@
-"""Comparison experiment scripts for NeuroScope.
+"""comparison experiment scripts for neuroscope.
 
-This module provides scripts for comparison experiments and benchmarking.
+this module provides scripts for comparison experiments and benchmarking.
 """
 
-# Comparison experiment initialization
+# comparison experiment initialization

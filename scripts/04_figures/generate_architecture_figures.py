@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Generate Architecture and Model Diagrams for Publication
+generate architecture and model diagrams for publication
 
-Creates comprehensive visualizations of:
-- Model architecture comparison (SA-CycleGAN vs Baseline)
-- Attention mechanism diagrams
-- Network structure details
-- Parameter breakdown
+creates comprehensive visualizations of:
+- model architecture comparison (sa-cyclegan vs baseline)
+- attention mechanism diagrams
+- network structure details
+- parameter breakdown
 
-Author: NeuroScope Research Team
-Date: January 2026
+author: neuroscope research team
+date: january 2026
 """
 
 import sys
@@ -29,23 +29,23 @@ OUTPUT_DIR = PROJECT_ROOT / 'figures/main'
 
 def generate_architecture_comparison():
     """
-    Figure: SA-CycleGAN vs Baseline Architecture Comparison
+    figure: sa-cyclegan vs baseline architecture comparison
 
-    Shows side-by-side comparison highlighting attention mechanisms.
+    shows side-by-side comparison highlighting attention mechanisms.
     """
-    print("Generating: Architecture Comparison...")
+    print("generating: architecture comparison...")
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7))
     plt.subplots_adjust(wspace=0.25, top=0.88, bottom=0.12)
 
-    # Color palette: oxford blue, emerald, crimson, ash
+    # color palette: oxford blue, emerald, crimson, ash
     c_encoder = '#002147'   # oxford blue
     c_resblock = '#50C878'  # emerald
-    c_cbam = '#2D8B4E'      # darker emerald for CBAM
+    c_cbam = '#2D8B4E'      # darker emerald for cbam
     c_attention = '#DC143C'  # crimson
     c_gray = '#8B8C89'      # ash gray
 
-    # Baseline CycleGAN (left)
+    # baseline cyclegan (left)
     ax = axes[0]
     ax.set_xlim(0, 5)
     ax.set_ylim(0, 10)
@@ -80,7 +80,7 @@ def generate_architecture_comparison():
     ax.text(2.5, 0.5, r'Parameters: 33.88M', ha='center', fontsize=10,
            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.4))
 
-    # SA-CycleGAN (right)
+    # sa-cyclegan (right)
     ax = axes[1]
     ax.set_xlim(0, 5)
     ax.set_ylim(0, 10)
@@ -126,7 +126,7 @@ def generate_architecture_comparison():
     ax.text(2.5, 0.2, r'Parameters: 35.1M (+3.6\%)', ha='center', fontsize=10,
            bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))
 
-    # Legend
+    # legend
     legend_elements = [
         mpatches.Patch(facecolor=c_resblock, alpha=0.6, label='Standard ResBlock'),
         mpatches.Patch(facecolor=c_cbam, alpha=0.6, label='ResBlock + CBAM'),
@@ -145,16 +145,16 @@ def generate_architecture_comparison():
 
 def generate_attention_mechanism_diagram():
     """
-    Figure: Attention Mechanisms Detailed Diagram
+    figure: attention mechanisms detailed diagram
 
-    Shows CBAM and Self-Attention structure in detail.
+    shows cbam and self-attention structure in detail.
     """
-    print("Generating: Attention Mechanisms Diagram...")
+    print("generating: attention mechanisms diagram...")
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7))
     plt.subplots_adjust(wspace=0.25, top=0.88)
 
-    # Color palette: midnight blue, byzantium, jade, flame
+    # color palette: midnight blue, byzantium, jade, flame
     c_input = '#8B8C89'      # ash
     c_channel = '#191970'    # midnight blue
     c_spatial = '#702963'    # byzantium
@@ -162,7 +162,7 @@ def generate_attention_mechanism_diagram():
     c_qkv = '#3F51B5'       # indigo blue
     c_attn = '#E25822'       # flame
 
-    # CBAM (left)
+    # cbam (left)
     ax = axes[0]
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 8)
@@ -198,7 +198,7 @@ def generate_attention_mechanism_diagram():
     ax.text(0.3, 5.5, 'Multiply', fontsize=9, ha='right', va='center', rotation=90)
     ax.text(0.3, 3, 'Multiply', fontsize=9, ha='right', va='center', rotation=90)
 
-    # Self-Attention (right)
+    # self-attention (right)
     ax = axes[1]
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 8)
@@ -267,22 +267,22 @@ def generate_attention_mechanism_diagram():
 
 def generate_parameter_breakdown():
     """
-    Figure: Parameter Count and Model Complexity
+    figure: parameter count and model complexity
 
-    Shows parameter distribution across model components.
+    shows parameter distribution across model components.
     """
-    print("Generating: Parameter Breakdown...")
+    print("generating: parameter breakdown...")
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     plt.subplots_adjust(wspace=0.35, top=0.85)
 
-    # Lighter, publication-quality colors
+    # lighter, publication-quality colors
     c_gen_ab = '#7BB3D0'   # soft blue
     c_gen_ba = '#F0A860'   # warm peach
     c_disc_a = '#8DC58A'   # soft green
     c_disc_b = '#D4A0C0'   # soft mauve
 
-    # (a) SA-CycleGAN parameter breakdown (pie chart)
+    # (a) sa-cyclegan parameter breakdown (pie chart)
     ax = axes[0]
     components = [r'Generator A$\rightarrow$B' + '\n(11.68M)',
                   r'Generator B$\rightarrow$A' + '\n(11.68M)',
@@ -302,7 +302,7 @@ def generate_parameter_breakdown():
 
     ax.set_title(r'(a) SA-CycleGAN-2.5D (35.1M total)', fontsize=13, pad=12)
 
-    # (b) Comparison bar chart
+    # (b) comparison bar chart
     ax = axes[1]
     models = ['Baseline\nCycleGAN', 'SA-CycleGAN-2.5D']
     params = [33.88, 35.1]
@@ -338,11 +338,11 @@ def generate_parameter_breakdown():
 
 def generate_cyclegan_workflow():
     """
-    Figure: Complete CycleGAN Training Workflow
+    figure: complete cyclegan training workflow
 
-    Shows the full training loop with forward/backward cycles.
+    shows the full training loop with forward/backward cycles.
     """
-    print("Generating: CycleGAN Workflow...")
+    print("generating: cyclegan workflow...")
 
     fig, ax = plt.subplots(figsize=(14, 7))
     ax.set_xlim(0, 12)
@@ -352,14 +352,14 @@ def generate_cyclegan_workflow():
     fig.suptitle(r'\textbf{CycleGAN Training Workflow}',
                  fontsize=16, y=0.98)
 
-    # Color palette: prussian blue, persian rose, chartreuse, amber, sky
+    # color palette: prussian blue, persian rose, chartreuse, amber, sky
     c_dom_a = '#003153'    # prussian blue
     c_dom_b = '#CC3366'    # persian rose
     c_gen = '#7FFF00'      # chartreuse
     c_gen2 = '#FFBF00'     # amber
     c_disc = '#87CEEB'     # sky blue
 
-    # Domain A (top)
+    # domain a (top)
     a_y = 8.5
     rect_a = mpatches.Rectangle((1, a_y-0.4), 2, 0.8,
                                 facecolor=c_dom_a,
@@ -367,7 +367,7 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_a)
     ax.text(2, a_y, r'Real $A$\\ (BraTS)', ha='center', va='center', fontsize=10, fontweight='bold')
 
-    # Domain B (top)
+    # domain b (top)
     b_y = 8.5
     rect_b = mpatches.Rectangle((9, b_y-0.4), 2, 0.8,
                                 facecolor=c_dom_b,
@@ -375,7 +375,7 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_b)
     ax.text(10, b_y, r'Real $B$\\ (UPenn)', ha='center', va='center', fontsize=10, fontweight='bold')
 
-    # Generator A→B
+    # generator a→b
     gen_ab_y = 6.5
     rect_gab = mpatches.FancyBboxPatch((4, gen_ab_y-0.4), 2, 0.8,
                                        boxstyle="round,pad=0.1",
@@ -384,11 +384,11 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_gab)
     ax.text(5, gen_ab_y, r'$G_{A \rightarrow B}$', ha='center', va='center', fontsize=12)
 
-    # Arrow A → G_AB
+    # arrow a → g_ab
     ax.annotate('', xy=(4, gen_ab_y), xytext=(2.5, a_y-0.5),
                arrowprops=dict(arrowstyle='->', lw=2, color='black'))
 
-    # Fake B
+    # fake b
     fake_b_y = 6.5
     rect_fb = mpatches.Rectangle((7, fake_b_y-0.3), 1.5, 0.6,
                                  facecolor=c_dom_b,
@@ -397,11 +397,11 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_fb)
     ax.text(7.75, fake_b_y, r'Fake $B$', ha='center', va='center', fontsize=10)
 
-    # Arrow G_AB → Fake B
+    # arrow g_ab → fake b
     ax.annotate('', xy=(7, fake_b_y), xytext=(6, gen_ab_y),
                arrowprops=dict(arrowstyle='->', lw=2, color='black'))
 
-    # Generator B→A
+    # generator b→a
     gen_ba_y = 4.5
     rect_gba = mpatches.FancyBboxPatch((4, gen_ba_y-0.4), 2, 0.8,
                                        boxstyle="round,pad=0.1",
@@ -410,12 +410,12 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_gba)
     ax.text(5, gen_ba_y, r'$G_{B \rightarrow A}$', ha='center', va='center', fontsize=12)
 
-    # Arrow Fake B → G_BA (cycle)
+    # arrow fake b → g_ba (cycle)
     ax.annotate('', xy=(5, gen_ba_y+0.4), xytext=(7.75, fake_b_y-0.4),
                arrowprops=dict(arrowstyle='->', lw=2, color='red'))
     ax.text(6.5, 5.3, 'Cycle', fontsize=9, color='red', ha='center')
 
-    # Reconstructed A
+    # reconstructed a
     rec_a_y = 4.5
     rect_ra = mpatches.Rectangle((1.5, rec_a_y-0.3), 1.5, 0.6,
                                  facecolor=c_dom_a,
@@ -424,11 +424,11 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_ra)
     ax.text(2.25, rec_a_y, r'Rec. $A$', ha='center', va='center', fontsize=10)
 
-    # Arrow G_BA → Rec A
+    # arrow g_ba → rec a
     ax.annotate('', xy=(3, rec_a_y), xytext=(4, gen_ba_y),
                arrowprops=dict(arrowstyle='->', lw=2, color='black'))
 
-    # Discriminators
+    # discriminators
     disc_a_y = 3
     rect_da = mpatches.Ellipse((1.5, disc_a_y), 1.2, 0.6,
                                facecolor=c_disc,
@@ -443,13 +443,13 @@ def generate_cyclegan_workflow():
     ax.add_patch(rect_db)
     ax.text(9.5, disc_b_y, r'$D_B$', ha='center', va='center', fontsize=11, fontweight='bold')
 
-    # Discriminator connections
+    # discriminator connections
     ax.annotate('', xy=(1.5, disc_a_y+0.35), xytext=(2, a_y-0.5),
                arrowprops=dict(arrowstyle='->', lw=1, color='green'))
     ax.annotate('', xy=(1.5, disc_a_y+0.35), xytext=(2.25, rec_a_y-0.4),
                arrowprops=dict(arrowstyle='->', lw=1, color='red', linestyle='--'))
 
-    # Losses
+    # losses
     loss_y = 1.5
     losses = [
         r'$\mathcal{L}_{\text{GAN}}$: Adversarial',
@@ -461,7 +461,7 @@ def generate_cyclegan_workflow():
         ax.text(1, loss_y - i*0.38, loss, ha='left', fontsize=10,
                bbox=dict(boxstyle='round,pad=0.2', facecolor='lightyellow', alpha=0.5))
 
-    # Total loss
+    # total loss
     ax.text(6, 0.5, r'$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{GAN}} + \lambda_{\text{cycle}} \mathcal{L}_{\text{cycle}} + \lambda_{\text{identity}} \mathcal{L}_{\text{identity}} + \lambda_{\text{SSIM}} \mathcal{L}_{\text{SSIM}}$',
            ha='center', fontsize=10,
            bbox=dict(boxstyle='round,pad=0.3', facecolor='#E0ECFF', alpha=0.5))
@@ -470,9 +470,9 @@ def generate_cyclegan_workflow():
 
 
 def main():
-    """Generate all architecture figures."""
+    """generate all architecture figures."""
     print("="*60)
-    print("Generating Architecture and Workflow Figures")
+    print("generating architecture and workflow figures")
     print("="*60)
 
     generate_architecture_comparison()
@@ -481,8 +481,8 @@ def main():
     generate_cyclegan_workflow()
 
     print("\n" + "="*60)
-    print("Architecture figures generation complete!")
-    print(f"Figures saved to: {OUTPUT_DIR}/")
+    print("architecture figures generation complete!")
+    print(f"figures saved to: {OUTPUT_DIR}/")
     print("="*60)
 
 

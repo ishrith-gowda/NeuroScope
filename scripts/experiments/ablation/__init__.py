@@ -1,6 +1,6 @@
-"""Ablation study scripts for NeuroScope.
+"""ablation study scripts for neuroscope.
 
-This module provides scripts for ablation studies and component analysis.
+this module provides scripts for ablation studies and component analysis.
 """
 
-# Ablation study initialization
+# ablation study initialization

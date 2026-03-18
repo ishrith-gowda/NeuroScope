@@ -11,7 +11,7 @@ import torchvision.transforms as T
 import SimpleITK as sitk
 
 
-# Public constants
+# public constants
 MRI_MODALITIES = ("t1.nii.gz", "t1gd.nii.gz", "t2.nii.gz", "flair.nii.gz")
 
 
@@ -36,16 +36,16 @@ def clamp_unit(x: torch.Tensor) -> torch.Tensor:
 
 
 def to_minus1_1(x: torch.Tensor) -> torch.Tensor:
-    # Assume input in [0,1]
+    # assume input in [0,1]
     return x * 2.0 - 1.0
 
 
 class DomainSliceDataset(data.Dataset):
-    """Domain‑specific 2D slice dataset.
+    """domain‑specific 2d slice dataset.
 
-    Each __getitem__ loads all 4 modalities for one subject (from preprocessed
+    each __getitem__ loads all 4 modalities for one subject (from preprocessed
     directory layout: <base_dir>/<section>/<subject>/<modality>) and returns a
-    randomly selected axial slice as float tensor shape [4,H,W] in range [-1,1].
+    randomly selected axial slice as float tensor shape [4,h,w] in range [-1,1].
     """
 
     def __init__(
@@ -80,7 +80,7 @@ class DomainSliceDataset(data.Dataset):
         for sid, info in subjects_meta.items():
             if info.get("split") != split:
                 continue
-            # Build expected preprocessed modality paths instead of relying on raw paths
+            # build expected preprocessed modality paths instead of relying on raw paths
             modality_paths = {}
             subject_dir = os.path.join(base_dir, section, sid)
             missing = False
@@ -106,7 +106,7 @@ class DomainSliceDataset(data.Dataset):
             )
 
     def __len__(self):
-        # Optionally amplify dataset length by slices_per_subject to present more slices per epoch
+        # optionally amplify dataset length by slices_per_subject to present more slices per epoch
         return len(self.items) * self.slices_per_subject
 
     def _load_subject_volume(self, idx_subject: int) -> np.ndarray:
@@ -117,7 +117,7 @@ class DomainSliceDataset(data.Dataset):
             img = sitk.ReadImage(p)
             arr = sitk.GetArrayFromImage(img).astype(np.float32)
             vols.append(arr)
-        return np.stack(vols, axis=0)  # [4,D,H,W]
+        return np.stack(vols, axis=0)  # [4,d,h,w]
 
     def __getitem__(self, idx: int):
         subj_index = idx // self.slices_per_subject
@@ -126,21 +126,21 @@ class DomainSliceDataset(data.Dataset):
         z = random.randint(0, depth - 1)
         slice4 = vols[:, z, :, :]
         
-        # Convert to tensor and validate
+        # convert to tensor and validate
         tensor = torch.from_numpy(slice4).float()
         
-        # Validate tensor values
+        # validate tensor values
         if not torch.isfinite(tensor).all():
             logging.warning("Non-finite values detected in slice, cleaning...")
             tensor = torch.nan_to_num(tensor, nan=0.0, posinf=tensor.max(), neginf=tensor.min())
         
-        # Ensure input is in [0,1] range (preprocessing should have done this, but safety check)
+        # ensure input is in [0,1] range (preprocessing should have done this, but safety check)
         tensor = clamp_unit(tensor)
         
-        # Convert to [-1,1] for CycleGAN
+        # convert to [-1,1] for cyclegan
         tensor = to_minus1_1(tensor)
         
-        # Apply transforms if specified
+        # apply transforms if specified
         if self.transforms:
             tensor = self.transforms(tensor)
             
@@ -167,9 +167,9 @@ def get_cycle_domain_loaders(
     slices_per_subject: int = 4,
     seed: int = 42,
 ):
-    """Return separate domain dataloaders for CycleGAN training.
+    """return separate domain dataloaders for cyclegan training.
 
-    Returns dict with keys: train_A, train_B, val_A, val_B, (optionally test_A/B)
+    returns dict with keys: train_a, train_b, val_a, val_b, (optionally test_a/b)
     """
     configure_logging()
     set_seed(seed)
@@ -211,7 +211,7 @@ def get_cycle_domain_loaders(
 
 
 if __name__ == "__main__":
-    # Simple smoke test (paths may need adjustment for actual environment)
+    # simple smoke test (paths may need adjustment for actual environment)
     import argparse
 
     parser = argparse.ArgumentParser()

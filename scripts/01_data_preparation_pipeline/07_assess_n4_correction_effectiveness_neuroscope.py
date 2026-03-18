@@ -16,7 +16,7 @@ import argparse
 from preprocessing_utils import generate_brain_mask
 
 def configure_logging() -> None:
-    """Configure logging format and level for N4 effectiveness assessment."""
+    """configure logging format and level for n4 effectiveness assessment."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
@@ -24,17 +24,17 @@ def configure_logging() -> None:
 
 def load_metadata_with_validation(metadata_path: Path) -> Dict[str, Any]:
     """
-    Load and validate the metadata with splits.
+    load and validate the metadata with splits.
     
-    Args:
-        metadata_path: Path to metadata JSON file
+    args:
+        metadata_path: path to metadata json file
         
-    Returns:
-        Dict: Validated metadata
+    returns:
+        dict: validated metadata
         
-    Raises:
-        FileNotFoundError: If metadata file doesn't exist
-        ValueError: If metadata structure is invalid
+    raises:
+        filenotfounderror: if metadata file doesn't exist
+        valueerror: if metadata structure is invalid
     """
     if not metadata_path.exists():
         raise FileNotFoundError(f"metadata file not found: {metadata_path}")
@@ -46,7 +46,7 @@ def load_metadata_with_validation(metadata_path: Path) -> Dict[str, Any]:
     except json.JSONDecodeError as e:
         raise ValueError(f"invalid json in metadata file: {e}")
     
-    # Validate structure
+    # validate structure
     required_sections = ['brats', 'upenn']
     for section in required_sections:
         if section not in metadata:
@@ -64,13 +64,13 @@ def load_metadata_with_validation(metadata_path: Path) -> Dict[str, Any]:
 
 def verify_image_file(file_path: Path) -> bool:
     """
-    Verify that an image file exists and is readable.
+    verify that an image file exists and is readable.
     
-    Args:
-        file_path: Path to the image file
+    args:
+        file_path: path to the image file
         
-    Returns:
-        bool: True if file is valid, False otherwise
+    returns:
+        bool: true if file is valid, false otherwise
     """
     if not file_path.exists():
         logging.debug("file not found: %s", file_path)
@@ -80,7 +80,7 @@ def verify_image_file(file_path: Path) -> bool:
         img = sitk.ReadImage(str(file_path))
         arr = sitk.GetArrayFromImage(img)
         
-        # Basic sanity checks
+        # basic sanity checks
         if arr.size == 0:
             logging.debug("empty image: %s", file_path)
             return False
@@ -110,22 +110,22 @@ def compute_bias_field_residual_metrics(
     smoothing_sigma_mm: float = 10.0
 ) -> Dict[str, float]:
     """
-    Compute comprehensive bias field residual metrics after N4 correction.
+    compute comprehensive bias field residual metrics after n4 correction.
     
-    Args:
-        image: Input SimpleITK image (should be N4-corrected)
-        mask: Brain mask
-        smoothing_sigma_mm: Gaussian smoothing sigma in mm for bias estimation
+    args:
+        image: input simpleitk image (should be n4-corrected)
+        mask: brain mask
+        smoothing_sigma_mm: gaussian smoothing sigma in mm for bias estimation
         
-    Returns:
-        Dict containing bias residual metrics
+    returns:
+        dict containing bias residual metrics
     """
-    # Get image arrays
+    # get image arrays
     arr = sitk.GetArrayFromImage(image).astype(np.float32)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
     brain_values = arr[mask_arr]
     
-    if len(brain_values) < 1000:  # Not enough brain tissue
+    if len(brain_values) < 1000:  # not enough brain tissue
         return {
             'original_std': np.nan,
             'residual_std': np.nan,
@@ -136,34 +136,34 @@ def compute_bias_field_residual_metrics(
             'error': 'insufficient_brain_tissue'
         }
     
-    # Original statistics
+    # original statistics
     original_std = float(brain_values.std())
     original_mean = float(brain_values.mean())
     
-    # Estimate remaining bias field using Gaussian smoothing
+    # estimate remaining bias field using gaussian smoothing
     spacing = image.GetSpacing()
     sigma_voxels = [smoothing_sigma_mm / sp for sp in spacing]
     
     try:
-        # Create smoothed version to estimate low-frequency bias
+        # create smoothed version to estimate low-frequency bias
         gaussian_filter = sitk.SmoothingRecursiveGaussianImageFilter()
         gaussian_filter.SetSigma(sigma_voxels)
         smoothed_image = gaussian_filter.Execute(image)
         smoothed_arr = sitk.GetArrayFromImage(smoothed_image).astype(np.float32)
         
-        # Compute residual (high-frequency anatomical variation)
+        # compute residual (high-frequency anatomical variation)
         residual = arr - smoothed_arr
         residual_values = residual[mask_arr]
         residual_std = float(residual_values.std())
         
-        # Bias field strength estimation
+        # bias field strength estimation
         smoothed_brain_values = smoothed_arr[mask_arr]
         bias_field_variation = float(smoothed_brain_values.std())
         
-        # Residual ratio (should be high after good N4 correction)
+        # residual ratio (should be high after good n4 correction)
         residual_ratio = residual_std / (original_std + 1e-8)
         
-        # Uniformity coefficient (bias field strength relative to signal)
+        # uniformity coefficient (bias field strength relative to signal)
         uniformity_coeff = bias_field_variation / (original_mean + 1e-8)
         
     except Exception as e:
@@ -178,7 +178,7 @@ def compute_bias_field_residual_metrics(
             'error': f'smoothing_failed: {str(e)}'
         }
     
-    # Additional quality metrics
+    # additional quality metrics
     metrics = {
         'original_std': original_std,
         'residual_std': residual_std,
@@ -200,17 +200,17 @@ def compare_before_after_n4(
     mask: sitk.Image
 ) -> Dict[str, float]:
     """
-    Compare bias metrics before and after N4 correction.
+    compare bias metrics before and after n4 correction.
     
-    Args:
-        original_image: Pre-N4 image
-        corrected_image: Post-N4 image  
-        mask: Brain mask
+    args:
+        original_image: pre-n4 image
+        corrected_image: post-n4 image  
+        mask: brain mask
         
-    Returns:
-        Dict containing comparison metrics
+    returns:
+        dict containing comparison metrics
     """
-    # Get arrays
+    # get arrays
     orig_arr = sitk.GetArrayFromImage(original_image).astype(np.float32)
     corr_arr = sitk.GetArrayFromImage(corrected_image).astype(np.float32)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
@@ -221,7 +221,7 @@ def compare_before_after_n4(
     if len(orig_brain) < 1000:
         return {'error': 'insufficient_brain_tissue'}
     
-    # Compute slice-wise coefficients of variation
+    # compute slice-wise coefficients of variation
     def compute_slice_cv(arr, mask_arr):
         slice_cvs = []
         for z in range(arr.shape[0]):
@@ -236,7 +236,7 @@ def compare_before_after_n4(
     orig_slice_cvs = compute_slice_cv(orig_arr, mask_arr)
     corr_slice_cvs = compute_slice_cv(corr_arr, mask_arr)
     
-    # Overall statistics
+    # overall statistics
     metrics = {
         'original_cv': float(orig_brain.std() / (orig_brain.mean() + 1e-8)),
         'corrected_cv': float(corr_brain.std() / (corr_brain.mean() + 1e-8)),
@@ -256,18 +256,18 @@ def assess_n4_effectiveness_for_subject(
     splits_to_assess: List[str]
 ) -> Dict[str, Any]:
     """
-    Assess N4 correction effectiveness for a single subject.
+    assess n4 correction effectiveness for a single subject.
     
-    Args:
-        section: Dataset section ('brats' or 'upenn')
-        subject_id: Subject identifier
-        modalities: List of modality names ['t1', 't1gd', 't2', 'flair']
-        splits_to_assess: List of splits to process
+    args:
+        section: dataset section ('brats' or 'upenn')
+        subject_id: subject identifier
+        modalities: list of modality names ['t1', 't1gd', 't2', 'flair']
+        splits_to_assess: list of splits to process
         
-    Returns:
-        Dict containing assessment results for all modalities
+    returns:
+        dict containing assessment results for all modalities
     """
-    # Define paths
+    # define paths
     original_dir = PATHS['preprocessed_dir'] / section / subject_id
     n4_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected" / subject_id
     
@@ -288,7 +288,7 @@ def assess_n4_effectiveness_for_subject(
         orig_file = original_dir / f"{modality}.nii.gz"
         n4_file = n4_dir / f"{modality}.nii.gz"
         
-        # Check file availability
+        # check file availability
         orig_exists = verify_image_file(orig_file)
         n4_exists = verify_image_file(n4_file)
         
@@ -310,17 +310,17 @@ def assess_n4_effectiveness_for_subject(
             continue
         
         try:
-            # Load images
+            # load images
             original_image = sitk.ReadImage(str(orig_file))
             n4_image = sitk.ReadImage(str(n4_file))
             
-            # Generate brain mask from N4-corrected image (should be cleaner)
+            # generate brain mask from n4-corrected image (should be cleaner)
             mask = generate_brain_mask(n4_image)
             
-            # Compute bias residual metrics for N4-corrected image
+            # compute bias residual metrics for n4-corrected image
             n4_metrics = compute_bias_field_residual_metrics(n4_image, mask)
             
-            # Compare before/after N4 correction
+            # compare before/after n4 correction
             comparison_metrics = compare_before_after_n4(original_image, n4_image, mask)
             
             modality_result.update({
@@ -329,7 +329,7 @@ def assess_n4_effectiveness_for_subject(
                 'assessment_successful': True
             })
             
-            # Track overall effectiveness
+            # track overall effectiveness
             if 'cv_improvement_ratio' in comparison_metrics and np.isfinite(comparison_metrics['cv_improvement_ratio']):
                 total_improvements.append(comparison_metrics['cv_improvement_ratio'])
                 processed_modalities += 1
@@ -340,7 +340,7 @@ def assess_n4_effectiveness_for_subject(
         
         subject_results['modality_results'][modality] = modality_result
     
-    # Compute overall effectiveness summary
+    # compute overall effectiveness summary
     if processed_modalities > 0:
         subject_results['overall_effectiveness'] = {
             'processed_modalities': processed_modalities,
@@ -362,14 +362,14 @@ def run_comprehensive_n4_assessment(
     splits_to_assess: List[str] = None
 ) -> Dict[str, Any]:
     """
-    Run comprehensive N4 effectiveness assessment across datasets.
+    run comprehensive n4 effectiveness assessment across datasets.
     
-    Args:
-        metadata: Complete metadata dictionary
-        splits_to_assess: List of splits to assess
+    args:
+        metadata: complete metadata dictionary
+        splits_to_assess: list of splits to assess
         
-    Returns:
-        Dict containing comprehensive assessment results
+    returns:
+        dict containing comprehensive assessment results
     """
     if splits_to_assess is None:
         splits_to_assess = ['train', 'val']
@@ -401,7 +401,7 @@ def run_comprehensive_n4_assessment(
     
     modalities = ['t1', 't1gd', 't2', 'flair']
     
-    # Process each dataset
+    # process each dataset
     for section in ['brats', 'upenn']:
         logging.info("processing %s dataset...", section)
         valid_subjects = metadata[section]['valid_subjects']
@@ -410,7 +410,7 @@ def run_comprehensive_n4_assessment(
         section_successful = 0
         
         for subject_id, subject_info in valid_subjects.items():
-            # Check if subject is in the splits we want to assess
+            # check if subject is in the splits we want to assess
             subject_split = subject_info.get('split')
             if subject_split not in splits_to_assess:
                 continue
@@ -419,20 +419,20 @@ def run_comprehensive_n4_assessment(
             section_processed += 1
             
             try:
-                # Assess N4 effectiveness for this subject
+                # assess n4 effectiveness for this subject
                 subject_results = assess_n4_effectiveness_for_subject(
                     section, subject_id, modalities, splits_to_assess
                 )
                 
                 results['detailed_results'][section][subject_id] = subject_results
                 
-                # Check assessment success
+                # check assessment success
                 successful_modalities = sum(
                     1 for mod_result in subject_results['modality_results'].values()
                     if mod_result.get('assessment_successful', False)
                 )
                 
-                if successful_modalities >= 3:  # At least 3/4 modalities successful
+                if successful_modalities >= 3:  # at least 3/4 modalities successful
                     results['processing_summary']['successful_subjects'] += 1
                     section_successful += 1
                 elif successful_modalities > 0:
@@ -440,7 +440,7 @@ def run_comprehensive_n4_assessment(
                 else:
                     results['processing_summary']['failed_subjects'] += 1
                 
-                # Check for missing files
+                # check for missing files
                 has_missing_files = any(
                     not mod_result['files_status']['n4_corrected_exists']
                     for mod_result in subject_results['modality_results'].values()
@@ -462,7 +462,7 @@ def run_comprehensive_n4_assessment(
         logging.info("%s assessment complete: %d processed, %d successful", 
                     section, section_processed, section_successful)
     
-    # Add timing info
+    # add timing info
     elapsed_time = time.time() - start_time
     results['processing_summary']['elapsed_time_seconds'] = elapsed_time
     results['processing_summary']['end_time'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -473,13 +473,13 @@ def run_comprehensive_n4_assessment(
 
 def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Generate summary statistics for N4 effectiveness assessment.
+    generate summary statistics for n4 effectiveness assessment.
     
-    Args:
-        results: N4 assessment results
+    args:
+        results: n4 assessment results
         
-    Returns:
-        Dict containing summary statistics
+    returns:
+        dict containing summary statistics
     """
     summary = {
         'overall_statistics': {},
@@ -491,7 +491,7 @@ def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
         }
     }
     
-    # Collect metrics from all successful assessments
+    # collect metrics from all successful assessments
     all_improvements = []
     all_residual_ratios = []
     dataset_improvements = defaultdict(list)
@@ -504,7 +504,7 @@ def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
                 
             for modality, mod_result in subject_results['modality_results'].items():
                 if mod_result.get('assessment_successful', False):
-                    # Extract improvement metrics
+                    # extract improvement metrics
                     comparison = mod_result.get('before_after_comparison', {})
                     residual = mod_result.get('n4_residual_metrics', {})
                     
@@ -519,7 +519,7 @@ def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
                     if residual_ratio is not None and np.isfinite(residual_ratio):
                         all_residual_ratios.append(residual_ratio)
     
-    # Compute overall statistics
+    # compute overall statistics
     if all_improvements:
         summary['overall_statistics']['cv_improvement_ratio'] = {
             'mean': float(np.mean(all_improvements)),
@@ -540,7 +540,7 @@ def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
             'count': len(all_residual_ratios)
         }
     
-    # Dataset-specific statistics
+    # dataset-specific statistics
     for section, improvements in dataset_improvements.items():
         if improvements:
             summary['dataset_statistics'][section]['cv_improvement_ratio'] = {
@@ -549,7 +549,7 @@ def generate_n4_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
                 'count': len(improvements)
             }
     
-    # Modality-specific statistics
+    # modality-specific statistics
     for modality, improvements in modality_improvements.items():
         if improvements:
             summary['modality_statistics'][modality]['cv_improvement_ratio'] = {
@@ -567,14 +567,14 @@ def save_n4_assessment_results(
     output_path: Path
 ) -> None:
     """
-    Save N4 effectiveness assessment results to JSON file.
+    save n4 effectiveness assessment results to json file.
     
-    Args:
-        results: Detailed assessment results
-        summary: Summary statistics
-        output_path: Path to save results
+    args:
+        results: detailed assessment results
+        summary: summary statistics
+        output_path: path to save results
     """
-    # Combine results and summary
+    # combine results and summary
     output_data = {
         'assessment_info': results.get('assessment_info', {}),
         'processing_summary': results.get('processing_summary', {}),
@@ -606,12 +606,12 @@ def save_n4_assessment_results(
 
 
 def print_n4_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]) -> None:
-    """Print a comprehensive summary of N4 effectiveness assessment."""
+    """print a comprehensive summary of n4 effectiveness assessment."""
     proc_summary = results.get('processing_summary', {})
     overall_stats = summary.get('overall_statistics', {})
     dataset_stats = summary.get('dataset_statistics', {})
     print("\n" + "="*80)
-    print("N4 BIAS FIELD CORRECTION EFFECTIVENESS ASSESSMENT")
+    print("n4 bias field correction effectiveness assessment")
     print("="*80)
     print(f"\nprocessing summary:")
     print(f"  total subjects:           {proc_summary.get('total_subjects', 0)}")
@@ -632,9 +632,9 @@ def print_n4_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]
         print(f"  standard deviation:   {cv_stats['std']:.3f}")
         print(f"  range:               [{cv_stats['min']:.3f}, {cv_stats['max']:.3f}]")
         print(f"  assessments count:    {cv_stats['count']}")
-    # Dataset and modality comparisons printed later (reuse existing logic below)
+    # dataset and modality comparisons printed later (reuse existing logic below)
     
-    # Modality comparison
+    # modality comparison
     modality_stats = summary.get('modality_statistics', {})
     modality_names = {'t1': 'T1', 't1gd': 'T1-Gd', 't2': 'T2', 'flair': 'FLAIR'}
     print(f"\nmodality comparison (cv improvement):")
@@ -646,7 +646,7 @@ def print_n4_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]
             print(f"    median improvement: {stats_dict['median']:.3f}x")
             print(f"    count:              {stats_dict['count']}")
     
-    # Recommendations
+    # recommendations
     print(f"\nrecommendations:")
     if overall_stats.get('cv_improvement_ratio', {}).get('median', 1.0) >= 1.2:
         print(f"n4 correction is working effectively")
@@ -659,7 +659,7 @@ def print_n4_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]
         print(f"  consider alternative bias correction methods or parameter optimization")
     
     if proc_summary.get('subjects_with_missing_files', 0) > 0:
-        print(f" {proc_summary['subjects_with_missing_files']} subjects missing N4-corrected files")
+        print(f" {proc_summary['subjects_with_missing_files']} subjects missing n4-corrected files")
         print(f"  ensure script 06_n4_bias_correction_neuroscope.py completed successfully")
     
     print("="*80)
@@ -667,13 +667,13 @@ def print_n4_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]
 
 def check_n4_correction_status(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Check which subjects have been N4-corrected and provide a summary.
+    check which subjects have been n4-corrected and provide a summary.
     
-    Args:
-        metadata: Complete metadata dictionary
+    args:
+        metadata: complete metadata dictionary
         
-    Returns:
-        Dict with N4 correction status summary
+    returns:
+        dict with n4 correction status summary
     """
     status = {
         'brats': {'train': {'total': 0, 'n4_corrected': 0}, 
@@ -692,7 +692,7 @@ def check_n4_correction_status(metadata: Dict[str, Any]) -> Dict[str, Any]:
             if split in status[section]:
                 status[section][split]['total'] += 1
                 
-                # Check if at least one modality is N4-corrected
+                # check if at least one modality is n4-corrected
                 n4_corrected = False
                 n4_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected" / subject_id
                 for modality in modalities:

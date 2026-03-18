@@ -1,6 +1,6 @@
-"""Visualization utility scripts for NeuroScope.
+"""visualization utility scripts for neuroscope.
 
-This module provides utility scripts for creating visualizations and plots.
+this module provides utility scripts for creating visualizations and plots.
 """
 
-# Visualization utility initialization
+# visualization utility initialization

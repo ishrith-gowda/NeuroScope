@@ -1,6 +1,6 @@
-"""Experimental scripts for NeuroScope.
+"""experimental scripts for neuroscope.
 
-This module provides experimental scripts for research and development.
+this module provides experimental scripts for research and development.
 """
 
-# Experimental script initialization
+# experimental script initialization

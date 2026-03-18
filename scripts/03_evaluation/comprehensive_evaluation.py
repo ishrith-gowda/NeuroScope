@@ -211,7 +211,7 @@ class ComprehensiveEvaluator:
                 img1[i] = 2 * (img1[i] - img1[i].min()) / (img1[i].max() - img1[i].min() + 1e-8) - 1
                 img2[i] = 2 * (img2[i] - img2[i].min()) / (img2[i].max() - img2[i].min() + 1e-8) - 1
 
-            # for 4-channel MRI, compute lpips on each channel and average
+            # for 4-channel mri, compute lpips on each channel and average
             if img1.size(1) == 4:
                 lpips_scores = []
                 for c in range(4):
@@ -269,14 +269,14 @@ class ComprehensiveEvaluator:
         logger.info("running inference on test set...")
         with torch.no_grad():
             for batch_idx, batch in enumerate(tqdm(test_loader, desc="evaluating")):
-                real_a = batch['A'].to(self.device)  # [B, 12, H, W] - 3 slices
-                real_b = batch['B'].to(self.device)  # [B, 12, H, W] - 3 slices
-                center_a = batch['A_center'].to(self.device)  # [B, 4, H, W] - center slice only
-                center_b = batch['B_center'].to(self.device)  # [B, 4, H, W] - center slice only
+                real_a = batch['A'].to(self.device)  # [b, 12, h, w] - 3 slices
+                real_b = batch['B'].to(self.device)  # [b, 12, h, w] - 3 slices
+                center_a = batch['A_center'].to(self.device)  # [b, 4, h, w] - center slice only
+                center_b = batch['B_center'].to(self.device)  # [b, 4, h, w] - center slice only
 
                 # forward pass (generators output center slice only)
-                fake_b = model.G_A2B(real_a)  # [B, 4, H, W]
-                fake_a = model.G_B2A(real_b)  # [B, 4, H, W]
+                fake_b = model.G_A2B(real_a)  # [b, 4, h, w]
+                fake_a = model.G_B2A(real_b)  # [b, 4, h, w]
 
                 # move to cpu for metric computation
                 center_a_cpu = center_a.cpu()
@@ -287,22 +287,22 @@ class ComprehensiveEvaluator:
                 # compute metrics for each sample in batch
                 for i in range(center_a.size(0)):
                     # convert to numpy for ssim/psnr
-                    ca_np = center_a_cpu[i].numpy()  # center slice of A
-                    cb_np = center_b_cpu[i].numpy()  # center slice of B
-                    fa_np = fake_a_cpu[i].numpy()    # generated A
-                    fb_np = fake_b_cpu[i].numpy()    # generated B
+                    ca_np = center_a_cpu[i].numpy()  # center slice of a
+                    cb_np = center_b_cpu[i].numpy()  # center slice of b
+                    fa_np = fake_a_cpu[i].numpy()    # generated a
+                    fb_np = fake_b_cpu[i].numpy()    # generated b
 
                     # debug logging for first batch
                     if batch_idx == 0 and i == 0:
                         logger.info(f"debug shapes - ca: {ca_np.shape}, cb: {cb_np.shape}, fa: {fa_np.shape}, fb: {fb_np.shape}")
 
-                    # a -> b metrics (brats -> upenn): compare generated B with real center B
+                    # a -> b metrics (brats -> upenn): compare generated b with real center b
                     metrics_a2b['ssim'].append(self.compute_ssim(cb_np, fb_np))
                     metrics_a2b['psnr'].append(self.compute_psnr(cb_np, fb_np))
                     metrics_a2b['mae'].append(self.compute_mae(cb_np, fb_np))
                     metrics_a2b['mse'].append(self.compute_mse(cb_np, fb_np))
 
-                    # b -> a metrics (upenn -> brats): compare generated A with real center A
+                    # b -> a metrics (upenn -> brats): compare generated a with real center a
                     metrics_b2a['ssim'].append(self.compute_ssim(ca_np, fa_np))
                     metrics_b2a['psnr'].append(self.compute_psnr(ca_np, fa_np))
                     metrics_b2a['mae'].append(self.compute_mae(ca_np, fa_np))

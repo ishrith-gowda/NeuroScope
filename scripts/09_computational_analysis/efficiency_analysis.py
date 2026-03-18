@@ -225,7 +225,7 @@ def analyze_model_efficiency(
         n_test_samples: number of samples to test
 
     returns:
-        EfficiencyMetrics dataclass
+        efficiencymetrics dataclass
     """
     import torch
 
@@ -355,12 +355,12 @@ def create_comparison_table(metrics_list: List[Dict], output_path: Path):
     """
     latex = r"""\begin{table}[htbp]
 \centering
-\caption{Computational Efficiency Comparison}
+\caption{computational efficiency comparison}
 \label{tab:efficiency_comparison}
 \begin{tabular}{lcccccc}
 \toprule
-Method & Time/Slice & Time/Vol. & Throughput & Memory & Params & Size \\
- & (ms) & (s) & (vol/hr) & (MB) & (M) & (MB) \\
+method & time/slice & time/vol. & throughput & memory & params & size \\
+ & (ms) & (s) & (vol/hr) & (mb) & (m) & (mb) \\
 \midrule
 """
 

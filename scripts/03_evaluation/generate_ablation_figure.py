@@ -251,21 +251,21 @@ def create_ablation_summary_table(results: dict, output_path: Path):
     # summary focusing on key improvements
     latex = r"""\begin{table}[htbp]
 \centering
-\caption{Ablation Study: Self-Attention Impact on Harmonization Quality}
+\caption{ablation study: self-attention impact on harmonization quality}
 \label{tab:ablation_summary}
 \begin{tabular}{lccc}
 \toprule
-Direction & Metric & Improvement & Cohen's $d$ \\
+direction & metric & improvement & cohen's $d$ \\
 \midrule
-\multirow{2}{*}{A $\rightarrow$ B $\rightarrow$ A}
-  & Cycle SSIM & """ + f"{stats['cycle_ssim_A']['difference']*100:+.2f}" + r"""\% & """ + f"{stats['cycle_ssim_A']['cohens_d']:.2f}" + r""" \\
-  & Cycle PSNR & """ + f"{stats['cycle_psnr_A']['difference']:+.2f}" + r""" dB & """ + f"{stats['cycle_psnr_A']['cohens_d']:.2f}" + r""" \\
+\multirow{2}{*}{a $\rightarrow$ b $\rightarrow$ a}
+  & cycle ssim & """ + f"{stats['cycle_ssim_A']['difference']*100:+.2f}" + r"""\% & """ + f"{stats['cycle_ssim_A']['cohens_d']:.2f}" + r""" \\
+  & cycle psnr & """ + f"{stats['cycle_psnr_A']['difference']:+.2f}" + r""" db & """ + f"{stats['cycle_psnr_A']['cohens_d']:.2f}" + r""" \\
 \midrule
-\multirow{2}{*}{B $\rightarrow$ A $\rightarrow$ B}
-  & Cycle SSIM & """ + f"{stats['cycle_ssim_B']['difference']*100:+.2f}" + r"""\% & """ + f"{stats['cycle_ssim_B']['cohens_d']:.2f}" + r""" \\
-  & Cycle PSNR & """ + f"{stats['cycle_psnr_B']['difference']:+.2f}" + r""" dB & """ + f"{stats['cycle_psnr_B']['cohens_d']:.2f}" + r""" \\
+\multirow{2}{*}{b $\rightarrow$ a $\rightarrow$ b}
+  & cycle ssim & """ + f"{stats['cycle_ssim_B']['difference']*100:+.2f}" + r"""\% & """ + f"{stats['cycle_ssim_B']['cohens_d']:.2f}" + r""" \\
+  & cycle psnr & """ + f"{stats['cycle_psnr_B']['difference']:+.2f}" + r""" db & """ + f"{stats['cycle_psnr_B']['cohens_d']:.2f}" + r""" \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize All differences significant at $p < 0.001$} \\
+\multicolumn{4}{l}{\footnotesize all differences significant at $p < 0.001$} \\
 \end{tabular}
 \end{table}
 """

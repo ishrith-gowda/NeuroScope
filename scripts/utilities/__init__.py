@@ -1,6 +1,6 @@
-"""Utility scripts for NeuroScope.
+"""utility scripts for neuroscope.
 
-This module provides utility scripts for various tasks and operations.
+this module provides utility scripts for various tasks and operations.
 """
 
-# Utility script initialization
+# utility script initialization

@@ -268,22 +268,22 @@ def create_comprehensive_figure(results: Dict, output_path: Path):
     ax_summary.axis('off')
 
     summary_text = """
-Key Findings - SA-CycleGAN-2.5D for Multi-Site MRI Harmonization
+key findings - sa-cyclegan-2.5d for multi-site mri harmonization
 
-DOMAIN ALIGNMENT:
-  - Domain classification accuracy reduced from {raw_acc:.1%} to {harm_acc:.1%} ({acc_red:.1f}% reduction)
-  - Maximum Mean Discrepancy reduced by {mmd_red:.1f}% (from {raw_mmd:.4f} to {harm_mmd:.4f})
-  - Feature cosine similarity improved from {raw_cos:.4f} to {harm_cos:.4f}
+domain alignment:
+  - domain classification accuracy reduced from {raw_acc:.1%} to {harm_acc:.1%} ({acc_red:.1f}% reduction)
+  - maximum mean discrepancy reduced by {mmd_red:.1f}% (from {raw_mmd:.4f} to {harm_mmd:.4f})
+  - feature cosine similarity improved from {raw_cos:.4f} to {harm_cos:.4f}
 
-METHOD COMPARISON:
-  - SA-CycleGAN-2.5D achieves {sa_red:.1f}% MMD reduction vs ComBat's {combat_red:.1f}%
-  - Deep learning approach provides end-to-end image-level harmonization
-  - Self-attention mechanism captures long-range spatial dependencies
+method comparison:
+  - sa-cyclegan-2.5d achieves {sa_red:.1f}% mmd reduction vs combat's {combat_red:.1f}%
+  - deep learning approach provides end-to-end image-level harmonization
+  - self-attention mechanism captures long-range spatial dependencies
 
-CLINICAL IMPLICATIONS:
-  - Effective harmonization enables multi-site neuroimaging studies
-  - Reduced domain shift improves downstream analysis reliability
-  - Preserves anatomical structures while aligning intensity distributions
+clinical implications:
+  - effective harmonization enables multi-site neuroimaging studies
+  - reduced domain shift improves downstream analysis reliability
+  - preserves anatomical structures while aligning intensity distributions
 """.format(
         raw_acc=raw_acc,
         harm_acc=harm_acc,
@@ -324,20 +324,20 @@ def create_latex_summary_table(results: Dict, output_path: Path):
 
     latex = r"""\begin{table*}[htbp]
 \centering
-\caption{Comprehensive Evaluation Results for SA-CycleGAN-2.5D Harmonization}
+\caption{comprehensive evaluation results for sa-cyclegan-2.5d harmonization}
 \label{tab:comprehensive_results}
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Metric} & \textbf{Raw (No Harm.)} & \textbf{SA-CycleGAN-2.5D} & \textbf{ComBat} & \textbf{Improvement} \\
+\textbf{metric} & \textbf{raw (no harm.)} & \textbf{sa-cyclegan-2.5d} & \textbf{combat} & \textbf{improvement} \\
 \midrule
-\multicolumn{5}{l}{\textit{Domain Classification}} \\
-\quad Accuracy $\downarrow$ & """ + f"{raw.get('accuracy', 0):.3f}" + r""" & """ + f"{harm.get('accuracy', 0):.3f}" + r""" & 0.750 & """ + f"{domain_class.get('improvement', {}).get('accuracy_reduction', 0)*100:.1f}" + r"""\% \\
-\quad AUC $\downarrow$ & """ + f"{raw.get('auc', 0):.3f}" + r""" & """ + f"{harm.get('auc', 0):.3f}" + r""" & 0.800 & """ + f"{domain_class.get('improvement', {}).get('auc_reduction', 0)*100:.1f}" + r"""\% \\
+\multicolumn{5}{l}{\textit{domain classification}} \\
+\quad accuracy $\downarrow$ & """ + f"{raw.get('accuracy', 0):.3f}" + r""" & """ + f"{harm.get('accuracy', 0):.3f}" + r""" & 0.750 & """ + f"{domain_class.get('improvement', {}).get('accuracy_reduction', 0)*100:.1f}" + r"""\% \\
+\quad auc $\downarrow$ & """ + f"{raw.get('auc', 0):.3f}" + r""" & """ + f"{harm.get('auc', 0):.3f}" + r""" & 0.800 & """ + f"{domain_class.get('improvement', {}).get('auc_reduction', 0)*100:.1f}" + r"""\% \\
 \midrule
-\multicolumn{5}{l}{\textit{Feature Distribution}} \\
-\quad MMD $\downarrow$ & """ + f"{raw_feat.get('mmd', 0):.4f}" + r""" & """ + f"{harm_feat.get('mmd', 0):.4f}" + r""" & 0.0027 & """ + f"{comprehensive.get('summary', {}).get('sa_cyclegan_mmd_reduction_percent', 0):.1f}" + r"""\% \\
-\quad Cosine Similarity $\uparrow$ & """ + f"{raw_feat.get('cosine_similarity', 0):.4f}" + r""" & """ + f"{harm_feat.get('cosine_similarity', 0):.4f}" + r""" & 1.0000 & +""" + f"{(harm_feat.get('cosine_similarity', 0) - raw_feat.get('cosine_similarity', 0)):.4f}" + r""" \\
-\quad Mean Difference $\downarrow$ & """ + f"{raw_feat.get('mean_difference', 0):.4f}" + r""" & """ + f"{harm_feat.get('mean_difference', 0):.4f}" + r""" & 0.0126 & """ + f"{(1 - harm_feat.get('mean_difference', 0)/raw_feat.get('mean_difference', 0))*100:.1f}" + r"""\% \\
+\multicolumn{5}{l}{\textit{feature distribution}} \\
+\quad mmd $\downarrow$ & """ + f"{raw_feat.get('mmd', 0):.4f}" + r""" & """ + f"{harm_feat.get('mmd', 0):.4f}" + r""" & 0.0027 & """ + f"{comprehensive.get('summary', {}).get('sa_cyclegan_mmd_reduction_percent', 0):.1f}" + r"""\% \\
+\quad cosine similarity $\uparrow$ & """ + f"{raw_feat.get('cosine_similarity', 0):.4f}" + r""" & """ + f"{harm_feat.get('cosine_similarity', 0):.4f}" + r""" & 1.0000 & +""" + f"{(harm_feat.get('cosine_similarity', 0) - raw_feat.get('cosine_similarity', 0)):.4f}" + r""" \\
+\quad mean difference $\downarrow$ & """ + f"{raw_feat.get('mean_difference', 0):.4f}" + r""" & """ + f"{harm_feat.get('mean_difference', 0):.4f}" + r""" & 0.0126 & """ + f"{(1 - harm_feat.get('mean_difference', 0)/raw_feat.get('mean_difference', 0))*100:.1f}" + r"""\% \\
 \bottomrule
 \end{tabular}
 \end{table*}

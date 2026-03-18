@@ -1,7 +1,7 @@
 """
-Additional Publication Figure Generator.
+additional publication figure generator.
 
-Generate slice comparison grids, attention maps,
+generate slice comparison grids, attention maps,
 and supplementary figures.
 """
 
@@ -16,7 +16,7 @@ from matplotlib.gridspec import GridSpec
 import seaborn as sns
 
 
-# Publication settings
+# publication settings
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
@@ -32,88 +32,88 @@ def create_slice_comparison_grid(
     n_subjects: int = 4
 ):
     """
-    Create grid showing input, output, and difference for multiple subjects.
+    create grid showing input, output, and difference for multiple subjects.
     
-    Args:
-        output_path: Output path
-        n_subjects: Number of subjects to show
+    args:
+        output_path: output path
+        n_subjects: number of subjects to show
     """
     fig = plt.figure(figsize=(14, 10))
     gs = GridSpec(n_subjects, 5, figure=fig, wspace=0.05, hspace=0.15)
     
-    # Column headers
+    # column headers
     columns = ['Source (BraTS)', 'Harmonized', 'Target (UPenn)', 'Difference', 'Attention']
     
     for col, title in enumerate(columns):
         ax = fig.add_subplot(gs[0, col])
         ax.set_title(title, fontsize=11, fontweight='bold', pad=10)
     
-    # Generate mock slices for each subject
+    # generate mock slices for each subject
     for row in range(n_subjects):
         for col in range(5):
             ax = fig.add_subplot(gs[row, col])
             
-            # Generate mock MRI slice
+            # generate mock mri slice
             np.random.seed(row * 5 + col)
             
             if col < 3:
-                # MRI slices
+                # mri slices
                 slice_data = _generate_mock_brain_slice()
                 ax.imshow(slice_data, cmap='gray', vmin=0, vmax=1)
             elif col == 3:
-                # Difference map
+                # difference map
                 diff = np.random.randn(128, 128) * 0.1
                 ax.imshow(diff, cmap='RdBu_r', vmin=-0.3, vmax=0.3)
             else:
-                # Attention map
+                # attention map
                 attention = _generate_mock_attention()
                 ax.imshow(attention, cmap='hot')
             
             ax.axis('off')
             
-            # Add row label
+            # add row label
             if col == 0:
                 ax.text(-0.15, 0.5, f'Subject {row+1}', transform=ax.transAxes,
                        fontsize=10, rotation=90, va='center', ha='center')
     
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def _generate_mock_brain_slice():
-    """Generate mock brain slice for visualization."""
-    # Create elliptical brain shape
+    """generate mock brain slice for visualization."""
+    # create elliptical brain shape
     x = np.linspace(-1, 1, 128)
     y = np.linspace(-1, 1, 128)
     X, Y = np.meshgrid(x, y)
     
-    # Brain outline
+    # brain outline
     brain = np.sqrt((X/0.8)**2 + (Y/0.9)**2) < 1
     
-    # Add internal structure
+    # add internal structure
     wm = np.sqrt((X/0.5)**2 + (Y/0.6)**2) < 0.7
     ventricle = np.sqrt((X/0.1)**2 + (Y/0.2)**2) < 0.3
     
-    # Combine
+    # combine
     slice_data = np.zeros((128, 128))
     slice_data[brain] = 0.4 + np.random.rand() * 0.1
     slice_data[wm] = 0.6 + np.random.rand() * 0.1
     slice_data[ventricle] = 0.15
     
-    # Add noise
+    # add noise
     slice_data += np.random.randn(128, 128) * 0.02
     
     return np.clip(slice_data, 0, 1)
 
 
 def _generate_mock_attention():
-    """Generate mock attention map."""
+    """generate mock attention map."""
     x = np.linspace(-1, 1, 128)
     y = np.linspace(-1, 1, 128)
     X, Y = np.meshgrid(x, y)
     
-    # Create attention hotspots
+    # create attention hotspots
     attention = np.zeros((128, 128))
     
     for _ in range(5):
@@ -126,26 +126,26 @@ def _generate_mock_attention():
 
 def create_loss_landscape(output_path: str):
     """
-    Create loss landscape visualization.
+    create loss landscape visualization.
     
-    Args:
-        output_path: Output path
+    args:
+        output_path: output path
     """
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
-    # Create 2D loss landscape
+    # create 2d loss landscape
     x = np.linspace(-2, 2, 100)
     y = np.linspace(-2, 2, 100)
     X, Y = np.meshgrid(x, y)
     
-    # Generator loss landscape
+    # generator loss landscape
     Z_g = (X**2 + Y**2) + 0.5*np.sin(3*X)*np.cos(3*Y) + 0.1*np.random.randn(100, 100)
     
     ax = axes[0]
     contour = ax.contourf(X, Y, Z_g, levels=20, cmap='viridis')
     ax.plot([0], [0], 'r*', markersize=15, label='Optimum')
     
-    # Add optimization trajectory
+    # add optimization trajectory
     t = np.linspace(0, 2*np.pi, 50)
     traj_x = 1.5 * np.exp(-t/3) * np.cos(t)
     traj_y = 1.5 * np.exp(-t/3) * np.sin(t)
@@ -158,7 +158,7 @@ def create_loss_landscape(output_path: str):
     ax.legend(loc='upper right')
     plt.colorbar(contour, ax=ax, label='Loss')
     
-    # Discriminator loss landscape
+    # discriminator loss landscape
     Z_d = np.sin(X) * np.cos(Y) + 0.5*(X**2 + Y**2) + 0.1*np.random.randn(100, 100)
     
     ax = axes[1]
@@ -174,21 +174,21 @@ def create_loss_landscape(output_path: str):
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_convergence_analysis(output_path: str):
     """
-    Create convergence analysis plot.
+    create convergence analysis plot.
     
-    Args:
-        output_path: Output path
+    args:
+        output_path: output path
     """
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     
     epochs = np.arange(1, 201)
     
-    # Loss convergence
+    # loss convergence
     ax = axes[0, 0]
     g_loss = 4.0 * np.exp(-0.015 * epochs) + 1.0 + 0.2 * np.random.randn(200)
     d_loss = 2.0 - 1.0 * (1 - np.exp(-0.02 * epochs)) + 0.1 * np.random.randn(200)
@@ -204,7 +204,7 @@ def create_convergence_analysis(output_path: str):
     ax.legend()
     ax.grid(True, alpha=0.3)
     
-    # Gradient norm
+    # gradient norm
     ax = axes[0, 1]
     g_grad = 10.0 * np.exp(-0.02 * epochs) + 0.5 + 0.5 * np.random.randn(200)
     d_grad = 5.0 * np.exp(-0.025 * epochs) + 0.3 + 0.3 * np.random.randn(200)
@@ -218,7 +218,7 @@ def create_convergence_analysis(output_path: str):
     ax.legend()
     ax.grid(True, alpha=0.3)
     
-    # SSIM/PSNR evolution
+    # ssim/psnr evolution
     ax = axes[1, 0]
     ssim = 0.75 + 0.17 * (1 - np.exp(-0.03 * epochs)) + 0.01 * np.random.randn(200)
     ax.plot(epochs, ssim, color='#2E86AB', linewidth=2)
@@ -232,7 +232,7 @@ def create_convergence_analysis(output_path: str):
     ax.legend()
     ax.grid(True, alpha=0.3)
     
-    # FID evolution
+    # fid evolution
     ax = axes[1, 1]
     fid = 150 * np.exp(-0.02 * epochs) + 30 + 5 * np.random.randn(200)
     ax.plot(epochs, fid, color='#A23B72', linewidth=2)
@@ -246,19 +246,19 @@ def create_convergence_analysis(output_path: str):
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_feature_distribution(output_path: str):
     """
-    Create feature distribution visualization.
+    create feature distribution visualization.
     
-    Args:
-        output_path: Output path
+    args:
+        output_path: output path
     """
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     
-    # Before harmonization
+    # before harmonization
     ax = axes[0, 0]
     source_features = np.random.multivariate_normal([2, 2], [[1, 0.5], [0.5, 1]], 500)
     target_features = np.random.multivariate_normal([-2, -2], [[1.5, 0.3], [0.3, 1.5]], 500)
@@ -270,7 +270,7 @@ def create_feature_distribution(output_path: str):
     ax.set_title('Before Harmonization')
     ax.legend()
     
-    # After harmonization
+    # after harmonization
     ax = axes[0, 1]
     harmonized = source_features * 0.3 + target_features.mean(axis=0) * 0.7 + np.random.randn(500, 2) * 0.5
     
@@ -281,7 +281,7 @@ def create_feature_distribution(output_path: str):
     ax.set_title('After Harmonization')
     ax.legend()
     
-    # Intensity distributions
+    # intensity distributions
     ax = axes[1, 0]
     x = np.linspace(0, 1, 100)
     
@@ -299,9 +299,9 @@ def create_feature_distribution(output_path: str):
     ax.legend()
     ax.grid(True, alpha=0.3)
     
-    # t-SNE visualization
+    # t-sne visualization
     ax = axes[1, 1]
-    # Simulated t-SNE clusters
+    # simulated t-sne clusters
     for i, (name, color) in enumerate([('BraTS', '#2E86AB'), ('UPenn', '#A23B72'), ('Harmonized', '#388E3C')]):
         center = np.array([np.cos(i * 2 * np.pi / 3), np.sin(i * 2 * np.pi / 3)]) * (2 if i < 2 else 0.5)
         points = center + np.random.randn(100, 2) * 0.4
@@ -315,21 +315,21 @@ def create_feature_distribution(output_path: str):
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_effect_size_forest_plot(output_path: str):
     """
-    Create effect size forest plot.
+    create effect size forest plot.
     
-    Args:
-        output_path: Output path
+    args:
+        output_path: output path
     """
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Ablation components and their effect sizes
+    # ablation components and their effect sizes
     components = [
-        ('Full Model', 0, 0),  # Reference
+        ('Full Model', 0, 0),  # reference
         ('w/o Self-Attention', -0.85, 0.15),
         ('w/o Perceptual Loss', -0.52, 0.12),
         ('w/o Contrastive Loss', -0.63, 0.14),
@@ -343,24 +343,24 @@ def create_effect_size_forest_plot(output_path: str):
     for i, (name, effect, ci) in enumerate(components):
         color = '#2E86AB' if effect >= 0 else '#C73E1D'
         
-        # Point estimate
+        # point estimate
         ax.plot(effect, i, 'o', color=color, markersize=10)
         
-        # Confidence interval
+        # confidence interval
         ax.hlines(i, effect - 1.96*ci, effect + 1.96*ci, color=color, linewidth=2)
         ax.vlines(effect - 1.96*ci, i - 0.1, i + 0.1, color=color, linewidth=1.5)
         ax.vlines(effect + 1.96*ci, i - 0.1, i + 0.1, color=color, linewidth=1.5)
     
-    # Reference line
+    # reference line
     ax.axvline(x=0, color='gray', linestyle='--', linewidth=1)
     
-    # Labels
+    # labels
     ax.set_yticks(y_positions)
     ax.set_yticklabels([c[0] for c in components])
     ax.set_xlabel("Cohen's d (Effect Size)")
     ax.set_title('Ablation Study: Component Effect Sizes on SSIM', fontweight='bold')
     
-    # Effect size interpretation guide
+    # effect size interpretation guide
     ax.axvspan(-0.2, 0.2, alpha=0.1, color='gray', label='Negligible')
     ax.axvspan(-0.5, -0.2, alpha=0.1, color='yellow')
     ax.axvspan(-0.8, -0.5, alpha=0.1, color='orange')
@@ -369,27 +369,27 @@ def create_effect_size_forest_plot(output_path: str):
     ax.set_xlim(-1.5, 0.5)
     ax.grid(True, alpha=0.3, axis='x')
     
-    # Legend
+    # legend
     ax.text(0.25, 6.5, 'Effect Size Guide:\n|d| < 0.2: Negligible\n0.2-0.5: Small\n0.5-0.8: Medium\n> 0.8: Large',
             fontsize=9, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_all_supplementary_figures(output_dir: str = 'figures/generated'):
     """
-    Generate all supplementary figures.
+    generate all supplementary figures.
     
-    Args:
-        output_dir: Output directory
+    args:
+        output_dir: output directory
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    print("Generating supplementary figures...")
+    print("generating supplementary figures...")
     print("=" * 50)
     
     create_slice_comparison_grid(output_dir / 'slice_comparison_grid.pdf')
@@ -408,7 +408,7 @@ def create_all_supplementary_figures(output_dir: str = 'figures/generated'):
     create_effect_size_forest_plot(output_dir / 'effect_size_forest.png')
     
     print("=" * 50)
-    print(f"All supplementary figures saved to: {output_dir}")
+    print(f"all supplementary figures saved to: {output_dir}")
 
 
 if __name__ == '__main__':

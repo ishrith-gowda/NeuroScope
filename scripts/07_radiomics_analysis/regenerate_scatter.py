@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate scatter plot figure using per-feature statistics from results JSON."""
+"""regenerate scatter plot figure using per-feature statistics from results json."""
 
 import json
 import importlib.util
@@ -43,4 +43,4 @@ for i, fn in enumerate(feature_names):
 
 output_path = Path(__file__).parent.parent.parent / 'figures' / 'radiomics' / 'fig_radiomics_scatter.pdf'
 radiomics_figures.plot_preservation_scatter(original, harmonized, feature_names, output_path)
-print(f'Done: {output_path}')
+print(f'done: {output_path}')

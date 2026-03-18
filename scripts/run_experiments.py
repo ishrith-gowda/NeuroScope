@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Complete Experiment Runner for SA-CycleGAN NeurIPS Submission
+complete experiment runner for sa-cyclegan neurips submission
 
-This script orchestrates the complete experimental pipeline:
-1. Train SA-CycleGAN and baseline methods
-2. Run ablation studies
-3. Evaluate all methods with comprehensive metrics
-4. Perform statistical significance testing
-5. Generate publication-ready figures and tables
+this script orchestrates the complete experimental pipeline:
+1. train sa-cyclegan and baseline methods
+2. run ablation studies
+3. evaluate all methods with comprehensive metrics
+4. perform statistical significance testing
+5. generate publication-ready figures and tables
 
-Usage:
-    python run_experiments.py --mode full    # Run everything
-    python run_experiments.py --mode train   # Training only
-    python run_experiments.py --mode eval    # Evaluation only
-    python run_experiments.py --mode figures # Generate figures only
+usage:
+    python run_experiments.py --mode full    # run everything
+    python run_experiments.py --mode train   # training only
+    python run_experiments.py --mode eval    # evaluation only
+    python run_experiments.py --mode figures # generate figures only
 
-Author: NeuroScope Team
-Date: 2025
+author: neuroscope team
+date: 2025
 """
 
 import os
@@ -31,11 +31,11 @@ import numpy as np
 import torch
 from collections import defaultdict
 
-# Add project root to path
+# add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Import our modules
+# import our modules
 try:
     from evaluation.comprehensive_evaluation import (
         EvaluationPipeline, ImageQualityMetrics, StatisticalTests,
@@ -44,38 +44,38 @@ try:
     from neuroscope.models.architectures.sa_cyclegan import create_sa_cyclegan
     from neuroscope.models.baselines import ComBat, HistogramMatching, CUTGenerator, UNIT
 except ImportError as e:
-    print(f"Warning: Could not import all modules: {e}")
+    print(f"warning: could not import all modules: {e}")
 
 
 # ============================================================================
-# Experiment Configuration
+# experiment configuration
 # ============================================================================
 
 class ExperimentConfig:
-    """Central configuration for all experiments."""
+    """central configuration for all experiments."""
     
-    # Paths
+    # paths
     data_dir: str = './preprocessed'
     checkpoint_dir: str = './checkpoints'
     results_dir: str = './results/neurips_submission'
     figures_dir: str = './figures/publication'
     
-    # Training
+    # training
     epochs: int = 100
     batch_size: int = 4
     image_size: int = 256
     
-    # Methods to compare
+    # methods to compare
     methods: List[str] = [
-        'sa_cyclegan',      # Our method
-        'cyclegan',         # Standard baseline
-        'cut',              # CUT (Park et al.)
-        'unit',             # UNIT (Liu et al.)
-        'combat',           # Statistical (Fortin et al.)
-        'histogram_match'   # Traditional
+        'sa_cyclegan',      # our method
+        'cyclegan',         # standard baseline
+        'cut',              # cut (park et al.)
+        'unit',             # unit (liu et al.)
+        'combat',           # statistical (fortin et al.)
+        'histogram_match'   # traditional
     ]
     
-    # Ablation variants
+    # ablation variants
     ablation_variants: List[str] = [
         'full_model',
         'no_self_attention',
@@ -86,12 +86,12 @@ class ExperimentConfig:
         'no_tumor_loss'
     ]
     
-    # Evaluation
+    # evaluation
     n_eval_samples: int = 500
     n_bootstrap: int = 10000
     alpha: float = 0.05
     
-    # Random seed for reproducibility
+    # random seed for reproducibility
     seed: int = 42
     
     def __init__(self, **kwargs):
@@ -104,11 +104,11 @@ class ExperimentConfig:
 
 
 # ============================================================================
-# Experiment Logger
+# experiment logger
 # ============================================================================
 
 class ExperimentLogger:
-    """Structured logging for experiments."""
+    """structured logging for experiments."""
     
     def __init__(self, log_dir: str, experiment_name: str):
         self.log_dir = Path(log_dir)
@@ -121,7 +121,7 @@ class ExperimentLogger:
         self.start_time = time.time()
         
     def log(self, message: str, level: str = 'INFO'):
-        """Log a message."""
+        """log a message."""
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         entry = f"[{timestamp}] [{level}] {message}"
         self.logs.append(entry)
@@ -131,27 +131,27 @@ class ExperimentLogger:
             f.write(entry + '\n')
     
     def log_metrics(self, method: str, metrics: Dict[str, float]):
-        """Log metrics for a method."""
+        """log metrics for a method."""
         metrics_str = ', '.join([f"{k}={v:.4f}" for k, v in metrics.items()])
         self.log(f"[{method}] {metrics_str}")
     
     def log_comparison(self, method_a: str, method_b: str, p_value: float, significant: bool):
-        """Log statistical comparison."""
+        """log statistical comparison."""
         sig_str = "SIGNIFICANT" if significant else "not significant"
         self.log(f"Comparison {method_a} vs {method_b}: p={p_value:.4f} ({sig_str})")
     
     def summary(self):
-        """Print experiment summary."""
+        """print experiment summary."""
         elapsed = time.time() - self.start_time
         self.log(f"Experiment completed in {elapsed/60:.2f} minutes")
 
 
 # ============================================================================
-# Result Aggregator
+# result aggregator
 # ============================================================================
 
 class ResultAggregator:
-    """Aggregate and format results for publication."""
+    """aggregate and format results for publication."""
     
     def __init__(self, output_dir: str):
         self.output_dir = Path(output_dir)
@@ -162,23 +162,23 @@ class ResultAggregator:
         self.ablations = {}
     
     def add_method_results(self, method: str, metrics: Dict[str, Dict]):
-        """Add results for a method."""
+        """add results for a method."""
         self.method_results[method] = metrics
     
     def add_comparison(self, comparison: Dict):
-        """Add a statistical comparison."""
+        """add a statistical comparison."""
         self.comparisons.append(comparison)
     
     def add_ablation(self, variant: str, results: Dict):
-        """Add ablation study results."""
+        """add ablation study results."""
         self.ablations[variant] = results
     
     def generate_main_table(self) -> str:
         """
-        Generate Table 1: Main quantitative results.
+        generate table 1: main quantitative results.
         
-        Format:
-        | Method | SSIM ↑ | PSNR ↑ | NRMSE ↓ | Edge Pres. ↑ | Time (s) |
+        format:
+        | method | ssim ↑ | psnr ↑ | nrmse ↓ | edge pres. ↑ | time (s) |
         """
         lines = []
         lines.append("Table 1: Quantitative comparison of domain translation methods.")
@@ -208,7 +208,7 @@ class ResultAggregator:
     
     def generate_significance_table(self) -> str:
         """
-        Generate Table 2: Statistical significance of improvements.
+        generate table 2: statistical significance of improvements.
         """
         lines = []
         lines.append("Table 2: Statistical significance of SA-CycleGAN improvements.")
@@ -234,7 +234,7 @@ class ResultAggregator:
     
     def generate_ablation_table(self) -> str:
         """
-        Generate Table 3: Ablation study results.
+        generate table 3: ablation study results.
         """
         lines = []
         lines.append("Table 3: Ablation study - Contribution of each component.")
@@ -260,8 +260,8 @@ class ResultAggregator:
         return "\n".join(lines)
     
     def save_all(self):
-        """Save all results in multiple formats."""
-        # Save as JSON
+        """save all results in multiple formats."""
+        # save as json
         results = {
             'methods': self.method_results,
             'comparisons': self.comparisons,
@@ -271,7 +271,7 @@ class ResultAggregator:
         with open(self.output_dir / 'all_results.json', 'w') as f:
             json.dump(results, f, indent=2)
         
-        # Save tables
+        # save tables
         tables = [
             self.generate_main_table(),
             self.generate_significance_table(),
@@ -281,24 +281,24 @@ class ResultAggregator:
         with open(self.output_dir / 'tables.txt', 'w') as f:
             f.write("\n\n".join(tables))
         
-        # Save LaTeX tables
+        # save latex tables
         self._save_latex_tables()
         
-        print(f"Results saved to {self.output_dir}")
+        print(f"results saved to {self.output_dir}")
     
     def _save_latex_tables(self):
-        """Generate LaTeX tables for paper."""
+        """generate latex tables for paper."""
         latex = []
         
-        # Table 1: Main results
+        # table 1: main results
         latex.append(r"""
 \begin{table*}[t]
 \centering
-\caption{Quantitative comparison of domain translation methods for brain MRI harmonization between BraTS and UPenn-GBM datasets. Best results in \textbf{bold}, second best \underline{underlined}. $\uparrow$ indicates higher is better, $\downarrow$ indicates lower is better.}
+\caption{quantitative comparison of domain translation methods for brain mri harmonization between brats and upenn-gbm datasets. best results in \textbf{bold}, second best \underline{underlined}. $\uparrow$ indicates higher is better, $\downarrow$ indicates lower is better.}
 \label{tab:main_results}
 \begin{tabular}{lcccccc}
 \toprule
-Method & SSIM $\uparrow$ & PSNR $\uparrow$ & NRMSE $\downarrow$ & MI $\uparrow$ & Edge Pres. $\uparrow$ \\
+method & ssim $\uparrow$ & psnr $\uparrow$ & nrmse $\downarrow$ & mi $\uparrow$ & edge pres. $\uparrow$ \\
 \midrule
 """)
         
@@ -317,15 +317,15 @@ Method & SSIM $\uparrow$ & PSNR $\uparrow$ & NRMSE $\downarrow$ & MI $\uparrow$ 
 \end{table*}
 """)
         
-        # Table 2: Ablation
+        # table 2: ablation
         latex.append(r"""
 \begin{table}[t]
 \centering
-\caption{Ablation study showing the contribution of each component in SA-CycleGAN. $\Delta$ indicates change from full model.}
+\caption{ablation study showing the contribution of each component in sa-cyclegan. $\delta$ indicates change from full model.}
 \label{tab:ablation}
 \begin{tabular}{lccc}
 \toprule
-Variant & SSIM & PSNR & $\Delta$SSIM \\
+variant & ssim & psnr & $\delta$ssim \\
 \midrule
 """)
         
@@ -350,18 +350,18 @@ Variant & SSIM & PSNR & $\Delta$SSIM \\
 
 
 # ============================================================================
-# Figure Generator
+# figure generator
 # ============================================================================
 
 class FigureGenerator:
-    """Generate publication-quality figures."""
+    """generate publication-quality figures."""
     
     def __init__(self, output_dir: str):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def generate_all(self, results: Dict):
-        """Generate all figures for publication."""
+        """generate all figures for publication."""
         try:
             import matplotlib
             matplotlib.use('Agg')
@@ -383,13 +383,13 @@ class FigureGenerator:
             self._generate_training_curves(results, plt, sns)
             self._generate_qualitative_grid(results, plt, GridSpec)
             
-            print(f"Figures saved to {self.output_dir}")
+            print(f"figures saved to {self.output_dir}")
             
         except ImportError:
-            print("Warning: matplotlib/seaborn not available for figure generation")
+            print("warning: matplotlib/seaborn not available for figure generation")
     
     def _generate_method_comparison(self, results: Dict, plt, sns):
-        """Figure 2: Bar chart comparing all methods."""
+        """figure 2: bar chart comparing all methods."""
         methods = list(results.get('methods', {}).keys())
         metrics = ['ssim', 'psnr']
         
@@ -412,7 +412,7 @@ class FigureGenerator:
             axes[idx].set_ylabel(metric.upper())
             axes[idx].set_title(f'{metric.upper()} Comparison')
             
-            # Highlight best method
+            # highlight best method
             best_idx = np.argmax(values)
             bars[best_idx].set_edgecolor('red')
             bars[best_idx].set_linewidth(2)
@@ -423,7 +423,7 @@ class FigureGenerator:
         plt.close()
     
     def _generate_ablation_chart(self, results: Dict, plt, sns):
-        """Figure 3: Ablation study visualization."""
+        """figure 3: ablation study visualization."""
         ablations = results.get('ablations', {})
         if not ablations:
             return
@@ -431,7 +431,7 @@ class FigureGenerator:
         variants = list(ablations.keys())
         ssim_values = [ablations[v].get('ssim', {}).get('mean', 0) for v in variants]
         
-        # Sort by SSIM
+        # sort by ssim
         sorted_pairs = sorted(zip(variants, ssim_values), key=lambda x: x[1], reverse=True)
         variants, ssim_values = zip(*sorted_pairs)
         
@@ -453,11 +453,11 @@ class FigureGenerator:
         plt.close()
     
     def _generate_training_curves(self, results: Dict, plt, sns):
-        """Figure 4: Training loss curves."""
-        # Simulated training curves if not available
+        """figure 4: training loss curves."""
+        # simulated training curves if not available
         epochs = np.arange(1, 101)
         
-        # Typical GAN training curves
+        # typical gan training curves
         g_loss = 2.0 * np.exp(-epochs / 30) + 0.5 + np.random.randn(100) * 0.05
         d_loss = 0.5 * np.exp(-epochs / 20) + 0.3 + np.random.randn(100) * 0.03
         cycle_loss = 1.5 * np.exp(-epochs / 25) + 0.2 + np.random.randn(100) * 0.02
@@ -488,9 +488,9 @@ class FigureGenerator:
         plt.close()
     
     def _generate_qualitative_grid(self, results: Dict, plt, GridSpec):
-        """Figure 5: Qualitative comparison grid (placeholder)."""
-        # This would show actual MRI translations
-        # For now, create a placeholder structure
+        """figure 5: qualitative comparison grid (placeholder)."""
+        # this would show actual mri translations
+        # for now, create a placeholder structure
         
         fig = plt.figure(figsize=(16, 10))
         gs = GridSpec(3, 6, figure=fig, hspace=0.3, wspace=0.1)
@@ -502,7 +502,7 @@ class FigureGenerator:
             for col, method in enumerate(methods):
                 ax = fig.add_subplot(gs[row, col])
                 
-                # Placeholder gray image
+                # placeholder gray image
                 img = np.random.rand(128, 128) * 0.5 + 0.25
                 ax.imshow(img, cmap='gray', vmin=0, vmax=1)
                 ax.axis('off')
@@ -521,11 +521,11 @@ class FigureGenerator:
 
 
 # ============================================================================
-# Main Experiment Runner
+# main experiment runner
 # ============================================================================
 
 class ExperimentRunner:
-    """Main experiment orchestrator."""
+    """main experiment orchestrator."""
     
     def __init__(self, config: ExperimentConfig):
         self.config = config
@@ -533,34 +533,34 @@ class ExperimentRunner:
         self.aggregator = ResultAggregator(config.results_dir)
         self.figure_gen = FigureGenerator(config.figures_dir)
         
-        # Set random seed
+        # set random seed
         np.random.seed(config.seed)
         torch.manual_seed(config.seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(config.seed)
     
     def run_full_pipeline(self):
-        """Run the complete experiment pipeline."""
+        """run the complete experiment pipeline."""
         self.logger.log("Starting full experiment pipeline")
         self.logger.log(f"Configuration: {self.config.to_dict()}")
         
-        # 1. Train methods (or load pre-trained)
+        # 1. train methods (or load pre-trained)
         self.logger.log("Phase 1: Training models")
         models = self._train_or_load_models()
         
-        # 2. Evaluate all methods
+        # 2. evaluate all methods
         self.logger.log("Phase 2: Evaluating methods")
         evaluation_results = self._evaluate_methods(models)
         
-        # 3. Run ablation studies
+        # 3. run ablation studies
         self.logger.log("Phase 3: Running ablation studies")
         ablation_results = self._run_ablations()
         
-        # 4. Statistical comparisons
+        # 4. statistical comparisons
         self.logger.log("Phase 4: Statistical analysis")
         comparisons = self._run_statistical_analysis(evaluation_results)
         
-        # 5. Generate figures
+        # 5. generate figures
         self.logger.log("Phase 5: Generating figures")
         all_results = {
             'methods': evaluation_results,
@@ -569,17 +569,17 @@ class ExperimentRunner:
         }
         self.figure_gen.generate_all(all_results)
         
-        # 6. Save results
+        # 6. save results
         self.logger.log("Phase 6: Saving results")
         self.aggregator.save_all()
         
-        # 7. Generate report
+        # 7. generate report
         self._generate_final_report()
         
         self.logger.summary()
     
     def _train_or_load_models(self) -> Dict:
-        """Train models or load pre-trained weights."""
+        """train models or load pre-trained weights."""
         models = {}
         checkpoint_dir = Path(self.config.checkpoint_dir)
         
@@ -588,20 +588,20 @@ class ExperimentRunner:
             
             if ckpt_path.exists():
                 self.logger.log(f"Loading pre-trained {method}")
-                # In practice, load the model
+                # in practice, load the model
                 models[method] = {'loaded': True, 'path': str(ckpt_path)}
             else:
                 self.logger.log(f"Training {method} from scratch")
-                # In practice, train the model
+                # in practice, train the model
                 models[method] = {'loaded': False, 'trained': True}
         
         return models
     
     def _evaluate_methods(self, models: Dict) -> Dict:
-        """Evaluate all methods on test data."""
+        """evaluate all methods on test data."""
         results = {}
         
-        # Simulate evaluation with realistic values
+        # simulate evaluation with realistic values
         base_metrics = {
             'sa_cyclegan': {'ssim': 0.912, 'psnr': 28.5, 'nrmse': 0.082, 'edge_preservation': 0.934},
             'cyclegan': {'ssim': 0.886, 'psnr': 25.4, 'nrmse': 0.105, 'edge_preservation': 0.897},
@@ -614,7 +614,7 @@ class ExperimentRunner:
         for method in self.config.methods:
             base = base_metrics.get(method, {'ssim': 0.7, 'psnr': 20, 'nrmse': 0.15})
             
-            # Add realistic variance
+            # add realistic variance
             metrics = {}
             for key, value in base.items():
                 std = value * 0.05  # 5% std dev
@@ -632,10 +632,10 @@ class ExperimentRunner:
         return results
     
     def _run_ablations(self) -> Dict:
-        """Run ablation studies."""
+        """run ablation studies."""
         ablations = {}
         
-        # Ablation results showing component contributions
+        # ablation results showing component contributions
         ablation_metrics = {
             'full_model': {'ssim': 0.912, 'psnr': 28.5},
             'no_self_attention': {'ssim': 0.895, 'psnr': 27.1},
@@ -663,7 +663,7 @@ class ExperimentRunner:
         return ablations
     
     def _run_statistical_analysis(self, results: Dict) -> List[Dict]:
-        """Run statistical significance tests."""
+        """run statistical significance tests."""
         stats_test = StatisticalTests(alpha=self.config.alpha)
         comparisons = []
         
@@ -672,7 +672,7 @@ class ExperimentRunner:
         
         for baseline in baselines:
             for metric in ['ssim', 'psnr']:
-                # Simulate paired samples
+                # simulate paired samples
                 n = self.config.n_eval_samples
                 our_values = np.random.normal(
                     results[our_method][metric]['mean'],
@@ -708,57 +708,57 @@ class ExperimentRunner:
         return comparisons
     
     def _generate_final_report(self):
-        """Generate the final experiment report."""
+        """generate the final experiment report."""
         report_path = Path(self.config.results_dir) / 'EXPERIMENT_REPORT.md'
         
-        report = f"""# SA-CycleGAN Experiment Report
+        report = f"""# sa-cyclegan experiment report
 
-## Experiment Configuration
-- Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-- Random Seed: {self.config.seed}
-- Epochs: {self.config.epochs}
-- Batch Size: {self.config.batch_size}
-- Image Size: {self.config.image_size}
-- Number of Evaluation Samples: {self.config.n_eval_samples}
+## experiment configuration
+- date: {datetime.now().strftime('%y-%m-%d %h:%m:%s')}
+- random seed: {self.config.seed}
+- epochs: {self.config.epochs}
+- batch size: {self.config.batch_size}
+- image size: {self.config.image_size}
+- number of evaluation samples: {self.config.n_eval_samples}
 
-## Main Results
+## main results
 
 {self.aggregator.generate_main_table()}
 
-## Statistical Significance
+## statistical significance
 
 {self.aggregator.generate_significance_table()}
 
-## Ablation Study
+## ablation study
 
 {self.aggregator.generate_ablation_table()}
 
-## Key Findings
+## key findings
 
-1. **SA-CycleGAN achieves state-of-the-art performance** with SSIM of 0.912±0.046 and PSNR of 28.5±1.4 dB.
+1. **sa-cyclegan achieves state-of-the-art performance** with ssim of 0.912±0.046 and psnr of 28.5±1.4 db.
 
-2. **Self-attention is the most critical component**, contributing +0.017 SSIM improvement.
+2. **self-attention is the most critical component**, contributing +0.017 ssim improvement.
 
-3. **All improvements are statistically significant** (p < 0.001) compared to baselines.
+3. **all improvements are statistically significant** (p < 0.001) compared to baselines.
 
-4. **Modality-aware encoding** provides substantial benefits for multi-modal MRI.
+4. **modality-aware encoding** provides substantial benefits for multi-modal mri.
 
-5. **Neural methods outperform statistical approaches** by significant margins.
+5. **neural methods outperform statistical approaches** by significant margins.
 
-## Files Generated
+## files generated
 
-- `all_results.json` - Complete numerical results
-- `tables.txt` - Text tables for review
-- `latex_tables.tex` - LaTeX tables for paper
-- `fig2_method_comparison.pdf` - Method comparison bar chart
-- `fig3_ablation.pdf` - Ablation study visualization
-- `fig4_training_curves.pdf` - Training loss curves
-- `fig5_qualitative.pdf` - Qualitative comparison grid
+- `all_results.json` - complete numerical results
+- `tables.txt` - text tables for review
+- `latex_tables.tex` - latex tables for paper
+- `fig2_method_comparison.pdf` - method comparison bar chart
+- `fig3_ablation.pdf` - ablation study visualization
+- `fig4_training_curves.pdf` - training loss curves
+- `fig5_qualitative.pdf` - qualitative comparison grid
 
-## Reproducibility
+## reproducibility
 
-All experiments use seed {self.config.seed} for reproducibility.
-Model checkpoints and evaluation data are stored in the `checkpoints/` directory.
+all experiments use seed {self.config.seed} for reproducibility.
+model checkpoints and evaluation data are stored in the `checkpoints/` directory.
 """
         
         with open(report_path, 'w') as f:
@@ -768,7 +768,7 @@ Model checkpoints and evaluation data are stored in the `checkpoints/` directory
 
 
 # ============================================================================
-# Command Line Interface
+# command line interface
 # ============================================================================
 
 def parse_args():
@@ -798,7 +798,7 @@ def parse_args():
 def main():
     args = parse_args()
     
-    # Create configuration
+    # create configuration
     config = ExperimentConfig(
         data_dir=args.data_dir,
         results_dir=args.results_dir,
@@ -806,10 +806,10 @@ def main():
         epochs=args.epochs
     )
     
-    # Create runner
+    # create runner
     runner = ExperimentRunner(config)
     
-    # Run based on mode
+    # run based on mode
     if args.mode == 'full':
         runner.run_full_pipeline()
     elif args.mode == 'train':
@@ -818,7 +818,7 @@ def main():
         models = runner._train_or_load_models()
         runner._evaluate_methods(models)
     elif args.mode == 'figures':
-        # Load existing results and regenerate figures
+        # load existing results and regenerate figures
         results_path = Path(args.results_dir) / 'all_results.json'
         if results_path.exists():
             with open(results_path) as f:

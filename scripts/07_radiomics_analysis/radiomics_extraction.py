@@ -52,7 +52,7 @@ class FirstOrderFeatures:
 
         args:
             image: input image array
-            mask: optional binary mask (uses non-zero voxels if None)
+            mask: optional binary mask (uses non-zero voxels if none)
 
         returns:
             dictionary of feature names to values

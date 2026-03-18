@@ -1,6 +1,6 @@
-"""Baseline experiment scripts for NeuroScope.
+"""baseline experiment scripts for neuroscope.
 
-This module provides scripts for baseline experiments and comparisons.
+this module provides scripts for baseline experiments and comparisons.
 """
 
-# Baseline experiment initialization
+# baseline experiment initialization

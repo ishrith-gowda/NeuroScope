@@ -182,7 +182,7 @@ def compute_preservation_metrics(
         harmonized: harmonized feature values
 
     returns:
-        PreservationMetrics dataclass
+        preservationmetrics dataclass
     """
     original = np.asarray(original).flatten()
     harmonized = np.asarray(harmonized).flatten()

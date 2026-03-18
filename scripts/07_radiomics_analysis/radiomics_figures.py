@@ -71,7 +71,7 @@ def plot_correlation_heatmap(
         output_path: path to save figure
         title: figure title
     """
-    # LaTeX rendering
+    # latex rendering
     plt.rcParams.update({
         'text.usetex': True,
         'font.family': 'serif',
@@ -115,7 +115,7 @@ def plot_correlation_heatmap(
         if indices:
             category_labels.append(cat_name)
             category_boundaries.append(len(sorted_indices))
-            # sort within category by CCC value
+            # sort within category by ccc value
             cat_indices = sorted(indices, key=lambda i: all_cccs[i], reverse=True)
             sorted_indices.extend(cat_indices)
 
@@ -180,7 +180,7 @@ def plot_preservation_by_category(
         output_path: path to save figure
         method_name: name of harmonization method
     """
-    # LaTeX rendering
+    # latex rendering
     plt.rcParams.update({
         'text.usetex': True,
         'font.family': 'serif',
@@ -297,7 +297,7 @@ def plot_bland_altman(
     step = len(sorted_indices) // n_features
     selected_indices = sorted_indices[::step][:n_features]
 
-    # LaTeX rendering
+    # latex rendering
     plt.rcParams.update({
         'text.usetex': True,
         'font.family': 'serif',
@@ -349,7 +349,7 @@ def plot_bland_altman(
         # truncate long names
         if len(feature_name) > 25:
             feature_name = feature_name[:22] + '...'
-        # escape underscores for LaTeX
+        # escape underscores for latex
         feature_name = feature_name.replace('_', r'\_')
 
         ax.set_title(f'({chr(97+idx)}) {feature_name}')
@@ -400,7 +400,7 @@ def plot_preservation_scatter(
         if idx not in selected_indices:
             selected_indices.append(idx)
 
-    # LaTeX rendering
+    # latex rendering
     plt.rcParams.update({
         'text.usetex': True,
         'font.family': 'serif',
@@ -448,7 +448,7 @@ def plot_preservation_scatter(
         feature_name = feature_names[feature_idx] if feature_idx < len(feature_names) else f'Feature {feature_idx}'
         if len(feature_name) > 25:
             feature_name = feature_name[:22] + '...'
-        # escape underscores for LaTeX
+        # escape underscores for latex
         feature_name = feature_name.replace('_', r'\_')
 
         ax.set_title(f'({chr(97+idx)}) {feature_name}')
@@ -605,22 +605,22 @@ def plot_comprehensive_summary(
     ax8.axis('off')
 
     findings_text = f"""
-Key Findings - {method_name} Radiomics Preservation:
+key findings - {method_name} radiomics preservation:
 
-1. Overall Preservation: Mean CCC = {overall.get('mean_ccc', 0):.3f}, Mean ICC = {overall.get('mean_icc', 0):.3f}
-   - {overall.get('excellent_preservation', 0)} features with excellent preservation (CCC > 0.9)
-   - {overall.get('good_preservation', 0)} features with good preservation (0.75 < CCC < 0.9)
+1. overall preservation: mean ccc = {overall.get('mean_ccc', 0):.3f}, mean icc = {overall.get('mean_icc', 0):.3f}
+   - {overall.get('excellent_preservation', 0)} features with excellent preservation (ccc > 0.9)
+   - {overall.get('good_preservation', 0)} features with good preservation (0.75 < ccc < 0.9)
 
-2. Domain-Specific Results:
-   - Domain A: CCC = {results.get('domain_a_preservation', {}).get('overall', {}).get('mean_ccc', 0):.3f}
-   - Domain B: CCC = {results.get('domain_b_preservation', {}).get('overall', {}).get('mean_ccc', 0):.3f}
+2. domain-specific results:
+   - domain a: ccc = {results.get('domain_a_preservation', {}).get('overall', {}).get('mean_ccc', 0):.3f}
+   - domain b: ccc = {results.get('domain_b_preservation', {}).get('overall', {}).get('mean_ccc', 0):.3f}
 
-3. Cross-Domain Alignment:
-   - Raw alignment CCC: {raw_alignment.get('mean_ccc', 0):.3f}
-   - Harmonized alignment CCC: {harm_alignment.get('mean_ccc', 0):.3f}
-   - Improvement: {(harm_alignment.get('mean_ccc', 0) - raw_alignment.get('mean_ccc', 0)):.3f}
+3. cross-domain alignment:
+   - raw alignment ccc: {raw_alignment.get('mean_ccc', 0):.3f}
+   - harmonized alignment ccc: {harm_alignment.get('mean_ccc', 0):.3f}
+   - improvement: {(harm_alignment.get('mean_ccc', 0) - raw_alignment.get('mean_ccc', 0)):.3f}
 
-Interpretation: Harmonization effectively preserves radiomics features within each domain
+interpretation: harmonization effectively preserves radiomics features within each domain
 while improving cross-domain feature alignment, supporting clinical validity.
 """
 
@@ -650,11 +650,11 @@ def create_latex_table(results: Dict, output_path: Path):
 
     latex = r"""\begin{table}[htbp]
 \centering
-\caption{Radiomics Feature Preservation Analysis}
+\caption{radiomics feature preservation analysis}
 \label{tab:radiomics_preservation}
 \begin{tabular}{lccc}
 \toprule
-Category & CCC & ICC & Pearson r \\
+category & ccc & icc & pearson r \\
 \midrule
 """
 

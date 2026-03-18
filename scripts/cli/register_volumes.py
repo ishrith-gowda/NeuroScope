@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Image registration script using the MRIRegistration module.
+image registration script using the mriregistration module.
 
-This script applies registration between MRI volumes.
+this script applies registration between mri volumes.
 """
 
 import argparse
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import sys
 
-# Add the project root to the Python path if not already there
+# add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -22,7 +22,7 @@ from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """parse command line arguments."""
     parser = argparse.ArgumentParser(description='Register MRI volumes.')
     parser.add_argument('--fixed-path', type=str, required=True,
                         help='Path to fixed (target) image or directory')
@@ -57,18 +57,18 @@ def parse_args():
 
 
 def main():
-    """Main function."""
+    """main function."""
     args = parse_args()
     
-    # Set up logging
+    # set up logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     setup_logging(log_level=log_level)
     logger = get_logger(__name__)
     
-    # Create output directory
+    # create output directory
     os.makedirs(args.output_path, exist_ok=True)
     
-    # Initialize registration
+    # initialize registration
     registration = MRIRegistration(
         registration_type=args.registration_type,
         metric=args.metric,
@@ -78,7 +78,7 @@ def main():
         verbose=args.verbose
     )
     
-    # Process volumes
+    # process volumes
     results = registration.batch_register(
         fixed_path=args.fixed_path,
         moving_path=args.moving_path,
@@ -89,7 +89,7 @@ def main():
         save_transforms=args.save_transforms
     )
     
-    # Save metrics to JSON if requested
+    # save metrics to json if requested
     if args.output_json:
         with open(args.output_json, 'w') as f:
             json.dump(results, f, indent=2)
@@ -97,7 +97,7 @@ def main():
     
     logger.info("Registration complete")
     
-    # Compute summary statistics
+    # compute summary statistics
     if results:
         similarities = [res['final_similarity'] for res in results.values()]
         avg_similarity = sum(similarities) / len(similarities)

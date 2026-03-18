@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-LaTeX Figure Configuration for Publication-Grade Figures
+latex figure configuration for publication-grade figures
 
-Configures matplotlib to generate publication-ready figures with LaTeX rendering
-suitable for MICCAI, IEEE TMI, and other top-tier medical imaging venues.
+configures matplotlib to generate publication-ready figures with latex rendering
+suitable for miccai, ieee tmi, and other top-tier medical imaging venues.
 
-Author: NeuroScope Research Team
-Date: January 2026
+author: neuroscope research team
+date: january 2026
 """
 
 import matplotlib
@@ -69,23 +69,23 @@ COLORS = {
 
 def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
     """
-    Calculate figure dimensions for publication.
+    calculate figure dimensions for publication.
 
-    Args:
+    args:
         width: 'columnwidth' (3.5in), 'textwidth' (7in), or custom float
-        fraction: Fraction of width to use
+        fraction: fraction of width to use
         aspect_ratio: 'golden' (1.618), 'square' (1.0), or custom float
 
-    Returns:
+    returns:
         tuple: (width, height) in inches
     """
-    # IEEE column widths
+    # ieee column widths
     widths = {
-        'columnwidth': 3.5,  # Single column
-        'textwidth': 7.0,     # Full width (two columns)
+        'columnwidth': 3.5,  # single column
+        'textwidth': 7.0,     # full width (two columns)
     }
 
-    # Get width in inches
+    # get width in inches
     if isinstance(width, str):
         fig_width = widths.get(width, 7.0)
     else:
@@ -93,24 +93,24 @@ def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
 
     fig_width = fig_width * fraction
 
-    # Calculate height based on aspect ratio
+    # calculate height based on aspect ratio
     if aspect_ratio == 'golden':
-        fig_height = fig_width / 1.618  # Golden ratio
+        fig_height = fig_width / 1.618  # golden ratio
     elif aspect_ratio == 'square':
         fig_height = fig_width
     elif isinstance(aspect_ratio, (int, float)):
         fig_height = fig_width / aspect_ratio
     else:
-        fig_height = fig_width / 1.618  # Default to golden
+        fig_height = fig_width / 1.618  # default to golden
 
     return (fig_width, fig_height)
 
 
 def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
     """
-    Save figure in multiple formats with consistent settings.
+    save figure in multiple formats with consistent settings.
 
-    Args:
+    args:
         fig: matplotlib figure object
         filename: output filename (without extension)
         output_dir: directory to save figures
@@ -130,14 +130,14 @@ def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
             bbox_inches='tight',
             pad_inches=0.05,
         )
-        print(f"Saved: {output_path}")
+        print(f"saved: {output_path}")
 
 
 def add_statistical_annotation(ax, x1, x2, y, h, text, color='black'):
     """
-    Add statistical significance annotation to plot.
+    add statistical significance annotation to plot.
 
-    Args:
+    args:
         ax: matplotlib axes
         x1, x2: x positions for bracket
         y: y position for bracket base
@@ -151,13 +151,13 @@ def add_statistical_annotation(ax, x1, x2, y, h, text, color='black'):
 
 def create_colormap(name='viridis', reverse=False):
     """
-    Get colormap suitable for medical images.
+    get colormap suitable for medical images.
 
-    Args:
+    args:
         name: colormap name ('gray', 'viridis', 'plasma', 'hot', 'jet')
         reverse: reverse the colormap
 
-    Returns:
+    returns:
         matplotlib colormap
     """
     cmap = plt.get_cmap(name)
@@ -188,8 +188,8 @@ SIGNIFICANCE = {
 
 
 if __name__ == '__main__':
-    # Test LaTeX rendering
-    print("Testing LaTeX configuration...")
+    # test latex rendering
+    print("testing latex configuration...")
 
     fig, ax = plt.subplots(figsize=FIGURE_SIZES['single'])
     x = np.linspace(0, 2*np.pi, 100)
@@ -204,5 +204,5 @@ if __name__ == '__main__':
     save_figure(fig, 'test_latex_rendering', output_dir='figures/main', formats=['pdf'])
     plt.close()
 
-    print("LaTeX configuration test complete!")
-    print(f"Test figure saved to: figures/main/test_latex_rendering.pdf")
+    print("latex configuration test complete!")
+    print(f"test figure saved to: figures/main/test_latex_rendering.pdf")

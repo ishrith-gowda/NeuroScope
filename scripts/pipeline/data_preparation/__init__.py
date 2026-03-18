@@ -1,6 +1,6 @@
-"""Data preparation pipeline scripts for NeuroScope.
+"""data preparation pipeline scripts for neuroscope.
 
-This module provides scripts for data preparation and preprocessing pipelines.
+this module provides scripts for data preparation and preprocessing pipelines.
 """
 
-# Data preparation pipeline initialization
+# data preparation pipeline initialization

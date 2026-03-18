@@ -1,6 +1,6 @@
-"""Model development pipeline scripts for NeuroScope.
+"""model development pipeline scripts for neuroscope.
 
-This module provides scripts for model development and training pipelines.
+this module provides scripts for model development and training pipelines.
 """
 
-# Model development pipeline initialization
+# model development pipeline initialization

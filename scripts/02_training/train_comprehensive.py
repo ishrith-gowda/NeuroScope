@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-Comprehensive Training Launch Script for 2.5D SA-CycleGAN.
+comprehensive training launch script for 2.5d sa-cyclegan.
 
-This is the main entry point for launching professional-grade training
+this is the main entry point for launching professional-grade training
 with the full logging, sampling, and figure generation infrastructure.
 
-Usage:
-    # Using YAML config
+usage:
+    # using yaml config
     python train_comprehensive.py --config ../../../neuroscope/config/experiments/train_sa_cyclegan_25d.yaml
     
-    # Quick debug run
+    # quick debug run
     python train_comprehensive.py --debug
     
-    # Command line overrides
+    # command line overrides
     python train_comprehensive.py --epochs 50 --batch_size 2 --lr 1e-4
     
-    # Resume training
+    # resume training
     python train_comprehensive.py --resume /path/to/checkpoint.pth
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 import os
@@ -27,7 +27,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 
-# Add project root to path
+# add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -37,31 +37,31 @@ import random
 
 
 def set_environment():
-    """Configure environment for optimal training."""
-    # Reduce memory fragmentation
+    """configure environment for optimal training."""
+    # reduce memory fragmentation
     os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
 
-    # For reproducibility
+    # for reproducibility
     os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
-    # Fix macOS malloc stack logging warnings
+    # fix macos malloc stack logging warnings
     os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
     os.environ['MallocStackLogging'] = '0'
 
-    # Suppress unhelpful warnings
+    # suppress unhelpful warnings
     import warnings
     warnings.filterwarnings('ignore', category=UserWarning)
     
 
 def print_banner():
-    """Print simple training header."""
+    """print simple training header."""
     print("\n" + "="*60)
     print("neuroscope - 2.5d sa-cyclegan training")
     print("="*60)
 
 
 def get_device_info():
-    """Get device information."""
+    """get device information."""
     if torch.cuda.is_available():
         device = torch.device('cuda')
         name = torch.cuda.get_device_name(0)
@@ -75,7 +75,7 @@ def get_device_info():
 
 
 def create_debug_config():
-    """Create minimal debug configuration."""
+    """create minimal debug configuration."""
     from neuroscope.training.trainers.comprehensive_trainer import TrainingConfig
     
     return TrainingConfig(
@@ -93,7 +93,7 @@ def create_debug_config():
 
 
 def create_config_from_args(args) -> 'TrainingConfig':
-    """Create configuration from command line arguments."""
+    """create configuration from command line arguments."""
     from neuroscope.training.trainers.comprehensive_trainer import TrainingConfig
     
     if args.config:
@@ -106,7 +106,7 @@ def create_config_from_args(args) -> 'TrainingConfig':
         config = TrainingConfig()
         print("using default configuration")
     
-    # Command line overrides
+    # command line overrides
     if args.epochs is not None:
         config.epochs = args.epochs
     if args.batch_size is not None:
@@ -123,9 +123,9 @@ def create_config_from_args(args) -> 'TrainingConfig':
     if args.output_dir is not None:
         config.output_dir = args.output_dir
 
-    # macOS-specific fix: reduce num_workers to avoid fork issues
+    # macos-specific fix: reduce num_workers to avoid fork issues
     import platform
-    if platform.system() == 'Darwin':  # macOS
+    if platform.system() == 'Darwin':  # macos
         if hasattr(config, 'num_workers') and config.num_workers > 2:
             print(f"macos detected: reducing num_workers from {config.num_workers} to 2")
             config.num_workers = 2
@@ -134,7 +134,7 @@ def create_config_from_args(args) -> 'TrainingConfig':
 
 
 def verify_data_paths(config):
-    """Verify data directories exist and contain valid MRI data."""
+    """verify data directories exist and contain valid mri data."""
     brats_path = Path(config.brats_dir)
     upenn_path = Path(config.upenn_dir)
 
@@ -144,7 +144,7 @@ def verify_data_paths(config):
         print(f"   brats directory not found: {brats_path}")
         return False
     else:
-        # Count subject folders and NIfTI files
+        # count subject folders and nifti files
         brats_subjects = [d for d in brats_path.iterdir() if d.is_dir()]
         brats_nifti = list(brats_path.glob("**/*.nii.gz"))
         print(f"   brats: {len(brats_subjects)} subjects, {len(brats_nifti)} nifti files")
@@ -155,7 +155,7 @@ def verify_data_paths(config):
         print(f"   upenn directory not found: {upenn_path}")
         return False
     else:
-        # Count subject folders and NIfTI files
+        # count subject folders and nifti files
         upenn_subjects = [d for d in upenn_path.iterdir() if d.is_dir()]
         upenn_nifti = list(upenn_path.glob("**/*.nii.gz"))
         print(f"   upenn: {len(upenn_subjects)} subjects, {len(upenn_nifti)} nifti files")
@@ -166,7 +166,7 @@ def verify_data_paths(config):
 
 
 def print_config_summary(config):
-    """Print configuration summary."""
+    """print configuration summary."""
     print("\n" + "="*60)
     print("configuration summary")
     print("="*60)
@@ -203,33 +203,33 @@ def print_config_summary(config):
 
 
 def main():
-    """Main entry point."""
+    """main entry point."""
     parser = argparse.ArgumentParser(
         description="Train 2.5D SA-CycleGAN with comprehensive logging",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-    # Train with YAML config
+examples:
+    # train with yaml config
     python train_comprehensive.py --config path/to/config.yaml
     
-    # Quick debug run
+    # quick debug run
     python train_comprehensive.py --debug
     
-    # Override settings
+    # override settings
     python train_comprehensive.py --epochs 50 --batch_size 8 --lr 1e-4
     
-    # Resume training
+    # resume training
     python train_comprehensive.py --resume experiments/run_001/checkpoints/latest.pth
         """
     )
     
-    # Config
+    # config
     parser.add_argument('--config', type=str, default=None,
                        help='Path to YAML config file')
     parser.add_argument('--debug', action='store_true',
                        help='Run quick debug training (2 epochs)')
     
-    # Overrides
+    # overrides
     parser.add_argument('--epochs', type=int, default=None,
                        help='Number of training epochs')
     parser.add_argument('--batch_size', type=int, default=None,
@@ -247,52 +247,52 @@ Examples:
     
     args = parser.parse_args()
     
-    # Setup
+    # setup
     set_environment()
     print_banner()
 
-    # Device info
+    # device info
     device, device_name = get_device_info()
     print(f"device: {device_name}")
     print(f"python: {sys.version.split()[0]}")
     print(f"pytorch: {torch.__version__}")
 
-    # Create config
+    # create config
     config = create_config_from_args(args)
 
-    # Verify paths
+    # verify paths
     if not verify_data_paths(config):
         print("\ndata verification failed. exiting.")
         sys.exit(1)
 
-    # Print summary
+    # print summary
     print_config_summary(config)
 
-    # Confirm
+    # confirm
     if not args.debug:
         response = input("start training? [y/n]: ").strip().lower()
         if response and response != 'y':
             print("training cancelled.")
             sys.exit(0)
 
-    # Import trainer (after all checks to fail fast)
+    # import trainer (after all checks to fail fast)
     from neuroscope.training.trainers.comprehensive_trainer import ComprehensiveTrainer
 
-    # Create trainer
+    # create trainer
     print("\ninitializing trainer...")
     trainer = ComprehensiveTrainer(config)
 
-    # Model summary
+    # model summary
     print(f"\nmodel parameters: {trainer.total_params:,}")
     print(f"   trainable: {trainer.trainable_params:,}")
 
-    # Data summary
+    # data summary
     print(f"\ndataset splits:")
     print(f"   train: {trainer.train_samples:,} samples")
     print(f"   valid: {trainer.val_samples:,} samples")
     print(f"   test: {trainer.test_samples:,} samples")
 
-    # Start training
+    # start training
     print("\n" + "="*60)
     print("starting training")
     print("="*60 + "\n")

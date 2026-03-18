@@ -11,7 +11,7 @@ from neuroscope_preprocessing_config import PATHS
 
 def configure_logging() -> None:
     """
-    Configure the root logger to output debug information with timestamps.
+    configure the root logger to output debug information with timestamps.
     """
     logging.basicConfig(
         level=logging.INFO,
@@ -21,31 +21,31 @@ def configure_logging() -> None:
 
 def verify_mri_file(file_path: Path) -> bool:
     """
-    Verify that a file contains MRI data, not segmentation masks.
+    verify that a file contains mri data, not segmentation masks.
     
-    Args:
-        file_path: Path to the NIfTI file to verify
+    args:
+        file_path: path to the nifti file to verify
         
-    Returns:
-        bool: True if file appears to be MRI data, False if it's likely a mask
+    returns:
+        bool: true if file appears to be mri data, false if it's likely a mask
     """
     try:
         img = sitk.ReadImage(str(file_path))
         arr = sitk.GetArrayFromImage(img).astype(np.float32)
         
-        # Check if it's binary (0s and 1s only) - likely a mask
+        # check if it's binary (0s and 1s only) - likely a mask
         unique_vals = np.unique(arr)
         if len(unique_vals) <= 2 and np.allclose(unique_vals, [0, 1]):
             logging.debug("excluding binary mask file: %s", file_path.name)
             return False
         
-        # Check if it has very few unique values - likely segmentation
+        # check if it has very few unique values - likely segmentation
         if len(unique_vals) < 10:
             logging.debug("axcluding low-variation file (possible mask): %s", file_path.name)
             return False
         
-        # Check if it has reasonable intensity distribution for MRI
-        if arr.std() < 0.01:  # Very low variation
+        # check if it has reasonable intensity distribution for mri
+        if arr.std() < 0.01:  # very low variation
             logging.debug("axcluding low-variation file: %s", file_path.name)
             return False
             
@@ -62,15 +62,15 @@ def find_modality_files(
     exclude_patterns: Set[str] = None
 ) -> Tuple[Dict[str, str], List[str]]:
     """
-    Find modality files for a subject, with robust exclusion of segmentation files.
+    find modality files for a subject, with robust exclusion of segmentation files.
     
-    Args:
-        subject_dir: Path to subject directory
-        modality_suffixes: List of required filename suffixes
-        exclude_patterns: Set of patterns to exclude from filenames
+    args:
+        subject_dir: path to subject directory
+        modality_suffixes: list of required filename suffixes
+        exclude_patterns: set of patterns to exclude from filenames
         
-    Returns:
-        Tuple of (found_files_dict, missing_suffixes_list)
+    returns:
+        tuple of (found_files_dict, missing_suffixes_list)
     """
     if exclude_patterns is None:
         exclude_patterns = {'_seg', 'segmentation', 'mask', 'label'}
@@ -79,12 +79,12 @@ def find_modality_files(
         logging.warning("subject directory does not exist: %s", subject_dir)
         return {}, modality_suffixes.copy()
     
-    # Get all NIfTI files in directory
+    # get all nifti files in directory
     nifti_files = []
     for pattern in ['*.nii.gz', '*.nii']:
         nifti_files.extend(subject_dir.glob(pattern))
     
-    # Filter out segmentation/mask files
+    # filter out segmentation/mask files
     filtered_files = []
     for file_path in nifti_files:
         filename_lower = file_path.name.lower()
@@ -96,14 +96,14 @@ def find_modality_files(
         else:
             logging.debug("excluded segmentation file: %s", file_path.name)
     
-    # Match files to required modalities
+    # match files to required modalities
     found: Dict[str, str] = {}
     missing: List[str] = []
     
     for suffix in modality_suffixes:
         matches = [f for f in filtered_files if f.name.endswith(suffix)]
         if matches:
-            # Take the first match if multiple found
+            # take the first match if multiple found
             found[suffix] = str(matches[0])
             if len(matches) > 1:
                 logging.warning("multiple files found for %s in %s, using: %s", 
@@ -121,15 +121,15 @@ def scan_dataset(
     dataset_name: str
 ) -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
     """
-    Scan subject subdirectories under root_dir and check for required modalities.
+    scan subject subdirectories under root_dir and check for required modalities.
 
-    Args:
-        root_dir: Path to the dataset root containing subject folders
-        modality_suffixes: List of filename suffixes for required modalities
-        dataset_name: Name of dataset for logging purposes
+    args:
+        root_dir: path to the dataset root containing subject folders
+        modality_suffixes: list of filename suffixes for required modalities
+        dataset_name: name of dataset for logging purposes
 
-    Returns:
-        Tuple of (valid_subjects_dict, missing_subjects_dict)
+    returns:
+        tuple of (valid_subjects_dict, missing_subjects_dict)
     """
     valid: Dict[str, Dict[str, str]] = {}
     missing: Dict[str, List[str]] = {}
@@ -140,7 +140,7 @@ def scan_dataset(
 
     logging.info("scanning %s dataset at: %s", dataset_name, root_dir)
     
-    # Get all subdirectories (potential subjects)
+    # get all subdirectories (potential subjects)
     try:
         subject_dirs = [d for d in root_dir.iterdir() if d.is_dir()]
     except PermissionError as e:
@@ -174,13 +174,13 @@ def scan_dataset(
 
 def validate_metadata(metadata: Dict) -> bool:
     """
-    Validate the generated metadata structure.
+    validate the generated metadata structure.
     
-    Args:
-        metadata: The metadata dictionary to validate
+    args:
+        metadata: the metadata dictionary to validate
         
-    Returns:
-        bool: True if metadata is valid, False otherwise
+    returns:
+        bool: true if metadata is valid, false otherwise
     """
     required_sections = ['brats', 'upenn']
     required_keys = ['valid_subjects', 'missing_subjects']
@@ -195,7 +195,7 @@ def validate_metadata(metadata: Dict) -> bool:
                 logging.error("missing key '%s' in section '%s'", key, section)
                 return False
     
-    # Check that we have some valid subjects
+    # check that we have some valid subjects
     total_valid = sum(len(metadata[section]['valid_subjects']) for section in required_sections)
     if total_valid == 0:
         logging.error("no valid subjects found in any dataset")
@@ -207,17 +207,17 @@ def validate_metadata(metadata: Dict) -> bool:
 
 def main() -> None:
     """
-    Main entry point for building the neuroscope dataset metadata.
+    main entry point for building the neuroscope dataset metadata.
 
-    Scans the BraTS and UPenn structural datasets for subjects with complete modalities,
-    validates the data quality, and writes the combined metadata to JSON.
+    scans the brats and upenn structural datasets for subjects with complete modalities,
+    validates the data quality, and writes the combined metadata to json.
     """
     configure_logging()
     
     logging.info("=== NEUROSCOPE DATASET METADATA GENERATION ===")
     logging.info("Using neuroscope_preprocessing_config.py for path management")
 
-    # Get dataset paths from config
+    # get dataset paths from config
     brats_dir = PATHS['raw_brats_root']
     upenn_dir = PATHS['raw_upenn_root']
     output_path = PATHS['metadata_base']
@@ -226,15 +226,15 @@ def main() -> None:
     logging.info("upenn dataset path: %s", upenn_dir)
     logging.info("output metadata path: %s", output_path)
 
-    # Define required modalities for each dataset
+    # define required modalities for each dataset
     brats_modalities = ["_t1.nii.gz", "_t1Gd.nii.gz", "_t2.nii.gz", "_flair.nii.gz"]
     upenn_modalities = ["_T1.nii.gz", "_T1GD.nii.gz", "_T2.nii.gz", "_FLAIR.nii.gz"]
 
-    # Scan datasets
+    # scan datasets
     brats_valid, brats_missing = scan_dataset(brats_dir, brats_modalities, "BraTS")
     upenn_valid, upenn_missing = scan_dataset(upenn_dir, upenn_modalities, "UPenn-GBM")
 
-    # Compile metadata
+    # compile metadata
     metadata = {
         "brats": {
             "valid_subjects": brats_valid,
@@ -265,15 +265,15 @@ def main() -> None:
         }
     }
 
-    # Validate metadata before saving
+    # validate metadata before saving
     if not validate_metadata(metadata):
         logging.error("Metadata validation failed. Aborting.")
         return
 
-    # Ensure output directory exists
+    # ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Save metadata JSON
+    # save metadata json
     try:
         with open(output_path, "w") as outfile:
             json.dump(metadata, outfile, indent=2, sort_keys=True)
@@ -282,9 +282,9 @@ def main() -> None:
         logging.error("failed to write metadata json: %s", e)
         return
 
-    # Print summary
+    # print summary
     print("\n" + "="*60)
-    print("NEUROSCOPE DATASET METADATA GENERATION SUMMARY")
+    print("neuroscope dataset metadata generation summary")
     print("="*60)
     
     for dataset_name, section_key in [("BraTS-TCGA-GBM", "brats"), ("UPenn-GBM", "upenn")]:
@@ -298,7 +298,7 @@ def main() -> None:
     total_complete = metadata['brats']['dataset_info']['complete_subjects'] + \
                     metadata['upenn']['dataset_info']['complete_subjects']
     
-    print(f"\nOVERALL:")
+    print(f"\noverall:")
     print(f"  total complete subjects:  {total_complete}")
     print("="*60)
 

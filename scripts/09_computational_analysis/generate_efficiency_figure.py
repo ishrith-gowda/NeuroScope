@@ -115,12 +115,12 @@ def create_efficiency_table(metrics_list: list, output_path: Path):
     latex = r"""\begin{table}[htbp]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\caption{Computational Efficiency Comparison of Harmonization Methods}
+\caption{computational efficiency comparison of harmonization methods}
 \vspace{0.5em}
 \label{tab:efficiency}
 \begin{tabular}{lccc}
 \toprule
-Method & Time/Slice (ms) & Time/Volume (s) & Throughput (vol/hr) \\
+method & time/slice (ms) & time/volume (s) & throughput (vol/hr) \\
 \midrule
 """
 

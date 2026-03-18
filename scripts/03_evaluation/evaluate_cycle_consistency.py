@@ -2,13 +2,13 @@
 """
 cycle consistency evaluation for sa-cyclegan-2.5d
 
-evaluates the model's cycle consistency (A→B→A and B→A→B) which is what
+evaluates the model's cycle consistency (a→b→a and b→a→b) which is what
 cycleg
 
-an optimizes for. this is the CORRECT metric for unpaired translation,
-unlike direct SSIM which compares to random target anatomy.
+an optimizes for. this is the correct metric for unpaired translation,
+unlike direct ssim which compares to random target anatomy.
 
-cycle consistency SSIM should match the training validation SSIM (~0.98).
+cycle consistency ssim should match the training validation ssim (~0.98).
 """
 
 import argparse
@@ -168,22 +168,22 @@ class CycleConsistencyEvaluator:
         logger.info("running cycle reconstructions...")
         with torch.no_grad():
             for batch_idx, batch in enumerate(tqdm(test_loader, desc="evaluating cycles")):
-                real_a = batch['A'].to(self.device)  # [B, 12, H, W]
-                real_b = batch['B'].to(self.device)  # [B, 12, H, W]
-                center_a = batch['A_center'].to(self.device)  # [B, 4, H, W]
-                center_b = batch['B_center'].to(self.device)  # [B, 4, H, W]
+                real_a = batch['A'].to(self.device)  # [b, 12, h, w]
+                real_b = batch['B'].to(self.device)  # [b, 12, h, w]
+                center_a = batch['A_center'].to(self.device)  # [b, 4, h, w]
+                center_b = batch['B_center'].to(self.device)  # [b, 4, h, w]
 
-                # cycle A: A → B → A
-                fake_b = model.G_A2B(real_a)  # [B, 4, H, W]
-                fake_b_3slice = fake_b.unsqueeze(2).repeat(1, 1, 3, 1, 1)  # [B, 4, 3, H, W]
-                fake_b_3slice = fake_b_3slice.view(fake_b.size(0), -1, fake_b.size(2), fake_b.size(3))  # [B, 12, H, W]
-                rec_a = model.G_B2A(fake_b_3slice)  # [B, 4, H, W]
+                # cycle a: a → b → a
+                fake_b = model.G_A2B(real_a)  # [b, 4, h, w]
+                fake_b_3slice = fake_b.unsqueeze(2).repeat(1, 1, 3, 1, 1)  # [b, 4, 3, h, w]
+                fake_b_3slice = fake_b_3slice.view(fake_b.size(0), -1, fake_b.size(2), fake_b.size(3))  # [b, 12, h, w]
+                rec_a = model.G_B2A(fake_b_3slice)  # [b, 4, h, w]
 
-                # cycle B: B → A → B
-                fake_a = model.G_B2A(real_b)  # [B, 4, H, W]
-                fake_a_3slice = fake_a.unsqueeze(2).repeat(1, 1, 3, 1, 1)  # [B, 4, 3, H, W]
-                fake_a_3slice = fake_a_3slice.view(fake_a.size(0), -1, fake_a.size(2), fake_a.size(3))  # [B, 12, H, W]
-                rec_b = model.G_A2B(fake_a_3slice)  # [B, 4, H, W]
+                # cycle b: b → a → b
+                fake_a = model.G_B2A(real_b)  # [b, 4, h, w]
+                fake_a_3slice = fake_a.unsqueeze(2).repeat(1, 1, 3, 1, 1)  # [b, 4, 3, h, w]
+                fake_a_3slice = fake_a_3slice.view(fake_a.size(0), -1, fake_a.size(2), fake_a.size(3))  # [b, 12, h, w]
+                rec_b = model.G_A2B(fake_a_3slice)  # [b, 4, h, w]
 
                 # move to cpu
                 center_a_cpu = center_a.cpu().numpy()
@@ -193,12 +193,12 @@ class CycleConsistencyEvaluator:
 
                 # compute metrics for each sample
                 for i in range(center_a.size(0)):
-                    # cycle A metrics
+                    # cycle a metrics
                     metrics_a = self.compute_cycle_metrics(center_a_cpu[i], rec_a_cpu[i])
                     for key in metrics_a:
                         cycle_a_metrics[key].append(metrics_a[key])
 
-                    # cycle B metrics
+                    # cycle b metrics
                     metrics_b = self.compute_cycle_metrics(center_b_cpu[i], rec_b_cpu[i])
                     for key in metrics_b:
                         cycle_b_metrics[key].append(metrics_b[key])

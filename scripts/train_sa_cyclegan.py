@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-SA-CycleGAN Training Script for NeurIPS-level Brain MRI Domain Translation
+sa-cyclegan training script for neurips-level brain mri domain translation
 
-This script implements training for the Self-Attention CycleGAN (SA-CycleGAN)
-architecture with advanced loss functions for brain MRI domain translation
-between BraTS and UPenn-GBM datasets.
+this script implements training for the self-attention cyclegan (sa-cyclegan)
+architecture with advanced loss functions for brain mri domain translation
+between brats and upenn-gbm datasets.
 
-Key Features:
-1. SA-CycleGAN with multi-scale self-attention
-2. Modality-aware encoding for 4-channel MRI (T1, T1ce, T2, FLAIR)
-3. Advanced losses: Perceptual, Contrastive, Modality-specific, Tumor preservation
-4. Multi-scale discriminator with spectral normalization
-5. Comprehensive logging with TensorBoard
-6. Checkpoint management with best model selection
-7. Learning rate scheduling with warmup
+key features:
+1. sa-cyclegan with multi-scale self-attention
+2. modality-aware encoding for 4-channel mri (t1, t1ce, t2, flair)
+3. advanced losses: perceptual, contrastive, modality-specific, tumor preservation
+4. multi-scale discriminator with spectral normalization
+5. comprehensive logging with tensorboard
+6. checkpoint management with best model selection
+7. learning rate scheduling with warmup
 
-Usage:
+usage:
     python train_sa_cyclegan.py --data_dir ./preprocessed --epochs 100 --batch_size 4
 
-Author: NeuroScope Team
-Date: 2025
+author: neuroscope team
+date: 2025
 """
 
 import os
@@ -46,11 +46,11 @@ from PIL import Image
 from tqdm import tqdm
 import nibabel as nib
 
-# Add project root to path
+# add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Import our novel architecture and losses
+# import our novel architecture and losses
 try:
     from neuroscope.models.architectures.sa_cyclegan import (
         SACycleGAN, SAGenerator, MultiScaleDiscriminator, create_sa_cyclegan
@@ -60,46 +60,46 @@ try:
         TumorPreservationLoss, TotalLoss
     )
 except ImportError:
-    print("Warning: Could not import custom modules. Using fallback.")
+    print("warning: could not import custom modules. using fallback.")
     sys.path.insert(0, str(project_root / 'neuroscope' / 'models' / 'architectures'))
     sys.path.insert(0, str(project_root / 'neuroscope' / 'models' / 'losses'))
 
 
 # ============================================================================
-# Configuration
+# configuration
 # ============================================================================
 
 class Config:
-    """Training configuration with sensible defaults for medical imaging."""
+    """training configuration with sensible defaults for medical imaging."""
     
-    # Data
+    # data
     data_dir: str = './preprocessed'
     brats_dir: str = 'brats'
     upenn_dir: str = 'upenn'
     image_size: int = 256
     num_workers: int = 4
     
-    # Model
+    # model
     input_channels: int = 4
-    ngf: int = 64  # Generator filters
-    ndf: int = 64  # Discriminator filters
+    ngf: int = 64  # generator filters
+    ndf: int = 64  # discriminator filters
     n_residual_blocks: int = 9
     use_modality_encoder: bool = True
     
-    # Training
+    # training
     epochs: int = 100
     batch_size: int = 4
     lr_g: float = 1e-4
-    lr_d: float = 2e-4  # TTUR: discriminator learns faster
+    lr_d: float = 2e-4  # ttur: discriminator learns faster
     beta1: float = 0.5
     beta2: float = 0.999
     weight_decay: float = 1e-5
     
-    # Learning rate schedule
+    # learning rate schedule
     warmup_epochs: int = 5
     lr_decay_type: str = 'cosine'  # 'cosine' or 'linear'
     
-    # Loss weights
+    # loss weights
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
     lambda_perceptual: float = 1.0
@@ -107,25 +107,25 @@ class Config:
     lambda_modality: float = 1.0
     lambda_tumor: float = 2.0
     
-    # Regularization
+    # regularization
     label_smoothing_real: float = 0.9
     label_smoothing_fake: float = 0.1
     replay_buffer_size: int = 50
     gradient_clip: float = 1.0
     
-    # Logging
+    # logging
     log_interval: int = 100
     save_interval: int = 10
     sample_interval: int = 500
     
-    # Paths
+    # paths
     checkpoint_dir: str = './checkpoints/sa_cyclegan'
     log_dir: str = './runs/sa_cyclegan'
     sample_dir: str = './samples/sa_cyclegan'
     
-    # Device
+    # device
     device: str = 'auto'  # 'auto', 'cuda', 'mps', 'cpu'
-    mixed_precision: bool = False  # Use AMP for faster training
+    mixed_precision: bool = False  # use amp for faster training
     
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -137,14 +137,14 @@ class Config:
 
 
 # ============================================================================
-# Data Loading
+# data loading
 # ============================================================================
 
 class MRISliceDataset(Dataset):
     """
-    Dataset for loading pre-processed 2D MRI slices with caching.
+    dataset for loading pre-processed 2d mri slices with caching.
     
-    Supports on-the-fly augmentation and multi-modal MRI loading.
+    supports on-the-fly augmentation and multi-modal mri loading.
     """
     
     def __init__(
@@ -154,45 +154,45 @@ class MRISliceDataset(Dataset):
         image_size: int = 256,
         augment: bool = True,
         cache_size: int = 1000,
-        slice_range: Tuple[int, int] = (40, 120)  # Focus on brain slices
+        slice_range: Tuple[int, int] = (40, 120)  # focus on brain slices
     ):
         self.root_dir = Path(root_dir) / domain
         self.image_size = image_size
         self.augment = augment
         self.slice_range = slice_range
         
-        # Find all subjects
+        # find all subjects
         self.subjects = sorted([
             d for d in self.root_dir.iterdir()
             if d.is_dir() and not d.name.startswith('.')
         ])
         
-        # Pre-compute slice indices
+        # pre-compute slice indices
         self.slices = []
         for subject in self.subjects:
             for slice_idx in range(slice_range[0], slice_range[1]):
                 self.slices.append((subject, slice_idx))
         
-        # LRU cache for loaded slices
+        # lru cache for loaded slices
         self.cache = {}
         self.cache_order = deque(maxlen=cache_size)
         
-        # Modality names (ordered)
+        # modality names (ordered)
         self.modalities = ['t1', 't1ce', 't2', 'flair']
         
-        # Augmentation transforms
+        # augmentation transforms
         self.transform = transforms.Compose([
             transforms.RandomHorizontalFlip(p=0.5 if augment else 0),
             transforms.RandomRotation(10 if augment else 0),
         ])
         
-        print(f"Loaded {domain} dataset: {len(self.subjects)} subjects, {len(self.slices)} slices")
+        print(f"loaded {domain} dataset: {len(self.subjects)} subjects, {len(self.slices)} slices")
     
     def __len__(self) -> int:
         return len(self.slices)
     
     def _load_slice(self, subject: Path, slice_idx: int) -> torch.Tensor:
-        """Load and stack all modalities for a slice."""
+        """load and stack all modalities for a slice."""
         cache_key = (str(subject), slice_idx)
         
         if cache_key in self.cache:
@@ -200,12 +200,12 @@ class MRISliceDataset(Dataset):
         
         modality_slices = []
         for mod in self.modalities:
-            # Try different file patterns
+            # try different file patterns
             nifti_file = subject / f'{mod}.nii.gz'
             if not nifti_file.exists():
                 nifti_file = subject / f'{subject.name}_{mod}.nii.gz'
             if not nifti_file.exists():
-                # Search for any file containing the modality
+                # search for any file containing the modality
                 matches = list(subject.glob(f'*{mod}*.nii.gz'))
                 if matches:
                     nifti_file = matches[0]
@@ -219,12 +219,12 @@ class MRISliceDataset(Dataset):
             else:
                 slice_data = np.zeros((self.image_size, self.image_size), dtype=np.float32)
             
-            # Normalize to [-1, 1]
+            # normalize to [-1, 1]
             if slice_data.max() > slice_data.min():
                 slice_data = (slice_data - slice_data.min()) / (slice_data.max() - slice_data.min())
                 slice_data = slice_data * 2 - 1
             
-            # Resize if necessary
+            # resize if necessary
             if slice_data.shape != (self.image_size, self.image_size):
                 slice_data = np.array(
                     Image.fromarray(slice_data).resize(
@@ -235,10 +235,10 @@ class MRISliceDataset(Dataset):
             
             modality_slices.append(slice_data)
         
-        # Stack modalities [4, H, W]
+        # stack modalities [4, h, w]
         stacked = torch.tensor(np.stack(modality_slices), dtype=torch.float32)
         
-        # Cache management
+        # cache management
         if len(self.cache) >= len(self.cache_order):
             old_key = self.cache_order.popleft()
             self.cache.pop(old_key, None)
@@ -252,7 +252,7 @@ class MRISliceDataset(Dataset):
         subject, slice_idx = self.slices[idx]
         data = self._load_slice(subject, slice_idx)
         
-        # Apply augmentation
+        # apply augmentation
         if self.augment:
             data = self.transform(data)
         
@@ -261,9 +261,9 @@ class MRISliceDataset(Dataset):
 
 class ReplayBuffer:
     """
-    Replay buffer for training stabilization.
+    replay buffer for training stabilization.
     
-    Stores previously generated images and randomly samples from buffer
+    stores previously generated images and randomly samples from buffer
     to reduce mode oscillation.
     """
     
@@ -272,7 +272,7 @@ class ReplayBuffer:
         self.data = []
     
     def push_and_pop(self, images: torch.Tensor) -> torch.Tensor:
-        """Add new images and return a mix of new and old images."""
+        """add new images and return a mix of new and old images."""
         result = []
         for img in images:
             img = img.unsqueeze(0)
@@ -290,11 +290,11 @@ class ReplayBuffer:
 
 
 # ============================================================================
-# Training Utilities
+# training utilities
 # ============================================================================
 
 def get_device(device_str: str = 'auto') -> torch.device:
-    """Get the best available device."""
+    """get the best available device."""
     if device_str == 'auto':
         if torch.cuda.is_available():
             return torch.device('cuda')
@@ -306,7 +306,7 @@ def get_device(device_str: str = 'auto') -> torch.device:
 
 
 def get_scheduler(optimizer, config: Config, steps_per_epoch: int):
-    """Create learning rate scheduler with warmup."""
+    """create learning rate scheduler with warmup."""
     
     def warmup_lambda(epoch):
         if epoch < config.warmup_epochs:
@@ -333,7 +333,7 @@ def save_checkpoint(
     checkpoint_dir: str,
     is_best: bool = False
 ):
-    """Save checkpoint with optional best model copy."""
+    """save checkpoint with optional best model copy."""
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
     filepath = Path(checkpoint_dir) / filename
     torch.save(state, filepath)
@@ -352,30 +352,30 @@ def save_samples(
     batch_idx: int,
     sample_dir: str
 ):
-    """Save sample images for visualization."""
+    """save sample images for visualization."""
     Path(sample_dir).mkdir(parents=True, exist_ok=True)
     
-    # Take first sample from batch
+    # take first sample from batch
     real_A = real_A[0].cpu().numpy()
     real_B = real_B[0].cpu().numpy()
     fake_A = fake_A[0].cpu().numpy()
     fake_B = fake_B[0].cpu().numpy()
     
-    # Save each modality
+    # save each modality
     for mod_idx, mod_name in enumerate(['t1', 't1ce', 't2', 'flair']):
-        # Normalize to [0, 255]
+        # normalize to [0, 255]
         def to_img(x):
             x = (x + 1) / 2  # [-1, 1] -> [0, 1]
             x = np.clip(x * 255, 0, 255).astype(np.uint8)
             return Image.fromarray(x)
         
-        # Create comparison grid
+        # create comparison grid
         real_a_img = to_img(real_A[mod_idx])
         fake_b_img = to_img(fake_B[mod_idx])
         real_b_img = to_img(real_B[mod_idx])
         fake_a_img = to_img(fake_A[mod_idx])
         
-        # Horizontal concatenation: real_A | fake_B | real_B | fake_A
+        # horizontal concatenation: real_a | fake_b | real_b | fake_a
         grid = Image.new('L', (256 * 4, 256))
         grid.paste(real_a_img, (0, 0))
         grid.paste(fake_b_img, (256, 0))
@@ -386,12 +386,12 @@ def save_samples(
 
 
 # ============================================================================
-# Training Loop
+# training loop
 # ============================================================================
 
 class SACycleGANTrainer:
     """
-    Trainer class for SA-CycleGAN with advanced losses and comprehensive logging.
+    trainer class for sa-cyclegan with advanced losses and comprehensive logging.
     """
     
     def __init__(self, config: Config):
@@ -399,12 +399,12 @@ class SACycleGANTrainer:
         self.device = get_device(config.device)
         self.scaler = torch.cuda.amp.GradScaler() if config.mixed_precision else None
         
-        # Create directories
+        # create directories
         Path(config.checkpoint_dir).mkdir(parents=True, exist_ok=True)
         Path(config.log_dir).mkdir(parents=True, exist_ok=True)
         Path(config.sample_dir).mkdir(parents=True, exist_ok=True)
         
-        # Initialize model
+        # initialize model
         self.model = create_sa_cyclegan(
             input_channels=config.input_channels,
             ngf=config.ngf,
@@ -412,24 +412,24 @@ class SACycleGANTrainer:
             n_residual_blocks=config.n_residual_blocks
         ).to(self.device)
         
-        # Initialize losses
+        # initialize losses
         self.criterion_gan = nn.MSELoss()
         self.criterion_cycle = nn.L1Loss()
         self.criterion_identity = nn.L1Loss()
         
-        # Advanced losses (only if available)
+        # advanced losses (only if available)
         try:
             self.criterion_perceptual = PerceptualLoss(device=self.device)
             self.criterion_contrastive = ContrastiveLoss(device=self.device)
             self.criterion_modality = ModalitySpecificLoss()
             self.criterion_tumor = TumorPreservationLoss()
             self.use_advanced_losses = True
-            print("Using advanced losses: Perceptual, Contrastive, Modality-specific, Tumor preservation")
+            print("using advanced losses: perceptual, contrastive, modality-specific, tumor preservation")
         except Exception as e:
-            print(f"Warning: Could not initialize advanced losses: {e}")
+            print(f"warning: could not initialize advanced losses: {e}")
             self.use_advanced_losses = False
         
-        # Optimizers (separate for G and D with TTUR)
+        # optimizers (separate for g and d with ttur)
         self.optimizer_G = Adam(
             list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
             lr=config.lr_g,
@@ -444,14 +444,14 @@ class SACycleGANTrainer:
             weight_decay=config.weight_decay
         )
         
-        # Replay buffers
+        # replay buffers
         self.buffer_A = ReplayBuffer(config.replay_buffer_size)
         self.buffer_B = ReplayBuffer(config.replay_buffer_size)
         
-        # TensorBoard writer
+        # tensorboard writer
         self.writer = SummaryWriter(config.log_dir)
         
-        # Training state
+        # training state
         self.epoch = 0
         self.global_step = 0
         self.best_loss = float('inf')
@@ -463,7 +463,7 @@ class SACycleGANTrainer:
         dataloader_B: DataLoader,
         epoch: int
     ) -> Dict[str, float]:
-        """Train for one epoch."""
+        """train for one epoch."""
         self.model.train()
         
         epoch_losses = {
@@ -471,7 +471,7 @@ class SACycleGANTrainer:
             'g_adv': 0, 'd_adv': 0, 'perceptual': 0, 'contrastive': 0
         }
         
-        # Iterate over both domains
+        # iterate over both domains
         iter_A = iter(dataloader_A)
         iter_B = iter(dataloader_B)
         num_batches = min(len(dataloader_A), len(dataloader_B))
@@ -485,22 +485,22 @@ class SACycleGANTrainer:
             except StopIteration:
                 break
             
-            # Create target tensors with label smoothing
+            # create target tensors with label smoothing
             batch_size = real_A.size(0)
             
-            # Forward pass through generators
+            # forward pass through generators
             fake_B, fake_A, rec_A, rec_B = self.model(real_A, real_B)
             
-            # Identity mapping (optional but helps preserve color)
+            # identity mapping (optional but helps preserve color)
             idt_A = self.model.G_B2A(real_A)
             idt_B = self.model.G_A2B(real_B)
             
             # =====================
-            # Train Generators
+            # train generators
             # =====================
             self.optimizer_G.zero_grad()
             
-            # GAN loss (multi-scale)
+            # gan loss (multi-scale)
             g_loss_A2B = 0
             g_loss_B2A = 0
             
@@ -517,28 +517,28 @@ class SACycleGANTrainer:
             
             g_loss_adv = (g_loss_A2B + g_loss_B2A) / 2
             
-            # Cycle consistency loss
+            # cycle consistency loss
             cycle_loss_A = self.criterion_cycle(rec_A, real_A)
             cycle_loss_B = self.criterion_cycle(rec_B, real_B)
             cycle_loss = (cycle_loss_A + cycle_loss_B) * self.config.lambda_cycle
             
-            # Identity loss
+            # identity loss
             idt_loss_A = self.criterion_identity(idt_A, real_A)
             idt_loss_B = self.criterion_identity(idt_B, real_B)
             idt_loss = (idt_loss_A + idt_loss_B) * self.config.lambda_identity
             
-            # Advanced losses
+            # advanced losses
             perceptual_loss = torch.tensor(0.0, device=self.device)
             contrastive_loss = torch.tensor(0.0, device=self.device)
             
             if self.use_advanced_losses:
-                # Perceptual loss
+                # perceptual loss
                 perceptual_loss = (
                     self.criterion_perceptual(fake_B, real_A) +
                     self.criterion_perceptual(fake_A, real_B)
                 ) * self.config.lambda_perceptual
                 
-                # Contrastive loss (if implemented with encoder)
+                # contrastive loss (if implemented with encoder)
                 try:
                     contrastive_loss = (
                         self.criterion_contrastive(fake_B, real_A, real_B) +
@@ -547,13 +547,13 @@ class SACycleGANTrainer:
                 except:
                     pass
             
-            # Total generator loss
+            # total generator loss
             g_loss = g_loss_adv + cycle_loss + idt_loss + perceptual_loss + contrastive_loss
             
-            # Backward and optimize
+            # backward and optimize
             g_loss.backward()
             
-            # Gradient clipping
+            # gradient clipping
             if self.config.gradient_clip > 0:
                 nn.utils.clip_grad_norm_(
                     list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
@@ -563,15 +563,15 @@ class SACycleGANTrainer:
             self.optimizer_G.step()
             
             # =====================
-            # Train Discriminators
+            # train discriminators
             # =====================
             self.optimizer_D.zero_grad()
             
-            # Use replay buffer
+            # use replay buffer
             fake_A_buffer = self.buffer_A.push_and_pop(fake_A.detach())
             fake_B_buffer = self.buffer_B.push_and_pop(fake_B.detach())
             
-            # Discriminator A
+            # discriminator a
             d_loss_A = 0
             d_real_A = self.model.D_A(real_A)
             d_fake_A = self.model.D_A(fake_A_buffer)
@@ -582,7 +582,7 @@ class SACycleGANTrainer:
                 d_loss_A += (self.criterion_gan(d_real, target_real) + 
                             self.criterion_gan(d_fake, target_fake)) / 2
             
-            # Discriminator B
+            # discriminator b
             d_loss_B = 0
             d_real_B = self.model.D_B(real_B)
             d_fake_B = self.model.D_B(fake_B_buffer)
@@ -597,7 +597,7 @@ class SACycleGANTrainer:
             
             d_loss.backward()
             
-            # Gradient clipping
+            # gradient clipping
             if self.config.gradient_clip > 0:
                 nn.utils.clip_grad_norm_(
                     list(self.model.D_A.parameters()) + list(self.model.D_B.parameters()),
@@ -606,7 +606,7 @@ class SACycleGANTrainer:
             
             self.optimizer_D.step()
             
-            # Update losses
+            # update losses
             epoch_losses['g_total'] += g_loss.item()
             epoch_losses['d_total'] += d_loss.item()
             epoch_losses['cycle'] += cycle_loss.item()
@@ -616,7 +616,7 @@ class SACycleGANTrainer:
             epoch_losses['perceptual'] += perceptual_loss.item()
             epoch_losses['contrastive'] += contrastive_loss.item()
             
-            # Logging
+            # logging
             if batch_idx % self.config.log_interval == 0:
                 self.writer.add_scalar('Loss/G_total', g_loss.item(), self.global_step)
                 self.writer.add_scalar('Loss/D_total', d_loss.item(), self.global_step)
@@ -629,7 +629,7 @@ class SACycleGANTrainer:
                     'Cyc': f'{cycle_loss.item():.3f}'
                 })
             
-            # Save samples
+            # save samples
             if batch_idx % self.config.sample_interval == 0:
                 with torch.no_grad():
                     save_samples(
@@ -639,7 +639,7 @@ class SACycleGANTrainer:
             
             self.global_step += 1
         
-        # Average losses
+        # average losses
         for key in epoch_losses:
             epoch_losses[key] /= num_batches
         
@@ -650,28 +650,28 @@ class SACycleGANTrainer:
         dataloader_A: DataLoader,
         dataloader_B: DataLoader
     ):
-        """Full training loop."""
-        print(f"\nStarting SA-CycleGAN training on {self.device}")
-        print(f"Configuration: {json.dumps(self.config.to_dict(), indent=2)}")
+        """full training loop."""
+        print(f"\nstarting sa-cyclegan training on {self.device}")
+        print(f"configuration: {json.dumps(self.config.to_dict(), indent=2)}")
         
         start_time = time.time()
         
         for epoch in range(self.config.epochs):
             self.epoch = epoch
             
-            # Train epoch
+            # train epoch
             losses = self.train_epoch(dataloader_A, dataloader_B, epoch)
             
-            # Log epoch losses
-            print(f"\nEpoch {epoch+1}/{self.config.epochs}")
-            print(f"  G Loss: {losses['g_total']:.4f}, D Loss: {losses['d_total']:.4f}")
-            print(f"  Cycle: {losses['cycle']:.4f}, Identity: {losses['identity']:.4f}")
+            # log epoch losses
+            print(f"\nepoch {epoch+1}/{self.config.epochs}")
+            print(f"  g loss: {losses['g_total']:.4f}, d loss: {losses['d_total']:.4f}")
+            print(f"  cycle: {losses['cycle']:.4f}, identity: {losses['identity']:.4f}")
             
             self.history['g_loss'].append(losses['g_total'])
             self.history['d_loss'].append(losses['d_total'])
             self.history['cycle_loss'].append(losses['cycle'])
             
-            # Save checkpoint
+            # save checkpoint
             if (epoch + 1) % self.config.save_interval == 0:
                 is_best = losses['g_total'] < self.best_loss
                 if is_best:
@@ -691,9 +691,9 @@ class SACycleGANTrainer:
                     self.config.checkpoint_dir,
                     is_best=is_best
                 )
-                print(f"  Saved checkpoint (best: {is_best})")
+                print(f"  saved checkpoint (best: {is_best})")
         
-        # Save final models
+        # save final models
         torch.save(self.model.G_A2B.state_dict(), 
                    Path(self.config.checkpoint_dir) / 'G_A2B_final.pth')
         torch.save(self.model.G_B2A.state_dict(),
@@ -703,32 +703,32 @@ class SACycleGANTrainer:
         torch.save(self.model.D_B.state_dict(),
                    Path(self.config.checkpoint_dir) / 'D_B_final.pth')
         
-        # Save training history
+        # save training history
         with open(Path(self.config.checkpoint_dir) / 'training_history.json', 'w') as f:
             json.dump(self.history, f, indent=2)
         
         total_time = time.time() - start_time
-        print(f"\nTraining completed in {total_time/3600:.2f} hours")
-        print(f"Final G Loss: {self.history['g_loss'][-1]:.4f}")
-        print(f"Final D Loss: {self.history['d_loss'][-1]:.4f}")
+        print(f"\ntraining completed in {total_time/3600:.2f} hours")
+        print(f"final g loss: {self.history['g_loss'][-1]:.4f}")
+        print(f"final d loss: {self.history['d_loss'][-1]:.4f}")
         
         self.writer.close()
 
 
 # ============================================================================
-# Main Entry Point
+# main entry point
 # ============================================================================
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train SA-CycleGAN for MRI domain translation')
     
-    # Data arguments
+    # data arguments
     parser.add_argument('--data_dir', type=str, default='./preprocessed',
                         help='Directory containing preprocessed data')
     parser.add_argument('--image_size', type=int, default=256,
                         help='Image size for training')
     
-    # Model arguments
+    # model arguments
     parser.add_argument('--ngf', type=int, default=64,
                         help='Number of generator filters')
     parser.add_argument('--ndf', type=int, default=64,
@@ -736,7 +736,7 @@ def parse_args():
     parser.add_argument('--n_residual_blocks', type=int, default=9,
                         help='Number of residual blocks in generator')
     
-    # Training arguments
+    # training arguments
     parser.add_argument('--epochs', type=int, default=100,
                         help='Number of training epochs')
     parser.add_argument('--batch_size', type=int, default=4,
@@ -746,7 +746,7 @@ def parse_args():
     parser.add_argument('--lr_d', type=float, default=2e-4,
                         help='Discriminator learning rate')
     
-    # Loss weights
+    # loss weights
     parser.add_argument('--lambda_cycle', type=float, default=10.0,
                         help='Cycle consistency loss weight')
     parser.add_argument('--lambda_identity', type=float, default=5.0,
@@ -754,13 +754,13 @@ def parse_args():
     parser.add_argument('--lambda_perceptual', type=float, default=1.0,
                         help='Perceptual loss weight')
     
-    # Output arguments
+    # output arguments
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/sa_cyclegan',
                         help='Directory for checkpoints')
     parser.add_argument('--log_dir', type=str, default='./runs/sa_cyclegan',
                         help='Directory for TensorBoard logs')
     
-    # Device
+    # device
     parser.add_argument('--device', type=str, default='auto',
                         help='Device to use (auto, cuda, mps, cpu)')
     
@@ -770,11 +770,11 @@ def parse_args():
 def main():
     args = parse_args()
     
-    # Create config from args
+    # create config from args
     config = Config(**vars(args))
     
-    # Create datasets
-    print("Loading datasets...")
+    # create datasets
+    print("loading datasets...")
     dataset_A = MRISliceDataset(
         root_dir=config.data_dir,
         domain=config.brats_dir,
@@ -789,7 +789,7 @@ def main():
         augment=True
     )
     
-    # Create dataloaders
+    # create dataloaders
     dataloader_A = DataLoader(
         dataset_A,
         batch_size=config.batch_size,
@@ -808,10 +808,10 @@ def main():
         drop_last=True
     )
     
-    print(f"Dataset A (BraTS): {len(dataset_A)} slices")
-    print(f"Dataset B (UPenn): {len(dataset_B)} slices")
+    print(f"dataset a (brats): {len(dataset_A)} slices")
+    print(f"dataset b (upenn): {len(dataset_B)} slices")
     
-    # Create trainer and train
+    # create trainer and train
     trainer = SACycleGANTrainer(config)
     trainer.train(dataloader_A, dataloader_B)
 

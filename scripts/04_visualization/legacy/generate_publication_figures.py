@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-Publication-Quality Visualization Generator for CycleGAN Domain Adaptation
+publication-quality visualization generator for cyclegan domain adaptation
 
-Generates comprehensive figures for academic publication:
-1. Model Architecture Diagrams
-2. Training Loss Curves 
-3. Sample Translation Results
-4. Quantitative Metrics (SSIM, PSNR, FID)
-5. Domain Distribution Analysis
-6. Ablation Study Visualizations
+generates comprehensive figures for academic publication:
+1. model architecture diagrams
+2. training loss curves 
+3. sample translation results
+4. quantitative metrics (ssim, psnr, fid)
+5. domain distribution analysis
+6. ablation study visualizations
 
-All figures follow publication standards:
-- Times New Roman font
-- Seaborn styling
-- High DPI (300+)
-- Vector formats where applicable
+all figures follow publication standards:
+- times new roman font
+- seaborn styling
+- high dpi (300+)
+- vector formats where applicable
 """
 
 import os
@@ -36,21 +36,21 @@ from torch import nn
 import torch.nn.functional as F
 from torchvision.utils import make_grid
 
-# Force unbuffered output
+# force unbuffered output
 os.environ['PYTHONUNBUFFERED'] = '1'
 
 def pprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
 
 # ============================================================================
-# Publication Style Configuration
+# publication style configuration
 # ============================================================================
 def setup_publication_style():
-    """Configure matplotlib for publication-quality figures"""
+    """configure matplotlib for publication-quality figures"""
     plt.style.use('seaborn-v0_8-whitegrid')
     
     plt.rcParams.update({
-        # Font settings
+        # font settings
         'font.family': 'serif',
         'font.serif': ['Times New Roman', 'DejaVu Serif', 'Times'],
         'font.size': 10,
@@ -61,57 +61,57 @@ def setup_publication_style():
         'legend.fontsize': 9,
         'figure.titlesize': 14,
         
-        # Math font
+        # math font
         'mathtext.fontset': 'stix',
         
-        # Figure settings
+        # figure settings
         'figure.dpi': 150,
         'savefig.dpi': 300,
         'savefig.format': 'pdf',
         'savefig.bbox': 'tight',
         'savefig.pad_inches': 0.05,
         
-        # Line settings
+        # line settings
         'lines.linewidth': 1.5,
         'lines.markersize': 6,
         
-        # Grid
+        # grid
         'grid.alpha': 0.3,
         'grid.linewidth': 0.5,
         
-        # Axes
+        # axes
         'axes.linewidth': 1.0,
         'axes.edgecolor': '#333333',
         'axes.labelcolor': '#333333',
         
-        # Legend
+        # legend
         'legend.frameon': True,
         'legend.framealpha': 0.9,
         'legend.edgecolor': '0.8',
     })
     
-    # Custom color palette
+    # custom color palette
     colors = {
-        'primary': '#2E86AB',      # Blue
-        'secondary': '#A23B72',    # Magenta
-        'tertiary': '#F18F01',     # Orange
-        'quaternary': '#C73E1D',   # Red
-        'quinary': '#3B1F2B',      # Dark
-        'success': '#2E7D32',      # Green
-        'warning': '#FF8F00',      # Amber
-        'domain_a': '#1976D2',     # Blue (BraTS)
-        'domain_b': '#D32F2F',     # Red (UPenn)
+        'primary': '#2E86AB',      # blue
+        'secondary': '#A23B72',    # magenta
+        'tertiary': '#F18F01',     # orange
+        'quaternary': '#C73E1D',   # red
+        'quinary': '#3B1F2B',      # dark
+        'success': '#2E7D32',      # green
+        'warning': '#FF8F00',      # amber
+        'domain_a': '#1976D2',     # blue (brats)
+        'domain_b': '#D32F2F',     # red (upenn)
     }
     
     return colors
 
 
 # ============================================================================
-# Figure 1: Model Architecture Diagram
+# figure 1: model architecture diagram
 # ============================================================================
 def create_architecture_diagram(save_dir, colors):
-    """Create CycleGAN architecture diagram"""
-    pprint("Creating architecture diagram...")
+    """create cyclegan architecture diagram"""
+    pprint("creating architecture diagram...")
     
     fig, ax = plt.subplots(1, 1, figsize=(12, 8))
     ax.set_xlim(-0.5, 10.5)
@@ -119,7 +119,7 @@ def create_architecture_diagram(save_dir, colors):
     ax.axis('off')
     ax.set_aspect('equal')
     
-    # Helper functions
+    # helper functions
     def draw_block(x, y, w, h, label, color, ax, fontsize=8):
         rect = FancyBboxPatch((x, y), w, h, 
                               boxstyle="round,pad=0.02,rounding_size=0.1",
@@ -133,55 +133,55 @@ def create_architecture_diagram(save_dir, colors):
         ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
                     arrowprops=dict(arrowstyle=style, color='#333', lw=1.5))
     
-    # Title
+    # title
     ax.text(5, 6.5, 'CycleGAN Architecture for Multi-Modal MRI Domain Adaptation',
             ha='center', fontsize=14, fontweight='bold')
     
-    # Domain A (BraTS)
+    # domain a (brats)
     draw_block(0, 4.5, 1.5, 1, 'Domain A\n(BraTS)', colors['domain_a'], ax, 9)
     
-    # Generator G_A2B
+    # generator g_a2b
     draw_block(2.5, 4.5, 2, 1, 'Generator\nG_A→B', colors['primary'], ax, 9)
     
-    # Fake B
+    # fake b
     draw_block(5.5, 4.5, 1.2, 1, 'Fake B', colors['secondary'], ax, 9)
     
-    # Generator G_B2A (cycle)
+    # generator g_b2a (cycle)
     draw_block(7.5, 4.5, 2, 1, 'Generator\nG_B→A', colors['primary'], ax, 9)
     
-    # Reconstructed A
+    # reconstructed a
     draw_block(0, 2.5, 1.5, 1, 'Recon. A', colors['tertiary'], ax, 9)
     
-    # Domain B (UPenn)
+    # domain b (upenn)
     draw_block(0, 0.5, 1.5, 1, 'Domain B\n(UPenn)', colors['domain_b'], ax, 9)
     
-    # Generator G_B2A
+    # generator g_b2a
     draw_block(2.5, 0.5, 2, 1, 'Generator\nG_B→A', colors['primary'], ax, 9)
     
-    # Fake A
+    # fake a
     draw_block(5.5, 0.5, 1.2, 1, 'Fake A', colors['secondary'], ax, 9)
     
-    # Generator G_A2B (cycle)
+    # generator g_a2b (cycle)
     draw_block(7.5, 0.5, 2, 1, 'Generator\nG_A→B', colors['primary'], ax, 9)
     
-    # Reconstructed B
+    # reconstructed b
     draw_block(0, 2.5, 1.5, 1, 'Recon. B', colors['tertiary'], ax, 9)
     
-    # Discriminators
+    # discriminators
     draw_block(5.5, 2.5, 1.2, 1, 'Disc. D_B', colors['quaternary'], ax, 8)
     draw_block(7.8, 2.5, 1.2, 1, 'Disc. D_A', colors['quaternary'], ax, 8)
     
-    # Arrows - Forward path A to B
+    # arrows - forward path a to b
     draw_arrow(1.5, 5, 2.5, 5, ax)
     draw_arrow(4.5, 5, 5.5, 5, ax)
     draw_arrow(6.7, 5, 7.5, 5, ax)
     
-    # Arrows - Forward path B to A
+    # arrows - forward path b to a
     draw_arrow(1.5, 1, 2.5, 1, ax)
     draw_arrow(4.5, 1, 5.5, 1, ax)
     draw_arrow(6.7, 1, 7.5, 1, ax)
     
-    # Cycle arrows
+    # cycle arrows
     draw_arrow(9.5, 4.5, 9.5, 3.5, ax)
     ax.annotate('', xy=(0.75, 3.5), xytext=(9.5, 3.5),
                 arrowprops=dict(arrowstyle='->', color='#333', lw=1.5,
@@ -192,16 +192,16 @@ def create_architecture_diagram(save_dir, colors):
                 arrowprops=dict(arrowstyle='->', color='#333', lw=1.5,
                                connectionstyle='arc3,rad=0'))
     
-    # Discriminator arrows
+    # discriminator arrows
     draw_arrow(6.1, 4.5, 6.1, 3.5, ax)
     draw_arrow(6.1, 1.5, 6.1, 2.5, ax)
     
-    # Loss labels
+    # loss labels
     ax.text(2.5, 6, r'$\mathcal{L}_{GAN}$', fontsize=10, ha='center')
     ax.text(5, 6, r'$\mathcal{L}_{cycle}$', fontsize=10, ha='center')
     ax.text(7.5, 6, r'$\mathcal{L}_{identity}$', fontsize=10, ha='center')
     
-    # Legend
+    # legend
     legend_elements = [
         mpatches.Patch(color=colors['domain_a'], label='Domain A (BraTS-TCGA)'),
         mpatches.Patch(color=colors['domain_b'], label='Domain B (UPenn-GBM)'),
@@ -221,11 +221,11 @@ def create_architecture_diagram(save_dir, colors):
 
 
 # ============================================================================
-# Figure 2: Generator Architecture Detail
+# figure 2: generator architecture detail
 # ============================================================================
 def create_generator_diagram(save_dir, colors):
-    """Create detailed generator architecture diagram"""
-    pprint("Creating generator architecture diagram...")
+    """create detailed generator architecture diagram"""
+    pprint("creating generator architecture diagram...")
     
     fig, ax = plt.subplots(1, 1, figsize=(14, 5))
     ax.set_xlim(-0.5, 14)
@@ -241,36 +241,36 @@ def create_generator_diagram(save_dir, colors):
                 fontsize=fontsize, fontweight='bold', color='white',
                 wrap=True)
     
-    # Title
+    # title
     ax.text(7, 3.7, 'ResNet Generator Architecture (6 Residual Blocks)',
             ha='center', fontsize=12, fontweight='bold')
     
-    # Input
+    # input
     draw_block(0, 1.5, 0.8, 1, 'Input\n4×256²', '#607D8B', ax, 7)
     
-    # Initial conv
+    # initial conv
     draw_block(1.2, 1.5, 0.9, 1, '7×7 Conv\n64ch\nIN+ReLU', colors['primary'], ax, 6)
     
-    # Downsampling
+    # downsampling
     draw_block(2.5, 1.5, 0.9, 1, 'Down\n128ch\nIN+ReLU', colors['secondary'], ax, 6)
     draw_block(3.8, 1.5, 0.9, 1, 'Down\n256ch\nIN+ReLU', colors['secondary'], ax, 6)
     
-    # Residual blocks
+    # residual blocks
     for i in range(6):
         x = 5.1 + i * 0.7
         draw_block(x, 1.5, 0.6, 1, f'Res\n{i+1}', colors['tertiary'], ax, 6)
     
-    # Upsampling
+    # upsampling
     draw_block(9.5, 1.5, 0.9, 1, 'Up\n128ch\nIN+ReLU', colors['quaternary'], ax, 6)
     draw_block(10.8, 1.5, 0.9, 1, 'Up\n64ch\nIN+ReLU', colors['quaternary'], ax, 6)
     
-    # Output conv
+    # output conv
     draw_block(12.1, 1.5, 0.9, 1, '7×7 Conv\n4ch\nTanh', colors['primary'], ax, 6)
     
-    # Output
+    # output
     draw_block(13.4, 1.5, 0.6, 1, 'Out\n4×256²', '#607D8B', ax, 7)
     
-    # Arrows
+    # arrows
     positions = [0.8, 2.1, 3.4, 4.7]
     for p in positions:
         ax.annotate('', xy=(p + 0.4, 2), xytext=(p, 2),
@@ -285,12 +285,12 @@ def create_generator_diagram(save_dir, colors):
         ax.annotate('', xy=(p + 0.4, 2), xytext=(p, 2),
                     arrowprops=dict(arrowstyle='->', color='#333', lw=1))
     
-    # Skip connection indicator
+    # skip connection indicator
     ax.annotate('', xy=(5.1, 0.8), xytext=(9.5, 0.8),
                 arrowprops=dict(arrowstyle='<->', color='#666', lw=1, ls='--'))
     ax.text(7.3, 0.5, 'Residual Blocks (256 channels)', fontsize=8, ha='center')
     
-    # Legend
+    # legend
     legend_elements = [
         mpatches.Patch(color='#607D8B', label='Input/Output (4 channels)'),
         mpatches.Patch(color=colors['primary'], label='7×7 Convolution'),
@@ -309,25 +309,25 @@ def create_generator_diagram(save_dir, colors):
 
 
 # ============================================================================
-# Figure 3: Training Loss Curves
+# figure 3: training loss curves
 # ============================================================================
 def create_loss_curves(save_dir, colors, loss_file=None):
-    """Create training loss curves"""
-    pprint("Creating training loss curves...")
+    """create training loss curves"""
+    pprint("creating training loss curves...")
     
-    # Try to load actual loss data
+    # try to load actual loss data
     loss_data = None
     if loss_file and Path(loss_file).exists():
         with open(loss_file, 'r') as f:
             loss_data = json.load(f)
     
-    # If no data, create synthetic data for demonstration
+    # if no data, create synthetic data for demonstration
     if loss_data is None:
-        pprint("  (Using synthetic data for demonstration)")
+        pprint("  (using synthetic data for demonstration)")
         epochs = np.arange(1, 31)
         np.random.seed(42)
         
-        # Simulate realistic GAN training dynamics
+        # simulate realistic gan training dynamics
         loss_data = {
             'G_total': 30 * np.exp(-0.1 * epochs) + 3 + np.random.randn(30) * 0.3,
             'G_GAN': 2 * np.exp(-0.05 * epochs) + 0.5 + np.random.randn(30) * 0.1,
@@ -341,7 +341,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
     
-    # Total Generator Loss
+    # total generator loss
     ax = axes[0, 0]
     ax.plot(epochs, loss_data['G_total'], color=colors['primary'], lw=2, label='Total')
     ax.set_xlabel('Epoch')
@@ -350,7 +350,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
     
-    # Generator Components
+    # generator components
     ax = axes[0, 1]
     ax.plot(epochs, loss_data['G_GAN'], color=colors['primary'], lw=2, label='Adversarial')
     ax.plot(epochs, loss_data['G_cycle'], color=colors['secondary'], lw=2, label='Cycle')
@@ -361,7 +361,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
     
-    # Discriminator Losses
+    # discriminator losses
     ax = axes[1, 0]
     ax.plot(epochs, loss_data['D_A'], color=colors['domain_a'], lw=2, label='D_A (BraTS)')
     ax.plot(epochs, loss_data['D_B'], color=colors['domain_b'], lw=2, label='D_B (UPenn)')
@@ -373,7 +373,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0, 1)
     
-    # Training Dynamics
+    # training dynamics
     ax = axes[1, 1]
     g_total = np.array(loss_data['G_total'])
     d_avg = (np.array(loss_data['D_A']) + np.array(loss_data['D_B'])) / 2
@@ -394,15 +394,15 @@ def create_loss_curves(save_dir, colors, loss_file=None):
 
 
 # ============================================================================
-# Figure 4: Dataset Statistics
+# figure 4: dataset statistics
 # ============================================================================
 def create_dataset_statistics(save_dir, colors):
-    """Create dataset statistics visualization"""
-    pprint("Creating dataset statistics...")
+    """create dataset statistics visualization"""
+    pprint("creating dataset statistics...")
     
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
     
-    # Dataset composition
+    # dataset composition
     ax = axes[0, 0]
     datasets = ['BraTS-TCGA', 'UPenn-GBM']
     subjects = [102, 671]
@@ -414,7 +414,7 @@ def create_dataset_statistics(save_dir, colors):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10,
                 str(val), ha='center', va='bottom', fontweight='bold')
     
-    # Train/Val/Test split
+    # train/val/test split
     ax = axes[0, 1]
     splits = ['Train', 'Validation', 'Test']
     brats_split = [62, 14, 12]
@@ -432,7 +432,7 @@ def create_dataset_statistics(save_dir, colors):
     ax.set_title('(b) Train/Val/Test Split')
     ax.legend()
     
-    # Modality information
+    # modality information
     ax = axes[1, 0]
     modalities = ['T1', 'T1-Gd', 'T2', 'FLAIR']
     properties = [
@@ -455,7 +455,7 @@ def create_dataset_statistics(save_dir, colors):
                 va='center', fontsize=9)
     ax.set_xticks([])
     
-    # Image dimensions
+    # image dimensions
     ax = axes[1, 1]
     dim_info = {
         'Input Size': '256 × 256',
@@ -478,7 +478,7 @@ def create_dataset_statistics(save_dir, colors):
     table.set_fontsize(10)
     table.scale(1.2, 1.8)
     
-    # Style table
+    # style table
     for i in range(len(table_data) + 1):
         for j in range(2):
             cell = table[(i, j)]
@@ -496,11 +496,11 @@ def create_dataset_statistics(save_dir, colors):
 
 
 # ============================================================================
-# Figure 5: Hyperparameter Configuration Table
+# figure 5: hyperparameter configuration table
 # ============================================================================
 def create_hyperparameter_table(save_dir, colors):
-    """Create hyperparameter configuration table"""
-    pprint("Creating hyperparameter table...")
+    """create hyperparameter configuration table"""
+    pprint("creating hyperparameter table...")
     
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     ax.axis('off')
@@ -531,7 +531,7 @@ def create_hyperparameter_table(save_dir, colors):
     table.set_fontsize(10)
     table.scale(1.4, 2.0)
     
-    # Style table
+    # style table
     for i in range(len(data) + 1):
         for j in range(2):
             cell = table[(i, j)]
@@ -549,11 +549,11 @@ def create_hyperparameter_table(save_dir, colors):
 
 
 # ============================================================================
-# Figure 6: Anti-Mode-Collapse Techniques
+# figure 6: anti-mode-collapse techniques
 # ============================================================================
 def create_techniques_diagram(save_dir, colors):
-    """Create diagram of anti-mode-collapse techniques"""
-    pprint("Creating techniques diagram...")
+    """create diagram of anti-mode-collapse techniques"""
+    pprint("creating techniques diagram...")
     
     fig, ax = plt.subplots(1, 1, figsize=(12, 7))
     ax.set_xlim(-0.5, 12)
@@ -576,18 +576,18 @@ def create_techniques_diagram(save_dir, colors):
         x = 1 + (idx % 3) * 4
         y = 3.5 if idx < 3 else 1
         
-        # Box
+        # box
         rect = FancyBboxPatch((x, y), 2.5, 1.5,
                               boxstyle="round,pad=0.05,rounding_size=0.1",
                               facecolor=color, edgecolor='black', linewidth=2,
                               alpha=0.85)
         ax.add_patch(rect)
         
-        # Title
+        # title
         ax.text(x + 1.25, y + 1.1, name, ha='center', va='center',
                 fontsize=10, fontweight='bold', color='white')
         
-        # Description
+        # description
         ax.text(x + 1.25, y + 0.4, desc, ha='center', va='center',
                 fontsize=8, color='white')
     
@@ -599,7 +599,7 @@ def create_techniques_diagram(save_dir, colors):
 
 
 # ============================================================================
-# Main Function
+# main function
 # ============================================================================
 def main():
     parser = argparse.ArgumentParser(description='Generate publication figures')
@@ -610,19 +610,19 @@ def main():
     args = parser.parse_args()
     
     pprint("\n" + "=" * 60)
-    pprint("PUBLICATION FIGURE GENERATOR")
+    pprint("publication figure generator")
     pprint("=" * 60)
     
-    # Setup
+    # setup
     save_dir = Path(args.output_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     
     colors = setup_publication_style()
     
-    pprint(f"\nOutput directory: {save_dir}")
-    pprint(f"Generating figures...\n")
+    pprint(f"\noutput directory: {save_dir}")
+    pprint(f"generating figures...\n")
     
-    # Generate all figures
+    # generate all figures
     create_architecture_diagram(save_dir, colors)
     create_generator_diagram(save_dir, colors)
     create_loss_curves(save_dir, colors, args.loss_file)
@@ -631,10 +631,10 @@ def main():
     create_techniques_diagram(save_dir, colors)
     
     pprint("\n" + "=" * 60)
-    pprint("FIGURE GENERATION COMPLETE")
+    pprint("figure generation complete")
     pprint("=" * 60)
-    pprint(f"\nAll figures saved to: {save_dir}")
-    pprint("Formats: PDF (vector) and PNG (raster)")
+    pprint(f"\nall figures saved to: {save_dir}")
+    pprint("formats: pdf (vector) and png (raster)")
 
 
 if __name__ == '__main__':

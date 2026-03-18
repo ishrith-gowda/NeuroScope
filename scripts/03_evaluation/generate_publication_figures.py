@@ -40,7 +40,7 @@ plt.rcParams.update({
     'legend.fontsize': 9,
     'figure.titlesize': 13,
     'font.family': 'serif',
-    'text.usetex': False,  # set to True if latex is installed
+    'text.usetex': False,  # set to true if latex is installed
 })
 
 # setup logging
