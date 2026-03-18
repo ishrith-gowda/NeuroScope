@@ -8,7 +8,7 @@ deterministic: false
 # data paths
 brats_dir: /home/cc/neuroscope/preprocessed/brats
 upenn_dir: /home/cc/neuroscope/preprocessed/upenn
-output_dir: /home/cc/neuroscope/experiments/journal_extension/compression
+output_dir: /data/experiments/journal_extension/compression
 
 # generator architecture
 ngf: 64

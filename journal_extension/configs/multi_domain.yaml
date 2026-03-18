@@ -11,7 +11,7 @@ data_dirs:
   brats_ge: /home/cc/neuroscope/preprocessed/brats_ge
   brats_philips: /home/cc/neuroscope/preprocessed/brats_philips
   upenn: /home/cc/neuroscope/preprocessed/upenn
-output_dir: /home/cc/neuroscope/experiments/journal_extension/multi_domain
+output_dir: /data/experiments/journal_extension/multi_domain
 
 # domain configuration
 n_domains: 4

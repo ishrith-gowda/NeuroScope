@@ -8,7 +8,7 @@ deterministic: false
 # data paths
 brats_dir: /home/cc/neuroscope/preprocessed/brats
 upenn_dir: /home/cc/neuroscope/preprocessed/upenn
-output_dir: /home/cc/neuroscope/experiments/journal_extension/federated
+output_dir: /data/experiments/journal_extension/federated
 
 # federated settings
 n_clients: 2  # brats site + upenn site

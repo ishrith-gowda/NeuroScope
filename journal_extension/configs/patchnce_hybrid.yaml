@@ -8,7 +8,7 @@ deterministic: false
 # data paths (chameleon cloud)
 brats_dir: /home/cc/neuroscope/preprocessed/brats
 upenn_dir: /home/cc/neuroscope/preprocessed/upenn
-output_dir: /home/cc/neuroscope/experiments/journal_extension/patchnce_hybrid
+output_dir: /data/experiments/journal_extension/patchnce_hybrid
 
 # generator architecture (same as base model)
 ngf: 64
