@@ -30,7 +30,7 @@ import torch.optim as optim
 from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 import numpy as np
 from tqdm import tqdm
 
@@ -68,6 +68,16 @@ class ReplayBuffer:
                 else:
                     result.append(element)
         return torch.cat(result, dim=0)
+
+
+def setup_torch_performance():
+    """configure torch for maximum gpu throughput."""
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(enabled=False)
+    torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
 class CompressionTrainer:
@@ -108,6 +118,7 @@ class CompressionTrainer:
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
     ):
+        setup_torch_performance()
         self.config = config
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -150,8 +161,9 @@ class CompressionTrainer:
         print(f"compression warmup: {compression_warmup_epochs} epochs")
 
         # tensorboard
+        runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
         self.writer = SummaryWriter(
-            log_dir=str(PROJECT_ROOT / "runs" / experiment_name)
+            log_dir=str(runs_dir / experiment_name)
         )
 
         # create compressed model
@@ -238,8 +250,8 @@ class CompressionTrainer:
 
         # automatic mixed precision
         self.use_amp = use_amp and torch.cuda.is_available()
-        self.scaler_G = GradScaler(enabled=self.use_amp)
-        self.scaler_D = GradScaler(enabled=self.use_amp)
+        self.scaler_G = GradScaler("cuda", enabled=self.use_amp)
+        self.scaler_D = GradScaler("cuda", enabled=self.use_amp)
         self.gradient_clip_norm = gradient_clip_norm
 
         # training history
@@ -334,9 +346,9 @@ class CompressionTrainer:
         # ================================================================
         # train generators
         # ================================================================
-        self.opt_G.zero_grad()
+        self.opt_G.zero_grad(set_to_none=True)
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             G_A2B = self._get_generator("G_A2B")
             G_B2A = self._get_generator("G_B2A")
 
@@ -431,12 +443,12 @@ class CompressionTrainer:
         # ================================================================
         # train discriminators
         # ================================================================
-        self.opt_D.zero_grad()
+        self.opt_D.zero_grad(set_to_none=True)
 
         fake_A_buffer = self.fake_A_buffer.push_and_pop(fake_A.detach())
         fake_B_buffer = self.fake_B_buffer.push_and_pop(fake_B.detach())
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             pred_real_A = self.model.D_A(center_A)
             pred_fake_A_d = self.model.D_A(fake_A_buffer)
             loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A_d)

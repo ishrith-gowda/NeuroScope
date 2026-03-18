@@ -30,7 +30,7 @@ import torch.optim as optim
 from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 import numpy as np
 from tqdm import tqdm
 
@@ -70,6 +70,19 @@ class ReplayBuffer:
         return torch.cat(result, dim=0)
 
 
+def setup_torch_performance():
+    """configure torch for maximum gpu throughput."""
+    # tf32 on ampere gpus: ~2x speedup on fp32 matmuls with minimal precision loss
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    # cudnn autotuner: finds optimal convolution algorithms for fixed input sizes
+    torch.backends.cudnn.benchmark = True
+    # disable debug profiling for max speed
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(enabled=False)
+    torch.autograd.profiler.emit_nvtx(enabled=False)
+
+
 class HybridNCETrainer:
     """
     trainer for sa-cyclegan-2.5d with patchnce hybrid loss.
@@ -106,7 +119,11 @@ class HybridNCETrainer:
         min_lr: float = 1e-6,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
+        use_compile: bool = True,
     ):
+        # configure torch for maximum throughput
+        setup_torch_performance()
+
         self.config = config
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -148,10 +165,9 @@ class HybridNCETrainer:
         print(f"nce_temperature: {nce_temperature}")
         print(f"nce_num_patches: {nce_num_patches}")
 
-        # tensorboard
-        self.writer = SummaryWriter(
-            log_dir=str(PROJECT_ROOT / "runs" / experiment_name)
-        )
+        # tensorboard (use /data/runs if available, else project root)
+        runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
+        self.writer = SummaryWriter(log_dir=str(runs_dir / experiment_name))
 
         # create model
         self.model = create_model(config)
@@ -177,6 +193,17 @@ class HybridNCETrainer:
         ).to(self.device)
 
         self.lambda_nce = lambda_nce
+
+        # torch.compile for kernel fusion and reduced overhead
+        if use_compile and hasattr(torch, "compile"):
+            try:
+                self.model.G_A2B = torch.compile(self.model.G_A2B, mode="reduce-overhead")
+                self.model.G_B2A = torch.compile(self.model.G_B2A, mode="reduce-overhead")
+                self.model.D_A = torch.compile(self.model.D_A, mode="reduce-overhead")
+                self.model.D_B = torch.compile(self.model.D_B, mode="reduce-overhead")
+                print("torch.compile: enabled (reduce-overhead mode)")
+            except Exception as e:
+                print(f"torch.compile: disabled ({e})")
 
         # wrap with dataparallel for multi-gpu
         if self.use_multi_gpu:
@@ -254,8 +281,8 @@ class HybridNCETrainer:
 
         # automatic mixed precision
         self.use_amp = use_amp and torch.cuda.is_available()
-        self.scaler_G = GradScaler(enabled=self.use_amp)
-        self.scaler_D = GradScaler(enabled=self.use_amp)
+        self.scaler_G = GradScaler("cuda", enabled=self.use_amp)
+        self.scaler_D = GradScaler("cuda", enabled=self.use_amp)
         self.gradient_clip_norm = gradient_clip_norm
 
         # training history
@@ -339,9 +366,9 @@ class HybridNCETrainer:
         # ================================================================
         # train generators
         # ================================================================
-        self.opt_G.zero_grad()
+        self.opt_G.zero_grad(set_to_none=True)
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             # forward translation
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
@@ -443,12 +470,12 @@ class HybridNCETrainer:
         # ================================================================
         # train discriminators
         # ================================================================
-        self.opt_D.zero_grad()
+        self.opt_D.zero_grad(set_to_none=True)
 
         fake_A_buffer = self.fake_A_buffer.push_and_pop(fake_A.detach())
         fake_B_buffer = self.fake_B_buffer.push_and_pop(fake_B.detach())
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             pred_real_A = self.model.D_A(center_A)
             pred_fake_A_d = self.model.D_A(fake_A_buffer)
             loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A_d)

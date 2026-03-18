@@ -33,7 +33,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 import numpy as np
 from tqdm import tqdm
 
@@ -120,8 +120,8 @@ class LocalClient:
         )
 
         self.use_amp = use_amp and torch.cuda.is_available()
-        self.scaler_G = GradScaler(enabled=self.use_amp)
-        self.scaler_D = GradScaler(enabled=self.use_amp)
+        self.scaler_G = GradScaler("cuda", enabled=self.use_amp)
+        self.scaler_D = GradScaler("cuda", enabled=self.use_amp)
 
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
@@ -134,9 +134,9 @@ class LocalClient:
         center_B = batch["B_center"].to(self.device)
 
         # train generators
-        self.opt_G.zero_grad()
+        self.opt_G.zero_grad(set_to_none=True)
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
 
@@ -194,12 +194,12 @@ class LocalClient:
         self.scaler_G.update()
 
         # train discriminators
-        self.opt_D.zero_grad()
+        self.opt_D.zero_grad(set_to_none=True)
 
         fake_A_buf = self.fake_A_buffer.push_and_pop(fake_A.detach())
         fake_B_buf = self.fake_B_buffer.push_and_pop(fake_B.detach())
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             pred_real_A = self.model.D_A(center_A)
             pred_fake_A_d = self.model.D_A(fake_A_buf)
             loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A_d)
@@ -249,6 +249,16 @@ class LocalClient:
         return len(self.data_loader.dataset)
 
 
+def setup_torch_performance():
+    """configure torch for maximum gpu throughput."""
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(enabled=False)
+    torch.autograd.profiler.emit_nvtx(enabled=False)
+
+
 class FederatedTrainer:
     """
     federated learning orchestrator for sa-cyclegan-2.5d.
@@ -282,6 +292,7 @@ class FederatedTrainer:
         use_amp: bool = True,
         eval_every_n_rounds: int = 5,
     ):
+        setup_torch_performance()
         self.config = config
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -323,8 +334,9 @@ class FederatedTrainer:
         if aggregation_strategy == "fedprox":
             print(f"fedprox mu: {fedprox_mu}")
 
+        runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
         self.writer = SummaryWriter(
-            log_dir=str(PROJECT_ROOT / "runs" / experiment_name)
+            log_dir=str(runs_dir / experiment_name)
         )
 
         # create global model
