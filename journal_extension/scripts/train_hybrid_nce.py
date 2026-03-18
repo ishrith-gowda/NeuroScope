@@ -194,14 +194,13 @@ class HybridNCETrainer:
 
         self.lambda_nce = lambda_nce
 
-        # torch.compile for kernel fusion and reduced overhead
+        # torch.compile for kernel fusion (generators only — discriminators
+        # use inplace ops that conflict with cuda graphs in gan training)
         if use_compile and hasattr(torch, "compile"):
             try:
-                self.model.G_A2B = torch.compile(self.model.G_A2B, mode="reduce-overhead")
-                self.model.G_B2A = torch.compile(self.model.G_B2A, mode="reduce-overhead")
-                self.model.D_A = torch.compile(self.model.D_A, mode="reduce-overhead")
-                self.model.D_B = torch.compile(self.model.D_B, mode="reduce-overhead")
-                print("torch.compile: enabled (reduce-overhead mode)")
+                self.model.G_A2B = torch.compile(self.model.G_A2B, mode="default")
+                self.model.G_B2A = torch.compile(self.model.G_B2A, mode="default")
+                print("torch.compile: enabled (generators, default mode)")
             except Exception as e:
                 print(f"torch.compile: disabled ({e})")
 
