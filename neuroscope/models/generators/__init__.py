@@ -1,12 +1,12 @@
 """
-Generator Architectures Module.
+generator architectures module.
 
-This module provides various generator architectures for
+this module provides various generator architectures for
 image-to-image translation, particularly optimized for
-medical imaging and MRI domain adaptation.
+medical imaging and mri domain adaptation.
 """
 
-# Base classes
+# base classes
 from .base import (
     BaseGenerator,
     EncoderDecoderGenerator,
@@ -16,7 +16,7 @@ from .base import (
     StyleGenerator,
 )
 
-# Encoder modules
+# encoder modules
 from .encoder import (
     ConvEncoder,
     ResidualEncoder,
@@ -25,7 +25,7 @@ from .encoder import (
     HierarchicalEncoder,
 )
 
-# Decoder modules
+# decoder modules
 from .decoder import (
     ConvDecoder,
     ResidualDecoder,
@@ -35,7 +35,7 @@ from .decoder import (
     PixelShuffleDecoder,
 )
 
-# ResNet-based generators
+# resnet-based generators
 from .resnet import (
     ResNetGenerator,
     ResNetGeneratorWithAttention,
@@ -43,7 +43,7 @@ from .resnet import (
     DeepResNetGenerator,
 )
 
-# Self-Attention generators
+# self-attention generators
 from .sa_generator import (
     SAGenerator,
     SAEncoder,
@@ -53,7 +53,7 @@ from .sa_generator import (
     DenseSAGenerator,
 )
 
-# U-Net generators
+# u-net generators
 from .unet import (
     UNetGenerator,
     AttentionUNetGenerator,
@@ -61,11 +61,11 @@ from .unet import (
     UNetPlusPlusGenerator,
 )
 
-# Aliases for compatibility
+# aliases for compatibility
 CycleGANGenerator = ResNetGenerator
 
 __all__ = [
-    # Base
+    # base
     'BaseGenerator',
     'EncoderDecoderGenerator',
     'ResidualGenerator',
@@ -73,14 +73,14 @@ __all__ = [
     'ConditionalGenerator',
     'StyleGenerator',
     
-    # Encoders
+    # encoders
     'ConvEncoder',
     'ResidualEncoder',
     'DenseEncoder',
     'MultiModalEncoder',
     'HierarchicalEncoder',
     
-    # Decoders
+    # decoders
     'ConvDecoder',
     'ResidualDecoder',
     'UNetDecoder',
@@ -88,14 +88,14 @@ __all__ = [
     'ProgressiveDecoder',
     'PixelShuffleDecoder',
     
-    # ResNet
+    # resnet
     'ResNetGenerator',
     'ResNetGeneratorWithAttention',
     'FastResNetGenerator',
     'DeepResNetGenerator',
     'CycleGANGenerator',
     
-    # Self-Attention
+    # self-attention
     'SAGenerator',
     'SAEncoder',
     'SABottleneck',
@@ -103,7 +103,7 @@ __all__ = [
     'MultiScaleSAGenerator',
     'DenseSAGenerator',
     
-    # U-Net
+    # u-net
     'UNetGenerator',
     'AttentionUNetGenerator',
     'ResUNetGenerator',

@@ -1,6 +1,6 @@
-"""Test fixtures for NeuroScope.
+"""test fixtures for neuroscope.
 
-This module provides test fixtures and sample data for testing purposes.
+this module provides test fixtures and sample data for testing purposes.
 """
 
-# Test fixture initialization
+# test fixture initialization

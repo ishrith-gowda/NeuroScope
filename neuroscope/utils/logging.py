@@ -1,7 +1,7 @@
 """
-Logging Utilities.
+logging utilities.
 
-Structured logging and experiment tracking for
+structured logging and experiment tracking for
 reproducible research.
 """
 
@@ -13,7 +13,7 @@ import json
 import sys
 
 
-# Global logger registry
+# global logger registry
 _loggers: Dict[str, logging.Logger] = {}
 
 
@@ -25,24 +25,24 @@ def setup_logger(
     format_string: str = None
 ) -> logging.Logger:
     """
-    Set up a logger with file and console handlers.
+    set up a logger with file and console handlers.
     
-    Args:
-        name: Logger name
-        level: Logging level
-        log_file: Optional log file path
-        console: Enable console output
-        format_string: Custom format string
+    args:
+        name: logger name
+        level: logging level
+        log_file: optional log file path
+        console: enable console output
+        format_string: custom format string
         
-    Returns:
-        Configured logger
+    returns:
+        configured logger
     """
     if name in _loggers:
         return _loggers[name]
     
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    logger.handlers = []  # Clear existing handlers
+    logger.handlers = []  # clear existing handlers
     
     if format_string is None:
         format_string = '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s'
@@ -70,13 +70,13 @@ def setup_logger(
 
 def get_logger(name: str = 'neuroscope') -> logging.Logger:
     """
-    Get existing logger or create new one.
+    get existing logger or create new one.
     
-    Args:
-        name: Logger name
+    args:
+        name: logger name
         
-    Returns:
-        Logger instance
+    returns:
+        logger instance
     """
     if name not in _loggers:
         return setup_logger(name)
@@ -85,9 +85,9 @@ def get_logger(name: str = 'neuroscope') -> logging.Logger:
 
 class MetricTracker:
     """
-    Track and aggregate metrics during training.
+    track and aggregate metrics during training.
     
-    Supports running averages, best values, and history.
+    supports running averages, best values, and history.
     """
     
     def __init__(self):
@@ -103,11 +103,11 @@ class MetricTracker:
         n: int = 1
     ):
         """
-        Update with new metric values.
+        update with new metric values.
         
-        Args:
-            metrics: Dict of metric name -> value
-            n: Batch size / weight
+        args:
+            metrics: dict of metric name -> value
+            n: batch size / weight
         """
         for name, value in metrics.items():
             if name not in self.running:
@@ -118,23 +118,23 @@ class MetricTracker:
             self.counts[name] += n
     
     def average(self) -> Dict[str, float]:
-        """Get running averages."""
+        """get running averages."""
         return {
             name: self.running[name] / max(self.counts[name], 1)
             for name in self.running
         }
     
     def reset(self):
-        """Reset running averages."""
+        """reset running averages."""
         self.running = {}
         self.counts = {}
     
     def end_epoch(self, epoch: int):
         """
-        End epoch and record history.
+        end epoch and record history.
         
-        Args:
-            epoch: Current epoch number
+        args:
+            epoch: current epoch number
         """
         averages = self.average()
         
@@ -143,7 +143,7 @@ class MetricTracker:
                 self.history[name] = []
             self.history[name].append(value)
             
-            # Track best
+            # track best
             if name not in self.best or value > self.best[name]:
                 self.best[name] = value
                 self.best_epoch[name] = epoch
@@ -151,24 +151,24 @@ class MetricTracker:
         self.reset()
     
     def get_history(self, name: str) -> List[float]:
-        """Get metric history."""
+        """get metric history."""
         return self.history.get(name, [])
     
     def get_best(self, name: str) -> Optional[float]:
-        """Get best value for metric."""
+        """get best value for metric."""
         return self.best.get(name)
     
     def is_best(self, name: str, value: float, mode: str = 'max') -> bool:
         """
-        Check if value is best.
+        check if value is best.
         
-        Args:
-            name: Metric name
-            value: Current value
+        args:
+            name: metric name
+            value: current value
             mode: 'max' or 'min'
             
-        Returns:
-            True if value is best
+        returns:
+            true if value is best
         """
         if name not in self.best:
             return True
@@ -178,7 +178,7 @@ class MetricTracker:
         return value < self.best[name]
     
     def to_dict(self) -> Dict:
-        """Convert to dictionary."""
+        """convert to dictionary."""
         return {
             'history': self.history,
             'best': self.best,
@@ -186,13 +186,13 @@ class MetricTracker:
         }
     
     def save(self, path: Union[str, Path]):
-        """Save to JSON file."""
+        """save to json file."""
         with open(path, 'w') as f:
             json.dump(self.to_dict(), f, indent=2)
     
     @classmethod
     def load(cls, path: Union[str, Path]) -> 'MetricTracker':
-        """Load from JSON file."""
+        """load from json file."""
         with open(path, 'r') as f:
             data = json.load(f)
         
@@ -206,10 +206,10 @@ class MetricTracker:
 
 class ExperimentLogger:
     """
-    Comprehensive experiment logging.
+    comprehensive experiment logging.
     
-    Tracks configuration, metrics, artifacts, and provides
-    TensorBoard/W&B integration.
+    tracks configuration, metrics, artifacts, and provides
+    tensorboard/w&b integration.
     """
     
     def __init__(
@@ -221,12 +221,12 @@ class ExperimentLogger:
         use_wandb: bool = False
     ):
         """
-        Args:
-            experiment_name: Name of experiment
-            output_dir: Output directory
-            config: Experiment configuration
-            use_tensorboard: Enable TensorBoard
-            use_wandb: Enable Weights & Biases
+        args:
+            experiment_name: name of experiment
+            output_dir: output directory
+            config: experiment configuration
+            use_tensorboard: enable tensorboard
+            use_wandb: enable weights & biases
         """
         self.name = experiment_name
         self.output_dir = Path(output_dir) / experiment_name
@@ -235,16 +235,16 @@ class ExperimentLogger:
         self.config = config or {}
         self.start_time = datetime.now()
         
-        # Set up text logger
+        # set up text logger
         self.logger = setup_logger(
             name=experiment_name,
             log_file=self.output_dir / 'experiment.log'
         )
         
-        # Metric tracking
+        # metric tracking
         self.metrics = MetricTracker()
         
-        # TensorBoard
+        # tensorboard
         self.tb_writer = None
         if use_tensorboard:
             try:
@@ -253,7 +253,7 @@ class ExperimentLogger:
             except ImportError:
                 self.logger.warning("TensorBoard not available")
         
-        # W&B
+        # w&b
         self.wandb_run = None
         if use_wandb:
             try:
@@ -266,13 +266,13 @@ class ExperimentLogger:
             except ImportError:
                 self.logger.warning("Weights & Biases not available")
         
-        # Save config
+        # save config
         self._save_config()
         
         self.logger.info(f"Experiment '{experiment_name}' initialized")
     
     def _save_config(self):
-        """Save configuration to file."""
+        """save configuration to file."""
         config_path = self.output_dir / 'config.json'
         with open(config_path, 'w') as f:
             json.dump({
@@ -282,7 +282,7 @@ class ExperimentLogger:
             }, f, indent=2)
     
     def log(self, message: str, level: str = 'info'):
-        """Log a message."""
+        """log a message."""
         getattr(self.logger, level)(message)
     
     def log_metrics(
@@ -292,22 +292,22 @@ class ExperimentLogger:
         prefix: str = ''
     ):
         """
-        Log metrics.
+        log metrics.
         
-        Args:
-            metrics: Dict of metric name -> value
-            step: Global step
-            prefix: Metric name prefix
+        args:
+            metrics: dict of metric name -> value
+            step: global step
+            prefix: metric name prefix
         """
         self.metrics.update(metrics)
         
-        # TensorBoard
+        # tensorboard
         if self.tb_writer is not None and step is not None:
             for name, value in metrics.items():
                 tag = f"{prefix}/{name}" if prefix else name
                 self.tb_writer.add_scalar(tag, value, step)
         
-        # W&B
+        # w&b
         if self.wandb_run is not None:
             import wandb
             log_dict = {
@@ -325,12 +325,12 @@ class ExperimentLogger:
         step: int = None
     ):
         """
-        Log image.
+        log image.
         
-        Args:
-            tag: Image tag
-            image: Image (numpy or tensor)
-            step: Global step
+        args:
+            tag: image tag
+            image: image (numpy or tensor)
+            step: global step
         """
         import numpy as np
         
@@ -339,13 +339,13 @@ class ExperimentLogger:
                 image = image.numpy()
             
             if image.ndim == 3 and image.shape[0] in [1, 3]:
-                # CHW -> HWC
+                # chw -> hwc
                 image = np.transpose(image, (1, 2, 0))
             
             self.tb_writer.add_image(tag, image, step, dataformats='HWC')
     
     def log_model_graph(self, model, input_tensor):
-        """Log model graph to TensorBoard."""
+        """log model graph to tensorboard."""
         if self.tb_writer is not None:
             try:
                 self.tb_writer.add_graph(model, input_tensor)
@@ -353,10 +353,10 @@ class ExperimentLogger:
                 self.logger.warning(f"Failed to log model graph: {e}")
     
     def end_epoch(self, epoch: int):
-        """End epoch and record metrics."""
+        """end epoch and record metrics."""
         self.metrics.end_epoch(epoch)
         
-        # Log epoch summary
+        # log epoch summary
         averages = {k: v[-1] for k, v in self.metrics.history.items()}
         self.logger.info(f"Epoch {epoch} - {averages}")
     
@@ -365,7 +365,7 @@ class ExperimentLogger:
         state: Dict,
         filename: str = 'checkpoint.pth'
     ):
-        """Save checkpoint."""
+        """save checkpoint."""
         import torch
         
         path = self.output_dir / 'checkpoints' / filename
@@ -379,7 +379,7 @@ class ExperimentLogger:
         filename: str,
         artifact_type: str = 'general'
     ):
-        """Save artifact."""
+        """save artifact."""
         path = self.output_dir / 'artifacts' / artifact_type / filename
         path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -397,14 +397,14 @@ class ExperimentLogger:
         self.logger.info(f"Saved artifact: {path}")
     
     def finish(self):
-        """Finish experiment and clean up."""
+        """finish experiment and clean up."""
         end_time = datetime.now()
         duration = end_time - self.start_time
         
-        # Save final metrics
+        # save final metrics
         self.metrics.save(self.output_dir / 'metrics.json')
         
-        # Save summary
+        # save summary
         summary = {
             'name': self.name,
             'start_time': self.start_time.isoformat(),
@@ -419,7 +419,7 @@ class ExperimentLogger:
         
         self.logger.info(f"Experiment completed in {duration}")
         
-        # Close writers
+        # close writers
         if self.tb_writer is not None:
             self.tb_writer.close()
         

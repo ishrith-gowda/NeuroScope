@@ -1,9 +1,9 @@
-"""Experiment configurations for NeuroScope.
+"""experiment configurations for neuroscope.
 
-This module provides configuration templates for various experiments and studies.
+this module provides configuration templates for various experiments and studies.
 """
 
-# Placeholder for experiment configurations
-# The actual implementation would be imported here
+# placeholder for experiment configurations
+# the actual implementation would be imported here
 
 __all__ = []

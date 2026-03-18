@@ -1,6 +1,6 @@
-"""Data handling module for NeuroScope.
+"""data handling module for neuroscope.
 
-This module provides comprehensive data handling capabilities including
+this module provides comprehensive data handling capabilities including
 loaders, transforms, datasets, and data splitting utilities.
 """
 

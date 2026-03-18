@@ -1,7 +1,7 @@
-"""Volume normalization methods for medical imaging data.
+"""volume normalization methods for medical imaging data.
 
-This module provides various normalization techniques specifically designed
-for 3D medical imaging volumes, including brain MRI preprocessing.
+this module provides various normalization techniques specifically designed
+for 3d medical imaging volumes, including brain mri preprocessing.
 """
 
 import numpy as np
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 
 class VolumeNormalization:
-    """Normalization methods for 3D medical volumes."""
+    """normalization methods for 3d medical volumes."""
     
     @staticmethod
     def min_max_normalization(
@@ -24,27 +24,27 @@ class VolumeNormalization:
         target_range: Tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume to [0, 1] or custom range using min-max normalization.
+        """normalize volume to [0, 1] or custom range using min-max normalization.
         
-        Args:
-            volume: Input volume as numpy array.
-            min_val: Optional minimum value for normalization.
-            max_val: Optional maximum value for normalization.
-            target_range: Target range for normalized values.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            min_val: optional minimum value for normalization.
+            max_val: optional maximum value for normalization.
+            target_range: target range for normalized values.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Determine min and max values
+        # determine min and max values
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -55,15 +55,15 @@ class VolumeNormalization:
             v_min = min_val if min_val is not None else np.min(volume)
             v_max = max_val if max_val is not None else np.max(volume)
         
-        # Avoid division by zero
+        # avoid division by zero
         if v_min == v_max:
             logger.warning(f"Min and max values are equal: {v_min}. Setting normalized volume to {target_range[0]}.")
             return np.ones_like(volume) * target_range[0]
         
-        # Normalize to [0, 1]
+        # normalize to [0, 1]
         normalized = (normalized - v_min) / (v_max - v_min)
         
-        # Scale to target range if not [0, 1]
+        # scale to target range if not [0, 1]
         if target_range != (0, 1):
             target_min, target_max = target_range
             normalized = normalized * (target_max - target_min) + target_min
@@ -77,26 +77,26 @@ class VolumeNormalization:
         std_val: Optional[float] = None,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume using z-score normalization.
+        """normalize volume using z-score normalization.
         
-        Args:
-            volume: Input volume as numpy array.
-            mean_val: Optional mean value for normalization.
-            std_val: Optional standard deviation for normalization.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            mean_val: optional mean value for normalization.
+            std_val: optional standard deviation for normalization.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Determine mean and std values
+        # determine mean and std values
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -107,12 +107,12 @@ class VolumeNormalization:
             v_mean = mean_val if mean_val is not None else np.mean(volume)
             v_std = std_val if std_val is not None else np.std(volume)
         
-        # Avoid division by zero
+        # avoid division by zero
         if v_std == 0:
             logger.warning(f"Standard deviation is zero. Setting normalized volume to zeros.")
             return np.zeros_like(volume)
         
-        # Apply z-score normalization
+        # apply z-score normalization
         normalized = (normalized - v_mean) / v_std
         
         return normalized
@@ -125,27 +125,27 @@ class VolumeNormalization:
         target_range: Tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume using percentile clipping.
+        """normalize volume using percentile clipping.
         
-        Args:
-            volume: Input volume as numpy array.
-            low_percentile: Lower percentile for clipping.
-            high_percentile: Upper percentile for clipping.
-            target_range: Target range for normalized values.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            low_percentile: lower percentile for clipping.
+            high_percentile: upper percentile for clipping.
+            target_range: target range for normalized values.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Calculate percentiles
+        # calculate percentiles
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -156,10 +156,10 @@ class VolumeNormalization:
             low_val = np.percentile(volume, low_percentile)
             high_val = np.percentile(volume, high_percentile)
         
-        # Clip to percentile range
+        # clip to percentile range
         normalized = np.clip(normalized, low_val, high_val)
         
-        # Apply min-max normalization to target range
+        # apply min-max normalization to target range
         return VolumeNormalization.min_max_normalization(
             normalized, low_val, high_val, target_range
         )
@@ -170,28 +170,28 @@ class VolumeNormalization:
         num_bins: int = 256,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply histogram equalization to the volume.
+        """apply histogram equalization to the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            num_bins: Number of histogram bins.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            num_bins: number of histogram bins.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Histogram-equalized volume.
+        returns:
+            histogram-equalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         equalized = volume.copy()
         
-        # Normalize to [0, 1] first for binning
+        # normalize to [0, 1] first for binning
         normalized = VolumeNormalization.min_max_normalization(volume, mask=mask)
         
-        # Create histogram
+        # create histogram
         if mask is not None:
-            # Use only foreground voxels for histogram
+            # use only foreground voxels for histogram
             foreground = normalized[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -201,11 +201,11 @@ class VolumeNormalization:
         else:
             hist, bins = np.histogram(normalized.flatten(), num_bins, range=(0, 1))
         
-        # Calculate cumulative distribution function (CDF)
+        # calculate cumulative distribution function (cdf)
         cdf = hist.cumsum()
-        cdf = cdf / float(cdf[-1])  # Normalize CDF
+        cdf = cdf / float(cdf[-1])  # normalize cdf
         
-        # Apply equalization using the CDF
+        # apply equalization using the cdf
         equalized = np.interp(normalized.flatten(), bins[:-1], cdf)
         equalized = equalized.reshape(volume.shape)
         
@@ -217,60 +217,60 @@ class VolumeNormalization:
         block_size: Tuple[int, int, int] = (32, 32, 32),
         clip_limit: float = 0.01,
     ) -> np.ndarray:
-        """Apply adaptive histogram equalization to the volume.
+        """apply adaptive histogram equalization to the volume.
         
-        This method applies a 3D version of CLAHE (Contrast Limited Adaptive
-        Histogram Equalization) to the volume.
+        this method applies a 3d version of clahe (contrast limited adaptive
+        histogram equalization) to the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            block_size: Size of blocks for local histogram equalization.
-            clip_limit: Clipping limit to prevent over-amplification of noise.
+        args:
+            volume: input volume as numpy array.
+            block_size: size of blocks for local histogram equalization.
+            clip_limit: clipping limit to prevent over-amplification of noise.
             
-        Returns:
-            CLAHE-equalized volume.
+        returns:
+            clahe-equalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Normalize to [0, 1] first
+        # normalize to [0, 1] first
         normalized = VolumeNormalization.min_max_normalization(volume)
         
-        # Scale to uint8 for processing
+        # scale to uint8 for processing
         uint8_volume = (normalized * 255).astype(np.uint8)
         
-        # Try to use skimage for 3D CLAHE if available
+        # try to use skimage for 3d clahe if available
         try:
             from skimage import exposure
             
-            # Process each axis separately (pseudo-3D CLAHE)
+            # process each axis separately (pseudo-3d clahe)
             clahe_xy = np.zeros_like(uint8_volume, dtype=np.float32)
             clahe_xz = np.zeros_like(uint8_volume, dtype=np.float32)
             clahe_yz = np.zeros_like(uint8_volume, dtype=np.float32)
             
-            # Apply CLAHE along different planes
-            for i in range(uint8_volume.shape[0]):  # XY planes
+            # apply clahe along different planes
+            for i in range(uint8_volume.shape[0]):  # xy planes
                 clahe_xy[i] = exposure.equalize_adapthist(
                     uint8_volume[i], 
                     kernel_size=block_size[1:],
                     clip_limit=clip_limit
                 )
             
-            for i in range(uint8_volume.shape[1]):  # XZ planes
+            for i in range(uint8_volume.shape[1]):  # xz planes
                 clahe_xz[:, i, :] = exposure.equalize_adapthist(
                     uint8_volume[:, i, :], 
                     kernel_size=(block_size[0], block_size[2]),
                     clip_limit=clip_limit
                 )
             
-            for i in range(uint8_volume.shape[2]):  # YZ planes
+            for i in range(uint8_volume.shape[2]):  # yz planes
                 clahe_yz[:, :, i] = exposure.equalize_adapthist(
                     uint8_volume[:, :, i], 
                     kernel_size=block_size[:2],
                     clip_limit=clip_limit
                 )
             
-            # Average the results from different planes
+            # average the results from different planes
             equalized = (clahe_xy + clahe_xz + clahe_yz) / 3.0
             
         except ImportError:
@@ -286,27 +286,27 @@ class VolumeNormalization:
         stripe_width: float = 0.1,
         target_value: float = 1.0,
     ) -> np.ndarray:
-        """Apply white stripe normalization.
+        """apply white stripe normalization.
         
-        This method is specifically designed for brain MRI normalization.
-        It identifies a stripe of white matter and normalizes based on it.
+        this method is specifically designed for brain mri normalization.
+        it identifies a stripe of white matter and normalizes based on it.
         
-        Args:
-            volume: Input volume as numpy array.
-            mask: Optional mask for brain voxels.
-            stripe_width: Width of the stripe as proportion of intensity range.
-            target_value: Target value for the white stripe.
+        args:
+            volume: input volume as numpy array.
+            mask: optional mask for brain voxels.
+            stripe_width: width of the stripe as proportion of intensity range.
+            target_value: target value for the white stripe.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Calculate histogram for brain region
+        # calculate histogram for brain region
         if mask is not None:
             brain_voxels = normalized[mask > 0]
             if len(brain_voxels) == 0:
@@ -315,30 +315,30 @@ class VolumeNormalization:
         else:
             brain_voxels = normalized.flatten()
         
-        # Calculate the mode of the histogram (approximating white matter peak)
+        # calculate the mode of the histogram (approximating white matter peak)
         hist, bin_edges = np.histogram(brain_voxels, bins=100)
         mode_index = np.argmax(hist)
         mode_value = (bin_edges[mode_index] + bin_edges[mode_index + 1]) / 2
         
-        # Define stripe around the mode
+        # define stripe around the mode
         intensity_range = np.max(brain_voxels) - np.min(brain_voxels)
         stripe_half_width = stripe_width * intensity_range / 2
         stripe_min = mode_value - stripe_half_width
         stripe_max = mode_value + stripe_half_width
         
-        # Create white matter mask
+        # create white matter mask
         wm_mask = (normalized >= stripe_min) & (normalized <= stripe_max)
         if mask is not None:
             wm_mask = wm_mask & (mask > 0)
         
-        # Calculate mean of white stripe
+        # calculate mean of white stripe
         if np.sum(wm_mask) > 0:
             wm_mean = np.mean(normalized[wm_mask])
         else:
             logger.warning("No voxels in white stripe, using mode value")
             wm_mean = mode_value
         
-        # Scale the volume so that white stripe mean is at target value
+        # scale the volume so that white stripe mean is at target value
         scale_factor = target_value / wm_mean
         normalized = normalized * scale_factor
         

@@ -1,7 +1,7 @@
 """
-ResNet-based Generator Architecture.
+resnet-based generator architecture.
 
-Classic generator architecture using residual blocks.
+classic generator architecture using residual blocks.
 """
 
 import torch
@@ -15,19 +15,19 @@ from .base import BaseGenerator
 
 class ResNetGenerator(BaseGenerator):
     """
-    ResNet-style Generator for image-to-image translation.
+    resnet-style generator for image-to-image translation.
     
-    Architecture: Conv -> Downsample -> ResBlocks -> Upsample -> Conv
+    architecture: conv -> downsample -> resblocks -> upsample -> conv
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_residual: Number of residual blocks
-        n_downsampling: Number of downsampling layers
-        norm_type: Normalization type ('instance', 'batch')
-        use_dropout: Whether to use dropout in residual blocks
-        padding_type: Padding type ('reflect', 'replicate', 'zero')
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_residual: number of residual blocks
+        n_downsampling: number of downsampling layers
+        norm_type: normalization type ('instance', 'batch')
+        use_dropout: whether to use dropout in residual blocks
+        padding_type: padding type ('reflect', 'replicate', 'zero')
     """
     
     def __init__(
@@ -46,7 +46,7 @@ class ResNetGenerator(BaseGenerator):
         self.n_residual = n_residual
         self.n_downsampling = n_downsampling
         
-        # Normalization layer
+        # normalization layer
         if norm_type == 'instance':
             norm_layer = nn.InstanceNorm2d
         elif norm_type == 'batch':
@@ -54,7 +54,7 @@ class ResNetGenerator(BaseGenerator):
         else:
             raise ValueError(f"Unknown norm type: {norm_type}")
             
-        # Padding layer
+        # padding layer
         if padding_type == 'reflect':
             padding_layer = nn.ReflectionPad2d
         elif padding_type == 'replicate':
@@ -62,7 +62,7 @@ class ResNetGenerator(BaseGenerator):
         else:
             padding_layer = nn.ZeroPad2d
             
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             padding_layer(3),
             nn.Conv2d(in_channels, ngf, kernel_size=7, padding=0),
@@ -70,7 +70,7 @@ class ResNetGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Downsampling
+        # downsampling
         self.downsample = nn.ModuleList()
         mult = 1
         for i in range(n_downsampling):
@@ -83,7 +83,7 @@ class ResNetGenerator(BaseGenerator):
             )
             mult *= 2
             
-        # Residual blocks
+        # residual blocks
         self.residual_blocks = nn.Sequential(*[
             ResidualBlock(
                 ngf * mult,
@@ -94,7 +94,7 @@ class ResNetGenerator(BaseGenerator):
             for _ in range(n_residual)
         ])
         
-        # Upsampling
+        # upsampling
         self.upsample = nn.ModuleList()
         for i in range(n_downsampling):
             self.upsample.append(
@@ -109,7 +109,7 @@ class ResNetGenerator(BaseGenerator):
             )
             mult //= 2
             
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             padding_layer(3),
             nn.Conv2d(ngf, out_channels, kernel_size=7, padding=0),
@@ -117,22 +117,22 @@ class ResNetGenerator(BaseGenerator):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
-        # Initial
+        """forward pass."""
+        # initial
         out = self.initial(x)
         
-        # Downsample
+        # downsample
         for down in self.downsample:
             out = down(out)
             
-        # Residual blocks
+        # residual blocks
         out = self.residual_blocks(out)
         
-        # Upsample
+        # upsample
         for up in self.upsample:
             out = up(out)
             
-        # Final
+        # final
         out = self.final(out)
         
         return out
@@ -140,13 +140,13 @@ class ResNetGenerator(BaseGenerator):
 
 class ResNetGeneratorWithAttention(ResNetGenerator):
     """
-    ResNet Generator with Self-Attention.
+    resnet generator with self-attention.
     
-    Adds self-attention layers after residual blocks.
+    adds self-attention layers after residual blocks.
     
-    Args:
-        Same as ResNetGenerator, plus:
-        attention_layers: List of layer indices to add attention
+    args:
+        same as resnetgenerator, plus:
+        attention_layers: list of layer indices to add attention
     """
     
     def __init__(
@@ -166,22 +166,22 @@ class ResNetGeneratorWithAttention(ResNetGenerator):
             n_downsampling, norm_type, use_dropout, padding_type
         )
         
-        # Default: add attention after middle residual blocks
+        # default: add attention after middle residual blocks
         if attention_layers is None:
             attention_layers = [n_residual // 2]
             
         self.attention_layers = attention_layers
         
-        # Compute channels at bottleneck
+        # compute channels at bottleneck
         mult = 2 ** n_downsampling
         bottleneck_channels = ngf * mult
         
-        # Create attention modules
+        # create attention modules
         self.attention_modules = nn.ModuleDict()
         for idx in attention_layers:
             self.attention_modules[str(idx)] = SelfAttention2d(bottleneck_channels)
             
-        # Rebuild residual blocks as list for attention insertion
+        # rebuild residual blocks as list for attention insertion
         self.residual_blocks = nn.ModuleList([
             ResidualBlock(
                 bottleneck_channels,
@@ -193,25 +193,25 @@ class ResNetGeneratorWithAttention(ResNetGenerator):
         ])
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with attention."""
-        # Initial
+        """forward pass with attention."""
+        # initial
         out = self.initial(x)
         
-        # Downsample
+        # downsample
         for down in self.downsample:
             out = down(out)
             
-        # Residual blocks with attention
+        # residual blocks with attention
         for i, block in enumerate(self.residual_blocks):
             out = block(out)
             if str(i) in self.attention_modules:
                 out = self.attention_modules[str(i)](out)
                 
-        # Upsample
+        # upsample
         for up in self.upsample:
             out = up(out)
             
-        # Final
+        # final
         out = self.final(out)
         
         return out
@@ -219,15 +219,15 @@ class ResNetGeneratorWithAttention(ResNetGenerator):
 
 class FastResNetGenerator(BaseGenerator):
     """
-    Fast ResNet Generator with fewer parameters.
+    fast resnet generator with fewer parameters.
     
-    Optimized for speed while maintaining quality.
+    optimized for speed while maintaining quality.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters (smaller default)
-        n_residual: Number of residual blocks (fewer)
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters (smaller default)
+        n_residual: number of residual blocks (fewer)
     """
     
     def __init__(
@@ -239,7 +239,7 @@ class FastResNetGenerator(BaseGenerator):
     ):
         super().__init__(in_channels, out_channels, ngf)
         
-        # Initial convolution - smaller kernel
+        # initial convolution - smaller kernel
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(2),
             nn.Conv2d(in_channels, ngf, kernel_size=5, padding=0),
@@ -247,27 +247,27 @@ class FastResNetGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Single downsample
+        # single downsample
         self.downsample = nn.Sequential(
             nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1),
             nn.InstanceNorm2d(ngf * 2),
             nn.ReLU(inplace=True)
         )
         
-        # Lightweight residual blocks
+        # lightweight residual blocks
         self.residual_blocks = nn.Sequential(*[
             LightweightResidualBlock(ngf * 2)
             for _ in range(n_residual)
         ])
         
-        # Single upsample
+        # single upsample
         self.upsample = nn.Sequential(
             nn.ConvTranspose2d(ngf * 2, ngf, 3, stride=2, padding=1, output_padding=1),
             nn.InstanceNorm2d(ngf),
             nn.ReLU(inplace=True)
         )
         
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReflectionPad2d(2),
             nn.Conv2d(ngf, out_channels, kernel_size=5, padding=0),
@@ -275,7 +275,7 @@ class FastResNetGenerator(BaseGenerator):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
+        """forward pass."""
         out = self.initial(x)
         out = self.downsample(out)
         out = self.residual_blocks(out)
@@ -285,17 +285,17 @@ class FastResNetGenerator(BaseGenerator):
 
 
 class LightweightResidualBlock(nn.Module):
-    """Lightweight residual block with depthwise separable convolutions."""
+    """lightweight residual block with depthwise separable convolutions."""
     
     def __init__(self, channels: int):
         super().__init__()
         
         self.conv = nn.Sequential(
-            # Depthwise
+            # depthwise
             nn.Conv2d(channels, channels, 3, padding=1, groups=channels),
             nn.InstanceNorm2d(channels),
             nn.ReLU(inplace=True),
-            # Pointwise
+            # pointwise
             nn.Conv2d(channels, channels, 1),
             nn.InstanceNorm2d(channels)
         )
@@ -306,16 +306,16 @@ class LightweightResidualBlock(nn.Module):
 
 class DeepResNetGenerator(BaseGenerator):
     """
-    Deep ResNet Generator with more capacity.
+    deep resnet generator with more capacity.
     
-    For high-quality generation with more parameters.
+    for high-quality generation with more parameters.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_residual: Number of residual blocks (more)
-        n_downsampling: Number of downsampling layers
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_residual: number of residual blocks (more)
+        n_downsampling: number of downsampling layers
     """
     
     def __init__(
@@ -328,7 +328,7 @@ class DeepResNetGenerator(BaseGenerator):
     ):
         super().__init__(in_channels, out_channels, ngf)
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, ngf, kernel_size=7, padding=0),
@@ -336,11 +336,11 @@ class DeepResNetGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Progressive downsampling
+        # progressive downsampling
         self.downsample = nn.ModuleList()
         mult = 1
         for i in range(n_downsampling):
-            out_mult = min(mult * 2, 8)  # Cap at 8x base
+            out_mult = min(mult * 2, 8)  # cap at 8x base
             self.downsample.append(
                 nn.Sequential(
                     nn.Conv2d(ngf * mult, ngf * out_mult, 3, stride=2, padding=1),
@@ -350,14 +350,14 @@ class DeepResNetGenerator(BaseGenerator):
             )
             mult = out_mult
             
-        # Deep residual blocks
+        # deep residual blocks
         self.residual_blocks = nn.ModuleList()
         for i in range(n_residual):
             self.residual_blocks.append(
                 PreActResidualBlock(ngf * mult)
             )
             
-        # Progressive upsampling
+        # progressive upsampling
         self.upsample = nn.ModuleList()
         for i in range(n_downsampling):
             out_mult = max(mult // 2, 1)
@@ -373,7 +373,7 @@ class DeepResNetGenerator(BaseGenerator):
             )
             mult = out_mult
             
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, out_channels, kernel_size=7, padding=0),
@@ -381,10 +381,10 @@ class DeepResNetGenerator(BaseGenerator):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
+        """forward pass."""
         out = self.initial(x)
         
-        # Store for potential skip connections
+        # store for potential skip connections
         skip_features = [out]
         
         for down in self.downsample:
@@ -402,7 +402,7 @@ class DeepResNetGenerator(BaseGenerator):
 
 
 class PreActResidualBlock(nn.Module):
-    """Pre-activation residual block (He et al.)."""
+    """pre-activation residual block (he et al.)."""
     
     def __init__(self, channels: int):
         super().__init__()

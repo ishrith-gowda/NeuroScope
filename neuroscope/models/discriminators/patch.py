@@ -1,7 +1,7 @@
 """
-Patch Discriminator Architectures.
+patch discriminator architectures.
 
-PatchGAN-style discriminators that classify NxN patches.
+patchgan-style discriminators that classify nxn patches.
 """
 
 import torch
@@ -14,16 +14,16 @@ from .base import BaseDiscriminator, PatchDiscriminator
 
 class NLayerPatchDiscriminator(PatchDiscriminator):
     """
-    N-Layer PatchGAN Discriminator.
+    n-layer patchgan discriminator.
     
-    Standard PatchGAN with configurable depth.
+    standard patchgan with configurable depth.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of conv layers
-        norm_type: Normalization type ('instance', 'batch', 'none')
-        use_sigmoid: Whether to apply sigmoid at output
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of conv layers
+        norm_type: normalization type ('instance', 'batch', 'none')
+        use_sigmoid: whether to apply sigmoid at output
     """
     
     def __init__(
@@ -43,8 +43,8 @@ class NLayerPatchDiscriminator(PatchDiscriminator):
         super().__init__(in_channels, ndf, n_layers, norm_type)
         
     def _build_network(self) -> nn.Sequential:
-        """Build the discriminator network."""
-        # Normalization layer
+        """build the discriminator network."""
+        # normalization layer
         if self._norm_type == 'instance':
             norm_layer = nn.InstanceNorm2d
         elif self._norm_type == 'batch':
@@ -54,13 +54,13 @@ class NLayerPatchDiscriminator(PatchDiscriminator):
             
         layers = []
         
-        # First layer (no normalization)
+        # first layer (no normalization)
         layers.append(
             nn.Conv2d(self._in_channels, self._ndf, 4, stride=2, padding=1)
         )
         layers.append(nn.LeakyReLU(0.2, inplace=True))
         
-        # Intermediate layers
+        # intermediate layers
         nf_mult = 1
         for n in range(1, self._n_layers):
             nf_mult_prev = nf_mult
@@ -77,7 +77,7 @@ class NLayerPatchDiscriminator(PatchDiscriminator):
                 layers.append(norm_layer(self._ndf * nf_mult))
             layers.append(nn.LeakyReLU(0.2, inplace=True))
             
-        # Second to last layer
+        # second to last layer
         nf_mult_prev = nf_mult
         nf_mult = min(2 ** self._n_layers, 8)
         
@@ -92,7 +92,7 @@ class NLayerPatchDiscriminator(PatchDiscriminator):
             layers.append(norm_layer(self._ndf * nf_mult))
         layers.append(nn.LeakyReLU(0.2, inplace=True))
         
-        # Output layer
+        # output layer
         layers.append(
             nn.Conv2d(self._ndf * nf_mult, 1, 4, stride=1, padding=1)
         )
@@ -105,14 +105,14 @@ class NLayerPatchDiscriminator(PatchDiscriminator):
 
 class PixelDiscriminator(BaseDiscriminator):
     """
-    1x1 PatchGAN (Pixel) Discriminator.
+    1x1 patchgan (pixel) discriminator.
     
-    Classifies each pixel independently.
+    classifies each pixel independently.
     
-    Args:
-        in_channels: Input channels
-        ndf: Number of filters
-        norm_type: Normalization type
+    args:
+        in_channels: input channels
+        ndf: number of filters
+        norm_type: normalization type
     """
     
     def __init__(
@@ -145,14 +145,14 @@ class PixelDiscriminator(BaseDiscriminator):
 
 class DeepPatchDiscriminator(BaseDiscriminator):
     """
-    Deep PatchGAN Discriminator.
+    deep patchgan discriminator.
     
-    Deeper network with more capacity.
+    deeper network with more capacity.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of layers
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of layers
     """
     
     def __init__(
@@ -165,7 +165,7 @@ class DeepPatchDiscriminator(BaseDiscriminator):
         
         self.layers = nn.ModuleList()
         
-        # First layer
+        # first layer
         self.layers.append(
             nn.Sequential(
                 nn.Conv2d(in_channels, ndf, 4, stride=2, padding=1),
@@ -173,7 +173,7 @@ class DeepPatchDiscriminator(BaseDiscriminator):
             )
         )
         
-        # Hidden layers
+        # hidden layers
         in_ch = ndf
         for i in range(1, n_layers):
             out_ch = min(ndf * (2 ** i), 512)
@@ -188,7 +188,7 @@ class DeepPatchDiscriminator(BaseDiscriminator):
             )
             in_ch = out_ch
             
-        # Output layer
+        # output layer
         self.output = nn.Conv2d(in_ch, 1, 4, stride=1, padding=1)
         
     def forward(
@@ -196,7 +196,7 @@ class DeepPatchDiscriminator(BaseDiscriminator):
         x: torch.Tensor,
         return_features: bool = False
     ) -> torch.Tensor:
-        """Forward pass with optional feature return."""
+        """forward pass with optional feature return."""
         features = []
         
         for layer in self.layers:
@@ -213,14 +213,14 @@ class DeepPatchDiscriminator(BaseDiscriminator):
 
 class ResidualPatchDiscriminator(BaseDiscriminator):
     """
-    Residual PatchGAN Discriminator.
+    residual patchgan discriminator.
     
-    Uses residual connections for better gradient flow.
+    uses residual connections for better gradient flow.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_blocks: Number of residual blocks
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_blocks: number of residual blocks
     """
     
     def __init__(
@@ -231,13 +231,13 @@ class ResidualPatchDiscriminator(BaseDiscriminator):
     ):
         super().__init__(in_channels, ndf)
         
-        # Initial conv
+        # initial conv
         self.initial = nn.Sequential(
             nn.Conv2d(in_channels, ndf, 4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True)
         )
         
-        # Residual blocks with downsampling
+        # residual blocks with downsampling
         self.blocks = nn.ModuleList()
         in_ch = ndf
         
@@ -248,7 +248,7 @@ class ResidualPatchDiscriminator(BaseDiscriminator):
             )
             in_ch = out_ch
             
-        # Output
+        # output
         self.output = nn.Sequential(
             nn.Conv2d(in_ch, in_ch, 3, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
@@ -265,7 +265,7 @@ class ResidualPatchDiscriminator(BaseDiscriminator):
 
 
 class ResidualDownBlock(nn.Module):
-    """Residual block with downsampling."""
+    """residual block with downsampling."""
     
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
@@ -291,15 +291,15 @@ class ResidualDownBlock(nn.Module):
 
 class DilatedPatchDiscriminator(BaseDiscriminator):
     """
-    Dilated PatchGAN Discriminator.
+    dilated patchgan discriminator.
     
-    Uses dilated convolutions for larger receptive field
+    uses dilated convolutions for larger receptive field
     without downsampling.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of dilated layers
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of dilated layers
     """
     
     def __init__(
@@ -312,13 +312,13 @@ class DilatedPatchDiscriminator(BaseDiscriminator):
         
         layers = []
         
-        # First layer (no dilation)
+        # first layer (no dilation)
         layers.append(
             nn.Conv2d(in_channels, ndf, 3, stride=1, padding=1)
         )
         layers.append(nn.LeakyReLU(0.2, inplace=True))
         
-        # Dilated layers
+        # dilated layers
         in_ch = ndf
         for i in range(n_layers):
             out_ch = min(ndf * (2 ** (i + 1)), 512)
@@ -333,7 +333,7 @@ class DilatedPatchDiscriminator(BaseDiscriminator):
             
             in_ch = out_ch
             
-        # Output layer
+        # output layer
         layers.append(nn.Conv2d(in_ch, 1, 3, padding=1))
         
         self.model = nn.Sequential(*layers)
@@ -344,15 +344,15 @@ class DilatedPatchDiscriminator(BaseDiscriminator):
 
 class AttentionPatchDiscriminator(BaseDiscriminator):
     """
-    PatchGAN with Self-Attention.
+    patchgan with self-attention.
     
-    Adds self-attention layers for capturing long-range dependencies.
+    adds self-attention layers for capturing long-range dependencies.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of layers
-        attention_layer: Which layer to add attention
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of layers
+        attention_layer: which layer to add attention
     """
     
     def __init__(
@@ -367,7 +367,7 @@ class AttentionPatchDiscriminator(BaseDiscriminator):
         self.layers = nn.ModuleList()
         self.attention_layer = attention_layer
         
-        # Build layers
+        # build layers
         in_ch = in_channels
         for i in range(n_layers):
             out_ch = min(ndf * (2 ** i), 512)
@@ -380,13 +380,13 @@ class AttentionPatchDiscriminator(BaseDiscriminator):
                 )
             )
             
-            # Add attention at specified layer
+            # add attention at specified layer
             if i == attention_layer:
                 self.layers.append(SelfAttention(out_ch))
                 
             in_ch = out_ch
             
-        # Output
+        # output
         self.output = nn.Conv2d(in_ch, 1, 4, padding=1)
         
     def forward(
@@ -394,7 +394,7 @@ class AttentionPatchDiscriminator(BaseDiscriminator):
         x: torch.Tensor,
         return_attention: bool = False
     ) -> torch.Tensor:
-        """Forward pass with optional attention map return."""
+        """forward pass with optional attention map return."""
         attention_map = None
         
         for layer in self.layers:
@@ -411,7 +411,7 @@ class AttentionPatchDiscriminator(BaseDiscriminator):
 
 
 class SelfAttention(nn.Module):
-    """Self-attention module for discriminator."""
+    """self-attention module for discriminator."""
     
     def __init__(self, channels: int):
         super().__init__()

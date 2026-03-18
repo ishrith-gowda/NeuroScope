@@ -1,10 +1,10 @@
 """
-TensorBoard Logger.
+tensorboard logger.
 
-Comprehensive TensorBoard logging for 2.5D SA-CycleGAN training.
-Logs scalars, images, histograms, and model graphs.
+comprehensive tensorboard logging for 2.5d sa-cyclegan training.
+logs scalars, images, histograms, and model graphs.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, Any, Union, List
@@ -18,15 +18,15 @@ from torch.utils.tensorboard import SummaryWriter
 
 class TensorBoardLogger:
     """
-    Professional TensorBoard logger with comprehensive logging capabilities.
+    professional tensorboard logger with comprehensive logging capabilities.
     
-    Features:
-    - Scalar logging (losses, metrics, learning rates)
-    - Image logging (samples, comparisons, attention maps)
-    - Histogram logging (weights, gradients, activations)
-    - Graph logging (model architecture)
-    - Hyperparameter logging
-    - Custom layout for organized dashboards
+    features:
+    - scalar logging (losses, metrics, learning rates)
+    - image logging (samples, comparisons, attention maps)
+    - histogram logging (weights, gradients, activations)
+    - graph logging (model architecture)
+    - hyperparameter logging
+    - custom layout for organized dashboards
     """
     
     def __init__(
@@ -40,16 +40,16 @@ class TensorBoardLogger:
         filename_suffix: str = ""
     ):
         """
-        Initialize TensorBoard logger.
+        initialize tensorboard logger.
         
-        Args:
-            log_dir: Root directory for TensorBoard logs
-            experiment_name: Name for this experiment run
-            flush_secs: Flush frequency in seconds
-            comment: Comment to append to log directory name
-            purge_step: Purge all events after this global step
-            max_queue: Maximum queue size before flushing
-            filename_suffix: Suffix for log files
+        args:
+            log_dir: root directory for tensorboard logs
+            experiment_name: name for this experiment run
+            flush_secs: flush frequency in seconds
+            comment: comment to append to log directory name
+            purge_step: purge all events after this global step
+            max_queue: maximum queue size before flushing
+            filename_suffix: suffix for log files
         """
         log_dir = Path(log_dir)
         
@@ -74,7 +74,7 @@ class TensorBoardLogger:
         self.step = 0
         
     def _setup_custom_layout(self):
-        """Set up custom TensorBoard layout for organized viewing."""
+        """set up custom tensorboard layout for organized viewing."""
         layout = {
             "Training Losses": {
                 "Generator": ["Multiline", ["Loss/Generator/total", "Loss/Generator/gan", 
@@ -96,7 +96,7 @@ class TensorBoardLogger:
         self.writer.add_custom_scalars(layout)
         
     # =========================================================================
-    # Scalar Logging
+    # scalar logging
     # =========================================================================
     
     def log_scalar(
@@ -106,7 +106,7 @@ class TensorBoardLogger:
         step: Optional[int] = None,
         walltime: Optional[float] = None
     ):
-        """Log a single scalar value."""
+        """log a single scalar value."""
         step = step if step is not None else self.step
         self.writer.add_scalar(tag, value, step, walltime)
         
@@ -117,7 +117,7 @@ class TensorBoardLogger:
         step: Optional[int] = None,
         walltime: Optional[float] = None
     ):
-        """Log multiple scalars under a common main tag."""
+        """log multiple scalars under a common main tag."""
         step = step if step is not None else self.step
         self.writer.add_scalars(main_tag, tag_scalar_dict, step, walltime)
         
@@ -127,15 +127,15 @@ class TensorBoardLogger:
         step: Optional[int] = None
     ):
         """
-        Log training losses with organized structure.
+        log training losses with organized structure.
         
-        Expected keys:
-        - G_total, G_gan, G_cycle, G_identity, G_ssim, G_gradient
-        - D_total, D_A, D_B
+        expected keys:
+        - g_total, g_gan, g_cycle, g_identity, g_ssim, g_gradient
+        - d_total, d_a, d_b
         """
         step = step if step is not None else self.step
         
-        # Generator losses
+        # generator losses
         if 'G_total' in losses:
             self.log_scalar("Loss/Generator/total", losses['G_total'], step)
         if 'G_gan' in losses:
@@ -149,7 +149,7 @@ class TensorBoardLogger:
         if 'G_gradient' in losses:
             self.log_scalar("Loss/Generator/gradient", losses['G_gradient'], step)
             
-        # Discriminator losses
+        # discriminator losses
         if 'D_total' in losses:
             self.log_scalar("Loss/Discriminator/total", losses['D_total'], step)
         if 'D_A' in losses:
@@ -163,16 +163,16 @@ class TensorBoardLogger:
         step: Optional[int] = None
     ):
         """
-        Log validation metrics.
+        log validation metrics.
         
-        Expected keys:
-        - ssim_A2B, ssim_B2A
-        - psnr_A2B, psnr_B2A
-        - ncc_A2B, ncc_B2A (optional)
+        expected keys:
+        - ssim_a2b, ssim_b2a
+        - psnr_a2b, psnr_b2a
+        - ncc_a2b, ncc_b2a (optional)
         """
         step = step if step is not None else self.step
         
-        # SSIM
+        # ssim
         if 'ssim_A2B' in metrics:
             self.log_scalar("Metrics/SSIM/A2B", metrics['ssim_A2B'], step)
         if 'ssim_B2A' in metrics:
@@ -181,7 +181,7 @@ class TensorBoardLogger:
             self.log_scalar("Metrics/SSIM/mean", 
                           (metrics['ssim_A2B'] + metrics['ssim_B2A']) / 2, step)
             
-        # PSNR
+        # psnr
         if 'psnr_A2B' in metrics:
             self.log_scalar("Metrics/PSNR/A2B", metrics['psnr_A2B'], step)
         if 'psnr_B2A' in metrics:
@@ -190,7 +190,7 @@ class TensorBoardLogger:
             self.log_scalar("Metrics/PSNR/mean",
                           (metrics['psnr_A2B'] + metrics['psnr_B2A']) / 2, step)
             
-        # NCC (if available)
+        # ncc (if available)
         if 'ncc_A2B' in metrics:
             self.log_scalar("Metrics/NCC/A2B", metrics['ncc_A2B'], step)
         if 'ncc_B2A' in metrics:
@@ -202,13 +202,13 @@ class TensorBoardLogger:
         lr_D: float,
         step: Optional[int] = None
     ):
-        """Log learning rates."""
+        """log learning rates."""
         step = step if step is not None else self.step
         self.log_scalar("LR/Generator", lr_G, step)
         self.log_scalar("LR/Discriminator", lr_D, step)
         
     # =========================================================================
-    # Image Logging
+    # image logging
     # =========================================================================
     
     def log_image(
@@ -219,13 +219,13 @@ class TensorBoardLogger:
         dataformats: str = 'CHW'
     ):
         """
-        Log a single image.
+        log a single image.
         
-        Args:
-            tag: Image tag
-            img_tensor: Image tensor (C, H, W) or (H, W, C)
-            step: Global step
-            dataformats: Data format ('CHW', 'HWC', 'HW')
+        args:
+            tag: image tag
+            img_tensor: image tensor (c, h, w) or (h, w, c)
+            step: global step
+            dataformats: data format ('chw', 'hwc', 'hw')
         """
         step = step if step is not None else self.step
         
@@ -242,13 +242,13 @@ class TensorBoardLogger:
         dataformats: str = 'NCHW'
     ):
         """
-        Log multiple images as a grid.
+        log multiple images as a grid.
         
-        Args:
-            tag: Image tag
-            img_tensor: Image tensor (N, C, H, W)
-            step: Global step
-            dataformats: Data format
+        args:
+            tag: image tag
+            img_tensor: image tensor (n, c, h, w)
+            step: global step
+            dataformats: data format
         """
         step = step if step is not None else self.step
         
@@ -270,41 +270,41 @@ class TensorBoardLogger:
         max_samples: int = 4
     ):
         """
-        Log side-by-side comparison of translations.
+        log side-by-side comparison of translations.
         
-        Creates grid showing:
-        Row 1: real_A -> fake_B -> rec_A
-        Row 2: real_B -> fake_A -> rec_B
+        creates grid showing:
+        row 1: real_a -> fake_b -> rec_a
+        row 2: real_b -> fake_a -> rec_b
         
-        Args:
-            real_A: Real domain A images [B, C, H, W]
-            fake_B: Generated B images [B, C, H, W]
-            rec_A: Reconstructed A images [B, C, H, W]
-            real_B: Real domain B images [B, C, H, W]
-            fake_A: Generated A images [B, C, H, W]
-            rec_B: Reconstructed B images [B, C, H, W]
-            step: Global step
-            modality_idx: Which modality channel to visualize
-            max_samples: Maximum number of samples to show
+        args:
+            real_a: real domain a images [b, c, h, w]
+            fake_b: generated b images [b, c, h, w]
+            rec_a: reconstructed a images [b, c, h, w]
+            real_b: real domain b images [b, c, h, w]
+            fake_a: generated a images [b, c, h, w]
+            rec_b: reconstructed b images [b, c, h, w]
+            step: global step
+            modality_idx: which modality channel to visualize
+            max_samples: maximum number of samples to show
         """
         step = step if step is not None else self.step
         n = min(real_A.size(0), max_samples)
         
-        # Extract single modality for visualization
+        # extract single modality for visualization
         def get_modality(x, idx):
             if x.size(1) > idx:
                 return x[:n, idx:idx+1]
             return x[:n, 0:1]
         
-        # Create comparison grids
-        # A -> B -> A cycle
+        # create comparison grids
+        # a -> b -> a cycle
         grid_A2B = torch.cat([
             get_modality(real_A, modality_idx),
             get_modality(fake_B, modality_idx),
             get_modality(rec_A, modality_idx)
-        ], dim=0)  # [3*n, 1, H, W]
+        ], dim=0)  # [3*n, 1, h, w]
         
-        # B -> A -> B cycle
+        # b -> a -> b cycle
         grid_B2A = torch.cat([
             get_modality(real_B, modality_idx),
             get_modality(fake_A, modality_idx),
@@ -320,34 +320,34 @@ class TensorBoardLogger:
         step: Optional[int] = None
     ):
         """
-        Log attention maps from self-attention layers.
+        log attention maps from self-attention layers.
         
-        Args:
-            attention_maps: Dictionary of attention maps
-            step: Global step
+        args:
+            attention_maps: dictionary of attention maps
+            step: global step
         """
         step = step if step is not None else self.step
         
         for name, attn in attention_maps.items():
             if attn is not None and attn.numel() > 0:
-                # Normalize attention for visualization
+                # normalize attention for visualization
                 attn = attn.detach().cpu()
-                if attn.dim() == 4:  # [B, heads, H*W, H*W]
-                    # Take first sample, mean over heads
-                    attn = attn[0].mean(0)  # [H*W, H*W]
+                if attn.dim() == 4:  # [b, heads, h*w, h*w]
+                    # take first sample, mean over heads
+                    attn = attn[0].mean(0)  # [h*w, h*w]
                     
-                # Normalize to [0, 1]
+                # normalize to [0, 1]
                 attn = (attn - attn.min()) / (attn.max() - attn.min() + 1e-8)
                 
                 self.writer.add_image(
                     f"Attention/{name}",
-                    attn.unsqueeze(0),  # [1, H*W, H*W]
+                    attn.unsqueeze(0),  # [1, h*w, h*w]
                     step,
                     dataformats='CHW'
                 )
                 
     # =========================================================================
-    # Histogram Logging
+    # histogram logging
     # =========================================================================
     
     def log_histogram(
@@ -357,7 +357,7 @@ class TensorBoardLogger:
         step: Optional[int] = None,
         bins: str = 'tensorflow'
     ):
-        """Log a histogram of values."""
+        """log a histogram of values."""
         step = step if step is not None else self.step
         
         if isinstance(values, torch.Tensor):
@@ -372,12 +372,12 @@ class TensorBoardLogger:
         prefix: str = ""
     ):
         """
-        Log histograms of all model weights.
+        log histograms of all model weights.
         
-        Args:
-            model: PyTorch model
-            step: Global step
-            prefix: Prefix for tags
+        args:
+            model: pytorch model
+            step: global step
+            prefix: prefix for tags
         """
         step = step if step is not None else self.step
         
@@ -393,12 +393,12 @@ class TensorBoardLogger:
         prefix: str = ""
     ):
         """
-        Log histograms of all model gradients.
+        log histograms of all model gradients.
         
-        Args:
-            model: PyTorch model
-            step: Global step
-            prefix: Prefix for tags
+        args:
+            model: pytorch model
+            step: global step
+            prefix: prefix for tags
         """
         step = step if step is not None else self.step
         
@@ -413,11 +413,11 @@ class TensorBoardLogger:
         step: Optional[int] = None
     ):
         """
-        Log gradient L2 norms for models.
+        log gradient l2 norms for models.
         
-        Args:
-            models: Dictionary of model_name -> model
-            step: Global step
+        args:
+            models: dictionary of model_name -> model
+            step: global step
         """
         step = step if step is not None else self.step
         
@@ -431,7 +431,7 @@ class TensorBoardLogger:
             self.log_scalar(f"Gradients/{name}/norm", total_norm, step)
             
     # =========================================================================
-    # Model Graph & Hyperparameters
+    # model graph & hyperparameters
     # =========================================================================
     
     def log_graph(
@@ -441,30 +441,30 @@ class TensorBoardLogger:
         verbose: bool = False
     ):
         """
-        Log model computational graph.
+        log model computational graph.
         
-        Args:
-            model: PyTorch model
-            input_shape: Shape of input tensor (without batch dimension)
-            verbose: Whether to print graph info
+        args:
+            model: pytorch model
+            input_shape: shape of input tensor (without batch dimension)
+            verbose: whether to print graph info
         """
         import inspect
         device = next(model.parameters()).device
         dummy_input = torch.zeros(1, *input_shape, device=device)
         try:
-            # Inspect the forward signature
+            # inspect the forward signature
             sig = inspect.signature(model.forward)
             params = list(sig.parameters.values())
-            # Exclude 'self'
+            # exclude 'self'
             n_args = len([p for p in params if p.name != 'self'])
             if n_args == 2:
-                # Multi-input: pass tuple of two dummy tensors
+                # multi-input: pass tuple of two dummy tensors
                 dummy_input2 = torch.zeros(1, *input_shape, device=device)
                 self.writer.add_graph(model, (dummy_input, dummy_input2), verbose=verbose)
             else:
                 self.writer.add_graph(model, dummy_input, verbose=verbose)
         except Exception as e:
-            print(f"Warning: Could not log model graph: {e}")
+            print(f"warning: could not log model graph: {e}")
             
     def log_hyperparameters(
         self,
@@ -472,15 +472,15 @@ class TensorBoardLogger:
         metric_dict: Optional[Dict[str, float]] = None
     ):
         """
-        Log hyperparameters.
+        log hyperparameters.
         
-        Args:
-            hparam_dict: Dictionary of hyperparameters
-            metric_dict: Dictionary of metrics (optional)
+        args:
+            hparam_dict: dictionary of hyperparameters
+            metric_dict: dictionary of metrics (optional)
         """
         metric_dict = metric_dict or {}
         
-        # Filter to supported types
+        # filter to supported types
         filtered_hparams = {}
         for k, v in hparam_dict.items():
             if isinstance(v, (int, float, str, bool)):
@@ -493,7 +493,7 @@ class TensorBoardLogger:
         self.writer.add_hparams(filtered_hparams, metric_dict)
         
     # =========================================================================
-    # Text Logging
+    # text logging
     # =========================================================================
     
     def log_text(
@@ -502,12 +502,12 @@ class TensorBoardLogger:
         text: str,
         step: Optional[int] = None
     ):
-        """Log text data."""
+        """log text data."""
         step = step if step is not None else self.step
         self.writer.add_text(tag, text, step)
         
     def log_config(self, config: Dict[str, Any]):
-        """Log configuration as formatted text."""
+        """log configuration as formatted text."""
         config_text = "## Training Configuration\n\n"
         for section, values in config.items():
             config_text += f"### {section}\n"
@@ -521,23 +521,23 @@ class TensorBoardLogger:
         self.log_text("Config/training", config_text, 0)
         
     # =========================================================================
-    # Utility Methods
+    # utility methods
     # =========================================================================
     
     def set_step(self, step: int):
-        """Set the current global step."""
+        """set the current global step."""
         self.step = step
         
     def increment_step(self, n: int = 1):
-        """Increment the global step."""
+        """increment the global step."""
         self.step += n
         
     def flush(self):
-        """Flush pending events to disk."""
+        """flush pending events to disk."""
         self.writer.flush()
         
     def close(self):
-        """Close the writer."""
+        """close the writer."""
         self.writer.close()
         
     def __enter__(self):

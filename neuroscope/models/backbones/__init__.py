@@ -1,7 +1,7 @@
 """
-Backbone Feature Extraction Networks.
+backbone feature extraction networks.
 
-Pre-trained networks for feature extraction used in
+pre-trained networks for feature extraction used in
 perceptual losses and feature matching.
 """
 
@@ -28,20 +28,20 @@ from .efficientnet import (
 )
 
 __all__ = [
-    # VGG
+    # vgg
     'VGG16Features',
     'VGG19Features',
     'VGGPerceptualExtractor',
     'MultiLayerVGG',
     
-    # ResNet
+    # resnet
     'ResNet18Features',
     'ResNet34Features',
     'ResNet50Features',
     'ResNetPerceptualExtractor',
     'MultiScaleResNetFeatures',
     
-    # EfficientNet
+    # efficientnet
     'EfficientNetB0Features',
     'EfficientNetB4Features',
     'EfficientNetFeatureExtractor',

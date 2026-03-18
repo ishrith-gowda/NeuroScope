@@ -1,7 +1,7 @@
 """
-Image Transformation and Augmentation Pipelines.
+image transformation and augmentation pipelines.
 
-Comprehensive transforms for medical image preprocessing
+comprehensive transforms for medical image preprocessing
 and data augmentation in training pipelines.
 """
 
@@ -22,7 +22,7 @@ except ImportError:
 
 
 class BaseTransform(ABC):
-    """Abstract base class for all transforms."""
+    """abstract base class for all transforms."""
     
     @abstractmethod
     def __call__(self, data: Any) -> Any:
@@ -33,7 +33,7 @@ class BaseTransform(ABC):
 
 
 class Compose(BaseTransform):
-    """Compose multiple transforms sequentially."""
+    """compose multiple transforms sequentially."""
     
     def __init__(self, transforms: List[BaseTransform]):
         self.transforms = transforms
@@ -49,11 +49,11 @@ class Compose(BaseTransform):
 
 
 # =============================================================================
-# Intensity Transforms
+# intensity transforms
 # =============================================================================
 
 class IntensityNormalization(BaseTransform):
-    """Generic intensity normalization base class."""
+    """generic intensity normalization base class."""
     
     def __init__(self, per_channel: bool = True):
         self.per_channel = per_channel
@@ -61,9 +61,9 @@ class IntensityNormalization(BaseTransform):
 
 class ZScoreNormalization(IntensityNormalization):
     """
-    Z-score (standard) normalization.
+    z-score (standard) normalization.
     
-    Normalizes to zero mean and unit variance.
+    normalizes to zero mean and unit variance.
     """
     
     def __init__(
@@ -119,7 +119,7 @@ class ZScoreNormalization(IntensityNormalization):
 
 class MinMaxNormalization(IntensityNormalization):
     """
-    Min-max normalization to [0, 1] or custom range.
+    min-max normalization to [0, 1] or custom range.
     """
     
     def __init__(
@@ -145,7 +145,7 @@ class MinMaxNormalization(IntensityNormalization):
         
         if is_tensor:
             if self.percentile_range:
-                # Convert to numpy for percentile
+                # convert to numpy for percentile
                 x_np = x.numpy()
                 p_low = np.percentile(x_np, self.percentile_range[0])
                 p_high = np.percentile(x_np, self.percentile_range[1])
@@ -183,7 +183,7 @@ class MinMaxNormalization(IntensityNormalization):
 
 class PercentileNormalization(IntensityNormalization):
     """
-    Percentile-based normalization for robust intensity scaling.
+    percentile-based normalization for robust intensity scaling.
     """
     
     def __init__(
@@ -230,7 +230,7 @@ class PercentileNormalization(IntensityNormalization):
             clipped = np.clip(x_np, p_low, p_high)
             normalized = (clipped - p_low) / (p_high - p_low + 1e-8)
         
-        # Scale to output range
+        # scale to output range
         normalized = normalized * (self.output_range[1] - self.output_range[0]) + self.output_range[0]
         
         if is_tensor:
@@ -239,7 +239,7 @@ class PercentileNormalization(IntensityNormalization):
 
 
 class HistogramEqualization(BaseTransform):
-    """Histogram equalization for contrast enhancement."""
+    """histogram equalization for contrast enhancement."""
     
     def __init__(self, per_channel: bool = True, nbins: int = 256):
         self.per_channel = per_channel
@@ -266,19 +266,19 @@ class HistogramEqualization(BaseTransform):
             return self._equalize_single(x)
     
     def _equalize_single(self, img: np.ndarray) -> np.ndarray:
-        # Compute histogram
+        # compute histogram
         hist, bins = np.histogram(img.flatten(), bins=self.nbins, density=True)
         cdf = hist.cumsum()
-        cdf = cdf / cdf[-1]  # Normalize
+        cdf = cdf / cdf[-1]  # normalize
         
-        # Interpolate
+        # interpolate
         equalized = np.interp(img.flatten(), bins[:-1], cdf)
         return equalized.reshape(img.shape).astype(np.float32)
 
 
 class AdaptiveHistogramEqualization(BaseTransform):
     """
-    Contrast Limited Adaptive Histogram Equalization (CLAHE).
+    contrast limited adaptive histogram equalization (clahe).
     """
     
     def __init__(
@@ -303,7 +303,7 @@ class AdaptiveHistogramEqualization(BaseTransform):
         try:
             import cv2
             
-            # Normalize to 0-255 for OpenCV
+            # normalize to 0-255 for opencv
             x_min, x_max = x.min(), x.max()
             x_norm = ((x - x_min) / (x_max - x_min + 1e-8) * 255).astype(np.uint8)
             
@@ -321,21 +321,21 @@ class AdaptiveHistogramEqualization(BaseTransform):
             else:
                 result = clahe.apply(x_norm.reshape(-1)).reshape(x.shape)
             
-            # Convert back to original range
+            # convert back to original range
             result = result.astype(np.float32) / 255 * (x_max - x_min) + x_min
             return result
             
         except ImportError:
-            # Fallback without OpenCV
+            # fallback without opencv
             return x
 
 
 # =============================================================================
-# Spatial Transforms
+# spatial transforms
 # =============================================================================
 
 class RandomCrop(BaseTransform):
-    """Random crop of specified size."""
+    """random crop of specified size."""
     
     def __init__(self, size: Union[int, Tuple[int, int]]):
         if isinstance(size, int):
@@ -374,7 +374,7 @@ class RandomCrop(BaseTransform):
 
 
 class CenterCrop(BaseTransform):
-    """Center crop of specified size."""
+    """center crop of specified size."""
     
     def __init__(self, size: Union[int, Tuple[int, int]]):
         if isinstance(size, int):
@@ -406,7 +406,7 @@ class CenterCrop(BaseTransform):
 
 
 class Resize(BaseTransform):
-    """Resize to specified size."""
+    """resize to specified size."""
     
     def __init__(
         self,
@@ -444,7 +444,7 @@ class Resize(BaseTransform):
         if is_numpy:
             x = torch.from_numpy(x)
         
-        # Add batch dimension if needed
+        # add batch dimension if needed
         needs_squeeze = False
         if x.dim() == 2:
             x = x.unsqueeze(0).unsqueeze(0)
@@ -471,7 +471,7 @@ class Resize(BaseTransform):
 
 
 class RandomFlip(BaseTransform):
-    """Random horizontal and/or vertical flip."""
+    """random horizontal and/or vertical flip."""
     
     def __init__(
         self,
@@ -520,7 +520,7 @@ class RandomFlip(BaseTransform):
 
 
 class RandomRotation(BaseTransform):
-    """Random rotation by angle in degrees."""
+    """random rotation by angle in degrees."""
     
     def __init__(
         self,
@@ -576,7 +576,7 @@ class RandomRotation(BaseTransform):
 
 
 class RandomAffine(BaseTransform):
-    """Random affine transformation."""
+    """random affine transformation."""
     
     def __init__(
         self,
@@ -596,7 +596,7 @@ class RandomAffine(BaseTransform):
         if random.random() > self.p:
             return data
         
-        # Sample parameters
+        # sample parameters
         angle = random.uniform(-self.degrees, self.degrees)
         
         if self.translate:
@@ -644,25 +644,25 @@ class RandomAffine(BaseTransform):
         if is_tensor:
             x = x.numpy()
         
-        # Build affine matrix
+        # build affine matrix
         h, w = x.shape[-2:]
         center = (h / 2, w / 2)
         
-        # Rotation
+        # rotation
         theta = np.deg2rad(angle)
         cos_t, sin_t = np.cos(theta), np.sin(theta)
         
-        # Shear
+        # shear
         shear_rad = np.deg2rad(shear)
         
-        # Combined matrix
+        # combined matrix
         matrix = np.array([
             [scale * cos_t, -scale * sin_t + np.tan(shear_rad), tx * w],
             [scale * sin_t, scale * cos_t, ty * h],
             [0, 0, 1]
         ])
         
-        # Center transformation
+        # center transformation
         offset = np.array(center) - np.array(center) @ matrix[:2, :2].T
         
         if x.ndim == 2:
@@ -681,7 +681,7 @@ class RandomAffine(BaseTransform):
 
 
 class ElasticDeformation(BaseTransform):
-    """Elastic deformation for data augmentation."""
+    """elastic deformation for data augmentation."""
     
     def __init__(
         self,
@@ -701,7 +701,7 @@ class ElasticDeformation(BaseTransform):
             data = data.copy()
             key = 'image' if 'image' in data else 'source'
             
-            # Generate displacement fields once
+            # generate displacement fields once
             shape = data[key].shape[-2:]
             dx, dy = self._generate_displacement(shape)
             
@@ -755,11 +755,11 @@ class ElasticDeformation(BaseTransform):
 
 
 # =============================================================================
-# Augmentation Transforms
+# augmentation transforms
 # =============================================================================
 
 class RandomNoise(BaseTransform):
-    """Add random Gaussian noise."""
+    """add random gaussian noise."""
     
     def __init__(
         self,
@@ -797,7 +797,7 @@ class RandomNoise(BaseTransform):
 
 
 class RandomBlur(BaseTransform):
-    """Apply random Gaussian blur."""
+    """apply random gaussian blur."""
     
     def __init__(
         self,
@@ -847,7 +847,7 @@ class RandomBlur(BaseTransform):
 
 
 class RandomBrightnessContrast(BaseTransform):
-    """Random brightness and contrast adjustment."""
+    """random brightness and contrast adjustment."""
     
     def __init__(
         self,
@@ -890,7 +890,7 @@ class RandomBrightnessContrast(BaseTransform):
 
 
 class RandomGamma(BaseTransform):
-    """Random gamma correction."""
+    """random gamma correction."""
     
     def __init__(
         self,
@@ -919,7 +919,7 @@ class RandomGamma(BaseTransform):
         x: Union[np.ndarray, torch.Tensor],
         gamma: float
     ) -> Union[np.ndarray, torch.Tensor]:
-        # Normalize to [0, 1] for gamma correction
+        # normalize to [0, 1] for gamma correction
         x_min = x.min()
         x_max = x.max()
         
@@ -930,12 +930,12 @@ class RandomGamma(BaseTransform):
         else:
             x_gamma = np.power(np.clip(x_norm, 0, None), gamma)
         
-        # Scale back
+        # scale back
         return x_gamma * (x_max - x_min) + x_min
 
 
 class BiasFieldAugmentation(BaseTransform):
-    """Simulate MRI bias field artifacts."""
+    """simulate mri bias field artifacts."""
     
     def __init__(
         self,
@@ -966,19 +966,19 @@ class BiasFieldAugmentation(BaseTransform):
         
         h, w = x.shape[-2:]
         
-        # Create coordinate grids
+        # create coordinate grids
         y = np.linspace(-1, 1, h)
         x_coord = np.linspace(-1, 1, w)
         yy, xx = np.meshgrid(y, x_coord, indexing='ij')
         
-        # Generate polynomial bias field
+        # generate polynomial bias field
         bias_field = np.zeros((h, w))
         for i in range(self.degree + 1):
             for j in range(self.degree + 1 - i):
                 coef = random.uniform(self.coefficient_range[0], self.coefficient_range[1])
                 bias_field += coef * (xx ** i) * (yy ** j)
         
-        # Apply multiplicative bias
+        # apply multiplicative bias
         bias_field = np.exp(bias_field)
         
         if x.ndim == 2:
@@ -992,11 +992,11 @@ class BiasFieldAugmentation(BaseTransform):
 
 
 # =============================================================================
-# Medical-Specific Transforms
+# medical-specific transforms
 # =============================================================================
 
 class N4BiasFieldCorrection(BaseTransform):
-    """N4 bias field correction (requires SimpleITK)."""
+    """n4 bias field correction (requires simpleitk)."""
     
     def __init__(
         self,
@@ -1010,7 +1010,7 @@ class N4BiasFieldCorrection(BaseTransform):
         try:
             import SimpleITK as sitk
         except ImportError:
-            return data  # Skip if SimpleITK not available
+            return data  # skip if simpleitk not available
         
         if isinstance(data, dict):
             data = data.copy()
@@ -1039,20 +1039,20 @@ class N4BiasFieldCorrection(BaseTransform):
         
         sitk_img = sitk.GetImageFromArray(img.astype(np.float32))
         
-        # Create mask
+        # create mask
         mask = sitk.OtsuThreshold(sitk_img, 0, 1, 200)
         
-        # Shrink for speed
+        # shrink for speed
         shrunk = sitk.Shrink(sitk_img, [self.shrink_factor] * sitk_img.GetDimension())
         mask_shrunk = sitk.Shrink(mask, [self.shrink_factor] * mask.GetDimension())
         
-        # N4 correction
+        # n4 correction
         corrector = sitk.N4BiasFieldCorrectionImageFilter()
         corrector.SetMaximumNumberOfIterations(self.num_iterations)
         
         corrected = corrector.Execute(shrunk, mask_shrunk)
         
-        # Get bias field and apply to full resolution
+        # get bias field and apply to full resolution
         log_bias = corrector.GetLogBiasFieldAsImage(sitk_img)
         corrected_full = sitk_img / sitk.Exp(log_bias)
         
@@ -1060,7 +1060,7 @@ class N4BiasFieldCorrection(BaseTransform):
 
 
 class SkullStripping(BaseTransform):
-    """Skull stripping using thresholding (simplified)."""
+    """skull stripping using thresholding (simplified)."""
     
     def __init__(self, threshold_percentile: float = 10.0):
         self.threshold_percentile = threshold_percentile
@@ -1080,7 +1080,7 @@ class SkullStripping(BaseTransform):
 
 
 class IntensityClipping(BaseTransform):
-    """Clip intensity values to percentile range."""
+    """clip intensity values to percentile range."""
     
     def __init__(
         self,
@@ -1115,7 +1115,7 @@ class IntensityClipping(BaseTransform):
 
 
 # =============================================================================
-# Pipeline Builders
+# pipeline builders
 # =============================================================================
 
 def create_train_transforms(
@@ -1123,13 +1123,13 @@ def create_train_transforms(
     normalize: str = 'zscore',
     augment: bool = True
 ) -> Compose:
-    """Create training transformation pipeline."""
+    """create training transformation pipeline."""
     transforms = []
     
-    # Intensity clipping
+    # intensity clipping
     transforms.append(IntensityClipping())
     
-    # Normalization
+    # normalization
     if normalize == 'zscore':
         transforms.append(ZScoreNormalization(clip_range=(-3, 3)))
     elif normalize == 'minmax':
@@ -1137,10 +1137,10 @@ def create_train_transforms(
     elif normalize == 'percentile':
         transforms.append(PercentileNormalization())
     
-    # Spatial transforms
+    # spatial transforms
     transforms.append(RandomCrop(crop_size))
     
-    # Augmentation
+    # augmentation
     if augment:
         transforms.append(RandomFlip(horizontal=True, vertical=True, p=0.5))
         transforms.append(RandomRotation(degrees=15, p=0.5))
@@ -1155,7 +1155,7 @@ def create_val_transforms(
     crop_size: int = 224,
     normalize: str = 'zscore'
 ) -> Compose:
-    """Create validation transformation pipeline."""
+    """create validation transformation pipeline."""
     transforms = [
         IntensityClipping(),
     ]
@@ -1175,7 +1175,7 @@ def create_val_transforms(
 def create_test_transforms(
     normalize: str = 'zscore'
 ) -> Compose:
-    """Create test transformation pipeline (no cropping)."""
+    """create test transformation pipeline (no cropping)."""
     transforms = [
         IntensityClipping(),
     ]

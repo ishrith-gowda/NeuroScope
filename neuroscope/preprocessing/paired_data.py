@@ -1,4 +1,4 @@
-"""Utilities for working with paired MRI volumes."""
+"""utilities for working with paired mri volumes."""
 
 from pathlib import Path
 import json
@@ -13,9 +13,9 @@ logger = get_logger(__name__)
 
 
 class MRIPairLoader:
-    """Loader for paired MRI volumes for tasks like image translation.
+    """loader for paired mri volumes for tasks like image translation.
     
-    This class handles loading and preprocessing paired volumes from different
+    this class handles loading and preprocessing paired volumes from different
     directories, ensuring matching filenames and consistent preprocessing.
     """
     
@@ -29,16 +29,16 @@ class MRIPairLoader:
         transform_b: Optional[Any] = None,
         paired: bool = True,
     ):
-        """Initialize MRIPairLoader.
+        """initialize mripairloader.
         
-        Args:
-            domain_a_dir: Directory with domain A volumes.
-            domain_b_dir: Directory with domain B volumes.
-            file_pattern: Glob pattern for input files.
-            preprocessing_pipeline: Optional preprocessing pipeline.
-            transform_a: Optional transforms for domain A.
-            transform_b: Optional transforms for domain B.
-            paired: Whether the data is paired (same filenames in both domains).
+        args:
+            domain_a_dir: directory with domain a volumes.
+            domain_b_dir: directory with domain b volumes.
+            file_pattern: glob pattern for input files.
+            preprocessing_pipeline: optional preprocessing pipeline.
+            transform_a: optional transforms for domain a.
+            transform_b: optional transforms for domain b.
+            paired: whether the data is paired (same filenames in both domains).
         """
         import glob
         
@@ -50,140 +50,140 @@ class MRIPairLoader:
         self.transform_b = transform_b
         self.paired = paired
         
-        # List files in both domains
+        # list files in both domains
         self.domain_a_files = sorted(glob.glob(str(self.domain_a_dir / self.file_pattern)))
         self.domain_b_files = sorted(glob.glob(str(self.domain_b_dir / self.file_pattern)))
         
-        # Check for paired data
+        # check for paired data
         if paired:
-            # Extract filenames without directories
+            # extract filenames without directories
             a_filenames = [os.path.basename(f) for f in self.domain_a_files]
             b_filenames = [os.path.basename(f) for f in self.domain_b_files]
             
-            # Find common filenames
+            # find common filenames
             common_filenames = set(a_filenames).intersection(set(b_filenames))
             
             if not common_filenames:
                 logger.warning("No common filenames found between domains. Check directories or set paired=False.")
             else:
-                # Keep only matched files
+                # keep only matched files
                 self.domain_a_files = [f for f in self.domain_a_files if os.path.basename(f) in common_filenames]
                 self.domain_b_files = [f for f in self.domain_b_files if os.path.basename(f) in common_filenames]
                 
-                # Sort to ensure same order
+                # sort to ensure same order
                 self.domain_a_files = sorted(self.domain_a_files, key=lambda x: os.path.basename(x))
                 self.domain_b_files = sorted(self.domain_b_files, key=lambda x: os.path.basename(x))
     
     def __len__(self) -> int:
-        """Return number of paired samples."""
+        """return number of paired samples."""
         return len(self.domain_a_files)
     
     def load_pair(self, index: int) -> Tuple[np.ndarray, np.ndarray, str]:
-        """Load a pair of volumes by index.
+        """load a pair of volumes by index.
         
-        Args:
-            index: Index of the pair to load.
+        args:
+            index: index of the pair to load.
             
-        Returns:
-            Tuple of (domain_a_volume, domain_b_volume, filename).
+        returns:
+            tuple of (domain_a_volume, domain_b_volume, filename).
         """
         if index >= len(self):
             raise IndexError(f"Index {index} out of range for dataset with {len(self)} items")
         
-        # Get file paths
+        # get file paths
         a_file = self.domain_a_files[index]
         
         if self.paired:
             b_file = self.domain_b_files[index]
         else:
-            # For unpaired data, randomly sample from domain B
+            # for unpaired data, randomly sample from domain b
             b_file = self.domain_b_files[np.random.randint(0, len(self.domain_b_files))]
         
-        # Load volumes
+        # load volumes
         a_volume = self._load_volume(a_file)
         b_volume = self._load_volume(b_file)
         
-        # Apply preprocessing if available
+        # apply preprocessing if available
         if self.preprocessing_pipeline:
             a_volume = self.preprocessing_pipeline.preprocess(a_volume)
             b_volume = self.preprocessing_pipeline.preprocess(b_volume)
         
-        # Apply domain-specific transforms if available
+        # apply domain-specific transforms if available
         if self.transform_a:
             a_volume = self.transform_a(a_volume)
         
         if self.transform_b:
             b_volume = self.transform_b(b_volume)
         
-        # Return volumes and filename (for reference)
+        # return volumes and filename (for reference)
         return a_volume, b_volume, os.path.basename(a_file)
     
     def load_domain_a(self, index: int) -> Tuple[np.ndarray, str]:
-        """Load a volume from domain A.
+        """load a volume from domain a.
         
-        Args:
-            index: Index of the volume to load.
+        args:
+            index: index of the volume to load.
             
-        Returns:
-            Tuple of (domain_a_volume, filename).
+        returns:
+            tuple of (domain_a_volume, filename).
         """
         if index >= len(self):
             raise IndexError(f"Index {index} out of range for dataset with {len(self)} items")
         
-        # Get file path
+        # get file path
         a_file = self.domain_a_files[index]
         
-        # Load volume
+        # load volume
         a_volume = self._load_volume(a_file)
         
-        # Apply preprocessing if available
+        # apply preprocessing if available
         if self.preprocessing_pipeline:
             a_volume = self.preprocessing_pipeline.preprocess(a_volume)
         
-        # Apply domain-specific transform if available
+        # apply domain-specific transform if available
         if self.transform_a:
             a_volume = self.transform_a(a_volume)
         
-        # Return volume and filename (for reference)
+        # return volume and filename (for reference)
         return a_volume, os.path.basename(a_file)
     
     def load_domain_b(self, index: int) -> Tuple[np.ndarray, str]:
-        """Load a volume from domain B.
+        """load a volume from domain b.
         
-        Args:
-            index: Index of the volume to load.
+        args:
+            index: index of the volume to load.
             
-        Returns:
-            Tuple of (domain_b_volume, filename).
+        returns:
+            tuple of (domain_b_volume, filename).
         """
         if index >= len(self.domain_b_files):
             raise IndexError(f"Index {index} out of range for domain B with {len(self.domain_b_files)} items")
         
-        # Get file path
+        # get file path
         b_file = self.domain_b_files[index]
         
-        # Load volume
+        # load volume
         b_volume = self._load_volume(b_file)
         
-        # Apply preprocessing if available
+        # apply preprocessing if available
         if self.preprocessing_pipeline:
             b_volume = self.preprocessing_pipeline.preprocess(b_volume)
         
-        # Apply domain-specific transform if available
+        # apply domain-specific transform if available
         if self.transform_b:
             b_volume = self.transform_b(b_volume)
         
-        # Return volume and filename (for reference)
+        # return volume and filename (for reference)
         return b_volume, os.path.basename(b_file)
     
     def _load_volume(self, file_path: Union[str, Path]) -> np.ndarray:
-        """Load a volume from file.
+        """load a volume from file.
         
-        Args:
-            file_path: Path to volume file.
+        args:
+            file_path: path to volume file.
             
-        Returns:
-            Volume as numpy array.
+        returns:
+            volume as numpy array.
         """
         if str(file_path).endswith(".nii") or str(file_path).endswith(".nii.gz"):
             try:
@@ -199,10 +199,10 @@ class MRIPairLoader:
 
 
 class MRIPairDataset(torch.utils.data.Dataset):
-    """PyTorch Dataset for paired MRI volumes.
+    """pytorch dataset for paired mri volumes.
     
-    This class extends MRIPairLoader to provide a PyTorch Dataset interface,
-    making it compatible with PyTorch DataLoader for batch processing.
+    this class extends mripairloader to provide a pytorch dataset interface,
+    making it compatible with pytorch dataloader for batch processing.
     """
     
     def __init__(
@@ -216,25 +216,25 @@ class MRIPairDataset(torch.utils.data.Dataset):
         paired: bool = True,
         load_into_memory: bool = False,
     ):
-        """Initialize MRIPairDataset.
+        """initialize mripairdataset.
         
-        Args:
-            domain_a_dir: Directory with domain A volumes.
-            domain_b_dir: Directory with domain B volumes.
-            file_pattern: Glob pattern for input files.
-            preprocessing_pipeline: Optional preprocessing pipeline.
-            transform_a: Optional transforms for domain A.
-            transform_b: Optional transforms for domain B.
-            paired: Whether the data is paired (same filenames in both domains).
-            load_into_memory: Whether to load all data into memory.
+        args:
+            domain_a_dir: directory with domain a volumes.
+            domain_b_dir: directory with domain b volumes.
+            file_pattern: glob pattern for input files.
+            preprocessing_pipeline: optional preprocessing pipeline.
+            transform_a: optional transforms for domain a.
+            transform_b: optional transforms for domain b.
+            paired: whether the data is paired (same filenames in both domains).
+            load_into_memory: whether to load all data into memory.
         """
-        # Initialize loader
+        # initialize loader
         self.loader = MRIPairLoader(
             domain_a_dir=domain_a_dir,
             domain_b_dir=domain_b_dir,
             file_pattern=file_pattern,
             preprocessing_pipeline=preprocessing_pipeline,
-            transform_a=None,  # We'll apply transforms during __getitem__
+            transform_a=None,  # we'll apply transforms during __getitem__
             transform_b=None,
             paired=paired,
         )
@@ -243,7 +243,7 @@ class MRIPairDataset(torch.utils.data.Dataset):
         self.transform_b = transform_b
         self.load_into_memory = load_into_memory
         
-        # Preload data if requested
+        # preload data if requested
         self.preloaded_data = None
         if load_into_memory:
             self.preloaded_data = []
@@ -252,39 +252,39 @@ class MRIPairDataset(torch.utils.data.Dataset):
                 self.preloaded_data.append((a_volume, b_volume, filename))
     
     def __len__(self) -> int:
-        """Return number of paired samples."""
+        """return number of paired samples."""
         return len(self.loader)
     
     def __getitem__(self, index: int) -> Dict[str, Any]:
-        """Get a paired sample by index.
+        """get a paired sample by index.
         
-        Args:
-            index: Index of the pair to load.
+        args:
+            index: index of the pair to load.
             
-        Returns:
-            Dictionary with 'A', 'B', and 'filename' keys.
+        returns:
+            dictionary with 'a', 'b', and 'filename' keys.
         """
-        # Load data
+        # load data
         if self.preloaded_data:
             a_volume, b_volume, filename = self.preloaded_data[index]
         else:
             a_volume, b_volume, filename = self.loader.load_pair(index)
         
-        # Apply transforms if available
+        # apply transforms if available
         if self.transform_a:
             a_volume = self.transform_a(a_volume)
         
         if self.transform_b:
             b_volume = self.transform_b(b_volume)
         
-        # Convert to torch tensors if not already
+        # convert to torch tensors if not already
         if not isinstance(a_volume, torch.Tensor):
             a_volume = torch.tensor(a_volume, dtype=torch.float32)
         
         if not isinstance(b_volume, torch.Tensor):
             b_volume = torch.tensor(b_volume, dtype=torch.float32)
         
-        # Return as dictionary
+        # return as dictionary
         return {
             'A': a_volume,
             'B': b_volume,
@@ -303,91 +303,91 @@ def create_paired_dataset_splits(
     paired: bool = True,
     seed: int = 42,
 ) -> Dict[str, List[str]]:
-    """Create train/val/test splits for paired dataset.
+    """create train/val/test splits for paired dataset.
     
-    Args:
-        domain_a_dir: Directory with domain A volumes.
-        domain_b_dir: Directory with domain B volumes.
-        output_dir: Output directory for split files.
-        train_ratio: Fraction of data for training.
-        val_ratio: Fraction of data for validation.
-        test_ratio: Fraction of data for testing.
-        file_pattern: Glob pattern for input files.
-        paired: Whether the data is paired (same filenames in both domains).
-        seed: Random seed for reproducibility.
+    args:
+        domain_a_dir: directory with domain a volumes.
+        domain_b_dir: directory with domain b volumes.
+        output_dir: output directory for split files.
+        train_ratio: fraction of data for training.
+        val_ratio: fraction of data for validation.
+        test_ratio: fraction of data for testing.
+        file_pattern: glob pattern for input files.
+        paired: whether the data is paired (same filenames in both domains).
+        seed: random seed for reproducibility.
         
-    Returns:
-        Dictionary with filenames for each split.
+    returns:
+        dictionary with filenames for each split.
     """
     import glob
     import random
     
-    # Set random seed
+    # set random seed
     random.seed(seed)
     np.random.seed(seed)
     
-    # Create output directory
+    # create output directory
     output_dir = Path(output_dir)
     os.makedirs(output_dir, exist_ok=True)
     
-    # List files in both domains
+    # list files in both domains
     domain_a_files = sorted(glob.glob(str(Path(domain_a_dir) / file_pattern)))
     domain_b_files = sorted(glob.glob(str(Path(domain_b_dir) / file_pattern)))
     
-    # Extract filenames without directories
+    # extract filenames without directories
     a_filenames = [os.path.basename(f) for f in domain_a_files]
     b_filenames = [os.path.basename(f) for f in domain_b_files]
     
     if paired:
-        # Find common filenames
+        # find common filenames
         common_filenames = sorted(list(set(a_filenames).intersection(set(b_filenames))))
         
         if not common_filenames:
             logger.warning("No common filenames found between domains. Check directories or set paired=False.")
             return {}
         
-        # Shuffle filenames
+        # shuffle filenames
         random.shuffle(common_filenames)
         
-        # Calculate split sizes
+        # calculate split sizes
         total = len(common_filenames)
         train_size = int(total * train_ratio)
         val_size = int(total * val_ratio)
         test_size = total - train_size - val_size
         
-        # Create splits
+        # create splits
         train_files = common_filenames[:train_size]
         val_files = common_filenames[train_size:train_size + val_size]
         test_files = common_filenames[train_size + val_size:]
         
     else:
-        # Independently shuffle each domain
+        # independently shuffle each domain
         random.shuffle(a_filenames)
         random.shuffle(b_filenames)
         
-        # Calculate split sizes for domain A
+        # calculate split sizes for domain a
         total_a = len(a_filenames)
         train_size_a = int(total_a * train_ratio)
         val_size_a = int(total_a * val_ratio)
         test_size_a = total_a - train_size_a - val_size_a
         
-        # Calculate split sizes for domain B
+        # calculate split sizes for domain b
         total_b = len(b_filenames)
         train_size_b = int(total_b * train_ratio)
         val_size_b = int(total_b * val_ratio)
         test_size_b = total_b - train_size_b - val_size_b
         
-        # Create splits for domain A
+        # create splits for domain a
         train_files_a = a_filenames[:train_size_a]
         val_files_a = a_filenames[train_size_a:train_size_a + val_size_a]
         test_files_a = a_filenames[train_size_a + val_size_a:]
         
-        # Create splits for domain B
+        # create splits for domain b
         train_files_b = b_filenames[:train_size_b]
         val_files_b = b_filenames[train_size_b:train_size_b + val_size_b]
         test_files_b = b_filenames[train_size_b + val_size_b:]
         
-        # Store separately for unpaired data
+        # store separately for unpaired data
         train_files_dict = {"A": train_files_a, "B": train_files_b}
         val_files_dict = {"A": val_files_a, "B": val_files_b}
         test_files_dict = {"A": test_files_a, "B": test_files_b}
@@ -396,7 +396,7 @@ def create_paired_dataset_splits(
         val_files = val_files_dict
         test_files = test_files_dict
     
-    # Prepare output data
+    # prepare output data
     split_data = {
         "paired": paired,
         "domain_a_dir": str(domain_a_dir),
@@ -406,7 +406,7 @@ def create_paired_dataset_splits(
         "test": test_files,
     }
     
-    # Save splits to JSON file
+    # save splits to json file
     with open(output_dir / "dataset_splits.json", "w") as f:
         json.dump(split_data, f, indent=4)
     

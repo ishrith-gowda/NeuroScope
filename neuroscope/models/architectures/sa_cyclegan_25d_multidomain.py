@@ -390,8 +390,8 @@ class MultiDomainSACycleGAN25D(nn.Module):
     training uses:
         - adversarial loss (real/fake)
         - domain classification loss (generator fools discriminator about domain)
-        - cycle consistency loss (translate A->B->A)
-        - identity loss (translate A->A should be identity)
+        - cycle consistency loss (translate a->b->a)
+        - identity loss (translate a->a should be identity)
     """
 
     def __init__(self, config: Optional[MultiDomainConfig] = None):
@@ -460,7 +460,7 @@ if __name__ == "__main__":
     params = model.get_parameter_count()
     print(f"model parameters:")
     for k, v in params.items():
-        print(f"  {k}: {v:,} ({v/1e6:.2f}M)")
+        print(f"  {k}: {v:,} ({v/1e6:.2f}m)")
 
     # test forward
     x = torch.randn(2, 12, 128, 128)

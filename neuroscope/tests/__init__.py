@@ -1,6 +1,6 @@
-"""Test suite for NeuroScope.
+"""test suite for neuroscope.
 
-This module provides comprehensive testing capabilities for all NeuroScope components.
+this module provides comprehensive testing capabilities for all neuroscope components.
 """
 
-# Test suite initialization
+# test suite initialization

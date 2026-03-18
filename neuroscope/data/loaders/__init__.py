@@ -1,9 +1,9 @@
-"""Data loaders for NeuroScope.
+"""data loaders for neuroscope.
 
-This module provides data loaders for various dataset types and configurations.
+this module provides data loaders for various dataset types and configurations.
 """
 
-# Placeholder for data loaders
-# The actual implementation would be imported here
+# placeholder for data loaders
+# the actual implementation would be imported here
 
 __all__ = []

@@ -1,15 +1,15 @@
 """
-Unit Tests for Volumetric (3D) Loss Functions.
+unit tests for volumetric (3d) loss functions.
 
-Tests cover:
-- VolumetricSSIM and MultiScale variants
-- VolumetricCycleConsistencyLoss
-- VolumetricGradientLoss
-- VolumetricPerceptualLoss
-- AnatomicalConsistencyLoss
-- TissuePreservationLoss
-- VolumetricNCELoss
-- CombinedVolumetricLoss
+tests cover:
+- volumetricssim and multiscale variants
+- volumetriccycleconsistencyloss
+- volumetricgradientloss
+- volumetricperceptualloss
+- anatomicalconsistencyloss
+- tissuepreservationloss
+- volumetricnceloss
+- combinedvolumetricloss
 """
 
 import pytest
@@ -33,13 +33,13 @@ from src.models.losses.volumetric import (
 
 @pytest.fixture
 def device():
-    """Get available device."""
+    """get available device."""
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 @pytest.fixture
 def volume_pair(device):
-    """Create pair of test volumes."""
+    """create pair of test volumes."""
     vol1 = torch.randn(2, 1, 32, 32, 32, device=device)
     vol2 = torch.randn(2, 1, 32, 32, 32, device=device)
     return vol1, vol2
@@ -47,35 +47,35 @@ def volume_pair(device):
 
 @pytest.fixture
 def identical_volumes(device):
-    """Create identical volumes for testing."""
+    """create identical volumes for testing."""
     vol = torch.randn(2, 1, 32, 32, 32, device=device)
     return vol, vol.clone()
 
 
 @pytest.fixture
 def small_volume_pair(device):
-    """Smaller volumes for faster testing."""
+    """smaller volumes for faster testing."""
     vol1 = torch.randn(1, 1, 16, 16, 16, device=device)
     vol2 = torch.randn(1, 1, 16, 16, 16, device=device)
     return vol1, vol2
 
 
 class TestVolumetricSSIM:
-    """Tests for 3D SSIM implementation."""
+    """tests for 3d ssim implementation."""
     
     def test_basic_computation(self, volume_pair, device):
-        """Test basic SSIM computation."""
+        """test basic ssim computation."""
         vol1, vol2 = volume_pair
         ssim = VolumetricSSIM().to(device)
         
         result = ssim(vol1, vol2)
         
         assert isinstance(result, torch.Tensor)
-        assert result.ndim == 0  # Scalar
+        assert result.ndim == 0  # scalar
         assert not torch.isnan(result)
     
     def test_identical_volumes(self, identical_volumes, device):
-        """Test SSIM of identical volumes is 1."""
+        """test ssim of identical volumes is 1."""
         vol1, vol2 = identical_volumes
         ssim = VolumetricSSIM().to(device)
         
@@ -84,7 +84,7 @@ class TestVolumetricSSIM:
         assert result.item() > 0.99, f"SSIM of identical images: {result.item()}"
     
     def test_ssim_range(self, volume_pair, device):
-        """Test SSIM is in valid range [-1, 1]."""
+        """test ssim is in valid range [-1, 1]."""
         vol1, vol2 = volume_pair
         ssim = VolumetricSSIM().to(device)
         
@@ -93,7 +93,7 @@ class TestVolumetricSSIM:
         assert -1 <= result.item() <= 1
     
     def test_different_window_sizes(self, small_volume_pair, device):
-        """Test different window sizes."""
+        """test different window sizes."""
         vol1, vol2 = small_volume_pair
         
         for window_size in [3, 5, 7]:
@@ -103,7 +103,7 @@ class TestVolumetricSSIM:
             assert not torch.isnan(result)
     
     def test_multi_channel(self, device):
-        """Test with multi-channel volumes."""
+        """test with multi-channel volumes."""
         vol1 = torch.randn(1, 4, 16, 16, 16, device=device)
         vol2 = torch.randn(1, 4, 16, 16, 16, device=device)
         
@@ -113,7 +113,7 @@ class TestVolumetricSSIM:
         assert not torch.isnan(result)
     
     def test_batch_processing(self, device):
-        """Test batch processing."""
+        """test batch processing."""
         vol1 = torch.randn(4, 1, 16, 16, 16, device=device)
         vol2 = torch.randn(4, 1, 16, 16, 16, device=device)
         
@@ -124,10 +124,10 @@ class TestVolumetricSSIM:
 
 
 class TestVolumetricMultiScaleSSIM:
-    """Tests for multi-scale 3D SSIM."""
+    """tests for multi-scale 3d ssim."""
     
     def test_basic_computation(self, device):
-        """Test basic MS-SSIM computation."""
+        """test basic ms-ssim computation."""
         vol1 = torch.randn(1, 1, 64, 64, 64, device=device)
         vol2 = torch.randn(1, 1, 64, 64, 64, device=device)
         
@@ -138,7 +138,7 @@ class TestVolumetricMultiScaleSSIM:
         assert not torch.isnan(result)
     
     def test_identical_volumes(self, device):
-        """Test MS-SSIM of identical volumes."""
+        """test ms-ssim of identical volumes."""
         vol = torch.randn(1, 1, 64, 64, 64, device=device)
         
         msssim = VolumetricMultiScaleSSIM().to(device)
@@ -148,10 +148,10 @@ class TestVolumetricMultiScaleSSIM:
 
 
 class TestVolumetricCycleConsistencyLoss:
-    """Tests for 3D cycle consistency loss."""
+    """tests for 3d cycle consistency loss."""
     
     def test_l1_loss(self, volume_pair, device):
-        """Test L1 cycle consistency loss."""
+        """test l1 cycle consistency loss."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='l1').to(device)
         
@@ -161,7 +161,7 @@ class TestVolumetricCycleConsistencyLoss:
         assert result.item() >= 0
     
     def test_l2_loss(self, volume_pair, device):
-        """Test L2 cycle consistency loss."""
+        """test l2 cycle consistency loss."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='l2').to(device)
         
@@ -170,7 +170,7 @@ class TestVolumetricCycleConsistencyLoss:
         assert result.item() >= 0
     
     def test_ssim_loss(self, volume_pair, device):
-        """Test SSIM-based cycle consistency loss."""
+        """test ssim-based cycle consistency loss."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='ssim').to(device)
         
@@ -179,7 +179,7 @@ class TestVolumetricCycleConsistencyLoss:
         assert not torch.isnan(result)
     
     def test_combined_loss(self, volume_pair, device):
-        """Test combined L1 + SSIM loss."""
+        """test combined l1 + ssim loss."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='combined').to(device)
         
@@ -188,7 +188,7 @@ class TestVolumetricCycleConsistencyLoss:
         assert not torch.isnan(result)
     
     def test_multi_scale(self, volume_pair, device):
-        """Test multi-scale loss computation."""
+        """test multi-scale loss computation."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricCycleConsistencyLoss(
             loss_type='l1',
@@ -201,7 +201,7 @@ class TestVolumetricCycleConsistencyLoss:
         assert not torch.isnan(result)
     
     def test_zero_for_identical(self, identical_volumes, device):
-        """Test that loss is ~0 for identical volumes."""
+        """test that loss is ~0 for identical volumes."""
         vol1, vol2 = identical_volumes
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='l1').to(device)
         
@@ -210,10 +210,10 @@ class TestVolumetricCycleConsistencyLoss:
         assert result.item() < 1e-5
     
     def test_with_mask(self, volume_pair, device):
-        """Test with spatial mask."""
+        """test with spatial mask."""
         vol1, vol2 = volume_pair
         mask = torch.ones_like(vol1)
-        mask[:, :, :16, :, :] = 0  # Mask half the volume
+        mask[:, :, :16, :, :] = 0  # mask half the volume
         
         loss_fn = VolumetricCycleConsistencyLoss(loss_type='l1').to(device)
         result = loss_fn(vol1, vol2, mask=mask)
@@ -222,10 +222,10 @@ class TestVolumetricCycleConsistencyLoss:
 
 
 class TestVolumetricGradientLoss:
-    """Tests for 3D gradient matching loss."""
+    """tests for 3d gradient matching loss."""
     
     def test_basic_computation(self, volume_pair, device):
-        """Test basic gradient loss computation."""
+        """test basic gradient loss computation."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricGradientLoss().to(device)
         
@@ -235,7 +235,7 @@ class TestVolumetricGradientLoss:
         assert result.item() >= 0
     
     def test_identical_volumes(self, identical_volumes, device):
-        """Test gradient loss for identical volumes."""
+        """test gradient loss for identical volumes."""
         vol1, vol2 = identical_volumes
         loss_fn = VolumetricGradientLoss().to(device)
         
@@ -244,7 +244,7 @@ class TestVolumetricGradientLoss:
         assert result.item() < 1e-5
     
     def test_l1_vs_l2(self, volume_pair, device):
-        """Test L1 vs L2 gradient loss."""
+        """test l1 vs l2 gradient loss."""
         vol1, vol2 = volume_pair
         
         loss_l1 = VolumetricGradientLoss(loss_type='l1').to(device)
@@ -258,10 +258,10 @@ class TestVolumetricGradientLoss:
 
 
 class TestVolumetricPerceptualLoss:
-    """Tests for 3D perceptual loss."""
+    """tests for 3d perceptual loss."""
     
     def test_basic_computation(self, small_volume_pair, device):
-        """Test basic perceptual loss computation."""
+        """test basic perceptual loss computation."""
         vol1, vol2 = small_volume_pair
         loss_fn = VolumetricPerceptualLoss(feature_extractor='custom').to(device)
         
@@ -271,7 +271,7 @@ class TestVolumetricPerceptualLoss:
         assert result.item() >= 0
     
     def test_identical_volumes(self, device):
-        """Test perceptual loss for identical volumes."""
+        """test perceptual loss for identical volumes."""
         vol = torch.randn(1, 1, 16, 16, 16, device=device)
         loss_fn = VolumetricPerceptualLoss(feature_extractor='custom').to(device)
         
@@ -280,7 +280,7 @@ class TestVolumetricPerceptualLoss:
         assert result.item() < 1e-4
     
     def test_gradients_flow(self, small_volume_pair, device):
-        """Test that gradients flow through perceptual loss."""
+        """test that gradients flow through perceptual loss."""
         vol1, vol2 = small_volume_pair
         vol1.requires_grad = True
         
@@ -292,10 +292,10 @@ class TestVolumetricPerceptualLoss:
 
 
 class TestAnatomicalConsistencyLoss:
-    """Tests for anatomical consistency loss."""
+    """tests for anatomical consistency loss."""
     
     def test_basic_computation(self, volume_pair, device):
-        """Test basic anatomical consistency loss."""
+        """test basic anatomical consistency loss."""
         vol1, vol2 = volume_pair
         loss_fn = AnatomicalConsistencyLoss().to(device)
         
@@ -305,7 +305,7 @@ class TestAnatomicalConsistencyLoss:
         assert result.item() >= 0
     
     def test_with_tissue_maps(self, volume_pair, device):
-        """Test with explicit tissue probability maps."""
+        """test with explicit tissue probability maps."""
         vol1, vol2 = volume_pair
         
         tissue_maps = {
@@ -320,7 +320,7 @@ class TestAnatomicalConsistencyLoss:
         assert not torch.isnan(result)
     
     def test_different_weights(self, volume_pair, device):
-        """Test with different tissue weights."""
+        """test with different tissue weights."""
         vol1, vol2 = volume_pair
         
         loss_fn = AnatomicalConsistencyLoss(
@@ -335,10 +335,10 @@ class TestAnatomicalConsistencyLoss:
 
 
 class TestTissuePreservationLoss:
-    """Tests for tissue boundary preservation loss."""
+    """tests for tissue boundary preservation loss."""
     
     def test_basic_computation(self, volume_pair, device):
-        """Test basic tissue preservation loss."""
+        """test basic tissue preservation loss."""
         vol1, vol2 = volume_pair
         loss_fn = TissuePreservationLoss().to(device)
         
@@ -348,7 +348,7 @@ class TestTissuePreservationLoss:
         assert result.item() >= 0
     
     def test_identical_boundaries(self, identical_volumes, device):
-        """Test that identical volumes have zero boundary loss."""
+        """test that identical volumes have zero boundary loss."""
         vol1, vol2 = identical_volumes
         loss_fn = TissuePreservationLoss().to(device)
         
@@ -358,11 +358,11 @@ class TestTissuePreservationLoss:
 
 
 class TestVolumetricNCELoss:
-    """Tests for 3D contrastive loss."""
+    """tests for 3d contrastive loss."""
     
     def test_basic_computation(self, device):
-        """Test basic NCE loss computation."""
-        # Create feature lists (simulating encoder outputs)
+        """test basic nce loss computation."""
+        # create feature lists (simulating encoder outputs)
         feat_q = [torch.randn(2, 64, 8, 8, 8, device=device)]
         feat_k = [torch.randn(2, 64, 8, 8, 8, device=device)]
         
@@ -373,7 +373,7 @@ class TestVolumetricNCELoss:
         assert result.item() >= 0
     
     def test_positive_pairs(self, device):
-        """Test NCE with identical features (positive pairs)."""
+        """test nce with identical features (positive pairs)."""
         feat = torch.randn(2, 64, 8, 8, 8, device=device)
         feat_q = [feat]
         feat_k = [feat.clone()]
@@ -381,15 +381,15 @@ class TestVolumetricNCELoss:
         loss_fn = VolumetricNCELoss(num_patches=16).to(device)
         result = loss_fn(feat_q, feat_k)
         
-        # With identical features, loss should be lower
+        # with identical features, loss should be lower
         assert result.item() < 5.0
 
 
 class TestVolumetricIdentityLoss:
-    """Tests for 3D identity loss."""
+    """tests for 3d identity loss."""
     
     def test_l1_identity(self, volume_pair, device):
-        """Test L1 identity loss."""
+        """test l1 identity loss."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricIdentityLoss(loss_type='l1').to(device)
         
@@ -399,7 +399,7 @@ class TestVolumetricIdentityLoss:
         assert result.item() >= 0
     
     def test_with_ssim(self, volume_pair, device):
-        """Test identity loss with SSIM component."""
+        """test identity loss with ssim component."""
         vol1, vol2 = volume_pair
         loss_fn = VolumetricIdentityLoss(loss_type='l1', lambda_ssim=0.5).to(device)
         
@@ -409,11 +409,11 @@ class TestVolumetricIdentityLoss:
 
 
 class TestCombinedVolumetricLoss:
-    """Tests for combined volumetric loss."""
+    """tests for combined volumetric loss."""
     
     @pytest.fixture
     def cyclegan_outputs(self, device):
-        """Create simulated CycleGAN outputs."""
+        """create simulated cyclegan outputs."""
         B, C, D, H, W = 1, 1, 16, 16, 16
         
         return {
@@ -428,7 +428,7 @@ class TestCombinedVolumetricLoss:
         }
     
     def test_basic_computation(self, cyclegan_outputs, device):
-        """Test combined loss computation."""
+        """test combined loss computation."""
         loss_fn = CombinedVolumetricLoss().to(device)
         
         losses = loss_fn(**cyclegan_outputs)
@@ -438,7 +438,7 @@ class TestCombinedVolumetricLoss:
         assert not torch.isnan(losses['total'])
     
     def test_all_components_present(self, cyclegan_outputs, device):
-        """Test that all loss components are computed."""
+        """test that all loss components are computed."""
         loss_fn = CombinedVolumetricLoss().to(device)
         
         losses = loss_fn(**cyclegan_outputs)
@@ -458,20 +458,20 @@ class TestCombinedVolumetricLoss:
             assert key in losses, f"Missing loss component: {key}"
     
     def test_lambda_weights(self, cyclegan_outputs, device):
-        """Test that lambda weights affect total loss."""
-        # High cycle weight
+        """test that lambda weights affect total loss."""
+        # high cycle weight
         loss_fn_high = CombinedVolumetricLoss(lambda_cycle=100.0).to(device)
         losses_high = loss_fn_high(**cyclegan_outputs)
         
-        # Low cycle weight
+        # low cycle weight
         loss_fn_low = CombinedVolumetricLoss(lambda_cycle=0.1).to(device)
         losses_low = loss_fn_low(**cyclegan_outputs)
         
-        # High weight should produce higher total loss
+        # high weight should produce higher total loss
         assert losses_high['total'] != losses_low['total']
     
     def test_without_identity(self, device):
-        """Test combined loss without identity outputs."""
+        """test combined loss without identity outputs."""
         B, C, D, H, W = 1, 1, 16, 16, 16
         
         inputs = {
@@ -491,10 +491,10 @@ class TestCombinedVolumetricLoss:
 
 
 class TestLossGradients:
-    """Tests for gradient computation through losses."""
+    """tests for gradient computation through losses."""
     
     def test_cycle_loss_gradients(self, device):
-        """Test gradients flow through cycle loss."""
+        """test gradients flow through cycle loss."""
         vol1 = torch.randn(1, 1, 16, 16, 16, device=device, requires_grad=True)
         vol2 = torch.randn(1, 1, 16, 16, 16, device=device)
         
@@ -505,7 +505,7 @@ class TestLossGradients:
         assert vol1.grad is not None
     
     def test_ssim_gradients(self, device):
-        """Test gradients flow through SSIM."""
+        """test gradients flow through ssim."""
         vol1 = torch.randn(1, 1, 16, 16, 16, device=device, requires_grad=True)
         vol2 = torch.randn(1, 1, 16, 16, 16, device=device)
         
@@ -517,7 +517,7 @@ class TestLossGradients:
         assert vol1.grad is not None
     
     def test_gradient_loss_gradients(self, device):
-        """Test gradients flow through gradient loss."""
+        """test gradients flow through gradient loss."""
         vol1 = torch.randn(1, 1, 16, 16, 16, device=device, requires_grad=True)
         vol2 = torch.randn(1, 1, 16, 16, 16, device=device)
         
@@ -529,30 +529,30 @@ class TestLossGradients:
 
 
 class TestLossNumericalStability:
-    """Tests for numerical stability of losses."""
+    """tests for numerical stability of losses."""
     
     def test_ssim_with_constant_input(self, device):
-        """Test SSIM doesn't produce NaN with constant input."""
+        """test ssim doesn't produce nan with constant input."""
         vol = torch.ones(1, 1, 16, 16, 16, device=device)
         
         ssim = VolumetricSSIM().to(device)
         result = ssim(vol, vol)
         
-        # Should not be NaN (stability constants prevent division by zero)
+        # should not be nan (stability constants prevent division by zero)
         assert not torch.isnan(result)
     
     def test_gradient_loss_with_constant(self, device):
-        """Test gradient loss with constant input."""
+        """test gradient loss with constant input."""
         vol = torch.ones(1, 1, 16, 16, 16, device=device)
         
         loss_fn = VolumetricGradientLoss().to(device)
         result = loss_fn(vol, vol)
         
         assert not torch.isnan(result)
-        assert result.item() < 1e-5  # Should be ~0 for constant
+        assert result.item() < 1e-5  # should be ~0 for constant
     
     def test_losses_with_extreme_values(self, device):
-        """Test losses with extreme input values."""
+        """test losses with extreme input values."""
         vol1 = torch.randn(1, 1, 16, 16, 16, device=device) * 100
         vol2 = torch.randn(1, 1, 16, 16, 16, device=device) * 0.01
         

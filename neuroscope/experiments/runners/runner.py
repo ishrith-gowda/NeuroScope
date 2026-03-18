@@ -1,7 +1,7 @@
 """
-Experiment Runners.
+experiment runners.
 
-Execute training and evaluation experiments with
+execute training and evaluation experiments with
 full reproducibility and logging.
 """
 
@@ -18,9 +18,9 @@ import torch.nn as nn
 
 class ExperimentRunner:
     """
-    Run complete experiments with full logging.
+    run complete experiments with full logging.
     
-    Handles training, evaluation, checkpointing,
+    handles training, evaluation, checkpointing,
     and result aggregation.
     """
     
@@ -31,29 +31,29 @@ class ExperimentRunner:
         resume_from: Optional[str] = None
     ):
         """
-        Args:
-            config: ExperimentConfig instance
-            output_dir: Output directory
-            resume_from: Checkpoint to resume from
+        args:
+            config: experimentconfig instance
+            output_dir: output directory
+            resume_from: checkpoint to resume from
         """
         self.config = config
         self.output_dir = Path(output_dir)
         self.resume_from = resume_from
         
-        # Create output structure
+        # create output structure
         self._setup_output_dir()
         
-        # Set random seeds
+        # set random seeds
         self._set_seeds(config.training.seed)
         
-        # Initialize components
+        # initialize components
         self.model = None
         self.trainer = None
         self.dataloaders = None
         self.logger = None
     
     def _setup_output_dir(self):
-        """Create output directory structure."""
+        """create output directory structure."""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         self.run_dir = self.output_dir / f"{self.config.name}_{timestamp}"
         
@@ -63,7 +63,7 @@ class ExperimentRunner:
         (self.run_dir / 'results').mkdir(parents=True, exist_ok=True)
     
     def _set_seeds(self, seed: int):
-        """Set random seeds for reproducibility."""
+        """set random seeds for reproducibility."""
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -77,13 +77,13 @@ class ExperimentRunner:
             torch.backends.cudnn.benchmark = False
     
     def setup(self):
-        """Initialize all components."""
+        """initialize all components."""
         from ..utils import ExperimentLogger, load_config
         from ..models import build_generator, build_discriminator
         from ..data import create_dataloaders
         from ..training import HarmonizationTrainer
         
-        # Logger
+        # logger
         self.logger = ExperimentLogger(
             experiment_name=self.config.name,
             output_dir=self.run_dir,
@@ -92,15 +92,15 @@ class ExperimentRunner:
             use_wandb=self.config.training.use_wandb
         )
         
-        # Save config
+        # save config
         self._save_config()
         
         self.logger.log("Initializing experiment...")
         
-        # Build models
+        # build models
         self.models = self._build_models()
         
-        # Create dataloaders
+        # create dataloaders
         self.dataloaders = create_dataloaders(
             source_root=self.config.data.data_root,
             target_root=self.config.data.data_root,
@@ -108,7 +108,7 @@ class ExperimentRunner:
             num_workers=self.config.data.num_workers
         )
         
-        # Create trainer
+        # create trainer
         self.trainer = HarmonizationTrainer(
             generator_a2b=self.models['G_A2B'],
             generator_b2a=self.models['G_B2A'],
@@ -117,19 +117,19 @@ class ExperimentRunner:
             config=self.config
         )
         
-        # Resume if specified
+        # resume if specified
         if self.resume_from:
             self._resume(self.resume_from)
         
         self.logger.log("Experiment setup complete")
     
     def _build_models(self) -> Dict[str, nn.Module]:
-        """Build all model components."""
+        """build all model components."""
         from ..models import SAGenerator, MultiScaleDiscriminator
         
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        # Generators
+        # generators
         G_A2B = SAGenerator(
             in_channels=self.config.model.in_channels,
             out_channels=self.config.model.out_channels,
@@ -146,7 +146,7 @@ class ExperimentRunner:
             use_attention=self.config.model.use_attention
         ).to(device)
         
-        # Discriminators
+        # discriminators
         D_A = MultiScaleDiscriminator(
             in_channels=self.config.model.in_channels,
             base_channels=64,
@@ -167,13 +167,13 @@ class ExperimentRunner:
         }
     
     def _save_config(self):
-        """Save configuration to file."""
+        """save configuration to file."""
         config_path = self.run_dir / 'config.json'
         with open(config_path, 'w') as f:
             json.dump(self.config.to_dict(), f, indent=2)
     
     def _resume(self, checkpoint_path: str):
-        """Resume from checkpoint."""
+        """resume from checkpoint."""
         checkpoint = torch.load(checkpoint_path, map_location='cpu')
         
         self.models['G_A2B'].load_state_dict(checkpoint['G_A2B'])
@@ -187,19 +187,19 @@ class ExperimentRunner:
     
     def run(self) -> Dict:
         """
-        Run the complete experiment.
+        run the complete experiment.
         
-        Returns:
-            Results dictionary
+        returns:
+            results dictionary
         """
         self.logger.log("Starting training...")
         
-        # Training loop
+        # training loop
         for epoch in range(
             self.trainer.start_epoch, 
             self.config.training.epochs
         ):
-            # Train epoch
+            # train epoch
             train_metrics = self.trainer.train_epoch(
                 self.dataloaders['train'],
                 epoch
@@ -207,7 +207,7 @@ class ExperimentRunner:
             
             self.logger.log_metrics(train_metrics, epoch, prefix='train')
             
-            # Validation
+            # validation
             if epoch % self.config.training.val_every == 0:
                 val_metrics = self.trainer.validate(
                     self.dataloaders['val'],
@@ -215,17 +215,17 @@ class ExperimentRunner:
                 )
                 self.logger.log_metrics(val_metrics, epoch, prefix='val')
             
-            # Save checkpoint
+            # save checkpoint
             if epoch % self.config.training.save_every == 0:
                 self._save_checkpoint(epoch)
             
             self.logger.end_epoch(epoch)
         
-        # Final evaluation
+        # final evaluation
         self.logger.log("Running final evaluation...")
         results = self._final_evaluation()
         
-        # Save results
+        # save results
         self._save_results(results)
         
         self.logger.finish()
@@ -233,7 +233,7 @@ class ExperimentRunner:
         return results
     
     def _save_checkpoint(self, epoch: int):
-        """Save training checkpoint."""
+        """save training checkpoint."""
         checkpoint = {
             'epoch': epoch,
             'G_A2B': self.models['G_A2B'].state_dict(),
@@ -247,12 +247,12 @@ class ExperimentRunner:
         torch.save(checkpoint, path)
     
     def _final_evaluation(self) -> Dict:
-        """Run final evaluation."""
+        """run final evaluation."""
         from ..evaluation import MetricCalculator, StatisticalTester
         
         results = {}
         
-        # Compute metrics on test set
+        # compute metrics on test set
         metric_calc = MetricCalculator()
         test_metrics = self.trainer.evaluate(
             self.dataloaders['test'],
@@ -264,7 +264,7 @@ class ExperimentRunner:
         return results
     
     def _save_results(self, results: Dict):
-        """Save final results."""
+        """save final results."""
         path = self.run_dir / 'results' / 'final_results.json'
         with open(path, 'w') as f:
             json.dump(results, f, indent=2)
@@ -272,9 +272,9 @@ class ExperimentRunner:
 
 class AblationRunner:
     """
-    Run ablation study experiments.
+    run ablation study experiments.
     
-    Systematically evaluates component contributions.
+    systematically evaluates component contributions.
     """
     
     def __init__(
@@ -284,10 +284,10 @@ class AblationRunner:
         output_dir: Union[str, Path]
     ):
         """
-        Args:
-            base_config: Base experiment configuration
-            ablation_configs: List of ablation config paths
-            output_dir: Output directory
+        args:
+            base_config: base experiment configuration
+            ablation_configs: list of ablation config paths
+            output_dir: output directory
         """
         self.base_config = base_config
         self.ablation_configs = ablation_configs
@@ -298,15 +298,15 @@ class AblationRunner:
     
     def run(self) -> Dict:
         """
-        Run all ablation experiments.
+        run all ablation experiments.
         
-        Returns:
-            Combined results dictionary
+        returns:
+            combined results dictionary
         """
         from ..utils import load_config
         
-        # Run baseline
-        print("Running baseline experiment...")
+        # run baseline
+        print("running baseline experiment...")
         baseline_runner = ExperimentRunner(
             self.base_config,
             self.output_dir / 'baseline'
@@ -314,10 +314,10 @@ class AblationRunner:
         baseline_runner.setup()
         self.results['baseline'] = baseline_runner.run()
         
-        # Run ablations
+        # run ablations
         for config_path in self.ablation_configs:
             config = load_config(config_path)
-            print(f"Running ablation: {config.name}...")
+            print(f"running ablation: {config.name}...")
             
             runner = ExperimentRunner(
                 config,
@@ -326,25 +326,25 @@ class AblationRunner:
             runner.setup()
             self.results[config.name] = runner.run()
         
-        # Generate comparison report
+        # generate comparison report
         self._generate_report()
         
         return self.results
     
     def _generate_report(self):
-        """Generate ablation study report."""
+        """generate ablation study report."""
         report = {
             'experiments': list(self.results.keys()),
             'metrics': {},
             'summary': {}
         }
         
-        # Aggregate metrics
+        # aggregate metrics
         for name, result in self.results.items():
             if 'test_metrics' in result:
                 report['metrics'][name] = result['test_metrics']
         
-        # Save report
+        # save report
         path = self.output_dir / 'ablation_report.json'
         with open(path, 'w') as f:
             json.dump(report, f, indent=2)
@@ -352,9 +352,9 @@ class AblationRunner:
 
 class BaselineRunner:
     """
-    Run baseline comparison experiments.
+    run baseline comparison experiments.
     
-    Compares SA-CycleGAN against traditional methods.
+    compares sa-cyclegan against traditional methods.
     """
     
     def __init__(
@@ -363,9 +363,9 @@ class BaselineRunner:
         output_dir: Union[str, Path]
     ):
         """
-        Args:
-            data_config: Data configuration
-            output_dir: Output directory
+        args:
+            data_config: data configuration
+            output_dir: output directory
         """
         self.data_config = data_config
         self.output_dir = Path(output_dir) / 'baseline_comparison'
@@ -374,24 +374,24 @@ class BaselineRunner:
         self.results: Dict[str, Dict] = {}
     
     def run_combat(self) -> Dict:
-        """Run ComBat harmonization baseline."""
+        """run combat harmonization baseline."""
         from ..evaluation import MetricCalculator
         
-        # ComBat implementation would go here
-        # This is a placeholder for the actual implementation
+        # combat implementation would go here
+        # this is a placeholder for the actual implementation
         
         return {'method': 'combat', 'ssim': 0.92, 'psnr': 27.5}
     
     def run_histogram_matching(self) -> Dict:
-        """Run histogram matching baseline."""
+        """run histogram matching baseline."""
         return {'method': 'histogram_matching', 'ssim': 0.89, 'psnr': 25.3}
     
     def run_all(self) -> Dict:
-        """Run all baseline methods."""
+        """run all baseline methods."""
         self.results['combat'] = self.run_combat()
         self.results['histogram_matching'] = self.run_histogram_matching()
         
-        # Save results
+        # save results
         path = self.output_dir / 'baseline_results.json'
         with open(path, 'w') as f:
             json.dump(self.results, f, indent=2)

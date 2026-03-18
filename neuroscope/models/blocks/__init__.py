@@ -1,18 +1,18 @@
 """
-Neural Network Building Blocks.
+neural network building blocks.
 
-This module provides reusable building blocks for constructing
+this module provides reusable building blocks for constructing
 generator and discriminator architectures.
 
-Modules:
-    - residual: Residual block implementations
-    - conv: Convolution block patterns
-    - normalization: Normalization layer implementations
+modules:
+    - residual: residual block implementations
+    - conv: convolution block patterns
+    - normalization: normalization layer implementations
 """
 
 import torch.nn as nn
 
-# Residual blocks
+# residual blocks
 from .residual import (
     ResidualBlock,
     PreActResidualBlock,
@@ -22,7 +22,7 @@ from .residual import (
     DenseBlock,
 )
 
-# Convolution blocks
+# convolution blocks
 from .conv import (
     ConvBlock,
     ConvTransposeBlock,
@@ -31,11 +31,11 @@ from .conv import (
     SeparableConvBlock,
 )
 
-# Aliases
+# aliases
 UpsampleBlock = UpsampleConvBlock
 DownsampleBlock = DownsampleConvBlock
 
-# Normalization layers
+# normalization layers
 from .normalization import (
     AdaptiveInstanceNorm2d,
     LayerNorm2d,
@@ -44,27 +44,27 @@ from .normalization import (
     ConditionalBatchNorm2d,
 )
 
-# Aliases for compatibility
+# aliases for compatibility
 AdaptiveInstanceNorm = AdaptiveInstanceNorm2d
-# DenseBlock is now imported from residual.py
-PixelShuffleBlock = UpsampleBlock  # Alias
+# denseblock is now imported from residual.py
+PixelShuffleBlock = UpsampleBlock  # alias
 
 __all__ = [
-    # Residual
+    # residual
     'ResidualBlock',
     'PreActResidualBlock', 
     'BottleneckResidualBlock',
     'SEResidualBlock',
     'DenseResidualBlock',
     'DenseBlock',
-    # Convolution
+    # convolution
     'ConvBlock',
     'ConvTransposeBlock',
     'DownsampleBlock',
     'UpsampleBlock',
     'SeparableConvBlock',
     'PixelShuffleBlock',
-    # Normalization
+    # normalization
     'AdaptiveInstanceNorm2d',
     'AdaptiveInstanceNorm',
     'LayerNorm2d',

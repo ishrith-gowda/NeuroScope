@@ -1,7 +1,7 @@
 """
-Encoder Modules for Generator Architectures.
+encoder modules for generator architectures.
 
-This module provides various encoder implementations for image-to-image translation.
+this module provides various encoder implementations for image-to-image translation.
 """
 
 import torch
@@ -16,18 +16,18 @@ from ..attention.self_attention import SelfAttention2d
 
 class ConvEncoder(nn.Module):
     """
-    Standard Convolutional Encoder.
+    standard convolutional encoder.
     
-    Progressive downsampling with optional attention.
+    progressive downsampling with optional attention.
     
-    Args:
-        in_channels: Input channels
-        base_channels: Base channel count
-        n_downsample: Number of downsampling layers
-        norm_type: Normalization type
-        activation: Activation type
-        use_attention: Whether to use self-attention
-        attention_layers: Which layers to add attention to
+    args:
+        in_channels: input channels
+        base_channels: base channel count
+        n_downsample: number of downsampling layers
+        norm_type: normalization type
+        activation: activation type
+        use_attention: whether to use self-attention
+        attention_layers: which layers to add attention to
     """
     
     def __init__(
@@ -46,14 +46,14 @@ class ConvEncoder(nn.Module):
         self.use_attention = use_attention
         self.attention_layers = attention_layers or []
         
-        # Initial convolution
+        # initial convolution
         self.initial = ConvBlock(
             in_channels, base_channels,
             kernel_size=7, stride=1, padding=3,
             norm_type=norm_type, activation=activation
         )
         
-        # Downsampling layers
+        # downsampling layers
         self.downsample_layers = nn.ModuleList()
         self.attention_modules = nn.ModuleDict()
         
@@ -81,23 +81,23 @@ class ConvEncoder(nn.Module):
         return_intermediates: bool = True
     ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, C, H, W]
-            return_intermediates: Whether to return intermediate features
+        args:
+            x: input tensor [b, c, h, w]
+            return_intermediates: whether to return intermediate features
             
-        Returns:
-            Final encoded features and optionally intermediate features
+        returns:
+            final encoded features and optionally intermediate features
         """
         intermediates = []
         
-        # Initial conv
+        # initial conv
         x = self.initial(x)
         if return_intermediates:
             intermediates.append(x)
             
-        # Downsampling
+        # downsampling
         for i, down in enumerate(self.downsample_layers):
             x = down(x)
             
@@ -115,16 +115,16 @@ class ConvEncoder(nn.Module):
 
 class ResidualEncoder(nn.Module):
     """
-    Residual Encoder with skip connections.
+    residual encoder with skip connections.
     
-    Uses residual blocks between downsampling stages.
+    uses residual blocks between downsampling stages.
     
-    Args:
-        in_channels: Input channels
-        base_channels: Base channel count
-        n_downsample: Number of downsampling layers
-        n_residual: Residual blocks per scale
-        norm_type: Normalization type
+    args:
+        in_channels: input channels
+        base_channels: base channel count
+        n_downsample: number of downsampling layers
+        n_residual: residual blocks per scale
+        norm_type: normalization type
     """
     
     def __init__(
@@ -139,7 +139,7 @@ class ResidualEncoder(nn.Module):
         
         self.n_downsample = n_downsample
         
-        # Initial conv
+        # initial conv
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, base_channels, 7),
@@ -147,7 +147,7 @@ class ResidualEncoder(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder stages
+        # encoder stages
         self.stages = nn.ModuleList()
         
         current_channels = base_channels
@@ -155,12 +155,12 @@ class ResidualEncoder(nn.Module):
             out_channels = min(current_channels * 2, 512)
             
             stage = nn.ModuleList([
-                # Residual blocks
+                # residual blocks
                 nn.Sequential(*[
                     ResidualBlock(current_channels, norm_type=norm_type)
                     for _ in range(n_residual)
                 ]),
-                # Downsampling
+                # downsampling
                 nn.Sequential(
                     nn.Conv2d(current_channels, out_channels, 3, stride=2, padding=1),
                     nn.InstanceNorm2d(out_channels),
@@ -178,7 +178,7 @@ class ResidualEncoder(nn.Module):
         x: torch.Tensor,
         return_intermediates: bool = True
     ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
-        """Forward pass with optional intermediate outputs."""
+        """forward pass with optional intermediate outputs."""
         intermediates = []
         
         x = self.initial(x)
@@ -198,16 +198,16 @@ class ResidualEncoder(nn.Module):
 
 class DenseEncoder(nn.Module):
     """
-    Dense Encoder with dense connections.
+    dense encoder with dense connections.
     
-    Features are concatenated across layers for rich representations.
+    features are concatenated across layers for rich representations.
     
-    Args:
-        in_channels: Input channels
-        base_channels: Base channel count
-        growth_rate: Channels added per dense layer
-        n_dense_blocks: Number of dense blocks
-        n_layers_per_block: Layers per dense block
+    args:
+        in_channels: input channels
+        base_channels: base channel count
+        growth_rate: channels added per dense layer
+        n_dense_blocks: number of dense blocks
+        n_layers_per_block: layers per dense block
     """
     
     def __init__(
@@ -220,7 +220,7 @@ class DenseEncoder(nn.Module):
     ):
         super().__init__()
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.Conv2d(in_channels, base_channels, 7, padding=3),
             nn.BatchNorm2d(base_channels),
@@ -228,19 +228,19 @@ class DenseEncoder(nn.Module):
             nn.MaxPool2d(2)
         )
         
-        # Dense blocks with transitions
+        # dense blocks with transitions
         self.dense_blocks = nn.ModuleList()
         self.transitions = nn.ModuleList()
         
         current_channels = base_channels
         for i in range(n_dense_blocks):
-            # Dense block
+            # dense block
             block = DenseBlock(current_channels, growth_rate, n_layers_per_block)
             self.dense_blocks.append(block)
             
             current_channels = current_channels + growth_rate * n_layers_per_block
             
-            # Transition (except last)
+            # transition (except last)
             if i < n_dense_blocks - 1:
                 out_channels = current_channels // 2
                 transition = nn.Sequential(
@@ -259,7 +259,7 @@ class DenseEncoder(nn.Module):
         x: torch.Tensor,
         return_intermediates: bool = True
     ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
-        """Forward pass."""
+        """forward pass."""
         intermediates = []
         
         x = self.initial(x)
@@ -280,7 +280,7 @@ class DenseEncoder(nn.Module):
 
 
 class DenseBlock(nn.Module):
-    """Dense block with concatenated features."""
+    """dense block with concatenated features."""
     
     def __init__(
         self,
@@ -315,15 +315,15 @@ class DenseBlock(nn.Module):
 
 class MultiModalEncoder(nn.Module):
     """
-    Multi-Modal Encoder for multi-channel MRI.
+    multi-modal encoder for multi-channel mri.
     
-    Processes each modality separately then fuses features.
+    processes each modality separately then fuses features.
     
-    Args:
-        n_modalities: Number of input modalities
-        base_channels: Base channel count per modality
-        fusion_type: How to fuse modalities ('concat', 'attention', 'sum')
-        n_downsample: Number of downsampling layers
+    args:
+        n_modalities: number of input modalities
+        base_channels: base channel count per modality
+        fusion_type: how to fuse modalities ('concat', 'attention', 'sum')
+        n_downsample: number of downsampling layers
     """
     
     def __init__(
@@ -338,7 +338,7 @@ class MultiModalEncoder(nn.Module):
         self.n_modalities = n_modalities
         self.fusion_type = fusion_type
         
-        # Separate encoder for each modality
+        # separate encoder for each modality
         self.modality_encoders = nn.ModuleList([
             ConvEncoder(
                 in_channels=1,
@@ -349,7 +349,7 @@ class MultiModalEncoder(nn.Module):
         
         encoder_out_channels = self.modality_encoders[0].output_channels
         
-        # Fusion module
+        # fusion module
         if fusion_type == 'concat':
             self.fusion = nn.Conv2d(
                 encoder_out_channels * n_modalities,
@@ -374,18 +374,18 @@ class MultiModalEncoder(nn.Module):
         return_intermediates: bool = False
     ) -> Tuple[torch.Tensor, Optional[Dict]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, N_modalities, H, W]
+        args:
+            x: input tensor [b, n_modalities, h, w]
             
-        Returns:
-            Fused features and optionally per-modality features
+        returns:
+            fused features and optionally per-modality features
         """
         modality_features = []
         all_intermediates = {}
         
-        # Encode each modality
+        # encode each modality
         for i, encoder in enumerate(self.modality_encoders):
             modality_input = x[:, i:i+1, :, :]
             features, intermediates = encoder(modality_input, return_intermediates)
@@ -394,7 +394,7 @@ class MultiModalEncoder(nn.Module):
             if return_intermediates:
                 all_intermediates[f'modality_{i}'] = intermediates
                 
-        # Fuse modalities
+        # fuse modalities
         if self.fusion_type == 'concat':
             fused = self.fusion(torch.cat(modality_features, dim=1))
         elif self.fusion_type == 'attention':
@@ -409,7 +409,7 @@ class MultiModalEncoder(nn.Module):
 
 
 class ModalityAttentionFusion(nn.Module):
-    """Attention-based modality fusion."""
+    """attention-based modality fusion."""
     
     def __init__(self, n_modalities: int, channels: int):
         super().__init__()
@@ -423,16 +423,16 @@ class ModalityAttentionFusion(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: [B, N_modalities, C, H, W]
+        args:
+            x: [b, n_modalities, c, h, w]
         """
         B, N, C, H, W = x.shape
         
-        # Compute attention weights
+        # compute attention weights
         x_flat = x.view(B, N * C, H, W)
-        weights = self.attention(x_flat)  # [B, N]
+        weights = self.attention(x_flat)  # [b, n]
         
-        # Weighted sum
+        # weighted sum
         weights = weights.view(B, N, 1, 1, 1)
         fused = (x * weights).sum(dim=1)
         
@@ -441,14 +441,14 @@ class ModalityAttentionFusion(nn.Module):
 
 class HierarchicalEncoder(nn.Module):
     """
-    Hierarchical Encoder with multi-scale features.
+    hierarchical encoder with multi-scale features.
     
-    Extracts features at multiple resolutions simultaneously.
+    extracts features at multiple resolutions simultaneously.
     
-    Args:
-        in_channels: Input channels
-        base_channels: Base channel count
-        n_scales: Number of scales
+    args:
+        in_channels: input channels
+        base_channels: base channel count
+        n_scales: number of scales
     """
     
     def __init__(
@@ -461,7 +461,7 @@ class HierarchicalEncoder(nn.Module):
         
         self.n_scales = n_scales
         
-        # Scale-specific encoders
+        # scale-specific encoders
         self.scale_encoders = nn.ModuleList()
         
         for i in range(n_scales):
@@ -477,7 +477,7 @@ class HierarchicalEncoder(nn.Module):
                 )
             )
             
-        # Feature aggregation
+        # feature aggregation
         total_channels = sum(base_channels * (2 ** i) for i in range(n_scales))
         self.aggregate = nn.Conv2d(total_channels, base_channels * 4, 1)
         self.output_channels = base_channels * 4
@@ -487,20 +487,20 @@ class HierarchicalEncoder(nn.Module):
         x: torch.Tensor,
         return_intermediates: bool = False
     ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
-        """Forward pass with multi-scale processing."""
+        """forward pass with multi-scale processing."""
         scale_features = []
         
         for i, encoder in enumerate(self.scale_encoders):
-            # Downsample input to appropriate scale
+            # downsample input to appropriate scale
             if i > 0:
                 scale_input = F.avg_pool2d(x, 2 ** i)
             else:
                 scale_input = x
                 
-            # Encode at this scale
+            # encode at this scale
             features = encoder(scale_input)
             
-            # Upsample back to original resolution
+            # upsample back to original resolution
             if i > 0:
                 features = F.interpolate(
                     features, size=x.shape[-2:],
@@ -509,7 +509,7 @@ class HierarchicalEncoder(nn.Module):
                 
             scale_features.append(features)
             
-        # Aggregate multi-scale features
+        # aggregate multi-scale features
         aggregated = self.aggregate(torch.cat(scale_features, dim=1))
         
         if return_intermediates:

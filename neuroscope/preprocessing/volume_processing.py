@@ -1,6 +1,6 @@
-"""Medical image preprocessing utilities.
+"""medical image preprocessing utilities.
 
-This module contains utilities for preprocessing 3D medical imaging data,
+this module contains utilities for preprocessing 3d medical imaging data,
 including normalization, standardization, and data augmentation.
 """
 
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 
 class VolumeNormalization:
-    """Normalization methods for 3D medical volumes."""
+    """normalization methods for 3d medical volumes."""
     
     @staticmethod
     def min_max_normalization(
@@ -26,27 +26,27 @@ class VolumeNormalization:
         target_range: Tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume to [0, 1] or custom range using min-max normalization.
+        """normalize volume to [0, 1] or custom range using min-max normalization.
         
-        Args:
-            volume: Input volume as numpy array.
-            min_val: Optional minimum value for normalization.
-            max_val: Optional maximum value for normalization.
-            target_range: Target range for normalized values.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            min_val: optional minimum value for normalization.
+            max_val: optional maximum value for normalization.
+            target_range: target range for normalized values.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Determine min and max values
+        # determine min and max values
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -57,15 +57,15 @@ class VolumeNormalization:
             v_min = min_val if min_val is not None else np.min(volume)
             v_max = max_val if max_val is not None else np.max(volume)
         
-        # Avoid division by zero
+        # avoid division by zero
         if v_min == v_max:
             logger.warning(f"Min and max values are equal: {v_min}. Setting normalized volume to {target_range[0]}.")
             return np.ones_like(volume) * target_range[0]
         
-        # Normalize to [0, 1]
+        # normalize to [0, 1]
         normalized = (normalized - v_min) / (v_max - v_min)
         
-        # Scale to target range if not [0, 1]
+        # scale to target range if not [0, 1]
         if target_range != (0, 1):
             target_min, target_max = target_range
             normalized = normalized * (target_max - target_min) + target_min
@@ -79,26 +79,26 @@ class VolumeNormalization:
         std_val: Optional[float] = None,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume using z-score normalization.
+        """normalize volume using z-score normalization.
         
-        Args:
-            volume: Input volume as numpy array.
-            mean_val: Optional mean value for normalization.
-            std_val: Optional standard deviation for normalization.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            mean_val: optional mean value for normalization.
+            std_val: optional standard deviation for normalization.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Determine mean and std values
+        # determine mean and std values
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -109,12 +109,12 @@ class VolumeNormalization:
             v_mean = mean_val if mean_val is not None else np.mean(volume)
             v_std = std_val if std_val is not None else np.std(volume)
         
-        # Avoid division by zero
+        # avoid division by zero
         if v_std == 0:
             logger.warning(f"Standard deviation is zero. Setting normalized volume to zeros.")
             return np.zeros_like(volume)
         
-        # Apply z-score normalization
+        # apply z-score normalization
         normalized = (normalized - v_mean) / v_std
         
         return normalized
@@ -127,27 +127,27 @@ class VolumeNormalization:
         target_range: Tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Normalize volume using percentile clipping.
+        """normalize volume using percentile clipping.
         
-        Args:
-            volume: Input volume as numpy array.
-            low_percentile: Lower percentile for clipping.
-            high_percentile: Upper percentile for clipping.
-            target_range: Target range for normalized values.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            low_percentile: lower percentile for clipping.
+            high_percentile: upper percentile for clipping.
+            target_range: target range for normalized values.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Calculate percentiles
+        # calculate percentiles
         if mask is not None:
-            # Use only foreground voxels for normalization
+            # use only foreground voxels for normalization
             foreground = volume[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -158,10 +158,10 @@ class VolumeNormalization:
             low_val = np.percentile(volume, low_percentile)
             high_val = np.percentile(volume, high_percentile)
         
-        # Clip to percentile range
+        # clip to percentile range
         normalized = np.clip(normalized, low_val, high_val)
         
-        # Apply min-max normalization to target range
+        # apply min-max normalization to target range
         return VolumeNormalization.min_max_normalization(
             normalized, low_val, high_val, target_range
         )
@@ -172,28 +172,28 @@ class VolumeNormalization:
         num_bins: int = 256,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply histogram equalization to the volume.
+        """apply histogram equalization to the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            num_bins: Number of histogram bins.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            num_bins: number of histogram bins.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Histogram-equalized volume.
+        returns:
+            histogram-equalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         equalized = volume.copy()
         
-        # Normalize to [0, 1] first for binning
+        # normalize to [0, 1] first for binning
         normalized = VolumeNormalization.min_max_normalization(volume, mask=mask)
         
-        # Create histogram
+        # create histogram
         if mask is not None:
-            # Use only foreground voxels for histogram
+            # use only foreground voxels for histogram
             foreground = normalized[mask > 0]
             if len(foreground) == 0:
                 logger.warning("Empty foreground mask, using whole volume")
@@ -203,11 +203,11 @@ class VolumeNormalization:
         else:
             hist, bins = np.histogram(normalized.flatten(), num_bins, range=(0, 1))
         
-        # Calculate cumulative distribution function (CDF)
+        # calculate cumulative distribution function (cdf)
         cdf = hist.cumsum()
-        cdf = cdf / float(cdf[-1])  # Normalize CDF
+        cdf = cdf / float(cdf[-1])  # normalize cdf
         
-        # Apply equalization using the CDF
+        # apply equalization using the cdf
         equalized = np.interp(normalized.flatten(), bins[:-1], cdf)
         equalized = equalized.reshape(volume.shape)
         
@@ -219,60 +219,60 @@ class VolumeNormalization:
         block_size: Tuple[int, int, int] = (32, 32, 32),
         clip_limit: float = 0.01,
     ) -> np.ndarray:
-        """Apply adaptive histogram equalization to the volume.
+        """apply adaptive histogram equalization to the volume.
         
-        This method applies a 3D version of CLAHE (Contrast Limited Adaptive
-        Histogram Equalization) to the volume.
+        this method applies a 3d version of clahe (contrast limited adaptive
+        histogram equalization) to the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            block_size: Size of blocks for local histogram equalization.
-            clip_limit: Clipping limit to prevent over-amplification of noise.
+        args:
+            volume: input volume as numpy array.
+            block_size: size of blocks for local histogram equalization.
+            clip_limit: clipping limit to prevent over-amplification of noise.
             
-        Returns:
-            CLAHE-equalized volume.
+        returns:
+            clahe-equalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Normalize to [0, 1] first
+        # normalize to [0, 1] first
         normalized = VolumeNormalization.min_max_normalization(volume)
         
-        # Scale to uint8 for processing
+        # scale to uint8 for processing
         uint8_volume = (normalized * 255).astype(np.uint8)
         
-        # Try to use skimage for 3D CLAHE if available
+        # try to use skimage for 3d clahe if available
         try:
             from skimage import exposure
             
-            # Process each axis separately (pseudo-3D CLAHE)
+            # process each axis separately (pseudo-3d clahe)
             clahe_xy = np.zeros_like(uint8_volume, dtype=np.float32)
             clahe_xz = np.zeros_like(uint8_volume, dtype=np.float32)
             clahe_yz = np.zeros_like(uint8_volume, dtype=np.float32)
             
-            # Apply CLAHE along different planes
-            for i in range(uint8_volume.shape[0]):  # XY planes
+            # apply clahe along different planes
+            for i in range(uint8_volume.shape[0]):  # xy planes
                 clahe_xy[i] = exposure.equalize_adapthist(
                     uint8_volume[i], 
                     kernel_size=block_size[1:],
                     clip_limit=clip_limit
                 )
             
-            for i in range(uint8_volume.shape[1]):  # XZ planes
+            for i in range(uint8_volume.shape[1]):  # xz planes
                 clahe_xz[:, i, :] = exposure.equalize_adapthist(
                     uint8_volume[:, i, :], 
                     kernel_size=(block_size[0], block_size[2]),
                     clip_limit=clip_limit
                 )
             
-            for i in range(uint8_volume.shape[2]):  # YZ planes
+            for i in range(uint8_volume.shape[2]):  # yz planes
                 clahe_yz[:, :, i] = exposure.equalize_adapthist(
                     uint8_volume[:, :, i], 
                     kernel_size=block_size[:2],
                     clip_limit=clip_limit
                 )
             
-            # Average the results from different planes
+            # average the results from different planes
             equalized = (clahe_xy + clahe_xz + clahe_yz) / 3.0
             
         except ImportError:
@@ -288,27 +288,27 @@ class VolumeNormalization:
         stripe_width: float = 0.1,
         target_value: float = 1.0,
     ) -> np.ndarray:
-        """Apply white stripe normalization.
+        """apply white stripe normalization.
         
-        This method is specifically designed for brain MRI normalization.
-        It identifies a stripe of white matter and normalizes based on it.
+        this method is specifically designed for brain mri normalization.
+        it identifies a stripe of white matter and normalizes based on it.
         
-        Args:
-            volume: Input volume as numpy array.
-            mask: Optional mask for brain voxels.
-            stripe_width: Width of the stripe as proportion of intensity range.
-            target_value: Target value for the white stripe.
+        args:
+            volume: input volume as numpy array.
+            mask: optional mask for brain voxels.
+            stripe_width: width of the stripe as proportion of intensity range.
+            target_value: target value for the white stripe.
             
-        Returns:
-            Normalized volume.
+        returns:
+            normalized volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         normalized = volume.copy()
         
-        # Calculate histogram for brain region
+        # calculate histogram for brain region
         if mask is not None:
             brain_voxels = normalized[mask > 0]
             if len(brain_voxels) == 0:
@@ -317,30 +317,30 @@ class VolumeNormalization:
         else:
             brain_voxels = normalized.flatten()
         
-        # Calculate the mode of the histogram (approximating white matter peak)
+        # calculate the mode of the histogram (approximating white matter peak)
         hist, bin_edges = np.histogram(brain_voxels, bins=100)
         mode_index = np.argmax(hist)
         mode_value = (bin_edges[mode_index] + bin_edges[mode_index + 1]) / 2
         
-        # Define stripe around the mode
+        # define stripe around the mode
         intensity_range = np.max(brain_voxels) - np.min(brain_voxels)
         stripe_half_width = stripe_width * intensity_range / 2
         stripe_min = mode_value - stripe_half_width
         stripe_max = mode_value + stripe_half_width
         
-        # Create white matter mask
+        # create white matter mask
         wm_mask = (normalized >= stripe_min) & (normalized <= stripe_max)
         if mask is not None:
             wm_mask = wm_mask & (mask > 0)
         
-        # Calculate mean of white stripe
+        # calculate mean of white stripe
         if np.sum(wm_mask) > 0:
             wm_mean = np.mean(normalized[wm_mask])
         else:
             logger.warning("No voxels in white stripe, using mode value")
             wm_mean = mode_value
         
-        # Scale the volume so that white stripe mean is at target value
+        # scale the volume so that white stripe mean is at target value
         scale_factor = target_value / wm_mean
         normalized = normalized * scale_factor
         
@@ -348,7 +348,7 @@ class VolumeNormalization:
 
 
 class DataAugmentation:
-    """Data augmentation methods for 3D medical volumes."""
+    """data augmentation methods for 3d medical volumes."""
     
     @staticmethod
     def random_flip(
@@ -356,27 +356,27 @@ class DataAugmentation:
         axes: List[int] = None,
         p: float = 0.5,
     ) -> np.ndarray:
-        """Randomly flip the volume along specified axes.
+        """randomly flip the volume along specified axes.
         
-        Args:
-            volume: Input volume as numpy array.
-            axes: Axes along which to potentially flip. Default: all axes.
-            p: Probability of flipping along each axis.
+        args:
+            volume: input volume as numpy array.
+            axes: axes along which to potentially flip. default: all axes.
+            p: probability of flipping along each axis.
             
-        Returns:
-            Augmented volume.
+        returns:
+            augmented volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Default to all axes if none specified
+        # default to all axes if none specified
         if axes is None:
             axes = list(range(volume.ndim))
         
-        # Apply random flips along each specified axis
+        # apply random flips along each specified axis
         for axis in axes:
             if np.random.random() < p:
                 result = np.flip(result, axis=axis)
@@ -391,17 +391,17 @@ class DataAugmentation:
         mode: str = "constant",
         order: int = 1,
     ) -> np.ndarray:
-        """Randomly rotate the volume in 3D.
+        """randomly rotate the volume in 3d.
         
-        Args:
-            volume: Input 3D volume as numpy array.
-            max_angle: Maximum rotation angle in degrees.
-            axes: Rotation planes. Default: all combinations.
-            mode: Interpolation mode.
-            order: Interpolation order.
+        args:
+            volume: input 3d volume as numpy array.
+            max_angle: maximum rotation angle in degrees.
+            axes: rotation planes. default: all combinations.
+            mode: interpolation mode.
+            order: interpolation order.
             
-        Returns:
-            Rotated volume.
+        returns:
+            rotated volume.
         """
         try:
             from scipy.ndimage import rotate
@@ -412,14 +412,14 @@ class DataAugmentation:
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Default to all planes if none specified
+        # default to all planes if none specified
         if axes is None:
             axes = [(0, 1), (1, 2), (0, 2)]
         
-        # Apply random rotations in specified planes
+        # apply random rotations in specified planes
         for axis_pair in axes:
             angle = np.random.uniform(-max_angle, max_angle)
             result = rotate(result, angle, axes=axis_pair, reshape=False, 
@@ -433,46 +433,46 @@ class DataAugmentation:
         crop_size: Tuple[int, ...],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Randomly crop the volume.
+        """randomly crop the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            crop_size: Size of the crop.
-            mask: Optional mask to guide cropping (prefer foreground regions).
+        args:
+            volume: input volume as numpy array.
+            crop_size: size of the crop.
+            mask: optional mask to guide cropping (prefer foreground regions).
             
-        Returns:
-            Cropped volume.
+        returns:
+            cropped volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Check if crop is possible
+        # check if crop is possible
         for i in range(len(crop_size)):
             if crop_size[i] > volume.shape[i]:
                 raise ValueError(f"Crop size {crop_size[i]} is larger than volume size {volume.shape[i]} along axis {i}")
         
-        # Calculate valid crop ranges
+        # calculate valid crop ranges
         valid_starts = [volume.shape[i] - crop_size[i] for i in range(len(crop_size))]
         
-        # If mask is provided, prefer foreground regions
+        # if mask is provided, prefer foreground regions
         if mask is not None and np.any(mask > 0):
-            # Get foreground positions
+            # get foreground positions
             foreground_positions = np.where(mask > 0)
             
-            # Select a random foreground voxel as the center
+            # select a random foreground voxel as the center
             idx = np.random.randint(0, len(foreground_positions[0]))
             center = [foreground_positions[i][idx] for i in range(len(crop_size))]
             
-            # Calculate crop starts with the foreground voxel as center
+            # calculate crop starts with the foreground voxel as center
             starts = [max(0, min(valid_starts[i], center[i] - crop_size[i] // 2)) for i in range(len(crop_size))]
         else:
-            # Completely random crop
+            # completely random crop
             starts = [np.random.randint(0, valid_start + 1) for valid_start in valid_starts]
         
-        # Create slices for cropping
+        # create slices for cropping
         slices = tuple(slice(starts[i], starts[i] + crop_size[i]) for i in range(len(crop_size)))
         
-        # Apply crop
+        # apply crop
         return volume[slices]
     
     @staticmethod
@@ -481,23 +481,23 @@ class DataAugmentation:
         shift_range: Tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply random intensity shift augmentation.
+        """apply random intensity shift augmentation.
         
-        Args:
-            volume: Input volume as numpy array.
-            shift_range: Range of intensity shifts as fraction of intensity range.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            shift_range: range of intensity shifts as fraction of intensity range.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Augmented volume.
+        returns:
+            augmented volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Determine intensity range
+        # determine intensity range
         if mask is not None:
             foreground = volume[mask > 0]
             if len(foreground) > 0:
@@ -510,11 +510,11 @@ class DataAugmentation:
             v_min = np.min(volume)
             v_max = np.max(volume)
         
-        # Calculate intensity range and shift amount
+        # calculate intensity range and shift amount
         intensity_range = v_max - v_min
         shift_amount = np.random.uniform(shift_range[0], shift_range[1]) * intensity_range
         
-        # Apply shift
+        # apply shift
         result = result + shift_amount
         
         return result
@@ -525,26 +525,26 @@ class DataAugmentation:
         scale_range: Tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply random intensity scaling augmentation.
+        """apply random intensity scaling augmentation.
         
-        Args:
-            volume: Input volume as numpy array.
-            scale_range: Range of intensity scaling factors.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            scale_range: range of intensity scaling factors.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Augmented volume.
+        returns:
+            augmented volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Calculate scaling factor
+        # calculate scaling factor
         scale_factor = np.random.uniform(scale_range[0], scale_range[1])
         
-        # Determine mean intensity for mean-preserving scaling
+        # determine mean intensity for mean-preserving scaling
         if mask is not None:
             foreground = volume[mask > 0]
             if len(foreground) > 0:
@@ -554,7 +554,7 @@ class DataAugmentation:
         else:
             mean_val = np.mean(volume)
         
-        # Apply scaling while preserving mean
+        # apply scaling while preserving mean
         result = mean_val + scale_factor * (result - mean_val)
         
         return result
@@ -566,43 +566,43 @@ class DataAugmentation:
         params: Dict[str, Any] = None,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Add random noise to the volume.
+        """add random noise to the volume.
         
-        Args:
-            volume: Input volume as numpy array.
-            noise_type: Type of noise ('gaussian', 'poisson', 'salt', 'pepper', 'salt_and_pepper').
-            params: Parameters for the noise.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume as numpy array.
+            noise_type: type of noise ('gaussian', 'poisson', 'salt', 'pepper', 'salt_and_pepper').
+            params: parameters for the noise.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Noisy volume.
+        returns:
+            noisy volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Default parameters
+        # default parameters
         if params is None:
             params = {}
         
-        # Determine if noise should be applied to foreground only
+        # determine if noise should be applied to foreground only
         if mask is not None:
             noise_mask = mask > 0
         else:
             noise_mask = np.ones_like(volume, dtype=bool)
         
-        # Apply noise based on type
+        # apply noise based on type
         if noise_type == "gaussian":
-            # Default standard deviation as percentage of intensity range
+            # default standard deviation as percentage of intensity range
             std_dev = params.get("std_dev", 0.01)
             if "intensity_range" in params:
                 intensity_range = params["intensity_range"]
             else:
                 intensity_range = np.max(result[noise_mask]) - np.min(result[noise_mask])
             
-            # Generate Gaussian noise
+            # generate gaussian noise
             noise = np.random.normal(
                 loc=0, 
                 scale=std_dev * intensity_range, 
@@ -611,55 +611,55 @@ class DataAugmentation:
             result[noise_mask] += noise[noise_mask]
             
         elif noise_type == "poisson":
-            # Scale image for Poisson noise
+            # scale image for poisson noise
             scale_factor = params.get("scale_factor", 1.0)
             lambda_factor = params.get("lambda_factor", 10.0)
             
-            # Generate scaled image for Poisson simulation
+            # generate scaled image for poisson simulation
             scaled = np.max(np.abs(result[noise_mask])) * scale_factor
             
             if scaled > 0:
-                # Generate Poisson noise
+                # generate poisson noise
                 noisy_scaled = np.random.poisson(
                     lam=result[noise_mask] * lambda_factor / scaled
                 )
                 result[noise_mask] = noisy_scaled * scaled / lambda_factor
             
         elif noise_type in ["salt", "pepper", "salt_and_pepper"]:
-            # Amount of salt/pepper noise (fraction of voxels)
+            # amount of salt/pepper noise (fraction of voxels)
             amount = params.get("amount", 0.01)
             salt_val = params.get("salt_val", np.max(result))
             pepper_val = params.get("pepper_val", np.min(result))
             
-            # Number of noise voxels
+            # number of noise voxels
             num_noise_voxels = int(amount * np.sum(noise_mask))
             
-            # Get indices of foreground voxels
+            # get indices of foreground voxels
             noise_indices = np.where(noise_mask)
             if len(noise_indices[0]) == 0:
                 return result
             
-            # Randomly select voxels to modify
+            # randomly select voxels to modify
             idx = np.random.choice(len(noise_indices[0]), num_noise_voxels, replace=False)
             noise_coords = tuple(noise_indices[i][idx] for i in range(len(noise_indices)))
             
             if noise_type == "salt":
-                # Add salt noise (high intensity)
+                # add salt noise (high intensity)
                 result[noise_coords] = salt_val
                 
             elif noise_type == "pepper":
-                # Add pepper noise (low intensity)
+                # add pepper noise (low intensity)
                 result[noise_coords] = pepper_val
                 
             else:  # salt_and_pepper
-                # Split between salt and pepper
+                # split between salt and pepper
                 salt_idx = np.random.choice(len(idx), len(idx) // 2, replace=False)
                 salt_coords = tuple(noise_coords[i][salt_idx] for i in range(len(noise_coords)))
                 pepper_coords = tuple(
                     np.delete(noise_coords[i], salt_idx) for i in range(len(noise_coords))
                 )
                 
-                # Apply salt and pepper
+                # apply salt and pepper
                 if len(salt_coords[0]) > 0:
                     result[salt_coords] = salt_val
                 if len(pepper_coords[0]) > 0:
@@ -669,26 +669,26 @@ class DataAugmentation:
 
 
 class VolumePreprocessor:
-    """Pipeline for preprocessing 3D medical volumes."""
+    """pipeline for preprocessing 3d medical volumes."""
     
     def __init__(
         self,
         preprocessing_steps: List[Tuple[str, Dict[str, Any]]] = None,
     ):
-        """Initialize VolumePreprocessor.
+        """initialize volumepreprocessor.
         
-        Args:
-            preprocessing_steps: List of preprocessing steps and their parameters.
-                Each step is a tuple of (step_name, parameters).
+        args:
+            preprocessing_steps: list of preprocessing steps and their parameters.
+                each step is a tuple of (step_name, parameters).
         """
         self.preprocessing_steps = preprocessing_steps or []
     
     def add_step(self, step_name: str, parameters: Dict[str, Any] = None):
-        """Add a preprocessing step.
+        """add a preprocessing step.
         
-        Args:
-            step_name: Name of the preprocessing step.
-            parameters: Parameters for the step.
+        args:
+            step_name: name of the preprocessing step.
+            parameters: parameters for the step.
         """
         if parameters is None:
             parameters = {}
@@ -699,22 +699,22 @@ class VolumePreprocessor:
         volume: np.ndarray,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply preprocessing pipeline to a volume.
+        """apply preprocessing pipeline to a volume.
         
-        Args:
-            volume: Input volume.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Preprocessed volume.
+        returns:
+            preprocessed volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Apply each preprocessing step
+        # apply each preprocessing step
         for step_name, params in self.preprocessing_steps:
             logger.debug(f"Applying preprocessing step: {step_name}")
             
@@ -737,13 +737,13 @@ class VolumePreprocessor:
                 result = VolumeNormalization.white_stripe_normalization(result, mask=mask, **params)
                 
             elif step_name == "crop":
-                # Handle crop parameters
+                # handle crop parameters
                 if "crop_size" in params:
                     crop_size = params["crop_size"]
                     if "method" in params and params["method"] == "random":
                         result = DataAugmentation.random_crop(result, crop_size, mask=mask)
                     else:
-                        # Center crop
+                        # center crop
                         starts = [(result.shape[i] - crop_size[i]) // 2 for i in range(len(crop_size))]
                         slices = tuple(slice(starts[i], starts[i] + crop_size[i]) for i in range(len(crop_size)))
                         result = result[slices]
@@ -755,15 +755,15 @@ class VolumePreprocessor:
                     logger.warning("scipy.ndimage not available, skipping rescaling")
                     continue
                 
-                # Handle rescale parameters
+                # handle rescale parameters
                 if "scale_factor" in params:
                     scale_factor = params["scale_factor"]
-                    order = params.get("order", 1)  # Default to linear interpolation
+                    order = params.get("order", 1)  # default to linear interpolation
                     result = zoom(result, scale_factor, order=order)
                 elif "target_shape" in params:
                     target_shape = params["target_shape"]
                     scale_factor = [target_shape[i] / result.shape[i] for i in range(len(target_shape))]
-                    order = params.get("order", 1)  # Default to linear interpolation
+                    order = params.get("order", 1)  # default to linear interpolation
                     result = zoom(result, scale_factor, order=order)
             
             else:
@@ -778,16 +778,16 @@ class VolumePreprocessor:
         file_pattern: str = "*.nii.gz",
         mask_dir: Optional[Union[str, Path]] = None,
     ) -> Dict[str, Dict[str, Any]]:
-        """Batch process multiple volumes.
+        """batch process multiple volumes.
         
-        Args:
-            input_dir: Input directory with volumes.
-            output_dir: Output directory for preprocessed volumes.
-            file_pattern: Glob pattern for input files.
-            mask_dir: Optional directory with masks.
+        args:
+            input_dir: input directory with volumes.
+            output_dir: output directory for preprocessed volumes.
+            file_pattern: glob pattern for input files.
+            mask_dir: optional directory with masks.
             
-        Returns:
-            Dictionary with preprocessing metadata.
+        returns:
+            dictionary with preprocessing metadata.
         """
         import glob
         
@@ -795,14 +795,14 @@ class VolumePreprocessor:
         output_dir = Path(output_dir)
         os.makedirs(output_dir, exist_ok=True)
         
-        # List input files
+        # list input files
         input_files = sorted(glob.glob(str(input_dir / file_pattern)))
         
         if not input_files:
             logger.warning(f"No files found matching pattern: {file_pattern}")
             return {}
         
-        # Process each file
+        # process each file
         results = {}
         for input_file in input_files:
             try:
@@ -812,23 +812,23 @@ class VolumePreprocessor:
                 
                 logger.info(f"Processing {file_name}")
                 
-                # Load volume
+                # load volume
                 volume = self._load_volume(input_file)
                 
-                # Load mask if available
+                # load mask if available
                 mask = None
                 if mask_dir:
                     mask_file = Path(mask_dir) / file_name
                     if os.path.exists(mask_file):
                         mask = self._load_volume(mask_file)
                 
-                # Apply preprocessing
+                # apply preprocessing
                 processed_volume = self.preprocess(volume, mask)
                 
-                # Save preprocessed volume
+                # save preprocessed volume
                 self._save_volume(processed_volume, output_file, reference_file=input_file)
                 
-                # Record metadata
+                # record metadata
                 metadata = {
                     "input_shape": volume.shape,
                     "output_shape": processed_volume.shape,
@@ -848,13 +848,13 @@ class VolumePreprocessor:
         return results
     
     def _load_volume(self, file_path: Union[str, Path]) -> np.ndarray:
-        """Load a volume from file.
+        """load a volume from file.
         
-        Args:
-            file_path: Path to volume file.
+        args:
+            file_path: path to volume file.
             
-        Returns:
-            Volume as numpy array.
+        returns:
+            volume as numpy array.
         """
         if str(file_path).endswith(".nii") or str(file_path).endswith(".nii.gz"):
             try:
@@ -874,34 +874,34 @@ class VolumePreprocessor:
         output_file: Union[str, Path],
         reference_file: Optional[Union[str, Path]] = None,
     ):
-        """Save a volume to file.
+        """save a volume to file.
         
-        Args:
-            volume: Volume as numpy array.
-            output_file: Output file path.
-            reference_file: Optional reference file for header information.
+        args:
+            volume: volume as numpy array.
+            output_file: output file path.
+            reference_file: optional reference file for header information.
         """
         if str(output_file).endswith(".nii") or str(output_file).endswith(".nii.gz"):
             try:
                 import nibabel as nib
                 
-                # Copy header information from reference file if available
+                # copy header information from reference file if available
                 if reference_file:
-                    # Load reference file
+                    # load reference file
                     ref_img = nib.load(str(reference_file))
-                    # Create new image with reference header and affine
+                    # create new image with reference header and affine
                     affine = ref_img.affine if hasattr(ref_img, 'affine') else np.eye(4)
                     new_img = nib.Nifti1Image(volume, affine)
-                    # Copy header if possible
+                    # copy header if possible
                     if hasattr(ref_img, 'header') and hasattr(new_img, 'header'):
                         for field in ref_img.header:
-                            if field != 'dim':  # Don't copy dimensions
+                            if field != 'dim':  # don't copy dimensions
                                 new_img.header[field] = ref_img.header[field]
                 else:
-                    # Create new NIfTI image
+                    # create new nifti image
                     new_img = nib.Nifti1Image(volume, np.eye(4))
                 
-                # Save to file
+                # save to file
                 nib.save(new_img, str(output_file))
                 
             except ImportError:
@@ -912,7 +912,7 @@ class VolumePreprocessor:
             raise ValueError(f"Unsupported file format: {output_file}")
 
 
-# Available preprocessing functions
+# available preprocessing functions
 PREPROCESSING_FUNCTIONS = {
     "min_max_normalization": VolumeNormalization.min_max_normalization,
     "z_score_normalization": VolumeNormalization.z_score_normalization,

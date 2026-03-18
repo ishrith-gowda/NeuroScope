@@ -1,7 +1,7 @@
 """
-I/O Utilities.
+i/o utilities.
 
-File handling, checkpoint management, and configuration loading
+file handling, checkpoint management, and configuration loading
 for medical imaging data.
 """
 
@@ -16,13 +16,13 @@ import numpy as np
 
 def ensure_dir(path: Union[str, Path]) -> Path:
     """
-    Ensure directory exists.
+    ensure directory exists.
     
-    Args:
-        path: Directory path
+    args:
+        path: directory path
         
-    Returns:
-        Path object
+    returns:
+        path object
     """
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
@@ -35,15 +35,15 @@ def list_files(
     recursive: bool = False
 ) -> List[Path]:
     """
-    List files matching pattern.
+    list files matching pattern.
     
-    Args:
-        directory: Directory to search
-        pattern: Glob pattern
-        recursive: Search recursively
+    args:
+        directory: directory to search
+        pattern: glob pattern
+        recursive: search recursively
         
-    Returns:
-        List of matching file paths
+    returns:
+        list of matching file paths
     """
     directory = Path(directory)
     
@@ -58,15 +58,15 @@ def copy_file(
     overwrite: bool = False
 ) -> Path:
     """
-    Copy file to destination.
+    copy file to destination.
     
-    Args:
-        src: Source file
-        dst: Destination
-        overwrite: Allow overwriting
+    args:
+        src: source file
+        dst: destination
+        overwrite: allow overwriting
         
-    Returns:
-        Destination path
+    returns:
+        destination path
     """
     src, dst = Path(src), Path(dst)
     
@@ -79,21 +79,21 @@ def copy_file(
     return dst
 
 
-# NIfTI Handling
+# nifti handling
 
 def load_nifti(
     path: Union[str, Path],
     dtype: np.dtype = np.float32
 ) -> Tuple[np.ndarray, Any]:
     """
-    Load NIfTI file.
+    load nifti file.
     
-    Args:
-        path: Path to NIfTI file
-        dtype: Data type
+    args:
+        path: path to nifti file
+        dtype: data type
         
-    Returns:
-        Tuple of (data array, affine matrix)
+    returns:
+        tuple of (data array, affine matrix)
     """
     import nibabel as nib
     
@@ -110,12 +110,12 @@ def save_nifti(
     affine: np.ndarray = None
 ):
     """
-    Save data as NIfTI file.
+    save data as nifti file.
     
-    Args:
-        data: Data array
-        path: Output path
-        affine: Affine transformation matrix
+    args:
+        data: data array
+        path: output path
+        affine: affine transformation matrix
     """
     import nibabel as nib
     
@@ -135,16 +135,16 @@ def load_nifti_as_tensor(
     add_channel_dim: bool = True
 ) -> torch.Tensor:
     """
-    Load NIfTI file as PyTorch tensor.
+    load nifti file as pytorch tensor.
     
-    Args:
-        path: Path to NIfTI file
-        device: Device to load to
-        add_batch_dim: Add batch dimension
-        add_channel_dim: Add channel dimension
+    args:
+        path: path to nifti file
+        device: device to load to
+        add_batch_dim: add batch dimension
+        add_channel_dim: add channel dimension
         
-    Returns:
-        Tensor
+    returns:
+        tensor
     """
     data, _ = load_nifti(path)
     tensor = torch.from_numpy(data).float().to(device)
@@ -158,7 +158,7 @@ def load_nifti_as_tensor(
     return tensor
 
 
-# Checkpoint Management
+# checkpoint management
 
 def save_checkpoint(
     path: Union[str, Path],
@@ -172,21 +172,21 @@ def save_checkpoint(
     **kwargs
 ) -> Path:
     """
-    Save training checkpoint.
+    save training checkpoint.
     
-    Args:
-        path: Checkpoint path
-        model: Model to save
-        optimizer: Optimizer state
-        scheduler: Scheduler state
-        epoch: Current epoch
-        step: Current step
-        metrics: Evaluation metrics
-        config: Configuration
-        **kwargs: Additional items to save
+    args:
+        path: checkpoint path
+        model: model to save
+        optimizer: optimizer state
+        scheduler: scheduler state
+        epoch: current epoch
+        step: current step
+        metrics: evaluation metrics
+        config: configuration
+        **kwargs: additional items to save
         
-    Returns:
-        Saved checkpoint path
+    returns:
+        saved checkpoint path
     """
     path = Path(path)
     ensure_dir(path.parent)
@@ -200,7 +200,7 @@ def save_checkpoint(
     
     if model is not None:
         if hasattr(model, 'module'):
-            # DataParallel/DistributedDataParallel
+            # dataparallel/distributeddataparallel
             checkpoint['model_state_dict'] = model.module.state_dict()
         else:
             checkpoint['model_state_dict'] = model.state_dict()
@@ -227,18 +227,18 @@ def load_checkpoint(
     strict: bool = True
 ) -> Dict[str, Any]:
     """
-    Load training checkpoint.
+    load training checkpoint.
     
-    Args:
-        path: Checkpoint path
-        model: Model to load weights into
-        optimizer: Optimizer to load state into
-        scheduler: Scheduler to load state into
-        device: Device to load to
-        strict: Strict state dict loading
+    args:
+        path: checkpoint path
+        model: model to load weights into
+        optimizer: optimizer to load state into
+        scheduler: scheduler to load state into
+        device: device to load to
+        strict: strict state dict loading
         
-    Returns:
-        Checkpoint dictionary
+    returns:
+        checkpoint dictionary
     """
     checkpoint = torch.load(path, map_location=device)
     
@@ -266,14 +266,14 @@ def get_latest_checkpoint(
     pattern: str = "checkpoint_epoch_*.pth"
 ) -> Optional[Path]:
     """
-    Get the latest checkpoint from a directory.
+    get the latest checkpoint from a directory.
     
-    Args:
-        checkpoint_dir: Directory containing checkpoints
-        pattern: Checkpoint filename pattern
+    args:
+        checkpoint_dir: directory containing checkpoints
+        pattern: checkpoint filename pattern
         
-    Returns:
-        Path to latest checkpoint or None
+    returns:
+        path to latest checkpoint or none
     """
     checkpoint_dir = Path(checkpoint_dir)
     checkpoints = list(checkpoint_dir.glob(pattern))
@@ -281,7 +281,7 @@ def get_latest_checkpoint(
     if not checkpoints:
         return None
     
-    # Extract epoch/step numbers and sort
+    # extract epoch/step numbers and sort
     def extract_number(path):
         match = re.search(r'(\d+)', path.stem)
         return int(match.group(1)) if match else 0
@@ -302,21 +302,21 @@ def save_cyclegan_checkpoint(
     **kwargs
 ) -> Path:
     """
-    Save CycleGAN-specific checkpoint.
+    save cyclegan-specific checkpoint.
     
-    Args:
-        path: Checkpoint path
-        G_A2B: Generator A to B
-        G_B2A: Generator B to A
-        D_A: Discriminator A
-        D_B: Discriminator B
-        opt_G: Generator optimizer
-        opt_D: Discriminator optimizer
-        epoch: Current epoch
-        **kwargs: Additional items
+    args:
+        path: checkpoint path
+        g_a2b: generator a to b
+        g_b2a: generator b to a
+        d_a: discriminator a
+        d_b: discriminator b
+        opt_g: generator optimizer
+        opt_d: discriminator optimizer
+        epoch: current epoch
+        **kwargs: additional items
         
-    Returns:
-        Saved checkpoint path
+    returns:
+        saved checkpoint path
     """
     path = Path(path)
     ensure_dir(path.parent)
@@ -350,18 +350,18 @@ def load_cyclegan_checkpoint(
     device: str = 'cpu'
 ) -> Dict[str, Any]:
     """
-    Load CycleGAN-specific checkpoint.
+    load cyclegan-specific checkpoint.
     
-    Args:
-        path: Checkpoint path
-        G_A2B: Generator A to B
-        G_B2A: Generator B to A
-        D_A: Discriminator A
-        D_B: Discriminator B
-        device: Device to load to
+    args:
+        path: checkpoint path
+        g_a2b: generator a to b
+        g_b2a: generator b to a
+        d_a: discriminator a
+        d_b: discriminator b
+        device: device to load to
         
-    Returns:
-        Checkpoint dictionary
+    returns:
+        checkpoint dictionary
     """
     checkpoint = torch.load(path, map_location=device)
     
@@ -380,21 +380,21 @@ def load_cyclegan_checkpoint(
     return checkpoint
 
 
-# Configuration Handling
+# configuration handling
 
 def load_config(
     path: Union[str, Path],
     format: str = 'auto'
 ) -> Dict[str, Any]:
     """
-    Load configuration file.
+    load configuration file.
     
-    Args:
-        path: Config file path
+    args:
+        path: config file path
         format: 'yaml', 'json', or 'auto'
         
-    Returns:
-        Configuration dictionary
+    returns:
+        configuration dictionary
     """
     path = Path(path)
     
@@ -417,11 +417,11 @@ def save_config(
     format: str = 'auto'
 ):
     """
-    Save configuration to file.
+    save configuration to file.
     
-    Args:
-        config: Configuration dictionary
-        path: Output path
+    args:
+        config: configuration dictionary
+        path: output path
         format: 'yaml', 'json', or 'auto'
     """
     path = Path(path)
@@ -445,14 +445,14 @@ def merge_configs(
     override: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Deep merge two configuration dictionaries.
+    deep merge two configuration dictionaries.
     
-    Args:
-        base: Base configuration
-        override: Override configuration
+    args:
+        base: base configuration
+        override: override configuration
         
-    Returns:
-        Merged configuration
+    returns:
+        merged configuration
     """
     result = base.copy()
     

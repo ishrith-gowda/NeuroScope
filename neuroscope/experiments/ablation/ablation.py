@@ -1,7 +1,7 @@
 """
-Ablation Study Framework.
+ablation study framework.
 
-Systematic evaluation of model components
+systematic evaluation of model components
 with statistical validation.
 """
 
@@ -14,7 +14,7 @@ import itertools
 
 @dataclass
 class AblationConfig:
-    """Configuration for a single ablation variant."""
+    """configuration for a single ablation variant."""
     name: str
     description: str
     modifications: Dict[str, Any]
@@ -23,13 +23,13 @@ class AblationConfig:
 
 class AblationStudy:
     """
-    Comprehensive ablation study framework.
+    comprehensive ablation study framework.
     
-    Supports:
-    - Single-component ablations
-    - Multi-component ablations
-    - Interaction studies
-    - Statistical comparison
+    supports:
+    - single-component ablations
+    - multi-component ablations
+    - interaction studies
+    - statistical comparison
     """
     
     def __init__(
@@ -39,10 +39,10 @@ class AblationStudy:
         n_trials: int = 3
     ):
         """
-        Args:
-            base_config: Base experiment configuration
-            output_dir: Output directory
-            n_trials: Number of trials per ablation
+        args:
+            base_config: base experiment configuration
+            output_dir: output directory
+            n_trials: number of trials per ablation
         """
         self.base_config = base_config
         self.output_dir = Path(output_dir)
@@ -52,11 +52,11 @@ class AblationStudy:
         self.results: Dict[str, List[Dict]] = {}
     
     def add_ablation(self, ablation: AblationConfig):
-        """Add an ablation configuration."""
+        """add an ablation configuration."""
         self.ablations.append(ablation)
     
     def add_component_ablations(self):
-        """Add standard component ablations."""
+        """add standard component ablations."""
         components = [
             AblationConfig(
                 name="no_attention",
@@ -99,11 +99,11 @@ class AblationStudy:
         max_combination: int = 2
     ):
         """
-        Add interaction studies between components.
+        add interaction studies between components.
         
-        Args:
-            components: List of component keys
-            max_combination: Maximum number of components to combine
+        args:
+            components: list of component keys
+            max_combination: maximum number of components to combine
         """
         for r in range(2, min(len(components), max_combination) + 1):
             for combo in itertools.combinations(components, r):
@@ -126,14 +126,14 @@ class AblationStudy:
         modifications: Dict[str, Any]
     ) -> Any:
         """
-        Apply modifications to configuration.
+        apply modifications to configuration.
         
-        Args:
-            config: Base configuration
-            modifications: Dict of path -> value
+        args:
+            config: base configuration
+            modifications: dict of path -> value
             
-        Returns:
-            Modified configuration
+        returns:
+            modified configuration
         """
         import copy
         
@@ -152,21 +152,21 @@ class AblationStudy:
     
     def run(self, runner_class=None) -> Dict:
         """
-        Run complete ablation study.
+        run complete ablation study.
         
-        Args:
-            runner_class: Experiment runner class
+        args:
+            runner_class: experiment runner class
             
-        Returns:
-            Results dictionary
+        returns:
+            results dictionary
         """
         from .runner import ExperimentRunner
         
         runner_class = runner_class or ExperimentRunner
         
-        # Run baseline
+        # run baseline
         print("=" * 60)
-        print("Running baseline configuration")
+        print("running baseline configuration")
         print("=" * 60)
         
         self.results['baseline'] = []
@@ -180,11 +180,11 @@ class AblationStudy:
             result = runner.run()
             self.results['baseline'].append(result)
         
-        # Run ablations
+        # run ablations
         for ablation in self.ablations:
             print("=" * 60)
-            print(f"Running ablation: {ablation.name}")
-            print(f"Description: {ablation.description}")
+            print(f"running ablation: {ablation.name}")
+            print(f"description: {ablation.description}")
             print("=" * 60)
             
             self.results[ablation.name] = []
@@ -204,14 +204,14 @@ class AblationStudy:
                 result = runner.run()
                 self.results[ablation.name].append(result)
         
-        # Analyze and report
+        # analyze and report
         analysis = self._analyze_results()
         self._save_report(analysis)
         
         return analysis
     
     def _modify_for_trial(self, config: Any, trial: int) -> Any:
-        """Modify config for specific trial (different seed)."""
+        """modify config for specific trial (different seed)."""
         import copy
         modified = copy.deepcopy(config)
         modified.training.seed = config.training.seed + trial
@@ -219,10 +219,10 @@ class AblationStudy:
     
     def _analyze_results(self) -> Dict:
         """
-        Analyze ablation results with statistical tests.
+        analyze ablation results with statistical tests.
         
-        Returns:
-            Analysis dictionary
+        returns:
+            analysis dictionary
         """
         from scipy import stats
         import numpy as np
@@ -234,7 +234,7 @@ class AblationStudy:
             'rankings': {}
         }
         
-        # Extract baseline metrics
+        # extract baseline metrics
         baseline_metrics = self._extract_metrics('baseline')
         analysis['baseline'] = {
             metric: {
@@ -246,7 +246,7 @@ class AblationStudy:
             for metric, values in baseline_metrics.items()
         }
         
-        # Analyze each ablation
+        # analyze each ablation
         for ablation in self.ablations:
             ablation_metrics = self._extract_metrics(ablation.name)
             
@@ -260,12 +260,12 @@ class AblationStudy:
                 baseline_values = baseline_metrics.get(metric, [])
                 
                 if len(baseline_values) >= 2 and len(values) >= 2:
-                    # Paired t-test
+                    # paired t-test
                     t_stat, p_value = stats.ttest_ind(
                         baseline_values, values
                     )
                     
-                    # Effect size (Cohen's d)
+                    # effect size (cohen's d)
                     pooled_std = np.sqrt(
                         (np.std(baseline_values)**2 + np.std(values)**2) / 2
                     )
@@ -282,13 +282,13 @@ class AblationStudy:
                         'significant': p_value < 0.05
                     }
         
-        # Rank ablations by impact
+        # rank ablations by impact
         analysis['rankings'] = self._rank_ablations(analysis)
         
         return analysis
     
     def _extract_metrics(self, name: str) -> Dict[str, List[float]]:
-        """Extract metrics from results."""
+        """extract metrics from results."""
         metrics = {}
         
         for result in self.results.get(name, []):
@@ -301,7 +301,7 @@ class AblationStudy:
         return metrics
     
     def _rank_ablations(self, analysis: Dict) -> Dict:
-        """Rank ablations by their impact on metrics."""
+        """rank ablations by their impact on metrics."""
         rankings = {}
         
         for metric in ['ssim', 'psnr']:
@@ -312,24 +312,24 @@ class AblationStudy:
                     delta = data['metrics'][metric]['delta']
                     impacts.append((name, delta))
             
-            # Sort by absolute impact (most impactful first)
+            # sort by absolute impact (most impactful first)
             impacts.sort(key=lambda x: abs(x[1]), reverse=True)
             rankings[metric] = impacts
         
         return rankings
     
     def _save_report(self, analysis: Dict):
-        """Save analysis report."""
-        # JSON report
+        """save analysis report."""
+        # json report
         path = self.output_dir / 'ablation_analysis.json'
         with open(path, 'w') as f:
             json.dump(analysis, f, indent=2)
         
-        # Generate markdown report
+        # generate markdown report
         self._generate_markdown_report(analysis)
     
     def _generate_markdown_report(self, analysis: Dict):
-        """Generate markdown report."""
+        """generate markdown report."""
         lines = [
             "# Ablation Study Report",
             "",
@@ -337,7 +337,7 @@ class AblationStudy:
             ""
         ]
         
-        # Baseline table
+        # baseline table
         lines.extend([
             "| Metric | Mean | Std |",
             "|--------|------|-----|"
@@ -350,7 +350,7 @@ class AblationStudy:
         
         lines.extend(["", "## Ablation Results", ""])
         
-        # Ablation table
+        # ablation table
         lines.extend([
             "| Ablation | SSIM Δ | PSNR Δ | Significant |",
             "|----------|--------|--------|-------------|"
@@ -374,7 +374,7 @@ class AblationStudy:
                 lines.append(f"{i}. **{name}**: {delta:+.4f}")
             lines.append("")
         
-        # Save
+        # save
         path = self.output_dir / 'ablation_report.md'
         with open(path, 'w') as f:
             f.write('\n'.join(lines))
@@ -387,23 +387,23 @@ def run_ablation_suite(
     include_interactions: bool = True
 ) -> Dict:
     """
-    Run complete ablation study suite.
+    run complete ablation study suite.
     
-    Args:
-        base_config: Base experiment configuration
-        output_dir: Output directory
-        n_trials: Number of trials per ablation
-        include_interactions: Include interaction studies
+    args:
+        base_config: base experiment configuration
+        output_dir: output directory
+        n_trials: number of trials per ablation
+        include_interactions: include interaction studies
         
-    Returns:
-        Analysis results
+    returns:
+        analysis results
     """
     study = AblationStudy(base_config, output_dir, n_trials)
     
-    # Add standard ablations
+    # add standard ablations
     study.add_component_ablations()
     
-    # Add interactions
+    # add interactions
     if include_interactions:
         study.add_interaction_study([
             "loss.use_perceptual",

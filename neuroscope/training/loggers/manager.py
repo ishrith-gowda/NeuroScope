@@ -1,10 +1,10 @@
 """
-Logger Manager.
+logger manager.
 
-Coordinates multiple loggers (TensorBoard, CSV, JSON, Console)
+coordinates multiple loggers (tensorboard, csv, json, console)
 for unified logging experience.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, Any, Union, List
@@ -20,21 +20,21 @@ from .console_logger import ConsoleLogger
 
 class LoggerManager:
     """
-    Unified logger manager that coordinates all logging backends.
+    unified logger manager that coordinates all logging backends.
     
-    Provides a single interface for logging to:
-    - TensorBoard (scalars, images, histograms)
-    - CSV (tabular metrics)
-    - JSON (structured logs)
-    - Console (formatted output)
+    provides a single interface for logging to:
+    - tensorboard (scalars, images, histograms)
+    - csv (tabular metrics)
+    - json (structured logs)
+    - console (formatted output)
     
-    Usage:
-        logger = LoggerManager(
+    usage:
+        logger = loggermanager(
             log_dir="runs/experiment_1",
             experiment_name="sa_cyclegan_25d",
-            use_tensorboard=True,
-            use_csv=True,
-            use_json=True,
+            use_tensorboard=true,
+            use_csv=true,
+            use_json=true,
             console_verbose=2
         )
         
@@ -65,23 +65,23 @@ class LoggerManager:
         tensorboard_flush_secs: int = 30
     ):
         """
-        Initialize logger manager.
+        initialize logger manager.
         
-        Args:
-            log_dir: Root directory for all logs
-            experiment_name: Name of the experiment
-            use_tensorboard: Enable TensorBoard logging
-            use_csv: Enable CSV logging
-            use_json: Enable JSON logging
-            use_console: Enable console logging
-            console_verbose: Console verbosity level (0-3)
-            tensorboard_flush_secs: TensorBoard flush frequency
+        args:
+            log_dir: root directory for all logs
+            experiment_name: name of the experiment
+            use_tensorboard: enable tensorboard logging
+            use_csv: enable csv logging
+            use_json: enable json logging
+            use_console: enable console logging
+            console_verbose: console verbosity level (0-3)
+            tensorboard_flush_secs: tensorboard flush frequency
         """
         self.log_dir = Path(log_dir)
         self.experiment_name = experiment_name
         self.log_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create subdirectories
+        # create subdirectories
         self.tensorboard_dir = self.log_dir / "tensorboard"
         self.metrics_dir = self.log_dir / "metrics"
         self.samples_dir = self.log_dir / "samples"
@@ -92,7 +92,7 @@ class LoggerManager:
                   self.samples_dir, self.figures_dir, self.checkpoints_dir]:
             d.mkdir(parents=True, exist_ok=True)
         
-        # Initialize loggers
+        # initialize loggers
         self.tb_logger: Optional[TensorBoardLogger] = None
         self.csv_logger: Optional[CSVLogger] = None
         self.json_logger: Optional[JSONLogger] = None
@@ -125,21 +125,21 @@ class LoggerManager:
                 log_file=str(self.log_dir / "console.log")
             )
             
-        # Metrics aggregator for batch-level tracking
+        # metrics aggregator for batch-level tracking
         self.train_aggregator = MetricsAggregator()
         
-        # State tracking
+        # state tracking
         self.global_step = 0
         self.current_epoch = 0
         self.total_epochs = 0
         self.config: Dict[str, Any] = {}
         
     # =========================================================================
-    # Configuration & Metadata
+    # configuration & metadata
     # =========================================================================
     
     def log_config(self, config: Dict[str, Any]):
-        """Log training configuration."""
+        """log training configuration."""
         self.config = config
         
         if self.tb_logger:
@@ -158,7 +158,7 @@ class LoggerManager:
         model_name: str = "SACycleGAN25D",
         input_shape: tuple = (12, 128, 128)
     ):
-        """Log model information."""
+        """log model information."""
         total_params = sum(p.numel() for p in model.parameters())
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         
@@ -171,7 +171,7 @@ class LoggerManager:
             try:
                 self.tb_logger.log_graph(model, input_shape)
             except Exception:
-                pass  # Graph logging can fail for complex models
+                pass  # graph logging can fail for complex models
                 
         if self.json_logger:
             self.json_logger.log_metadata({
@@ -187,7 +187,7 @@ class LoggerManager:
         test_samples: int,
         batch_size: int
     ):
-        """Log dataset information."""
+        """log dataset information."""
         if self.console_logger:
             self.console_logger.print_data_summary(
                 train_samples, val_samples, test_samples, batch_size
@@ -202,11 +202,11 @@ class LoggerManager:
             })
             
     # =========================================================================
-    # Training Lifecycle
+    # training lifecycle
     # =========================================================================
     
     def on_training_start(self, total_epochs: int):
-        """Called at the start of training."""
+        """called at the start of training."""
         self.total_epochs = total_epochs
         
         if self.console_logger:
@@ -220,7 +220,7 @@ class LoggerManager:
             )
             
     def on_training_end(self, final_metrics: Optional[Dict[str, float]] = None):
-        """Called at the end of training."""
+        """called at the end of training."""
         if self.console_logger:
             self.console_logger.on_training_end(final_metrics)
             
@@ -234,7 +234,7 @@ class LoggerManager:
         self.flush()
         
     def on_epoch_start(self, epoch: int):
-        """Called at the start of each epoch."""
+        """called at the start of each epoch."""
         self.current_epoch = epoch
         self.train_aggregator.reset()
         
@@ -249,8 +249,8 @@ class LoggerManager:
         lr: Optional[float] = None,
         time_elapsed: Optional[float] = None
     ):
-        """Called at the end of each epoch."""
-        # Log to TensorBoard
+        """called at the end of each epoch."""
+        # log to tensorboard
         if self.tb_logger:
             self.tb_logger.log_training_losses(train_metrics, epoch)
             if val_metrics:
@@ -258,20 +258,20 @@ class LoggerManager:
             if lr:
                 self.tb_logger.log_learning_rates(lr, lr, epoch)
                 
-        # Log to CSV
+        # log to csv
         if self.csv_logger:
             self.csv_logger.log_epoch(epoch, train_metrics, val_metrics, lr)
             
-        # Log to JSON
+        # log to json
         if self.json_logger:
             self.json_logger.log_epoch(epoch, train_metrics, val_metrics, lr, time_elapsed)
             
-        # Log to console
+        # log to console
         if self.console_logger:
             self.console_logger.on_epoch_end(epoch, train_metrics, val_metrics, lr)
             
     # =========================================================================
-    # Batch-level Logging
+    # batch-level logging
     # =========================================================================
     
     def log_batch(
@@ -282,23 +282,23 @@ class LoggerManager:
         batch_size: int = 1,
         samples_per_sec: Optional[float] = None
     ):
-        """Log batch-level metrics."""
+        """log batch-level metrics."""
         self.global_step += 1
         self.train_aggregator.update(losses, batch_size)
         
-        # TensorBoard: log every N batches
+        # tensorboard: log every n batches
         if self.tb_logger and batch_idx % 10 == 0:
             for name, value in losses.items():
                 self.tb_logger.log_scalar(f"Batch/{name}", value, self.global_step)
                 
-        # Console: handled by on_batch_end
+        # console: handled by on_batch_end
         if self.console_logger:
             self.console_logger.on_batch_end(
                 batch_idx, total_batches, losses, samples_per_sec
             )
             
     # =========================================================================
-    # Metrics & Scalars
+    # metrics & scalars
     # =========================================================================
     
     def log_scalar(
@@ -307,7 +307,7 @@ class LoggerManager:
         value: float,
         step: Optional[int] = None
     ):
-        """Log a scalar value."""
+        """log a scalar value."""
         step = step if step is not None else self.global_step
         
         if self.tb_logger:
@@ -319,19 +319,19 @@ class LoggerManager:
         tag_scalar_dict: Dict[str, float],
         step: Optional[int] = None
     ):
-        """Log multiple scalars."""
+        """log multiple scalars."""
         step = step if step is not None else self.global_step
         
         if self.tb_logger:
             self.tb_logger.log_scalars(main_tag, tag_scalar_dict, step)
             
     def log_learning_rates(self, lr_G: float, lr_D: float):
-        """Log learning rates."""
+        """log learning rates."""
         if self.tb_logger:
             self.tb_logger.log_learning_rates(lr_G, lr_D, self.current_epoch)
             
     # =========================================================================
-    # Images & Samples
+    # images & samples
     # =========================================================================
     
     def log_images(
@@ -340,7 +340,7 @@ class LoggerManager:
         images: torch.Tensor,
         step: Optional[int] = None
     ):
-        """Log images to TensorBoard."""
+        """log images to tensorboard."""
         if self.tb_logger:
             self.tb_logger.log_images(tag, images, step)
             
@@ -355,7 +355,7 @@ class LoggerManager:
         step: Optional[int] = None,
         modality_idx: int = 0
     ):
-        """Log sample comparison images."""
+        """log sample comparison images."""
         if self.tb_logger:
             self.tb_logger.log_sample_comparison(
                 real_A, fake_B, rec_A,
@@ -364,12 +364,12 @@ class LoggerManager:
             )
             
     def log_sample_saved(self, path: str, epoch: int):
-        """Log that samples were saved."""
+        """log that samples were saved."""
         if self.console_logger:
             self.console_logger.log_sample_saved(path, epoch)
             
     # =========================================================================
-    # Gradients & Weights
+    # gradients & weights
     # =========================================================================
     
     def log_gradients(
@@ -377,7 +377,7 @@ class LoggerManager:
         models: Dict[str, nn.Module],
         step: Optional[int] = None
     ):
-        """Log gradient norms for multiple models."""
+        """log gradient norms for multiple models."""
         if self.tb_logger:
             self.tb_logger.log_gradient_norms(models, step)
             
@@ -387,13 +387,13 @@ class LoggerManager:
         prefix: str = "",
         step: Optional[int] = None
     ):
-        """Log weight and gradient histograms."""
+        """log weight and gradient histograms."""
         if self.tb_logger:
             self.tb_logger.log_model_weights(model, step, prefix)
             self.tb_logger.log_model_gradients(model, step, prefix)
             
     # =========================================================================
-    # Checkpoints & Events
+    # checkpoints & events
     # =========================================================================
     
     def log_checkpoint(
@@ -403,7 +403,7 @@ class LoggerManager:
         is_best: bool = False,
         metrics: Optional[Dict[str, float]] = None
     ):
-        """Log checkpoint save."""
+        """log checkpoint save."""
         if self.console_logger:
             self.console_logger.log_checkpoint(path, is_best, metrics)
             
@@ -411,7 +411,7 @@ class LoggerManager:
             self.json_logger.log_checkpoint(epoch, path, is_best, metrics)
             
     def log_early_stop(self, epoch: int, patience: int, best_metric: float):
-        """Log early stopping."""
+        """log early stopping."""
         if self.console_logger:
             self.console_logger.log_early_stop(epoch, patience, best_metric)
             
@@ -423,7 +423,7 @@ class LoggerManager:
             )
             
     def log_lr_update(self, old_lr: float, new_lr: float, reason: str = ""):
-        """Log learning rate update."""
+        """log learning rate update."""
         if self.console_logger:
             self.console_logger.log_lr_update(old_lr, new_lr, reason)
             
@@ -435,31 +435,31 @@ class LoggerManager:
             )
             
     # =========================================================================
-    # Messages
+    # messages
     # =========================================================================
     
     def log_info(self, message: str):
-        """Log info message."""
+        """log info message."""
         if self.console_logger:
             self.console_logger.log_info(message)
             
     def log_warning(self, message: str):
-        """Log warning message."""
+        """log warning message."""
         if self.console_logger:
             self.console_logger.log_warning(message)
             
     def log_error(self, message: str):
-        """Log error message."""
+        """log error message."""
         if self.console_logger:
             self.console_logger.log_error(message)
             
     def log_success(self, message: str):
-        """Log success message."""
+        """log success message."""
         if self.console_logger:
             self.console_logger.log_success(message)
             
     # =========================================================================
-    # Utility Methods
+    # utility methods
     # =========================================================================
     
     def _flatten_dict(
@@ -468,7 +468,7 @@ class LoggerManager:
         parent_key: str = '',
         sep: str = '/'
     ) -> Dict[str, Any]:
-        """Flatten a nested dictionary."""
+        """flatten a nested dictionary."""
         items = []
         for k, v in d.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -479,11 +479,11 @@ class LoggerManager:
         return dict(items)
         
     def get_train_averages(self) -> Dict[str, float]:
-        """Get averaged training metrics for current epoch."""
+        """get averaged training metrics for current epoch."""
         return self.train_aggregator.get_averages()
         
     def flush(self):
-        """Flush all loggers."""
+        """flush all loggers."""
         if self.tb_logger:
             self.tb_logger.flush()
         if self.csv_logger:
@@ -492,7 +492,7 @@ class LoggerManager:
             self.json_logger.flush()
             
     def close(self):
-        """Close all loggers."""
+        """close all loggers."""
         if self.tb_logger:
             self.tb_logger.close()
         if self.csv_logger:

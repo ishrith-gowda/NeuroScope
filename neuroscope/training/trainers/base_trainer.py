@@ -1,7 +1,7 @@
 """
-Training Loop Implementations.
+training loop implementations.
 
-Provides robust training infrastructure for GAN-based
+provides robust training infrastructure for gan-based
 image translation models with proper logging and checkpointing.
 """
 
@@ -19,46 +19,46 @@ from torch.cuda.amp import GradScaler, autocast
 
 @dataclass
 class TrainerConfig:
-    """Configuration for trainer."""
-    # Training parameters
+    """configuration for trainer."""
+    # training parameters
     num_epochs: int = 200
     start_epoch: int = 0
     
-    # Learning rates
+    # learning rates
     lr_g: float = 2e-4
     lr_d: float = 2e-4
     
-    # Betas for Adam
+    # betas for adam
     beta1: float = 0.5
     beta2: float = 0.999
     
-    # Loss weights
+    # loss weights
     lambda_cycle: float = 10.0
     lambda_identity: float = 0.5
     lambda_perceptual: float = 1.0
     lambda_adversarial: float = 1.0
     
-    # Training schedule
+    # training schedule
     decay_epoch: int = 100
     warmup_epochs: int = 0
     
-    # Checkpointing
+    # checkpointing
     checkpoint_dir: str = 'checkpoints'
     save_frequency: int = 10
     keep_last_n: int = 5
     
-    # Logging
+    # logging
     log_frequency: int = 100
     sample_frequency: int = 500
     
-    # Mixed precision
+    # mixed precision
     use_amp: bool = True
     grad_clip: Optional[float] = 1.0
     
-    # Device
+    # device
     device: str = 'cuda'
     
-    # Buffer pool size for discriminator
+    # buffer pool size for discriminator
     pool_size: int = 50
     
     def to_dict(self) -> Dict[str, Any]:
@@ -71,23 +71,23 @@ class TrainerConfig:
 
 @dataclass
 class TrainingState:
-    """Mutable training state."""
+    """mutable training state."""
     epoch: int = 0
     global_step: int = 0
     best_metric: float = float('inf')
     best_epoch: int = 0
     
-    # Running statistics
+    # running statistics
     losses: Dict[str, float] = field(default_factory=dict)
     metrics: Dict[str, float] = field(default_factory=dict)
     
-    # Training history
+    # training history
     history: Dict[str, List[float]] = field(default_factory=lambda: {
         'loss_g': [], 'loss_d': [], 'loss_cycle': [], 'loss_identity': []
     })
     
     def update_history(self, losses: Dict[str, float]):
-        """Update training history."""
+        """update training history."""
         for key, value in losses.items():
             if key not in self.history:
                 self.history[key] = []
@@ -115,9 +115,9 @@ class TrainingState:
 
 class ImagePool:
     """
-    Buffer pool for discriminator training.
+    buffer pool for discriminator training.
     
-    Stores previously generated images to provide a more
+    stores previously generated images to provide a more
     stable training signal for the discriminator.
     """
     
@@ -127,13 +127,13 @@ class ImagePool:
     
     def query(self, images: torch.Tensor) -> torch.Tensor:
         """
-        Return images from pool with 50% probability.
+        return images from pool with 50% probability.
         
-        Args:
-            images: Current batch of generated images
+        args:
+            images: current batch of generated images
             
-        Returns:
-            Mix of current and pooled images
+        returns:
+            mix of current and pooled images
         """
         if self.pool_size == 0:
             return images
@@ -147,7 +147,7 @@ class ImagePool:
                 return_images.append(image)
             else:
                 if torch.rand(1).item() > 0.5:
-                    # Return from pool
+                    # return from pool
                     idx = torch.randint(0, len(self.images), (1,)).item()
                     tmp = self.images[idx].clone()
                     self.images[idx] = image.clone()
@@ -160,13 +160,13 @@ class ImagePool:
 
 class BaseTrainer(ABC):
     """
-    Abstract base trainer class.
+    abstract base trainer class.
     
-    Provides common training infrastructure including:
-        - Training loop management
-        - Checkpointing
-        - Logging
-        - Mixed precision training
+    provides common training infrastructure including:
+        - training loop management
+        - checkpointing
+        - logging
+        - mixed precision training
     """
     
     def __init__(
@@ -178,34 +178,34 @@ class BaseTrainer(ABC):
         self.device = torch.device(config.device if torch.cuda.is_available() else 'cpu')
         self.callbacks = callbacks or []
         
-        # Initialize state
+        # initialize state
         self.state = TrainingState()
         
-        # Mixed precision
+        # mixed precision
         self.scaler = GradScaler() if config.use_amp and self.device.type == 'cuda' else None
         
-        # Create checkpoint directory
+        # create checkpoint directory
         self.checkpoint_dir = Path(config.checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
     @abstractmethod
     def build_models(self) -> Dict[str, nn.Module]:
-        """Build and return model dictionary."""
+        """build and return model dictionary."""
         pass
     
     @abstractmethod
     def build_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
-        """Build and return optimizer dictionary."""
+        """build and return optimizer dictionary."""
         pass
     
     @abstractmethod
     def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
-        """Execute single training step."""
+        """execute single training step."""
         pass
     
     @abstractmethod
     def validate_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
-        """Execute single validation step."""
+        """execute single validation step."""
         pass
     
     def train(
@@ -214,11 +214,11 @@ class BaseTrainer(ABC):
         val_loader: Optional[DataLoader] = None
     ):
         """
-        Main training loop.
+        main training loop.
         
-        Args:
-            train_loader: Training data loader
-            val_loader: Optional validation data loader
+        args:
+            train_loader: training data loader
+            val_loader: optional validation data loader
         """
         self._call_callbacks('on_train_begin')
         
@@ -226,19 +226,19 @@ class BaseTrainer(ABC):
             self.state.epoch = epoch
             self._call_callbacks('on_epoch_begin', epoch=epoch)
             
-            # Training phase
+            # training phase
             epoch_losses = self._train_epoch(train_loader)
             self.state.update_history(epoch_losses)
             
-            # Validation phase
+            # validation phase
             if val_loader is not None:
                 val_metrics = self._validate_epoch(val_loader)
                 self.state.metrics.update(val_metrics)
             
-            # Learning rate scheduling
+            # learning rate scheduling
             self._step_schedulers(epoch)
             
-            # Checkpointing
+            # checkpointing
             if (epoch + 1) % self.config.save_frequency == 0:
                 self._save_checkpoint(epoch)
             
@@ -247,7 +247,7 @@ class BaseTrainer(ABC):
         self._call_callbacks('on_train_end')
     
     def _train_epoch(self, train_loader: DataLoader) -> Dict[str, float]:
-        """Train for one epoch."""
+        """train for one epoch."""
         for model in self.models.values():
             model.train()
         
@@ -257,31 +257,31 @@ class BaseTrainer(ABC):
         for batch_idx, batch in enumerate(train_loader):
             self._call_callbacks('on_batch_begin', batch_idx=batch_idx)
             
-            # Move to device
+            # move to device
             batch = self._to_device(batch)
             
-            # Training step
+            # training step
             losses = self.train_step(batch)
             
-            # Accumulate losses
+            # accumulate losses
             for key, value in losses.items():
                 epoch_losses[key] = epoch_losses.get(key, 0) + value
             
             self.state.global_step += 1
             self._call_callbacks('on_batch_end', batch_idx=batch_idx, losses=losses)
             
-            # Logging
+            # logging
             if (batch_idx + 1) % self.config.log_frequency == 0:
                 self._log_progress(batch_idx, num_batches, losses)
         
-        # Average losses
+        # average losses
         for key in epoch_losses:
             epoch_losses[key] /= num_batches
         
         return epoch_losses
     
     def _validate_epoch(self, val_loader: DataLoader) -> Dict[str, float]:
-        """Validate for one epoch."""
+        """validate for one epoch."""
         for model in self.models.values():
             model.eval()
         
@@ -296,14 +296,14 @@ class BaseTrainer(ABC):
                 for key, value in metrics.items():
                     val_metrics[key] = val_metrics.get(key, 0) + value
         
-        # Average metrics
+        # average metrics
         for key in val_metrics:
             val_metrics[key] /= num_batches
         
         return val_metrics
     
     def _to_device(self, batch: Dict[str, Any]) -> Dict[str, Any]:
-        """Move batch to device."""
+        """move batch to device."""
         result = {}
         for key, value in batch.items():
             if isinstance(value, torch.Tensor):
@@ -313,45 +313,45 @@ class BaseTrainer(ABC):
         return result
     
     def _step_schedulers(self, epoch: int):
-        """Step learning rate schedulers."""
+        """step learning rate schedulers."""
         if hasattr(self, 'schedulers'):
             for scheduler in self.schedulers.values():
                 scheduler.step()
     
     def _save_checkpoint(self, epoch: int):
-        """Save training checkpoint."""
+        """save training checkpoint."""
         checkpoint = {
             'epoch': epoch,
             'state': self.state.to_dict(),
             'config': self.config.to_dict(),
         }
         
-        # Save model states
+        # save model states
         for name, model in self.models.items():
             checkpoint[f'model_{name}'] = model.state_dict()
         
-        # Save optimizer states
+        # save optimizer states
         for name, optimizer in self.optimizers.items():
             checkpoint[f'optimizer_{name}'] = optimizer.state_dict()
         
-        # Save scheduler states
+        # save scheduler states
         if hasattr(self, 'schedulers'):
             for name, scheduler in self.schedulers.items():
                 checkpoint[f'scheduler_{name}'] = scheduler.state_dict()
         
-        # Save checkpoint
+        # save checkpoint
         path = self.checkpoint_dir / f'checkpoint_epoch_{epoch:04d}.pt'
         torch.save(checkpoint, path)
         
-        # Save latest checkpoint
+        # save latest checkpoint
         latest_path = self.checkpoint_dir / 'checkpoint_latest.pt'
         torch.save(checkpoint, latest_path)
         
-        # Cleanup old checkpoints
+        # cleanup old checkpoints
         self._cleanup_checkpoints()
     
     def _cleanup_checkpoints(self):
-        """Remove old checkpoints keeping only last N."""
+        """remove old checkpoints keeping only last n."""
         checkpoints = sorted(self.checkpoint_dir.glob('checkpoint_epoch_*.pt'))
         
         if len(checkpoints) > self.config.keep_last_n:
@@ -359,39 +359,39 @@ class BaseTrainer(ABC):
                 ckpt.unlink()
     
     def load_checkpoint(self, path: Union[str, Path]):
-        """Load checkpoint from file."""
+        """load checkpoint from file."""
         path = Path(path)
         checkpoint = torch.load(path, map_location=self.device)
         
-        # Restore state
+        # restore state
         self.state = TrainingState.from_dict(checkpoint['state'])
         
-        # Restore models
+        # restore models
         for name, model in self.models.items():
             if f'model_{name}' in checkpoint:
                 model.load_state_dict(checkpoint[f'model_{name}'])
         
-        # Restore optimizers
+        # restore optimizers
         for name, optimizer in self.optimizers.items():
             if f'optimizer_{name}' in checkpoint:
                 optimizer.load_state_dict(checkpoint[f'optimizer_{name}'])
         
-        # Restore schedulers
+        # restore schedulers
         if hasattr(self, 'schedulers'):
             for name, scheduler in self.schedulers.items():
                 if f'scheduler_{name}' in checkpoint:
                     scheduler.load_state_dict(checkpoint[f'scheduler_{name}'])
         
-        print(f"Loaded checkpoint from epoch {checkpoint['epoch']}")
+        print(f"loaded checkpoint from epoch {checkpoint['epoch']}")
     
     def _log_progress(self, batch_idx: int, num_batches: int, losses: Dict[str, float]):
-        """Log training progress."""
+        """log training progress."""
         loss_str = ' | '.join([f'{k}: {v:.4f}' for k, v in losses.items()])
-        print(f"Epoch [{self.state.epoch + 1}/{self.config.num_epochs}] "
+        print(f"epoch [{self.state.epoch + 1}/{self.config.num_epochs}] "
               f"Batch [{batch_idx + 1}/{num_batches}] | {loss_str}")
     
     def _call_callbacks(self, hook: str, **kwargs):
-        """Call callback hooks."""
+        """call callback hooks."""
         for callback in self.callbacks:
             if hasattr(callback, hook):
                 getattr(callback, hook)(self, **kwargs)
@@ -399,9 +399,9 @@ class BaseTrainer(ABC):
 
 class GANTrainer(BaseTrainer):
     """
-    Generic GAN trainer.
+    generic gan trainer.
     
-    Handles generator and discriminator training with proper
+    handles generator and discriminator training with proper
     scheduling and gradient management.
     """
     
@@ -420,10 +420,10 @@ class GANTrainer(BaseTrainer):
             'D': discriminator.to(self.device)
         }
         
-        # Loss functions
+        # loss functions
         self.criterion_gan = gan_loss or nn.BCEWithLogitsLoss()
         
-        # Build optimizers
+        # build optimizers
         self.optimizers = self.build_optimizers()
     
     def build_models(self) -> Dict[str, nn.Module]:
@@ -447,24 +447,24 @@ class GANTrainer(BaseTrainer):
         real = batch['real']
         batch_size = real.size(0)
         
-        # Labels
+        # labels
         real_label = torch.ones(batch_size, 1, device=self.device)
         fake_label = torch.zeros(batch_size, 1, device=self.device)
         
-        # Generate noise
+        # generate noise
         noise = torch.randn(batch_size, self.models['G'].latent_dim, device=self.device)
         
         losses = {}
         
-        # Train Discriminator
+        # train discriminator
         self.optimizers['D'].zero_grad()
         
         with autocast(enabled=self.scaler is not None):
-            # Real images
+            # real images
             pred_real = self.models['D'](real)
             loss_d_real = self.criterion_gan(pred_real, real_label)
             
-            # Fake images
+            # fake images
             fake = self.models['G'](noise)
             pred_fake = self.models['D'](fake.detach())
             loss_d_fake = self.criterion_gan(pred_fake, fake_label)
@@ -480,7 +480,7 @@ class GANTrainer(BaseTrainer):
         
         losses['loss_d'] = loss_d.item()
         
-        # Train Generator
+        # train generator
         self.optimizers['G'].zero_grad()
         
         with autocast(enabled=self.scaler is not None):
@@ -505,13 +505,13 @@ class GANTrainer(BaseTrainer):
 
 class CycleGANTrainer(BaseTrainer):
     """
-    CycleGAN trainer for unpaired image-to-image translation.
+    cyclegan trainer for unpaired image-to-image translation.
     
-    Implements the full CycleGAN training procedure with:
-        - Cycle consistency loss
-        - Identity loss
-        - Adversarial loss
-        - Optional perceptual loss
+    implements the full cyclegan training procedure with:
+        - cycle consistency loss
+        - identity loss
+        - adversarial loss
+        - optional perceptual loss
     """
     
     def __init__(
@@ -529,7 +529,7 @@ class CycleGANTrainer(BaseTrainer):
     ):
         super().__init__(config, callbacks)
         
-        # Models
+        # models
         self.models = {
             'G_A2B': G_A2B.to(self.device),
             'G_B2A': G_B2A.to(self.device),
@@ -537,17 +537,17 @@ class CycleGANTrainer(BaseTrainer):
             'D_B': D_B.to(self.device)
         }
         
-        # Loss functions
+        # loss functions
         self.criterion_gan = criterion_gan or nn.MSELoss()
         self.criterion_cycle = criterion_cycle or nn.L1Loss()
         self.criterion_identity = criterion_identity or nn.L1Loss()
         self.criterion_perceptual = criterion_perceptual
         
-        # Image pools
+        # image pools
         self.fake_A_pool = ImagePool(config.pool_size)
         self.fake_B_pool = ImagePool(config.pool_size)
         
-        # Build optimizers
+        # build optimizers
         self.optimizers = self.build_optimizers()
     
     def build_models(self) -> Dict[str, nn.Module]:
@@ -576,12 +576,12 @@ class CycleGANTrainer(BaseTrainer):
         losses = {}
         
         # =====================
-        # Train Generators
+        # train generators
         # =====================
         self.optimizers['G'].zero_grad()
         
         with autocast(enabled=self.scaler is not None):
-            # Identity loss
+            # identity loss
             if self.config.lambda_identity > 0:
                 idt_A = self.models['G_B2A'](real_A)
                 loss_idt_A = self.criterion_identity(idt_A, real_A)
@@ -593,7 +593,7 @@ class CycleGANTrainer(BaseTrainer):
             else:
                 loss_identity = 0
             
-            # GAN loss
+            # gan loss
             fake_B = self.models['G_A2B'](real_A)
             pred_fake_B = self.models['D_B'](fake_B)
             loss_gan_A2B = self.criterion_gan(
@@ -608,7 +608,7 @@ class CycleGANTrainer(BaseTrainer):
                 torch.ones_like(pred_fake_A)
             )
             
-            # Cycle consistency loss
+            # cycle consistency loss
             rec_A = self.models['G_B2A'](fake_B)
             loss_cycle_A = self.criterion_cycle(rec_A, real_A)
             
@@ -617,7 +617,7 @@ class CycleGANTrainer(BaseTrainer):
             
             loss_cycle = (loss_cycle_A + loss_cycle_B) * self.config.lambda_cycle
             
-            # Perceptual loss
+            # perceptual loss
             if self.criterion_perceptual is not None:
                 loss_perceptual = (
                     self.criterion_perceptual(fake_B, real_A) +
@@ -626,7 +626,7 @@ class CycleGANTrainer(BaseTrainer):
             else:
                 loss_perceptual = 0
             
-            # Total generator loss
+            # total generator loss
             loss_G = (loss_gan_A2B + loss_gan_B2A + loss_cycle + 
                      loss_identity + loss_perceptual)
         
@@ -655,12 +655,12 @@ class CycleGANTrainer(BaseTrainer):
         losses['loss_identity'] = loss_identity.item() if isinstance(loss_identity, torch.Tensor) else loss_identity
         
         # =====================
-        # Train Discriminators
+        # train discriminators
         # =====================
         self.optimizers['D'].zero_grad()
         
         with autocast(enabled=self.scaler is not None):
-            # Discriminator A
+            # discriminator a
             fake_A_pooled = self.fake_A_pool.query(fake_A.detach())
             
             pred_real_A = self.models['D_A'](real_A)
@@ -677,7 +677,7 @@ class CycleGANTrainer(BaseTrainer):
             
             loss_D_A = (loss_D_A_real + loss_D_A_fake) * 0.5
             
-            # Discriminator B
+            # discriminator b
             fake_B_pooled = self.fake_B_pool.query(fake_B.detach())
             
             pred_real_B = self.models['D_B'](real_B)
@@ -711,19 +711,19 @@ class CycleGANTrainer(BaseTrainer):
         return losses
     
     def validate_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
-        """Compute validation metrics."""
+        """compute validation metrics."""
         real_A = batch['real_A']
         real_B = batch['real_B']
         
-        # Generate translations
+        # generate translations
         fake_B = self.models['G_A2B'](real_A)
         fake_A = self.models['G_B2A'](real_B)
         
-        # Cycle reconstruction
+        # cycle reconstruction
         rec_A = self.models['G_B2A'](fake_B)
         rec_B = self.models['G_A2B'](fake_A)
         
-        # Compute metrics
+        # compute metrics
         cycle_loss_A = self.criterion_cycle(rec_A, real_A).item()
         cycle_loss_B = self.criterion_cycle(rec_B, real_B).item()
         
@@ -738,7 +738,7 @@ class CycleGANTrainer(BaseTrainer):
         real_A: torch.Tensor,
         real_B: torch.Tensor
     ) -> Dict[str, torch.Tensor]:
-        """Generate sample translations for visualization."""
+        """generate sample translations for visualization."""
         with torch.no_grad():
             fake_B = self.models['G_A2B'](real_A)
             rec_A = self.models['G_B2A'](fake_B)
@@ -756,6 +756,6 @@ class CycleGANTrainer(BaseTrainer):
         }
 
 
-# Aliases for compatibility
+# aliases for compatibility
 TrainingConfig = TrainerConfig
 Trainer = CycleGANTrainer

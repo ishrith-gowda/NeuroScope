@@ -1,4 +1,4 @@
-"""Registration module for neuroscope."""
+"""registration module for neuroscope."""
 
 from neuroscope.preprocessing.registration.mri_registration import MRIRegistration
 

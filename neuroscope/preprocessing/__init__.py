@@ -1,6 +1,6 @@
-"""Preprocessing module for NeuroScope.
+"""preprocessing module for neuroscope.
 
-This module provides comprehensive preprocessing capabilities for medical imaging data,
+this module provides comprehensive preprocessing capabilities for medical imaging data,
 including normalization, bias correction, registration, and skull stripping.
 """
 

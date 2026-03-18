@@ -1,7 +1,7 @@
 """
-Perceptual Loss functions.
+perceptual loss functions.
 
-Computes losses in feature space of pretrained networks.
+computes losses in feature space of pretrained networks.
 """
 
 import torch
@@ -13,14 +13,14 @@ from collections import OrderedDict
 
 class VGGFeatureExtractor(nn.Module):
     """
-    VGG feature extractor for perceptual loss computation.
+    vgg feature extractor for perceptual loss computation.
     
-    Extracts features from intermediate VGG layers.
+    extracts features from intermediate vgg layers.
     
-    Args:
-        layer_ids: Layer indices to extract features from
-        use_input_norm: Whether to normalize input to VGG statistics
-        requires_grad: Whether to compute gradients for VGG
+    args:
+        layer_ids: layer indices to extract features from
+        use_input_norm: whether to normalize input to vgg statistics
+        requires_grad: whether to compute gradients for vgg
     """
     
     LAYER_NAMES = [
@@ -48,20 +48,20 @@ class VGGFeatureExtractor(nn.Module):
             
         self.layer_ids = sorted(layer_ids)
         
-        # Extract only needed layers
+        # extract only needed layers
         layers = OrderedDict()
         for i in range(max(self.layer_ids) + 1):
             layers[f'layer_{i}'] = vgg[i]
         self.vgg = nn.Sequential(layers)
         
-        # Freeze weights
+        # freeze weights
         if not requires_grad:
             for param in self.vgg.parameters():
                 param.requires_grad = False
                 
         self.use_input_norm = use_input_norm
         
-        # ImageNet normalization
+        # imagenet normalization
         self.register_buffer(
             'mean',
             torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
@@ -73,24 +73,24 @@ class VGGFeatureExtractor(nn.Module):
         
     def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
         """
-        Extract features from specified layers.
+        extract features from specified layers.
         
-        Args:
-            x: Input tensor [B, C, H, W] (can be 1-4 channels)
+        args:
+            x: input tensor [b, c, h, w] (can be 1-4 channels)
             
-        Returns:
-            Dictionary mapping layer IDs to feature tensors
+        returns:
+            dictionary mapping layer ids to feature tensors
         """
-        # Convert to 3 channels if necessary
+        # convert to 3 channels if necessary
         if x.size(1) == 1:
             x = x.repeat(1, 3, 1, 1)
         elif x.size(1) == 4:
-            x = x[:, :3]  # Use first 3 channels
+            x = x[:, :3]  # use first 3 channels
         elif x.size(1) != 3:
-            # Average to 3 channels
+            # average to 3 channels
             x = x.mean(dim=1, keepdim=True).repeat(1, 3, 1, 1)
             
-        # Normalize to VGG input range
+        # normalize to vgg input range
         if self.use_input_norm:
             x = (x - self.mean) / self.std
             
@@ -105,14 +105,14 @@ class VGGFeatureExtractor(nn.Module):
 
 class PerceptualLoss(nn.Module):
     """
-    Perceptual Loss using VGG features.
+    perceptual loss using vgg features.
     
-    Computes L1/L2 distance between feature representations.
+    computes l1/l2 distance between feature representations.
     
-    Args:
-        layer_weights: Weights for each layer's contribution
+    args:
+        layer_weights: weights for each layer's contribution
         loss_type: 'l1' or 'l2'
-        normalize: Whether to normalize features
+        normalize: whether to normalize features
     """
     
     def __init__(
@@ -141,14 +141,14 @@ class PerceptualLoss(nn.Module):
         target: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute perceptual loss.
+        compute perceptual loss.
         
-        Args:
-            pred: Predicted tensor [B, C, H, W]
-            target: Target tensor [B, C, H, W]
+        args:
+            pred: predicted tensor [b, c, h, w]
+            target: target tensor [b, c, h, w]
             
-        Returns:
-            Perceptual loss value
+        returns:
+            perceptual loss value
         """
         pred_features = self.feature_extractor(pred)
         target_features = self.feature_extractor(target)
@@ -175,28 +175,28 @@ class PerceptualLoss(nn.Module):
 
 class LPIPSLoss(nn.Module):
     """
-    Learned Perceptual Image Patch Similarity (LPIPS).
+    learned perceptual image patch similarity (lpips).
     
-    Uses learned linear weights on VGG features.
+    uses learned linear weights on vgg features.
     
-    Args:
-        net: Network type ('vgg', 'alex')
+    args:
+        net: network type ('vgg', 'alex')
     """
     
     def __init__(self, net: str = 'vgg'):
         super().__init__()
         
-        # VGG feature extractor
+        # vgg feature extractor
         self.feature_extractor = VGGFeatureExtractor(
-            layer_ids=[3, 8, 15, 22, 29],  # All relu layers
+            layer_ids=[3, 8, 15, 22, 29],  # all relu layers
             use_input_norm=True,
             requires_grad=False
         )
         
-        # Channel dimensions for each layer
+        # channel dimensions for each layer
         channels = [64, 128, 256, 512, 512]
         
-        # Learned linear layers (simplified - in practice, load pretrained weights)
+        # learned linear layers (simplified - in practice, load pretrained weights)
         self.linear_layers = nn.ModuleDict({
             str(3): nn.Conv2d(64, 1, 1, bias=False),
             str(8): nn.Conv2d(128, 1, 1, bias=False),
@@ -205,7 +205,7 @@ class LPIPSLoss(nn.Module):
             str(29): nn.Conv2d(512, 1, 1, bias=False),
         })
         
-        # Initialize with uniform weights
+        # initialize with uniform weights
         for layer in self.linear_layers.values():
             nn.init.ones_(layer.weight)
             
@@ -215,14 +215,14 @@ class LPIPSLoss(nn.Module):
         target: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute LPIPS loss.
+        compute lpips loss.
         
-        Args:
-            pred: Predicted tensor [B, C, H, W]
-            target: Target tensor [B, C, H, W]
+        args:
+            pred: predicted tensor [b, c, h, w]
+            target: target tensor [b, c, h, w]
             
-        Returns:
-            LPIPS loss value
+        returns:
+            lpips loss value
         """
         pred_features = self.feature_extractor(pred)
         target_features = self.feature_extractor(target)
@@ -233,14 +233,14 @@ class LPIPSLoss(nn.Module):
             pred_feat = pred_features[int(layer_id)]
             target_feat = target_features[int(layer_id)]
             
-            # Normalize features
+            # normalize features
             pred_feat = F.normalize(pred_feat, dim=1)
             target_feat = F.normalize(target_feat, dim=1)
             
-            # Squared difference
+            # squared difference
             diff = (pred_feat - target_feat) ** 2
             
-            # Apply learned weights and average
+            # apply learned weights and average
             weighted = self.linear_layers[layer_id](diff)
             total_loss += weighted.mean()
             
@@ -248,7 +248,7 @@ class LPIPSLoss(nn.Module):
 
 
 class StyleLoss(nn.Module):
-    """Style loss based on Gram matrix matching."""
+    """style loss based on gram matrix matching."""
     
     def __init__(
         self,
@@ -257,12 +257,12 @@ class StyleLoss(nn.Module):
         normalize: bool = True
     ):
         """
-        Initialize style loss.
+        initialize style loss.
         
-        Args:
-            feature_layers: VGG layers to use for style matching
-            weights: Weights for each layer
-            normalize: Whether to normalize gram matrices
+        args:
+            feature_layers: vgg layers to use for style matching
+            weights: weights for each layer
+            normalize: whether to normalize gram matrices
         """
         super().__init__()
         self.feature_extractor = VGGFeatureExtractor(feature_layers)
@@ -270,7 +270,7 @@ class StyleLoss(nn.Module):
         self.normalize = normalize
         
     def gram_matrix(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute Gram matrix for style representation."""
+        """compute gram matrix for style representation."""
         B, C, H, W = x.shape
         features = x.view(B, C, H * W)
         gram = torch.bmm(features, features.transpose(1, 2))
@@ -286,14 +286,14 @@ class StyleLoss(nn.Module):
         target: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute style loss.
+        compute style loss.
         
-        Args:
-            pred: Predicted tensor [B, C, H, W]
-            target: Target tensor [B, C, H, W]
+        args:
+            pred: predicted tensor [b, c, h, w]
+            target: target tensor [b, c, h, w]
             
-        Returns:
-            Style loss value
+        returns:
+            style loss value
         """
         pred_features = self.feature_extractor(pred)
         target_features = self.feature_extractor(target)
@@ -311,7 +311,7 @@ class StyleLoss(nn.Module):
 
 
 class ContentStyleLoss(nn.Module):
-    """Combined content and style loss."""
+    """combined content and style loss."""
     
     def __init__(
         self,
@@ -321,13 +321,13 @@ class ContentStyleLoss(nn.Module):
         style_layers: List[str] = ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3']
     ):
         """
-        Initialize combined content-style loss.
+        initialize combined content-style loss.
         
-        Args:
-            content_weight: Weight for content loss
-            style_weight: Weight for style loss
-            content_layers: VGG layers for content
-            style_layers: VGG layers for style
+        args:
+            content_weight: weight for content loss
+            style_weight: weight for style loss
+            content_layers: vgg layers for content
+            style_layers: vgg layers for style
         """
         super().__init__()
         self.content_weight = content_weight
@@ -341,14 +341,14 @@ class ContentStyleLoss(nn.Module):
         target: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Compute combined content and style loss.
+        compute combined content and style loss.
         
-        Args:
-            pred: Predicted tensor [B, C, H, W]
-            target: Target tensor [B, C, H, W]
+        args:
+            pred: predicted tensor [b, c, h, w]
+            target: target tensor [b, c, h, w]
             
-        Returns:
-            Tuple of (total_loss, content_loss, style_loss)
+        returns:
+            tuple of (total_loss, content_loss, style_loss)
         """
         content = self.content_loss(pred, target)
         style = self.style_loss(pred, target)

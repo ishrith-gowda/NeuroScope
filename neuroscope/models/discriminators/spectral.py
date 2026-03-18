@@ -1,7 +1,7 @@
 """
-Spectral Normalization Discriminators.
+spectral normalization discriminators.
 
-Discriminators with spectral normalization for improved
+discriminators with spectral normalization for improved
 training stability.
 """
 
@@ -16,14 +16,14 @@ from .base import BaseDiscriminator
 
 class SpectralNormDiscriminator(BaseDiscriminator):
     """
-    Spectral Normalization Discriminator.
+    spectral normalization discriminator.
     
-    PatchGAN with spectral normalization on all layers.
+    patchgan with spectral normalization on all layers.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of layers
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of layers
     """
     
     def __init__(
@@ -36,13 +36,13 @@ class SpectralNormDiscriminator(BaseDiscriminator):
         
         layers = []
         
-        # First layer
+        # first layer
         layers.append(
             spectral_norm(nn.Conv2d(in_channels, ndf, 4, stride=2, padding=1))
         )
         layers.append(nn.LeakyReLU(0.2, inplace=True))
         
-        # Hidden layers
+        # hidden layers
         in_ch = ndf
         for i in range(1, n_layers):
             out_ch = min(ndf * (2 ** i), 512)
@@ -54,7 +54,7 @@ class SpectralNormDiscriminator(BaseDiscriminator):
             
             in_ch = out_ch
             
-        # Output layer
+        # output layer
         layers.append(
             spectral_norm(nn.Conv2d(in_ch, 1, 4, padding=1))
         )
@@ -67,15 +67,15 @@ class SpectralNormDiscriminator(BaseDiscriminator):
 
 class SNResNetDiscriminator(BaseDiscriminator):
     """
-    Spectral Normalization ResNet Discriminator.
+    spectral normalization resnet discriminator.
     
-    ResNet-style discriminator with spectral normalization.
-    Used in BigGAN and similar architectures.
+    resnet-style discriminator with spectral normalization.
+    used in biggan and similar architectures.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_blocks: Number of residual blocks
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_blocks: number of residual blocks
     """
     
     def __init__(
@@ -86,12 +86,12 @@ class SNResNetDiscriminator(BaseDiscriminator):
     ):
         super().__init__(in_channels, ndf)
         
-        # Initial convolution
+        # initial convolution
         self.initial = spectral_norm(
             nn.Conv2d(in_channels, ndf, 3, padding=1)
         )
         
-        # Residual blocks
+        # residual blocks
         self.blocks = nn.ModuleList()
         in_ch = ndf
         
@@ -102,7 +102,7 @@ class SNResNetDiscriminator(BaseDiscriminator):
             )
             in_ch = out_ch
             
-        # Output
+        # output
         self.output = nn.Sequential(
             nn.ReLU(inplace=True),
             nn.AdaptiveAvgPool2d(1),
@@ -115,7 +115,7 @@ class SNResNetDiscriminator(BaseDiscriminator):
         x: torch.Tensor,
         return_features: bool = False
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        """Forward pass with optional feature return."""
+        """forward pass with optional feature return."""
         x = self.initial(x)
         
         for block in self.blocks:
@@ -130,7 +130,7 @@ class SNResNetDiscriminator(BaseDiscriminator):
 
 
 class SNResBlock(nn.Module):
-    """Spectral Normalization Residual Block."""
+    """spectral normalization residual block."""
     
     def __init__(
         self,
@@ -170,15 +170,15 @@ class SNResBlock(nn.Module):
 
 class SNProjectionDiscriminator(BaseDiscriminator):
     """
-    Spectral Normalization Projection Discriminator.
+    spectral normalization projection discriminator.
     
-    For conditional GANs with class labels.
-    Uses projection for conditioning (from cGAN-PD).
+    for conditional gans with class labels.
+    uses projection for conditioning (from cgan-pd).
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_classes: Number of classes (0 for unconditional)
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_classes: number of classes (0 for unconditional)
     """
     
     def __init__(
@@ -191,7 +191,7 @@ class SNProjectionDiscriminator(BaseDiscriminator):
         
         self.n_classes = n_classes
         
-        # Feature extractor
+        # feature extractor
         self.features = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels, ndf, 3, padding=1)),
             nn.LeakyReLU(0.2, inplace=True),
@@ -204,10 +204,10 @@ class SNProjectionDiscriminator(BaseDiscriminator):
             nn.ReLU(inplace=True)
         )
         
-        # Output
+        # output
         self.output_linear = spectral_norm(nn.Linear(ndf * 8, 1))
         
-        # Class embedding for projection
+        # class embedding for projection
         if n_classes > 0:
             self.embed = spectral_norm(nn.Embedding(n_classes, ndf * 8))
             
@@ -217,22 +217,22 @@ class SNProjectionDiscriminator(BaseDiscriminator):
         labels: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            labels: Optional class labels for conditional discrimination
+        args:
+            x: input tensor
+            labels: optional class labels for conditional discrimination
         """
-        # Extract features
+        # extract features
         h = self.features(x)
         
-        # Global sum pooling
+        # global sum pooling
         h = h.sum(dim=[2, 3])
         
-        # Output
+        # output
         output = self.output_linear(h)
         
-        # Add projection if labels provided
+        # add projection if labels provided
         if labels is not None and self.n_classes > 0:
             embed = self.embed(labels)
             output = output + (embed * h).sum(dim=1, keepdim=True)
@@ -242,14 +242,14 @@ class SNProjectionDiscriminator(BaseDiscriminator):
 
 class SNMultiScaleDiscriminator(BaseDiscriminator):
     """
-    Multi-Scale Spectral Normalization Discriminator.
+    multi-scale spectral normalization discriminator.
     
-    Multiple SN discriminators at different scales.
+    multiple sn discriminators at different scales.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_scales: Number of scales
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_scales: number of scales
     """
     
     def __init__(
@@ -268,12 +268,12 @@ class SNMultiScaleDiscriminator(BaseDiscriminator):
                 SpectralNormDiscriminator(
                     in_channels=in_channels,
                     ndf=ndf,
-                    n_layers=4 - i  # Fewer layers for smaller scales
+                    n_layers=4 - i  # fewer layers for smaller scales
                 )
             )
             
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        """Forward pass at multiple scales."""
+        """forward pass at multiple scales."""
         outputs = []
         current = x
         
@@ -287,15 +287,15 @@ class SNMultiScaleDiscriminator(BaseDiscriminator):
 
 class SNSelfAttentionDiscriminator(BaseDiscriminator):
     """
-    Spectral Normalization Self-Attention Discriminator.
+    spectral normalization self-attention discriminator.
     
-    Combines SN with self-attention (SAGAN-style).
+    combines sn with self-attention (sagan-style).
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_layers: Number of layers
-        attention_layer: Which layer to add attention
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_layers: number of layers
+        attention_layer: which layer to add attention
     """
     
     def __init__(
@@ -317,13 +317,13 @@ class SNSelfAttentionDiscriminator(BaseDiscriminator):
                 SNConvBlock(in_ch, out_ch, stride=2)
             )
             
-            # Add self-attention at specified layer
+            # add self-attention at specified layer
             if i == attention_layer:
                 self.layers.append(SNSelfAttention(out_ch))
                 
             in_ch = out_ch
             
-        # Output
+        # output
         self.output = spectral_norm(nn.Conv2d(in_ch, 1, 4, padding=1))
         
     def forward(
@@ -331,7 +331,7 @@ class SNSelfAttentionDiscriminator(BaseDiscriminator):
         x: torch.Tensor,
         return_attention: bool = False
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        """Forward pass with optional attention map return."""
+        """forward pass with optional attention map return."""
         attention_map = None
         
         for layer in self.layers:
@@ -348,7 +348,7 @@ class SNSelfAttentionDiscriminator(BaseDiscriminator):
 
 
 class SNConvBlock(nn.Module):
-    """Spectral Normalization Convolutional Block."""
+    """spectral normalization convolutional block."""
     
     def __init__(
         self,
@@ -368,7 +368,7 @@ class SNConvBlock(nn.Module):
 
 
 class SNSelfAttention(nn.Module):
-    """Self-Attention with Spectral Normalization."""
+    """self-attention with spectral normalization."""
     
     def __init__(self, channels: int):
         super().__init__()
@@ -402,13 +402,13 @@ class SNSelfAttention(nn.Module):
 
 class SNUNetDiscriminator(BaseDiscriminator):
     """
-    U-Net Discriminator with Spectral Normalization.
+    u-net discriminator with spectral normalization.
     
-    Provides both global and per-pixel discrimination.
+    provides both global and per-pixel discrimination.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
+    args:
+        in_channels: input channels
+        ndf: base number of filters
     """
     
     def __init__(
@@ -418,13 +418,13 @@ class SNUNetDiscriminator(BaseDiscriminator):
     ):
         super().__init__(in_channels, ndf)
         
-        # Encoder
+        # encoder
         self.enc1 = SNConvBlock(in_channels, ndf, stride=2)
         self.enc2 = SNConvBlock(ndf, ndf * 2, stride=2)
         self.enc3 = SNConvBlock(ndf * 2, ndf * 4, stride=2)
         self.enc4 = SNConvBlock(ndf * 4, ndf * 8, stride=2)
         
-        # Decoder
+        # decoder
         self.dec4 = nn.Sequential(
             spectral_norm(nn.ConvTranspose2d(ndf * 8, ndf * 4, 4, stride=2, padding=1)),
             nn.LeakyReLU(0.2, inplace=True)
@@ -442,18 +442,18 @@ class SNUNetDiscriminator(BaseDiscriminator):
             nn.LeakyReLU(0.2, inplace=True)
         )
         
-        # Output
+        # output
         self.output = spectral_norm(nn.Conv2d(ndf, 1, 3, padding=1))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
-        # Encode
+        """forward pass."""
+        # encode
         e1 = self.enc1(x)
         e2 = self.enc2(e1)
         e3 = self.enc3(e2)
         e4 = self.enc4(e3)
         
-        # Decode with skip connections
+        # decode with skip connections
         d4 = self.dec4(e4)
         d3 = self.dec3(torch.cat([d4, e3], dim=1))
         d2 = self.dec2(torch.cat([d3, e2], dim=1))

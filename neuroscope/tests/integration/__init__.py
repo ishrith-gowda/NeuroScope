@@ -1,6 +1,6 @@
-"""Integration tests for NeuroScope.
+"""integration tests for neuroscope.
 
-This module provides integration tests for complete workflows and pipelines.
+this module provides integration tests for complete workflows and pipelines.
 """
 
-# Integration test initialization
+# integration test initialization

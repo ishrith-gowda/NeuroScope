@@ -1,3 +1,3 @@
-"""Initialize neuroscope package."""
+"""initialize neuroscope package."""
 
 __version__ = "0.1.0"

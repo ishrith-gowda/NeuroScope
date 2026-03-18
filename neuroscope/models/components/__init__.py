@@ -1,4 +1,4 @@
-"""Components for neural network models."""
+"""components for neural network models."""
 
 from neuroscope.models.components.resnet_generator import ResNetGenerator, ResidualBlock, weights_init_normal
 from neuroscope.models.components.patch_discriminator import PatchDiscriminator

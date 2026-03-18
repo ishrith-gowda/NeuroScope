@@ -1,8 +1,8 @@
 """
-Learning Rate Schedulers.
+learning rate schedulers.
 
-Comprehensive collection of learning rate scheduling strategies
-optimized for GAN training.
+comprehensive collection of learning rate scheduling strategies
+optimized for gan training.
 """
 
 from typing import Optional, List, Callable
@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 
 @dataclass
 class SchedulerConfig:
-    """Configuration for learning rate scheduler."""
+    """configuration for learning rate scheduler."""
     name: str = 'linear'
     total_epochs: int = 200
     decay_epochs: int = 100
@@ -23,19 +23,19 @@ class SchedulerConfig:
     min_lr: float = 0.0
     max_lr: Optional[float] = None
     
-    # Cosine-specific
+    # cosine-specific
     num_cycles: float = 0.5
     
-    # Step-specific
+    # step-specific
     step_size: int = 50
     gamma: float = 0.5
 
 
 class LinearDecayScheduler(_LRScheduler):
     """
-    Linear decay learning rate scheduler.
+    linear decay learning rate scheduler.
     
-    Maintains initial LR for a number of epochs, then linearly
+    maintains initial lr for a number of epochs, then linearly
     decays to zero (or min_lr).
     """
     
@@ -48,12 +48,12 @@ class LinearDecayScheduler(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            total_epochs: Total number of training epochs
-            decay_epoch: Epoch to start decay
-            min_lr: Minimum learning rate
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            total_epochs: total number of training epochs
+            decay_epoch: epoch to start decay
+            min_lr: minimum learning rate
+            last_epoch: last epoch index
         """
         self.total_epochs = total_epochs
         self.decay_epoch = decay_epoch
@@ -75,9 +75,9 @@ class LinearDecayScheduler(_LRScheduler):
 
 class LinearWarmupScheduler(_LRScheduler):
     """
-    Linear warmup learning rate scheduler.
+    linear warmup learning rate scheduler.
     
-    Linearly increases LR from 0 to initial LR over warmup period,
+    linearly increases lr from 0 to initial lr over warmup period,
     then applies the wrapped scheduler.
     """
     
@@ -90,12 +90,12 @@ class LinearWarmupScheduler(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            warmup_epochs: Number of warmup epochs
-            scheduler: Scheduler to apply after warmup
-            warmup_factor: Starting factor (0 = start from 0)
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            warmup_epochs: number of warmup epochs
+            scheduler: scheduler to apply after warmup
+            warmup_factor: starting factor (0 = start from 0)
+            last_epoch: last epoch index
         """
         self.warmup_epochs = warmup_epochs
         self.scheduler = scheduler
@@ -122,9 +122,9 @@ class LinearWarmupScheduler(_LRScheduler):
 
 class CosineAnnealingWarmup(_LRScheduler):
     """
-    Cosine annealing with linear warmup.
+    cosine annealing with linear warmup.
     
-    Combines linear warmup with cosine annealing decay.
+    combines linear warmup with cosine annealing decay.
     """
     
     def __init__(
@@ -137,13 +137,13 @@ class CosineAnnealingWarmup(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            total_epochs: Total training epochs
-            warmup_epochs: Warmup period
-            min_lr: Minimum learning rate
-            num_cycles: Number of cosine cycles
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            total_epochs: total training epochs
+            warmup_epochs: warmup period
+            min_lr: minimum learning rate
+            num_cycles: number of cosine cycles
+            last_epoch: last epoch index
         """
         self.total_epochs = total_epochs
         self.warmup_epochs = warmup_epochs
@@ -153,12 +153,12 @@ class CosineAnnealingWarmup(_LRScheduler):
     
     def get_lr(self):
         if self.last_epoch < self.warmup_epochs:
-            # Linear warmup
+            # linear warmup
             factor = self.last_epoch / max(1, self.warmup_epochs)
             return [self.min_lr + factor * (base_lr - self.min_lr) 
                     for base_lr in self.base_lrs]
         
-        # Cosine annealing
+        # cosine annealing
         progress = (self.last_epoch - self.warmup_epochs) / max(
             1, self.total_epochs - self.warmup_epochs
         )
@@ -171,9 +171,9 @@ class CosineAnnealingWarmup(_LRScheduler):
 
 class PolynomialDecay(_LRScheduler):
     """
-    Polynomial decay learning rate scheduler.
+    polynomial decay learning rate scheduler.
     
-    Decays LR following polynomial: lr = base_lr * (1 - progress)^power
+    decays lr following polynomial: lr = base_lr * (1 - progress)^power
     """
     
     def __init__(
@@ -186,13 +186,13 @@ class PolynomialDecay(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            total_epochs: Total training epochs
-            power: Polynomial power
-            min_lr: Minimum learning rate
-            warmup_epochs: Warmup period
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            total_epochs: total training epochs
+            power: polynomial power
+            min_lr: minimum learning rate
+            warmup_epochs: warmup period
+            last_epoch: last epoch index
         """
         self.total_epochs = total_epochs
         self.power = power
@@ -218,9 +218,9 @@ class PolynomialDecay(_LRScheduler):
 
 class StepDecay(_LRScheduler):
     """
-    Step decay learning rate scheduler.
+    step decay learning rate scheduler.
     
-    Decays LR by gamma every step_size epochs.
+    decays lr by gamma every step_size epochs.
     """
     
     def __init__(
@@ -232,12 +232,12 @@ class StepDecay(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            step_size: Epochs between decays
-            gamma: Decay factor
-            min_lr: Minimum learning rate
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            step_size: epochs between decays
+            gamma: decay factor
+            min_lr: minimum learning rate
+            last_epoch: last epoch index
         """
         self.step_size = step_size
         self.gamma = gamma
@@ -253,9 +253,9 @@ class StepDecay(_LRScheduler):
 
 class ExponentialDecay(_LRScheduler):
     """
-    Exponential decay learning rate scheduler.
+    exponential decay learning rate scheduler.
     
-    Decays LR exponentially: lr = base_lr * gamma^epoch
+    decays lr exponentially: lr = base_lr * gamma^epoch
     """
     
     def __init__(
@@ -266,11 +266,11 @@ class ExponentialDecay(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            gamma: Decay factor per epoch
-            min_lr: Minimum learning rate
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            gamma: decay factor per epoch
+            min_lr: minimum learning rate
+            last_epoch: last epoch index
         """
         self.gamma = gamma
         self.min_lr = min_lr
@@ -283,9 +283,9 @@ class ExponentialDecay(_LRScheduler):
 
 class CyclicScheduler(_LRScheduler):
     """
-    Cyclic learning rate scheduler.
+    cyclic learning rate scheduler.
     
-    Oscillates LR between min and max values following a triangular
+    oscillates lr between min and max values following a triangular
     or other pattern.
     """
     
@@ -302,16 +302,16 @@ class CyclicScheduler(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            base_lr: Minimum learning rate
-            max_lr: Maximum learning rate
-            step_size_up: Steps to increase
-            step_size_down: Steps to decrease
+        args:
+            optimizer: wrapped optimizer
+            base_lr: minimum learning rate
+            max_lr: maximum learning rate
+            step_size_up: steps to increase
+            step_size_down: steps to decrease
             mode: 'triangular', 'triangular2', or 'exp_range'
-            gamma: Decay factor for exp_range
-            scale_fn: Custom scaling function
-            last_epoch: Last epoch index
+            gamma: decay factor for exp_range
+            scale_fn: custom scaling function
+            last_epoch: last epoch index
         """
         self.base_lr = base_lr
         self.max_lr = max_lr
@@ -338,10 +338,10 @@ class CyclicScheduler(_LRScheduler):
         x = self.last_epoch % self.cycle_size
         
         if x < self.step_size_up:
-            # Ascending
+            # ascending
             phase = x / self.step_size_up
         else:
-            # Descending
+            # descending
             phase = 1 - (x - self.step_size_up) / self.step_size_down
         
         scale = self.scale_fn(cycle + 1)
@@ -354,10 +354,10 @@ class CyclicScheduler(_LRScheduler):
 
 class OneCycleLR(_LRScheduler):
     """
-    One Cycle learning rate policy.
+    one cycle learning rate policy.
     
-    Implements the 1cycle policy from "Super-Convergence"
-    paper by Leslie Smith.
+    implements the 1cycle policy from "super-convergence"
+    paper by leslie smith.
     """
     
     def __init__(
@@ -372,15 +372,15 @@ class OneCycleLR(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            max_lr: Maximum learning rate
-            total_steps: Total number of training steps
-            pct_start: Percentage of cycle for warmup
+        args:
+            optimizer: wrapped optimizer
+            max_lr: maximum learning rate
+            total_steps: total number of training steps
+            pct_start: percentage of cycle for warmup
             anneal_strategy: 'cos' or 'linear'
-            div_factor: Initial LR = max_lr / div_factor
-            final_div_factor: Final LR = initial_lr / final_div_factor
-            last_epoch: Last epoch index
+            div_factor: initial lr = max_lr / div_factor
+            final_div_factor: final lr = initial_lr / final_div_factor
+            last_epoch: last epoch index
         """
         self.max_lr = max_lr
         self.total_steps = total_steps
@@ -399,7 +399,7 @@ class OneCycleLR(_LRScheduler):
     
     def get_lr(self):
         if self.last_epoch < self.step_up:
-            # Warmup phase
+            # warmup phase
             pct = self.last_epoch / self.step_up
             
             if self.anneal_strategy == 'cos':
@@ -409,7 +409,7 @@ class OneCycleLR(_LRScheduler):
             
             lr = self.initial_lr + factor * (self.max_lr - self.initial_lr)
         else:
-            # Annealing phase
+            # annealing phase
             pct = (self.last_epoch - self.step_up) / max(1, self.step_down)
             
             if self.anneal_strategy == 'cos':
@@ -424,9 +424,9 @@ class OneCycleLR(_LRScheduler):
 
 class WarmRestarts(_LRScheduler):
     """
-    Cosine annealing with warm restarts.
+    cosine annealing with warm restarts.
     
-    Implements SGDR: Stochastic Gradient Descent with Warm Restarts.
+    implements sgdr: stochastic gradient descent with warm restarts.
     """
     
     def __init__(
@@ -438,12 +438,12 @@ class WarmRestarts(_LRScheduler):
         last_epoch: int = -1
     ):
         """
-        Args:
-            optimizer: Wrapped optimizer
-            T_0: Initial period
-            T_mult: Period multiplier
-            eta_min: Minimum learning rate
-            last_epoch: Last epoch index
+        args:
+            optimizer: wrapped optimizer
+            t_0: initial period
+            t_mult: period multiplier
+            eta_min: minimum learning rate
+            last_epoch: last epoch index
         """
         self.T_0 = T_0
         self.T_mult = T_mult
@@ -482,17 +482,17 @@ def create_scheduler(
     **kwargs
 ) -> _LRScheduler:
     """
-    Create scheduler from configuration or parameters.
+    create scheduler from configuration or parameters.
     
-    Args:
-        optimizer: Optimizer to schedule
-        config: Scheduler configuration
-        name: Scheduler name
-        total_epochs: Total training epochs
-        **kwargs: Additional scheduler arguments
+    args:
+        optimizer: optimizer to schedule
+        config: scheduler configuration
+        name: scheduler name
+        total_epochs: total training epochs
+        **kwargs: additional scheduler arguments
         
-    Returns:
-        Configured scheduler
+    returns:
+        configured scheduler
     """
     if config is not None:
         name = config.name

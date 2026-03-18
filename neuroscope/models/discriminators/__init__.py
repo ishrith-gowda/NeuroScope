@@ -1,11 +1,11 @@
 """
-Discriminator Architectures Module.
+discriminator architectures module.
 
-This module provides various discriminator architectures for
+this module provides various discriminator architectures for
 adversarial training in image-to-image translation.
 """
 
-# Base classes
+# base classes
 from .base import (
     BaseDiscriminator,
     PatchDiscriminator,
@@ -15,7 +15,7 @@ from .base import (
     FeatureMatchingDiscriminator,
 )
 
-# Patch discriminators
+# patch discriminators
 from .patch import (
     NLayerPatchDiscriminator,
     PixelDiscriminator,
@@ -25,7 +25,7 @@ from .patch import (
     AttentionPatchDiscriminator,
 )
 
-# Multi-scale discriminators
+# multi-scale discriminators
 from .multiscale import (
     MultiScaleDiscriminator,
     PyramidDiscriminator,
@@ -35,7 +35,7 @@ from .multiscale import (
     DualScaleDiscriminator,
 )
 
-# Spectral normalization discriminators
+# spectral normalization discriminators
 from .spectral import (
     SpectralNormDiscriminator,
     SNResNetDiscriminator,
@@ -45,11 +45,11 @@ from .spectral import (
     SNUNetDiscriminator,
 )
 
-# Aliases for compatibility
+# aliases for compatibility
 PatchGANDiscriminator = NLayerPatchDiscriminator
 
 __all__ = [
-    # Base
+    # base
     'BaseDiscriminator',
     'PatchDiscriminator',
     'MultiScaleDiscriminatorBase',
@@ -57,7 +57,7 @@ __all__ = [
     'ProjectionDiscriminator',
     'FeatureMatchingDiscriminator',
     
-    # Patch
+    # patch
     'NLayerPatchDiscriminator',
     'PatchGANDiscriminator',
     'PixelDiscriminator',
@@ -66,7 +66,7 @@ __all__ = [
     'DilatedPatchDiscriminator',
     'AttentionPatchDiscriminator',
     
-    # Multi-scale
+    # multi-scale
     'MultiScaleDiscriminator',
     'PyramidDiscriminator',
     'SharedEncoderMultiScaleDiscriminator',
@@ -74,7 +74,7 @@ __all__ = [
     'ProgressiveMultiScaleDiscriminator',
     'DualScaleDiscriminator',
     
-    # Spectral
+    # spectral
     'SpectralNormDiscriminator',
     'SNResNetDiscriminator',
     'SNProjectionDiscriminator',

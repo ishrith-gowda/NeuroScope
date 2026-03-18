@@ -1,7 +1,7 @@
 """
-Multi-Head Attention mechanisms.
+multi-head attention mechanisms.
 
-Implements multi-head attention variants for transformer-style processing.
+implements multi-head attention variants for transformer-style processing.
 """
 
 import torch
@@ -13,17 +13,17 @@ import math
 
 class MultiHeadSelfAttention2d(nn.Module):
     """
-    Multi-Head Self-Attention for 2D feature maps.
+    multi-head self-attention for 2d feature maps.
     
-    Extends self-attention with multiple attention heads for diverse
+    extends self-attention with multiple attention heads for diverse
     representation learning.
     
-    Args:
-        in_channels: Number of input channels
-        num_heads: Number of attention heads
-        head_dim: Dimension per head (computed if None)
-        dropout: Dropout probability
-        use_bias: Whether to use bias in projections
+    args:
+        in_channels: number of input channels
+        num_heads: number of attention heads
+        head_dim: dimension per head (computed if none)
+        dropout: dropout probability
+        use_bias: whether to use bias in projections
     """
     
     def __init__(
@@ -41,15 +41,15 @@ class MultiHeadSelfAttention2d(nn.Module):
         self.inner_dim = self.num_heads * self.head_dim
         self.scale = self.head_dim ** -0.5
         
-        # Q, K, V projections
+        # q, k, v projections
         self.qkv = nn.Conv2d(in_channels, self.inner_dim * 3, kernel_size=1, bias=use_bias)
         
-        # Output projection
+        # output projection
         self.proj = nn.Conv2d(self.inner_dim, in_channels, kernel_size=1, bias=use_bias)
         
         self.dropout = nn.Dropout(dropout)
         
-        # Learnable scaling
+        # learnable scaling
         self.gamma = nn.Parameter(torch.zeros(1))
         
     def forward(
@@ -58,35 +58,35 @@ class MultiHeadSelfAttention2d(nn.Module):
         return_attention: bool = False
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, C, H, W]
-            return_attention: Whether to return attention maps
+        args:
+            x: input tensor [b, c, h, w]
+            return_attention: whether to return attention maps
             
-        Returns:
-            Output tensor and optionally attention maps
+        returns:
+            output tensor and optionally attention maps
         """
         B, C, H, W = x.size()
         N = H * W
         
-        # Compute Q, K, V
-        qkv = self.qkv(x)  # [B, 3*inner_dim, H, W]
-        qkv = qkv.view(B, 3, self.num_heads, self.head_dim, N)  # [B, 3, heads, head_dim, N]
-        qkv = qkv.permute(1, 0, 2, 4, 3)  # [3, B, heads, N, head_dim]
-        q, k, v = qkv[0], qkv[1], qkv[2]  # Each: [B, heads, N, head_dim]
+        # compute q, k, v
+        qkv = self.qkv(x)  # [b, 3*inner_dim, h, w]
+        qkv = qkv.view(B, 3, self.num_heads, self.head_dim, N)  # [b, 3, heads, head_dim, n]
+        qkv = qkv.permute(1, 0, 2, 4, 3)  # [3, b, heads, n, head_dim]
+        q, k, v = qkv[0], qkv[1], qkv[2]  # each: [b, heads, n, head_dim]
         
-        # Attention: softmax(Q @ K^T / sqrt(d)) @ V
-        attn = torch.matmul(q, k.transpose(-2, -1)) * self.scale  # [B, heads, N, N]
+        # attention: softmax(q @ k^t / sqrt(d)) @ v
+        attn = torch.matmul(q, k.transpose(-2, -1)) * self.scale  # [b, heads, n, n]
         attn = F.softmax(attn, dim=-1)
         attn = self.dropout(attn)
         
-        # Apply attention
-        out = torch.matmul(attn, v)  # [B, heads, N, head_dim]
-        out = out.transpose(2, 3).contiguous()  # [B, heads, head_dim, N]
-        out = out.view(B, self.inner_dim, H, W)  # [B, inner_dim, H, W]
+        # apply attention
+        out = torch.matmul(attn, v)  # [b, heads, n, head_dim]
+        out = out.transpose(2, 3).contiguous()  # [b, heads, head_dim, n]
+        out = out.view(B, self.inner_dim, H, W)  # [b, inner_dim, h, w]
         
-        # Output projection with residual
+        # output projection with residual
         out = self.proj(out)
         out = self.gamma * out + x
         
@@ -97,13 +97,13 @@ class MultiHeadSelfAttention2d(nn.Module):
 
 class CrossAttention2d(nn.Module):
     """
-    Cross-Attention for feature alignment between different modalities.
+    cross-attention for feature alignment between different modalities.
     
-    Args:
-        query_channels: Query tensor channels
-        key_channels: Key/Value tensor channels
-        num_heads: Number of attention heads
-        dropout: Dropout probability
+    args:
+        query_channels: query tensor channels
+        key_channels: key/value tensor channels
+        num_heads: number of attention heads
+        dropout: dropout probability
     """
     
     def __init__(
@@ -132,37 +132,37 @@ class CrossAttention2d(nn.Module):
         context: torch.Tensor
     ) -> torch.Tensor:
         """
-        Cross-attention forward pass.
+        cross-attention forward pass.
         
-        Args:
-            query: Query tensor [B, C_q, H_q, W_q]
-            context: Key/Value tensor [B, C_k, H_k, W_k]
+        args:
+            query: query tensor [b, c_q, h_q, w_q]
+            context: key/value tensor [b, c_k, h_k, w_k]
             
-        Returns:
-            Attended query tensor [B, C_q, H_q, W_q]
+        returns:
+            attended query tensor [b, c_q, h_q, w_q]
         """
         B, C, H_q, W_q = query.size()
         _, _, H_k, W_k = context.size()
         N_q = H_q * W_q
         N_k = H_k * W_k
         
-        # Projections
+        # projections
         q = self.q_proj(query).view(B, self.num_heads, self.head_dim, N_q)
         k = self.k_proj(context).view(B, self.num_heads, self.head_dim, N_k)
         v = self.v_proj(context).view(B, self.num_heads, self.head_dim, N_k)
         
-        # Transpose for attention
-        q = q.transpose(2, 3)  # [B, heads, N_q, head_dim]
-        k = k.transpose(2, 3)  # [B, heads, N_k, head_dim]
-        v = v.transpose(2, 3)  # [B, heads, N_k, head_dim]
+        # transpose for attention
+        q = q.transpose(2, 3)  # [b, heads, n_q, head_dim]
+        k = k.transpose(2, 3)  # [b, heads, n_k, head_dim]
+        v = v.transpose(2, 3)  # [b, heads, n_k, head_dim]
         
-        # Attention
-        attn = torch.matmul(q, k.transpose(-2, -1)) * self.scale  # [B, heads, N_q, N_k]
+        # attention
+        attn = torch.matmul(q, k.transpose(-2, -1)) * self.scale  # [b, heads, n_q, n_k]
         attn = F.softmax(attn, dim=-1)
         attn = self.dropout(attn)
         
-        out = torch.matmul(attn, v)  # [B, heads, N_q, head_dim]
-        out = out.transpose(2, 3).contiguous()  # [B, heads, head_dim, N_q]
+        out = torch.matmul(attn, v)  # [b, heads, n_q, head_dim]
+        out = out.transpose(2, 3).contiguous()  # [b, heads, head_dim, n_q]
         out = out.view(B, C, H_q, W_q)
         
         return self.out_proj(out) + query
@@ -170,14 +170,14 @@ class CrossAttention2d(nn.Module):
 
 class WindowedMultiHeadAttention(nn.Module):
     """
-    Windowed Multi-Head Attention (Swin Transformer style).
+    windowed multi-head attention (swin transformer style).
     
-    Computes attention within local windows for efficiency.
+    computes attention within local windows for efficiency.
     
-    Args:
-        in_channels: Number of input channels
-        num_heads: Number of attention heads
-        window_size: Window size for local attention
+    args:
+        in_channels: number of input channels
+        num_heads: number of attention heads
+        window_size: window size for local attention
     """
     
     def __init__(
@@ -196,13 +196,13 @@ class WindowedMultiHeadAttention(nn.Module):
         self.qkv = nn.Linear(in_channels, in_channels * 3)
         self.proj = nn.Linear(in_channels, in_channels)
         
-        # Relative position bias
+        # relative position bias
         self.relative_position_bias_table = nn.Parameter(
             torch.zeros((2 * window_size - 1) ** 2, num_heads)
         )
         nn.init.trunc_normal_(self.relative_position_bias_table, std=0.02)
         
-        # Create relative position index
+        # create relative position index
         coords_h = torch.arange(window_size)
         coords_w = torch.arange(window_size)
         coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing='ij'))
@@ -217,35 +217,35 @@ class WindowedMultiHeadAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with windowed attention.
+        forward pass with windowed attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Output tensor [B, C, H, W]
+        returns:
+            output tensor [b, c, h, w]
         """
         B, C, H, W = x.size()
         ws = self.window_size
         
-        # Pad if necessary
+        # pad if necessary
         pad_h = (ws - H % ws) % ws
         pad_w = (ws - W % ws) % ws
         x = F.pad(x, (0, pad_w, 0, pad_h))
         _, _, Hp, Wp = x.size()
         
-        # Reshape to windows
+        # reshape to windows
         x = x.view(B, C, Hp // ws, ws, Wp // ws, ws)
-        x = x.permute(0, 2, 4, 3, 5, 1).contiguous()  # [B, nH, nW, ws, ws, C]
+        x = x.permute(0, 2, 4, 3, 5, 1).contiguous()  # [b, nh, nw, ws, ws, c]
         nH, nW = Hp // ws, Wp // ws
-        x = x.view(B * nH * nW, ws * ws, C)  # [B*nH*nW, ws*ws, C]
+        x = x.view(B * nH * nW, ws * ws, C)  # [b*nh*nw, ws*ws, c]
         
-        # QKV
+        # qkv
         qkv = self.qkv(x).reshape(-1, ws * ws, 3, self.num_heads, self.head_dim)
-        qkv = qkv.permute(2, 0, 3, 1, 4)  # [3, B*nW*nH, heads, ws*ws, head_dim]
+        qkv = qkv.permute(2, 0, 3, 1, 4)  # [3, b*nw*nh, heads, ws*ws, head_dim]
         q, k, v = qkv[0], qkv[1], qkv[2]
         
-        # Attention with relative position bias
+        # attention with relative position bias
         attn = (q @ k.transpose(-2, -1)) * self.scale
         relative_position_bias = self.relative_position_bias_table[
             self.relative_position_index.view(-1)
@@ -257,12 +257,12 @@ class WindowedMultiHeadAttention(nn.Module):
         out = (attn @ v).transpose(1, 2).reshape(-1, ws * ws, C)
         out = self.proj(out)
         
-        # Reshape back
+        # reshape back
         out = out.view(B, nH, nW, ws, ws, C)
-        out = out.permute(0, 5, 1, 3, 2, 4).contiguous()  # [B, C, nH, ws, nW, ws]
+        out = out.permute(0, 5, 1, 3, 2, 4).contiguous()  # [b, c, nh, ws, nw, ws]
         out = out.view(B, C, Hp, Wp)
         
-        # Remove padding
+        # remove padding
         if pad_h > 0 or pad_w > 0:
             out = out[:, :, :H, :W].contiguous()
             

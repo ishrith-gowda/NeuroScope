@@ -194,7 +194,7 @@ class HyperpriorModel(nn.Module):
             )
 
         # gaussian likelihood for primary latent
-        # p(y_hat | sigma) = N(0, sigma^2) integrated over quantization bin
+        # p(y_hat | sigma) = n(0, sigma^2) integrated over quantization bin
         sigma = sigma.clamp(min=0.01)
         upper = (y_hat + 0.5) / sigma
         lower = (y_hat - 0.5) / sigma

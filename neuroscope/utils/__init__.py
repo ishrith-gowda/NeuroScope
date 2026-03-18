@@ -1,75 +1,75 @@
 """
-NeuroScope Utilities Package.
+neuroscope utilities package.
 
-Common utilities for I/O, visualization, logging,
+common utilities for i/o, visualization, logging,
 and configuration management.
 
-Modules:
-    - io: File I/O and checkpoint management
-    - visualization: Plotting and visualization
-    - logging: Structured logging
-    - config: Configuration management
+modules:
+    - io: file i/o and checkpoint management
+    - visualization: plotting and visualization
+    - logging: structured logging
+    - config: configuration management
 """
 
 from .io import (
-    # NIfTI handling
+    # nifti handling
     load_nifti,
     save_nifti,
     load_nifti_as_tensor,
     
-    # Checkpoint management
+    # checkpoint management
     save_checkpoint,
     load_checkpoint,
     get_latest_checkpoint,
     save_cyclegan_checkpoint,
     load_cyclegan_checkpoint,
     
-    # Config handling
+    # config handling
     load_config as load_config_io,
     save_config as save_config_io,
     merge_configs,
     
-    # Utilities
+    # utilities
     ensure_dir,
     list_files,
     copy_file,
 )
 
 from .visualization import (
-    # Slice visualization
+    # slice visualization
     plot_slice,
     plot_slice_comparison,
     plot_montage,
     plot_difference_map,
     plot_attention_overlay,
     
-    # Training visualization
+    # training visualization
     plot_training_curves,
     plot_loss_landscape,
     
-    # Statistical visualization
+    # statistical visualization
     plot_box_comparison,
     plot_violin_comparison,
     plot_confidence_intervals,
     plot_effect_size_forest,
     
-    # Figure utilities
+    # figure utilities
     create_figure_grid,
     save_publication_figure,
 )
 
 from .logging import (
-    # Logger
+    # logger
     setup_logger,
     get_logger,
     
-    # Metric tracking
+    # metric tracking
     MetricTracker,
     ExperimentLogger,
 )
 
 from .config import (
-    # Configuration classes
+    # configuration classes
     ModelConfig,
     DataConfig,
     LossConfig,
@@ -78,7 +78,7 @@ from .config import (
     EvaluationConfig,
     ExperimentConfig,
     
-    # Configuration utilities
+    # configuration utilities
     ConfigManager,
     get_default_config,
     load_config,
@@ -86,7 +86,7 @@ from .config import (
 )
 
 __all__ = [
-    # I/O
+    # i/o
     'load_nifti',
     'save_nifti',
     'load_nifti_as_tensor',
@@ -100,7 +100,7 @@ __all__ = [
     'copy_file',
     'merge_configs',
     
-    # Visualization
+    # visualization
     'plot_slice',
     'plot_slice_comparison',
     'plot_montage',
@@ -115,13 +115,13 @@ __all__ = [
     'create_figure_grid',
     'save_publication_figure',
     
-    # Logging
+    # logging
     'setup_logger',
     'get_logger',
     'MetricTracker',
     'ExperimentLogger',
     
-    # Config
+    # config
     'ModelConfig',
     'DataConfig',
     'LossConfig',

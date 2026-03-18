@@ -1,9 +1,9 @@
 """
-Console Logger with Rich Formatting.
+console logger with rich formatting.
 
-Beautiful, informative console output for training progress.
+beautiful, informative console output for training progress.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, Any, List
@@ -13,7 +13,7 @@ import time
 
 
 class Colors:
-    """ANSI color codes for terminal output."""
+    """ansi color codes for terminal output."""
     HEADER = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'
@@ -28,20 +28,20 @@ class Colors:
     
     
 def colorize(text: str, color: str) -> str:
-    """Add color to text."""
+    """add color to text."""
     return f"{color}{text}{Colors.END}"
 
 
 class ConsoleLogger:
     """
-    Rich console logger for training progress visualization.
+    rich console logger for training progress visualization.
     
-    Features:
-    - Colored output
-    - Progress bars
-    - Formatted tables
-    - Real-time metrics
-    - Time estimates
+    features:
+    - colored output
+    - progress bars
+    - formatted tables
+    - real-time metrics
+    - time estimates
     """
     
     def __init__(
@@ -53,14 +53,14 @@ class ConsoleLogger:
         log_file: Optional[str] = None
     ):
         """
-        Initialize console logger.
+        initialize console logger.
         
-        Args:
-            experiment_name: Name of the experiment
-            verbose: Verbosity level (0=silent, 1=minimal, 2=normal, 3=detailed)
-            use_color: Whether to use colored output
-            log_to_file: Whether to also log to file
-            log_file: Path to log file (if log_to_file is True)
+        args:
+            experiment_name: name of the experiment
+            verbose: verbosity level (0=silent, 1=minimal, 2=normal, 3=detailed)
+            use_color: whether to use colored output
+            log_to_file: whether to also log to file
+            log_file: path to log file (if log_to_file is true)
         """
         self.experiment_name = experiment_name
         self.verbose = verbose
@@ -79,23 +79,23 @@ class ConsoleLogger:
             self._file = None
             
     def _color(self, text: str, color: str) -> str:
-        """Apply color if enabled."""
+        """apply color if enabled."""
         if self.use_color:
             return colorize(text, color)
         return text
         
     def _write(self, message: str, end: str = '\n'):
-        """Write message to console and optionally to file."""
+        """write message to console and optionally to file."""
         print(message, end=end, flush=True)
         if self._file:
-            # Strip color codes for file
+            # strip color codes for file
             import re
             clean_message = re.sub(r'\033\[[0-9;]+m', '', message)
             self._file.write(clean_message + end)
             self._file.flush()
             
     def _format_time(self, seconds: float) -> str:
-        """Format seconds as human-readable time."""
+        """format seconds as human-readable time."""
         if seconds < 60:
             return f"{seconds:.1f}s"
         elif seconds < 3600:
@@ -108,7 +108,7 @@ class ConsoleLogger:
             return f"{hours}h {minutes}m"
             
     def _format_metric(self, name: str, value: float, precision: int = 4) -> str:
-        """Format a metric for display."""
+        """format a metric for display."""
         if 'psnr' in name.lower():
             return f"{name}={value:.2f}dB"
         elif 'lr' in name.lower() or 'learning_rate' in name.lower():
@@ -117,26 +117,26 @@ class ConsoleLogger:
             return f"{name}={value:.{precision}f}"
             
     # =========================================================================
-    # Banner and Headers
+    # banner and headers
     # =========================================================================
     
     def print_banner(self):
-        """Print training banner."""
+        """print training banner."""
         if self.verbose < 1:
             return
             
         banner = f"""
-{self._color('=' * 70, Colors.CYAN)}
-{self._color('  neuroscope - 2.5d sa-cyclegan training', Colors.BOLD + Colors.CYAN)}
-{self._color('  ' + '=' * 66, Colors.CYAN)}
-{self._color(f'  experiment: {self.experiment_name}', Colors.WHITE)}
-{self._color(f'  started: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', Colors.GRAY)}
-{self._color('=' * 70, Colors.CYAN)}
+{self._color('=' * 70, colors.cyan)}
+{self._color('  neuroscope - 2.5d sa-cyclegan training', colors.bold + colors.cyan)}
+{self._color('  ' + '=' * 66, colors.cyan)}
+{self._color(f'  experiment: {self.experiment_name}', colors.white)}
+{self._color(f'  started: {datetime.now().strftime("%y-%m-%d %h:%m:%s")}', colors.gray)}
+{self._color('=' * 70, colors.cyan)}
 """
         self._write(banner)
         
     def print_config(self, config: Dict[str, Any]):
-        """Print configuration summary."""
+        """print configuration summary."""
         if self.verbose < 2:
             return
             
@@ -159,7 +159,7 @@ class ConsoleLogger:
         total_params: int,
         trainable_params: int
     ):
-        """Print model summary."""
+        """print model summary."""
         if self.verbose < 1:
             return
             
@@ -176,7 +176,7 @@ class ConsoleLogger:
         test_samples: int,
         batch_size: int
     ):
-        """Print data summary."""
+        """print data summary."""
         if self.verbose < 1:
             return
             
@@ -190,11 +190,11 @@ class ConsoleLogger:
         self._write(f"  batch size: {batch_size}\n")
         
     # =========================================================================
-    # Training Progress
+    # training progress
     # =========================================================================
     
     def on_training_start(self, total_epochs: int):
-        """Called at the start of training."""
+        """called at the start of training."""
         self._start_time = time.time()
         self._total_epochs = total_epochs
         
@@ -207,7 +207,7 @@ class ConsoleLogger:
         self,
         final_metrics: Optional[Dict[str, float]] = None
     ):
-        """Called at the end of training."""
+        """called at the end of training."""
         total_time = time.time() - self._start_time if self._start_time else 0
         
         self._write(f"\n{self._color('=' * 70, Colors.GREEN)}")
@@ -222,7 +222,7 @@ class ConsoleLogger:
         self._write(self._color('=' * 70, Colors.GREEN) + "\n")
         
     def on_epoch_start(self, epoch: int, total_epochs: int):
-        """Called at the start of each epoch."""
+        """called at the start of each epoch."""
         self._current_epoch = epoch
         self._total_epochs = total_epochs
         self._epoch_start_time = time.time()
@@ -239,17 +239,17 @@ class ConsoleLogger:
         val_metrics: Optional[Dict[str, float]] = None,
         lr: Optional[float] = None
     ):
-        """Called at the end of each epoch."""
+        """called at the end of each epoch."""
         epoch_time = time.time() - self._epoch_start_time if self._epoch_start_time else 0
         
-        # Estimate remaining time
+        # estimate remaining time
         elapsed_total = time.time() - self._start_time if self._start_time else 0
         avg_epoch_time = elapsed_total / epoch
         remaining_epochs = self._total_epochs - epoch
         eta = avg_epoch_time * remaining_epochs
         
         if self.verbose >= 1:
-            # Progress bar
+            # progress bar
             progress = epoch / self._total_epochs
             bar_width = 30
             filled = int(bar_width * progress)
@@ -261,14 +261,14 @@ class ConsoleLogger:
                        f"eta: {self._format_time(eta)}")
             
         if self.verbose >= 2:
-            # Training metrics
+            # training metrics
             train_str = " | ".join([
                 self._format_metric(k, v)
                 for k, v in train_metrics.items()
             ])
             self._write(f"  {self._color('train:', Colors.BLUE)} {train_str}")
 
-            # Validation metrics
+            # validation metrics
             if val_metrics:
                 val_str = " | ".join([
                     self._format_metric(k, v)
@@ -276,7 +276,7 @@ class ConsoleLogger:
                 ])
                 self._write(f"  {self._color('val:', Colors.YELLOW)} {val_str}")
 
-            # Learning rate
+            # learning rate
             if lr is not None:
                 self._write(f"  {self._color('lr:', Colors.GRAY)} {lr:.2e}")
                 
@@ -287,7 +287,7 @@ class ConsoleLogger:
         metrics: Dict[str, float],
         samples_per_sec: Optional[float] = None
     ):
-        """Called at the end of each batch (for verbose >= 3)."""
+        """called at the end of each batch (for verbose >= 3)."""
         if self.verbose < 3:
             return
             
@@ -297,16 +297,16 @@ class ConsoleLogger:
         
         speed_str = f" | {samples_per_sec:.1f} samples/s" if samples_per_sec else ""
         
-        # Overwrite line for progress
+        # overwrite line for progress
         progress = f"[{batch}/{total_batches}]"
         line = f"\r  batch {progress}: {metrics_str}{speed_str}"
         self._write(line, end='')
         
         if batch == total_batches:
-            self._write('')  # New line at end
+            self._write('')  # new line at end
             
     # =========================================================================
-    # Events and Messages
+    # events and messages
     # =========================================================================
     
     def log_checkpoint(
@@ -315,7 +315,7 @@ class ConsoleLogger:
         is_best: bool = False,
         metrics: Optional[Dict[str, float]] = None
     ):
-        """Log checkpoint save."""
+        """log checkpoint save."""
         if self.verbose < 1:
             return
             
@@ -331,14 +331,14 @@ class ConsoleLogger:
                 self._write(f"    {self._format_metric(name, value)}")
                 
     def log_early_stop(self, epoch: int, patience: int, best_metric: float):
-        """Log early stopping."""
+        """log early stopping."""
         self._write(f"\n{self._color('warning: early stopping triggered', Colors.YELLOW)}")
         self._write(f"  epoch: {epoch}")
         self._write(f"  patience: {patience} epochs without improvement")
         self._write(f"  best metric: {best_metric:.4f}\n")
         
     def log_lr_update(self, old_lr: float, new_lr: float, reason: str = ""):
-        """Log learning rate update."""
+        """log learning rate update."""
         if self.verbose < 2:
             return
             
@@ -348,31 +348,31 @@ class ConsoleLogger:
         self._write(msg)
         
     def log_sample_saved(self, path: str, epoch: int):
-        """Log sample save."""
+        """log sample save."""
         if self.verbose < 2:
             return
             
         self._write(f"  {self._color('samples saved:', Colors.GRAY)} {path}")
 
     def log_info(self, message: str):
-        """Log info message."""
+        """log info message."""
         if self.verbose >= 1:
             self._write(f"  {self._color('info:', Colors.BLUE)} {message}")
             
     def log_warning(self, message: str):
-        """Log warning message."""
+        """log warning message."""
         self._write(f"  {self._color('warning:', Colors.YELLOW)} {message}")
 
     def log_error(self, message: str):
-        """Log error message."""
+        """log error message."""
         self._write(f"  {self._color('error:', Colors.RED)} {message}")
         
     def log_success(self, message: str):
-        """Log success message."""
+        """log success message."""
         self._write(f"  {self._color('+', Colors.GREEN)} {message}")
         
     # =========================================================================
-    # Tables
+    # tables
     # =========================================================================
     
     def print_metrics_table(
@@ -381,11 +381,11 @@ class ConsoleLogger:
         title: str = "Metrics Summary"
     ):
         """
-        Print a formatted metrics table.
+        print a formatted metrics table.
         
-        Args:
-            metrics: Dictionary of {row_name: {col_name: value}}
-            title: Table title
+        args:
+            metrics: dictionary of {row_name: {col_name: value}}
+            title: table title
         """
         if self.verbose < 1:
             return
@@ -393,25 +393,25 @@ class ConsoleLogger:
         if not metrics:
             return
             
-        # Get all column names
+        # get all column names
         all_cols = set()
         for row_metrics in metrics.values():
             all_cols.update(row_metrics.keys())
         cols = sorted(list(all_cols))
         
-        # Calculate column widths
+        # calculate column widths
         col_width = max(12, max(len(c) for c in cols) + 2)
         row_width = max(12, max(len(r) for r in metrics.keys()) + 2)
         
-        # Print title
+        # print title
         self._write(f"\n{self._color(title, Colors.BOLD)}")
         
-        # Print header
+        # print header
         header = " " * row_width + "".join(f"{c:>{col_width}}" for c in cols)
         self._write(self._color(header, Colors.CYAN))
         self._write("-" * (row_width + col_width * len(cols)))
         
-        # Print rows
+        # print rows
         for row_name, row_metrics in metrics.items():
             row_str = f"{row_name:<{row_width}}"
             for col in cols:
@@ -422,11 +422,11 @@ class ConsoleLogger:
         self._write("")
         
     # =========================================================================
-    # Cleanup
+    # cleanup
     # =========================================================================
     
     def close(self):
-        """Close the logger."""
+        """close the logger."""
         if self._file:
             self._file.close()
             self._file = None

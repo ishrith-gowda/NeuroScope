@@ -1,7 +1,7 @@
 """
-Multi-Scale Discriminator Architectures.
+multi-scale discriminator architectures.
 
-Discriminators that operate at multiple scales for
+discriminators that operate at multiple scales for
 multi-resolution adversarial training.
 """
 
@@ -16,16 +16,16 @@ from .patch import NLayerPatchDiscriminator
 
 class MultiScaleDiscriminator(MultiScaleDiscriminatorBase):
     """
-    Multi-Scale Discriminator.
+    multi-scale discriminator.
     
-    Uses multiple PatchGAN discriminators at different scales.
+    uses multiple patchgan discriminators at different scales.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_scales: Number of scales
-        n_layers: Layers per discriminator
-        norm_type: Normalization type
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_scales: number of scales
+        n_layers: layers per discriminator
+        norm_type: normalization type
     """
     
     def __init__(
@@ -39,7 +39,7 @@ class MultiScaleDiscriminator(MultiScaleDiscriminatorBase):
         super().__init__(in_channels, ndf, n_scales)
         
         for i in range(n_scales):
-            # Smaller networks for finer scales
+            # smaller networks for finer scales
             scale_ndf = ndf if i == 0 else ndf // (2 ** i)
             scale_ndf = max(scale_ndf, 32)
             
@@ -58,14 +58,14 @@ class MultiScaleDiscriminator(MultiScaleDiscriminatorBase):
         return_features: bool = False
     ) -> Union[List[torch.Tensor], Tuple[List[torch.Tensor], List[List[torch.Tensor]]]]:
         """
-        Forward pass at multiple scales.
+        forward pass at multiple scales.
         
-        Args:
-            x: Input tensor
-            return_features: Whether to return intermediate features
+        args:
+            x: input tensor
+            return_features: whether to return intermediate features
             
-        Returns:
-            List of outputs (and optionally features) from each scale
+        returns:
+            list of outputs (and optionally features) from each scale
         """
         outputs = []
         all_features = []
@@ -89,14 +89,14 @@ class MultiScaleDiscriminator(MultiScaleDiscriminatorBase):
 
 class PyramidDiscriminator(BaseDiscriminator):
     """
-    Feature Pyramid Discriminator.
+    feature pyramid discriminator.
     
-    Builds a feature pyramid and discriminates at each level.
+    builds a feature pyramid and discriminates at each level.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_levels: Number of pyramid levels
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_levels: number of pyramid levels
     """
     
     def __init__(
@@ -109,7 +109,7 @@ class PyramidDiscriminator(BaseDiscriminator):
         
         self.n_levels = n_levels
         
-        # Feature extractors for each level
+        # feature extractors for each level
         self.feature_extractors = nn.ModuleList()
         self.lateral_convs = nn.ModuleList()
         self.discriminators = nn.ModuleList()
@@ -118,7 +118,7 @@ class PyramidDiscriminator(BaseDiscriminator):
         for i in range(n_levels):
             out_ch = min(ndf * (2 ** i), 512)
             
-            # Feature extractor (downsampling)
+            # feature extractor (downsampling)
             self.feature_extractors.append(
                 nn.Sequential(
                     nn.Conv2d(in_ch, out_ch, 3, stride=2, padding=1),
@@ -130,12 +130,12 @@ class PyramidDiscriminator(BaseDiscriminator):
                 )
             )
             
-            # Lateral connection
+            # lateral connection
             self.lateral_convs.append(
                 nn.Conv2d(out_ch, ndf * 2, 1)
             )
             
-            # Per-level discriminator
+            # per-level discriminator
             self.discriminators.append(
                 nn.Sequential(
                     nn.Conv2d(ndf * 2, ndf * 2, 3, padding=1),
@@ -147,8 +147,8 @@ class PyramidDiscriminator(BaseDiscriminator):
             in_ch = out_ch
             
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        """Forward pass returning outputs at each pyramid level."""
-        # Extract features at each level
+        """forward pass returning outputs at each pyramid level."""
+        # extract features at each level
         features = []
         current = x
         
@@ -156,7 +156,7 @@ class PyramidDiscriminator(BaseDiscriminator):
             current = extractor(current)
             features.append(current)
             
-        # Build pyramid and discriminate
+        # build pyramid and discriminate
         outputs = []
         prev_features = None
         
@@ -164,7 +164,7 @@ class PyramidDiscriminator(BaseDiscriminator):
             lateral = self.lateral_convs[i](features[i])
             
             if prev_features is not None:
-                # Upsample and add
+                # upsample and add
                 upsampled = F.interpolate(
                     prev_features, size=lateral.shape[-2:],
                     mode='bilinear', align_corners=False
@@ -174,20 +174,20 @@ class PyramidDiscriminator(BaseDiscriminator):
             outputs.append(self.discriminators[i](lateral))
             prev_features = lateral
             
-        return outputs[::-1]  # Return in coarse-to-fine order
+        return outputs[::-1]  # return in coarse-to-fine order
 
 
 class SharedEncoderMultiScaleDiscriminator(BaseDiscriminator):
     """
-    Multi-Scale Discriminator with Shared Encoder.
+    multi-scale discriminator with shared encoder.
     
-    Uses a shared encoder and multiple output heads.
-    More efficient than separate discriminators.
+    uses a shared encoder and multiple output heads.
+    more efficient than separate discriminators.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_scales: Number of output scales
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_scales: number of output scales
     """
     
     def __init__(
@@ -200,7 +200,7 @@ class SharedEncoderMultiScaleDiscriminator(BaseDiscriminator):
         
         self.n_scales = n_scales
         
-        # Shared encoder
+        # shared encoder
         self.encoder = nn.ModuleList()
         
         in_ch = in_channels
@@ -216,31 +216,31 @@ class SharedEncoderMultiScaleDiscriminator(BaseDiscriminator):
             )
             in_ch = out_ch
             
-        # Output heads at different scales
+        # output heads at different scales
         self.output_heads = nn.ModuleList()
         
-        # Get channels at each scale
+        # get channels at each scale
         channels_per_scale = [
             min(ndf * (2 ** i), 512) for i in range(5)
         ]
         
         for i in range(n_scales):
-            layer_idx = min(i + 2, 4)  # Start from layer 2
+            layer_idx = min(i + 2, 4)  # start from layer 2
             self.output_heads.append(
                 nn.Conv2d(channels_per_scale[layer_idx], 1, 4, padding=1)
             )
             
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        """Forward pass with shared encoder."""
+        """forward pass with shared encoder."""
         outputs = []
         intermediate_features = []
         
-        # Encode
+        # encode
         for layer in self.encoder:
             x = layer(x)
             intermediate_features.append(x)
             
-        # Get outputs at multiple scales
+        # get outputs at multiple scales
         for i, head in enumerate(self.output_heads):
             layer_idx = min(i + 2, 4)
             outputs.append(head(intermediate_features[layer_idx]))
@@ -250,15 +250,15 @@ class SharedEncoderMultiScaleDiscriminator(BaseDiscriminator):
 
 class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
     """
-    Adaptive Multi-Scale Discriminator.
+    adaptive multi-scale discriminator.
     
-    Dynamically adjusts which scales are most important
+    dynamically adjusts which scales are most important
     based on training progress.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        n_scales: Number of scales
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        n_scales: number of scales
     """
     
     def __init__(
@@ -271,7 +271,7 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
         
         self.n_scales = n_scales
         
-        # Scale-specific discriminators
+        # scale-specific discriminators
         self.discriminators = nn.ModuleList()
         
         for i in range(n_scales):
@@ -279,12 +279,12 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
                 NLayerPatchDiscriminator(
                     in_channels=in_channels,
                     ndf=ndf,
-                    n_layers=3 + i,  # More layers for coarser scales
+                    n_layers=3 + i,  # more layers for coarser scales
                     norm_type='instance'
                 )
             )
             
-        # Learnable scale weights
+        # learnable scale weights
         self.scale_weights = nn.Parameter(torch.ones(n_scales) / n_scales)
         
     def forward(
@@ -293,11 +293,11 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
         return_weighted: bool = False
     ) -> Union[List[torch.Tensor], torch.Tensor]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            return_weighted: If True, return weighted sum of outputs
+        args:
+            x: input tensor
+            return_weighted: if true, return weighted sum of outputs
         """
         outputs = []
         current_input = x
@@ -307,12 +307,12 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
             current_input = F.avg_pool2d(current_input, 2)
             
         if return_weighted:
-            # Weighted combination
+            # weighted combination
             weights = F.softmax(self.scale_weights, dim=0)
             weighted_output = 0
             
             for i, (out, w) in enumerate(zip(outputs, weights)):
-                # Upsample to original scale
+                # upsample to original scale
                 if i > 0:
                     out = F.interpolate(
                         out, size=outputs[0].shape[-2:],
@@ -327,15 +327,15 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
 
 class ProgressiveMultiScaleDiscriminator(BaseDiscriminator):
     """
-    Progressive Multi-Scale Discriminator.
+    progressive multi-scale discriminator.
     
-    For progressive training - starts with coarse scales
+    for progressive training - starts with coarse scales
     and gradually adds finer scales.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        max_scales: Maximum number of scales
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        max_scales: maximum number of scales
     """
     
     def __init__(
@@ -349,7 +349,7 @@ class ProgressiveMultiScaleDiscriminator(BaseDiscriminator):
         self.max_scales = max_scales
         self.active_scales = 1
         
-        # Create all discriminators
+        # create all discriminators
         self.discriminators = nn.ModuleList()
         
         for i in range(max_scales):
@@ -363,23 +363,23 @@ class ProgressiveMultiScaleDiscriminator(BaseDiscriminator):
                 )
             )
             
-        # Alpha for blending new scale
+        # alpha for blending new scale
         self.register_buffer('alpha', torch.ones(1))
         
     def set_active_scales(self, n_scales: int, alpha: float = 1.0):
-        """Set number of active scales and blending alpha."""
+        """set number of active scales and blending alpha."""
         self.active_scales = min(n_scales, self.max_scales)
         self.alpha.fill_(alpha)
         
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        """Forward pass with active scales only."""
+        """forward pass with active scales only."""
         outputs = []
         current_input = x
         
         for i in range(self.active_scales):
             output = self.discriminators[i](current_input)
             
-            # Blend newest scale
+            # blend newest scale
             if i == self.active_scales - 1 and self.active_scales > 1:
                 output = self.alpha * output
                 
@@ -391,15 +391,15 @@ class ProgressiveMultiScaleDiscriminator(BaseDiscriminator):
 
 class DualScaleDiscriminator(BaseDiscriminator):
     """
-    Dual-Scale Discriminator.
+    dual-scale discriminator.
     
-    Simple two-scale discriminator: global and local.
+    simple two-scale discriminator: global and local.
     
-    Args:
-        in_channels: Input channels
-        ndf: Base number of filters
-        global_layers: Layers for global discriminator
-        local_layers: Layers for local discriminator
+    args:
+        in_channels: input channels
+        ndf: base number of filters
+        global_layers: layers for global discriminator
+        local_layers: layers for local discriminator
     """
     
     def __init__(
@@ -411,7 +411,7 @@ class DualScaleDiscriminator(BaseDiscriminator):
     ):
         super().__init__(in_channels, ndf)
         
-        # Global discriminator (full image)
+        # global discriminator (full image)
         self.global_disc = NLayerPatchDiscriminator(
             in_channels=in_channels,
             ndf=ndf,
@@ -419,7 +419,7 @@ class DualScaleDiscriminator(BaseDiscriminator):
             norm_type='instance'
         )
         
-        # Local discriminator (patches)
+        # local discriminator (patches)
         self.local_disc = NLayerPatchDiscriminator(
             in_channels=in_channels,
             ndf=ndf // 2,
@@ -433,22 +433,22 @@ class DualScaleDiscriminator(BaseDiscriminator):
         patch_size: int = 64
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            patch_size: Size of local patches
+        args:
+            x: input tensor
+            patch_size: size of local patches
             
-        Returns:
-            Global and local discriminator outputs
+        returns:
+            global and local discriminator outputs
         """
-        # Global
+        # global
         global_out = self.global_disc(x)
         
-        # Local (random patches)
+        # local (random patches)
         B, C, H, W = x.size()
         
-        # Sample random patches
+        # sample random patches
         if H > patch_size and W > patch_size:
             h_start = torch.randint(0, H - patch_size, (B,))
             w_start = torch.randint(0, W - patch_size, (B,))

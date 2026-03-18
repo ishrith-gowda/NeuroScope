@@ -10,12 +10,12 @@ bottleneck with self-attention, decoder) while inserting a quantization
 + entropy estimation layer between the encoder and bottleneck.
 
 key design decisions:
-    - quantization is placed AFTER the encoder and BEFORE the bottleneck,
+    - quantization is placed after the encoder and before the bottleneck,
       so the bottleneck operates on quantized features. this forces the
       model to be robust to quantization noise.
-    - the entropy model provides a differentiable bitrate estimate R
-      that enters the loss as lambda_rate * R.
-    - at inference, the quantized bottleneck features ARE the compressed
+    - the entropy model provides a differentiable bitrate estimate r
+      that enters the loss as lambda_rate * r.
+    - at inference, the quantized bottleneck features are the compressed
       representation (can be entropy coded with arithmetic coding).
 
 reference:
@@ -274,9 +274,9 @@ class CompressedSACycleGAN25D(nn.Module):
     which the model learns to handle gracefully.
 
     rate-distortion loss:
-        L_total = L_harmonization + lambda_rate * (R_A2B + R_B2A)
-    where L_harmonization = L_adv + L_cycle + L_idt + L_ssim [+ L_nce]
-    and R = estimated bitrate from entropy model.
+        l_total = l_harmonization + lambda_rate * (r_a2b + r_b2a)
+    where l_harmonization = l_adv + l_cycle + l_idt + l_ssim [+ l_nce]
+    and r = estimated bitrate from entropy model.
     """
 
     def __init__(
@@ -325,10 +325,10 @@ class CompressedSACycleGAN25D(nn.Module):
         returns:
             dict with fake images, reconstructions, and bitrate estimates
         """
-        # forward: A -> B (with compression)
+        # forward: a -> b (with compression)
         fake_B, bits_A2B, bpe_A2B = self.G_A2B(slices_A)
 
-        # cycle: B -> A -> B
+        # cycle: b -> a -> b
         fake_B_3slice = (
             fake_B.unsqueeze(2)
             .repeat(1, 1, 3, 1, 1)
@@ -336,10 +336,10 @@ class CompressedSACycleGAN25D(nn.Module):
         )
         rec_A, bits_rec_A, _ = self.G_B2A(fake_B_3slice)
 
-        # forward: B -> A (with compression)
+        # forward: b -> a (with compression)
         fake_A, bits_B2A, bpe_B2A = self.G_B2A(slices_B)
 
-        # cycle: A -> B -> A
+        # cycle: a -> b -> a
         fake_A_3slice = (
             fake_A.unsqueeze(2)
             .repeat(1, 1, 3, 1, 1)
@@ -394,7 +394,7 @@ if __name__ == "__main__":
     params = model.get_parameter_count()
     print(f"\ncompressed model parameters:")
     for k, v in params.items():
-        print(f"  {k}: {v:,} ({v/1e6:.2f}M)")
+        print(f"  {k}: {v:,} ({v/1e6:.2f}m)")
 
     # test forward
     a = torch.randn(2, 12, 128, 128)

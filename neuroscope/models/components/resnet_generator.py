@@ -1,4 +1,4 @@
-"""ResNet-based generator for CycleGAN."""
+"""resnet-based generator for cyclegan."""
 
 import torch
 import torch.nn as nn
@@ -6,13 +6,13 @@ from typing import List, Optional, Union, Tuple
 
 
 class ResidualBlock(nn.Module):
-    """Residual block with reflection padding for CycleGAN generator."""
+    """residual block with reflection padding for cyclegan generator."""
     
     def __init__(self, dim: int):
-        """Initialize residual block.
+        """initialize residual block.
         
-        Args:
-            dim: Number of input and output channels.
+        args:
+            dim: number of input and output channels.
         """
         super().__init__()
         self.block = nn.Sequential(
@@ -26,39 +26,39 @@ class ResidualBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of residual block.
+        """forward pass of residual block.
         
-        Args:
-            x: Input tensor of shape [B, C, H, W].
+        args:
+            x: input tensor of shape [b, c, h, w].
             
-        Returns:
-            Output tensor of shape [B, C, H, W].
+        returns:
+            output tensor of shape [b, c, h, w].
         """
         return x + self.block(x)
 
 
 class ResNetGenerator(nn.Module):
-    """ResNet-based generator for CycleGAN.
+    """resnet-based generator for cyclegan.
     
-    Architecture:
-    - Initial reflection padding and 7x7 convolution
+    architecture:
+    - initial reflection padding and 7x7 convolution
     - 2 downsampling layers with stride 2
     - 9 residual blocks
     - 2 upsampling layers with stride 2
-    - Final reflection padding and 7x7 convolution
+    - final reflection padding and 7x7 convolution
     """
     
     def __init__(self, in_channels: int = 4, out_channels: int = 4, n_residual: int = 9):
-        """Initialize ResNet generator.
+        """initialize resnet generator.
         
-        Args:
-            in_channels: Number of input channels.
-            out_channels: Number of output channels.
-            n_residual: Number of residual blocks.
+        args:
+            in_channels: number of input channels.
+            out_channels: number of output channels.
+            n_residual: number of residual blocks.
         """
         super().__init__()
         
-        # Initial block
+        # initial block
         model = [
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, 64, kernel_size=7),
@@ -66,7 +66,7 @@ class ResNetGenerator(nn.Module):
             nn.ReLU(inplace=True)
         ]
         
-        # Downsampling blocks
+        # downsampling blocks
         in_feat, out_feat = 64, 128
         for _ in range(2):
             model += [
@@ -76,11 +76,11 @@ class ResNetGenerator(nn.Module):
             ]
             in_feat, out_feat = out_feat, out_feat * 2
         
-        # Residual blocks
+        # residual blocks
         for _ in range(n_residual):
             model += [ResidualBlock(in_feat)]
         
-        # Upsampling blocks
+        # upsampling blocks
         out_feat = in_feat // 2
         for _ in range(2):
             model += [
@@ -90,7 +90,7 @@ class ResNetGenerator(nn.Module):
             ]
             in_feat, out_feat = out_feat, out_feat // 2
         
-        # Output block
+        # output block
         model += [
             nn.ReflectionPad2d(3),
             nn.Conv2d(64, out_channels, kernel_size=7),
@@ -100,30 +100,30 @@ class ResNetGenerator(nn.Module):
         self.model = nn.Sequential(*model)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of ResNet generator.
+        """forward pass of resnet generator.
         
-        Args:
-            x: Input tensor of shape [B, C, H, W].
+        args:
+            x: input tensor of shape [b, c, h, w].
             
-        Returns:
-            Output tensor of shape [B, C, H, W].
+        returns:
+            output tensor of shape [b, c, h, w].
         """
         return self.model(x)
     
     def get_num_params(self) -> int:
-        """Get number of trainable parameters.
+        """get number of trainable parameters.
         
-        Returns:
-            Number of trainable parameters.
+        returns:
+            number of trainable parameters.
         """
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 
 def weights_init_normal(m: nn.Module):
-    """Initialize weights with normal distribution.
+    """initialize weights with normal distribution.
     
-    Args:
-        m: Module to initialize.
+    args:
+        m: module to initialize.
     """
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:

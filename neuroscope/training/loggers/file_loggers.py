@@ -1,9 +1,9 @@
 """
-CSV and JSON Loggers.
+csv and json loggers.
 
-File-based logging for metrics export and reproducibility.
+file-based logging for metrics export and reproducibility.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, Any, List, Union
@@ -16,10 +16,10 @@ import threading
 
 class CSVLogger:
     """
-    CSV Logger for tabular metrics export.
+    csv logger for tabular metrics export.
     
-    Creates clean, parseable CSV files for metrics analysis
-    with tools like pandas, Excel, or R.
+    creates clean, parseable csv files for metrics analysis
+    with tools like pandas, excel, or r.
     """
     
     def __init__(
@@ -30,13 +30,13 @@ class CSVLogger:
         flush_every: int = 1
     ):
         """
-        Initialize CSV logger.
+        initialize csv logger.
         
-        Args:
-            log_dir: Directory to save CSV files
-            filename: Name of the CSV file
-            append: Whether to append to existing file
-            flush_every: Flush to disk every N writes
+        args:
+            log_dir: directory to save csv files
+            filename: name of the csv file
+            append: whether to append to existing file
+            flush_every: flush to disk every n writes
         """
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -55,7 +55,7 @@ class CSVLogger:
             self.filepath.unlink()
             
     def _initialize_file(self, columns: List[str]):
-        """Initialize the CSV file with headers."""
+        """initialize the csv file with headers."""
         mode = 'a' if self.append and self.filepath.exists() else 'w'
         self._file = open(self.filepath, mode, newline='', buffering=1)
         self._writer = csv.DictWriter(self._file, fieldnames=columns, extrasaction='ignore')
@@ -72,15 +72,15 @@ class CSVLogger:
         epoch: Optional[int] = None
     ):
         """
-        Log metrics to CSV.
+        log metrics to csv.
 
-        Args:
-            metrics: Dictionary of metric_name -> value
-            step: Global step (optional)
-            epoch: Current epoch (optional)
+        args:
+            metrics: dictionary of metric_name -> value
+            step: global step (optional)
+            epoch: current epoch (optional)
         """
         with self._lock:
-            # Build row with optional step/epoch
+            # build row with optional step/epoch
             row = {}
             if step is not None:
                 row['step'] = step
@@ -89,19 +89,19 @@ class CSVLogger:
             row['timestamp'] = datetime.now().isoformat()
             row.update(metrics)
 
-            # Initialize file if needed
+            # initialize file if needed
             if self._columns is None:
                 columns = list(row.keys())
                 self._initialize_file(columns)
 
-            # Check if new columns appeared - if so, only write columns we have
+            # check if new columns appeared - if so, only write columns we have
             filtered_row = {k: v for k, v in row.items() if k in self._columns}
 
-            # Write row
+            # write row
             self._writer.writerow(filtered_row)
             self._write_count += 1
 
-            # Flush periodically
+            # flush periodically
             if self._write_count % self.flush_every == 0:
                 self._file.flush()
                 
@@ -113,39 +113,39 @@ class CSVLogger:
         lr: Optional[float] = None
     ):
         """
-        Log a complete epoch's metrics.
+        log a complete epoch's metrics.
         
-        Args:
-            epoch: Current epoch
-            train_metrics: Training metrics
-            val_metrics: Validation metrics (optional)
-            lr: Learning rate (optional)
+        args:
+            epoch: current epoch
+            train_metrics: training metrics
+            val_metrics: validation metrics (optional)
+            lr: learning rate (optional)
         """
         row = {'epoch': epoch}
         
-        # Add training metrics with prefix
+        # add training metrics with prefix
         for k, v in train_metrics.items():
             row[f'train_{k}'] = v
             
-        # Add validation metrics with prefix
+        # add validation metrics with prefix
         if val_metrics:
             for k, v in val_metrics.items():
                 row[f'val_{k}'] = v
                 
-        # Add learning rate
+        # add learning rate
         if lr is not None:
             row['learning_rate'] = lr
             
         self.log(row, epoch=epoch)
         
     def flush(self):
-        """Flush buffer to disk."""
+        """flush buffer to disk."""
         with self._lock:
             if self._file:
                 self._file.flush()
                 
     def close(self):
-        """Close the CSV file."""
+        """close the csv file."""
         with self._lock:
             if self._file:
                 self._file.close()
@@ -162,9 +162,9 @@ class CSVLogger:
 
 class JSONLogger:
     """
-    JSON Logger for structured metrics and metadata.
+    json logger for structured metrics and metadata.
     
-    Creates JSON files with full training history,
+    creates json files with full training history,
     configuration, and metadata for reproducibility.
     """
     
@@ -175,12 +175,12 @@ class JSONLogger:
         pretty_print: bool = True
     ):
         """
-        Initialize JSON logger.
+        initialize json logger.
         
-        Args:
-            log_dir: Directory to save JSON files
-            filename: Name of the JSON file
-            pretty_print: Whether to format JSON for readability
+        args:
+            log_dir: directory to save json files
+            filename: name of the json file
+            pretty_print: whether to format json for readability
         """
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -189,7 +189,7 @@ class JSONLogger:
         
         self._lock = threading.Lock()
         
-        # Initialize log structure
+        # initialize log structure
         self._log = {
             'metadata': {
                 'created': datetime.now().isoformat(),
@@ -205,20 +205,20 @@ class JSONLogger:
             'events': []
         }
         
-        # Load existing log if present
+        # load existing log if present
         if self.filepath.exists():
             try:
                 with open(self.filepath, 'r') as f:
                     self._log = json.load(f)
             except json.JSONDecodeError:
-                pass  # Start fresh if file is corrupted
+                pass  # start fresh if file is corrupted
                 
     def log_config(self, config: Dict[str, Any]):
         """
-        Log training configuration.
+        log training configuration.
         
-        Args:
-            config: Configuration dictionary
+        args:
+            config: configuration dictionary
         """
         with self._lock:
             self._log['config'] = self._serialize(config)
@@ -226,10 +226,10 @@ class JSONLogger:
             
     def log_metadata(self, metadata: Dict[str, Any]):
         """
-        Log additional metadata.
+        log additional metadata.
         
-        Args:
-            metadata: Metadata dictionary
+        args:
+            metadata: metadata dictionary
         """
         with self._lock:
             self._log['metadata'].update(self._serialize(metadata))
@@ -242,12 +242,12 @@ class JSONLogger:
         epoch: Optional[int] = None
     ):
         """
-        Log a training step.
+        log a training step.
         
-        Args:
-            step: Global step
-            metrics: Metrics dictionary
-            epoch: Current epoch (optional)
+        args:
+            step: global step
+            metrics: metrics dictionary
+            epoch: current epoch (optional)
         """
         with self._lock:
             entry = {
@@ -260,8 +260,8 @@ class JSONLogger:
                 
             self._log['history']['train'].append(entry)
             
-            # Don't save every step (too slow)
-            # Save is done on epoch end or explicitly
+            # don't save every step (too slow)
+            # save is done on epoch end or explicitly
             
     def log_validation(
         self,
@@ -269,11 +269,11 @@ class JSONLogger:
         metrics: Dict[str, float]
     ):
         """
-        Log validation results.
+        log validation results.
         
-        Args:
-            epoch: Current epoch
-            metrics: Validation metrics
+        args:
+            epoch: current epoch
+            metrics: validation metrics
         """
         with self._lock:
             entry = {
@@ -293,14 +293,14 @@ class JSONLogger:
         time_elapsed: Optional[float] = None
     ):
         """
-        Log complete epoch summary.
+        log complete epoch summary.
         
-        Args:
-            epoch: Current epoch
-            train_metrics: Training metrics
-            val_metrics: Validation metrics (optional)
-            lr: Learning rate (optional)
-            time_elapsed: Time for this epoch (optional)
+        args:
+            epoch: current epoch
+            train_metrics: training metrics
+            val_metrics: validation metrics (optional)
+            lr: learning rate (optional)
+            time_elapsed: time for this epoch (optional)
         """
         with self._lock:
             entry = {
@@ -328,13 +328,13 @@ class JSONLogger:
         metrics: Optional[Dict[str, float]] = None
     ):
         """
-        Log checkpoint save event.
+        log checkpoint save event.
         
-        Args:
-            epoch: Current epoch
-            path: Checkpoint file path
-            is_best: Whether this is the best model
-            metrics: Associated metrics (optional)
+        args:
+            epoch: current epoch
+            path: checkpoint file path
+            is_best: whether this is the best model
+            metrics: associated metrics (optional)
         """
         with self._lock:
             entry = {
@@ -356,12 +356,12 @@ class JSONLogger:
         data: Optional[Dict[str, Any]] = None
     ):
         """
-        Log a training event.
+        log a training event.
         
-        Args:
-            event_type: Type of event (e.g., 'early_stop', 'lr_update')
-            message: Event message
-            data: Additional event data (optional)
+        args:
+            event_type: type of event (e.g., 'early_stop', 'lr_update')
+            message: event message
+            data: additional event data (optional)
         """
         with self._lock:
             entry = {
@@ -376,19 +376,19 @@ class JSONLogger:
             self._save()
             
     def get_history(self, key: str = 'epochs') -> List[Dict]:
-        """Get training history."""
+        """get training history."""
         return self._log['history'].get(key, [])
         
     def get_best_checkpoint(self) -> Optional[Dict]:
-        """Get the best checkpoint entry."""
+        """get the best checkpoint entry."""
         best_checkpoints = [c for c in self._log['checkpoints'] if c.get('is_best')]
         return best_checkpoints[-1] if best_checkpoints else None
         
     def _serialize(self, obj: Any) -> Any:
-        """Serialize object for JSON storage."""
+        """serialize object for json storage."""
         import numpy as np
 
-        # Handle numpy types
+        # handle numpy types
         if isinstance(obj, np.bool_):
             return bool(obj)
         elif isinstance(obj, np.integer):
@@ -397,7 +397,7 @@ class JSONLogger:
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        # Handle regular types
+        # handle regular types
         elif isinstance(obj, dict):
             return {k: self._serialize(v) for k, v in obj.items()}
         elif isinstance(obj, (list, tuple)):
@@ -412,9 +412,9 @@ class JSONLogger:
             return str(obj)
             
     def _save(self):
-        """Save log to disk."""
+        """save log to disk."""
         with open(self.filepath, 'w') as f:
-            # Serialize to handle numpy types and other non-JSON-serializable objects
+            # serialize to handle numpy types and other non-json-serializable objects
             serialized_log = self._serialize(self._log)
             if self.pretty_print:
                 json.dump(serialized_log, f, indent=2)
@@ -422,12 +422,12 @@ class JSONLogger:
                 json.dump(serialized_log, f)
                 
     def flush(self):
-        """Force save to disk."""
+        """force save to disk."""
         with self._lock:
             self._save()
             
     def close(self):
-        """Close and save final state."""
+        """close and save final state."""
         self.flush()
         
     def __enter__(self):
@@ -440,9 +440,9 @@ class JSONLogger:
 
 class MetricsAggregator:
     """
-    Aggregates metrics over batches for epoch-level reporting.
+    aggregates metrics over batches for epoch-level reporting.
     
-    Computes running averages and stores per-batch values.
+    computes running averages and stores per-batch values.
     """
     
     def __init__(self):
@@ -451,11 +451,11 @@ class MetricsAggregator:
         
     def update(self, metrics: Dict[str, float], batch_size: int = 1):
         """
-        Update with new batch metrics.
+        update with new batch metrics.
         
-        Args:
-            metrics: Batch metrics
-            batch_size: Size of batch (for weighted averaging)
+        args:
+            metrics: batch metrics
+            batch_size: size of batch (for weighted averaging)
         """
         for key, value in metrics.items():
             if key not in self._values:
@@ -465,20 +465,20 @@ class MetricsAggregator:
             self._counts[key] += batch_size
             
     def get_average(self, key: str) -> float:
-        """Get average value for a metric."""
+        """get average value for a metric."""
         if key not in self._values or not self._values[key]:
             return 0.0
         return sum(self._values[key]) / len(self._values[key])
         
     def get_averages(self) -> Dict[str, float]:
-        """Get all average values."""
+        """get all average values."""
         return {key: self.get_average(key) for key in self._values}
         
     def get_values(self, key: str) -> List[float]:
-        """Get all values for a metric."""
+        """get all values for a metric."""
         return self._values.get(key, [])
         
     def reset(self):
-        """Reset all accumulated values."""
+        """reset all accumulated values."""
         self._values.clear()
         self._counts.clear()

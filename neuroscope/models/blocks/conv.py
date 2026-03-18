@@ -1,7 +1,7 @@
 """
-Convolution block implementations.
+convolution block implementations.
 
-This module provides various convolution block patterns used throughout
+this module provides various convolution block patterns used throughout
 the architecture.
 """
 
@@ -12,17 +12,17 @@ from typing import Optional, Type, Tuple, Union
 
 class ConvBlock(nn.Module):
     """
-    Standard convolution block: Conv -> Norm -> Activation.
+    standard convolution block: conv -> norm -> activation.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        kernel_size: Convolution kernel size
-        stride: Convolution stride
-        padding: Convolution padding
-        norm_layer: Normalization layer class
-        activation: Activation function
-        bias: Whether to use bias
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        kernel_size: convolution kernel size
+        stride: convolution stride
+        padding: convolution padding
+        norm_layer: normalization layer class
+        activation: activation function
+        bias: whether to use bias
     """
     
     def __init__(
@@ -64,17 +64,17 @@ class ConvBlock(nn.Module):
 
 class ConvTransposeBlock(nn.Module):
     """
-    Transposed convolution block for upsampling.
+    transposed convolution block for upsampling.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        kernel_size: Convolution kernel size
-        stride: Convolution stride
-        padding: Convolution padding
-        output_padding: Output padding for transposed conv
-        norm_layer: Normalization layer class
-        activation: Activation function
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        kernel_size: convolution kernel size
+        stride: convolution stride
+        padding: convolution padding
+        output_padding: output padding for transposed conv
+        norm_layer: normalization layer class
+        activation: activation function
     """
     
     def __init__(
@@ -117,14 +117,14 @@ class ConvTransposeBlock(nn.Module):
 
 class UpsampleConvBlock(nn.Module):
     """
-    Upsample + Conv block (avoids checkerboard artifacts from transposed conv).
+    upsample + conv block (avoids checkerboard artifacts from transposed conv).
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        scale_factor: Upsampling scale factor
-        mode: Upsampling mode ('nearest', 'bilinear')
-        norm_layer: Normalization layer class
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        scale_factor: upsampling scale factor
+        mode: upsampling mode ('nearest', 'bilinear')
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -162,13 +162,13 @@ class UpsampleConvBlock(nn.Module):
 
 class DownsampleConvBlock(nn.Module):
     """
-    Strided convolution block for downsampling.
+    strided convolution block for downsampling.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        norm_layer: Normalization layer class
-        use_spectral_norm: Whether to apply spectral normalization
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        norm_layer: normalization layer class
+        use_spectral_norm: whether to apply spectral normalization
     """
     
     def __init__(
@@ -203,15 +203,15 @@ class DownsampleConvBlock(nn.Module):
 
 class SeparableConvBlock(nn.Module):
     """
-    Depthwise separable convolution block for efficiency.
+    depthwise separable convolution block for efficiency.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        kernel_size: Convolution kernel size
-        stride: Convolution stride
-        padding: Convolution padding
-        norm_layer: Normalization layer class
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        kernel_size: convolution kernel size
+        stride: convolution stride
+        padding: convolution padding
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -225,7 +225,7 @@ class SeparableConvBlock(nn.Module):
     ):
         super().__init__()
         
-        # Depthwise convolution
+        # depthwise convolution
         self.depthwise = nn.Conv2d(
             in_channels, in_channels,
             kernel_size=kernel_size,
@@ -235,7 +235,7 @@ class SeparableConvBlock(nn.Module):
             bias=False
         )
         
-        # Pointwise convolution
+        # pointwise convolution
         self.pointwise = nn.Conv2d(
             in_channels, out_channels,
             kernel_size=1,
@@ -252,7 +252,7 @@ class SeparableConvBlock(nn.Module):
         return self.activation(x)
 
 
-# Aliases for backward compatibility
+# aliases for backward compatibility
 DownsampleBlock = DownsampleConvBlock
 UpsampleBlock = UpsampleConvBlock
 PixelShuffleBlock = UpsampleConvBlock

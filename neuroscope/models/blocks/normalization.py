@@ -1,7 +1,7 @@
 """
-Normalization layer implementations.
+normalization layer implementations.
 
-This module provides various normalization layers used in GAN architectures.
+this module provides various normalization layers used in gan architectures.
 """
 
 import torch
@@ -11,13 +11,13 @@ from typing import Optional
 
 class AdaptiveInstanceNorm2d(nn.Module):
     """
-    Adaptive Instance Normalization (AdaIN) for style transfer.
+    adaptive instance normalization (adain) for style transfer.
     
-    Aligns the mean and variance of content features with style features.
+    aligns the mean and variance of content features with style features.
     
-    Args:
-        num_features: Number of feature channels
-        eps: Small constant for numerical stability
+    args:
+        num_features: number of feature channels
+        eps: small constant for numerical stability
     """
     
     def __init__(self, num_features: int, eps: float = 1e-5):
@@ -32,27 +32,27 @@ class AdaptiveInstanceNorm2d(nn.Module):
         beta: torch.Tensor
     ) -> torch.Tensor:
         """
-        Apply adaptive instance normalization.
+        apply adaptive instance normalization.
         
-        Args:
-            x: Input tensor [B, C, H, W]
-            gamma: Scale parameters [B, C] or [B, C, 1, 1]
-            beta: Shift parameters [B, C] or [B, C, 1, 1]
+        args:
+            x: input tensor [b, c, h, w]
+            gamma: scale parameters [b, c] or [b, c, 1, 1]
+            beta: shift parameters [b, c] or [b, c, 1, 1]
             
-        Returns:
-            Normalized tensor
+        returns:
+            normalized tensor
         """
-        # Compute instance statistics
+        # compute instance statistics
         b, c, h, w = x.size()
         x_reshaped = x.view(b, c, -1)
         mean = x_reshaped.mean(dim=2, keepdim=True)
         std = x_reshaped.std(dim=2, keepdim=True) + self.eps
         
-        # Normalize
+        # normalize
         x_norm = (x_reshaped - mean) / std
         x_norm = x_norm.view(b, c, h, w)
         
-        # Apply style
+        # apply style
         if gamma.dim() == 2:
             gamma = gamma.view(b, c, 1, 1)
             beta = beta.view(b, c, 1, 1)
@@ -62,13 +62,13 @@ class AdaptiveInstanceNorm2d(nn.Module):
 
 class LayerNorm2d(nn.Module):
     """
-    Layer Normalization for 2D feature maps.
+    layer normalization for 2d feature maps.
     
-    Normalizes over C, H, W dimensions (used in Transformers).
+    normalizes over c, h, w dimensions (used in transformers).
     
-    Args:
-        num_features: Number of feature channels
-        eps: Small constant for numerical stability
+    args:
+        num_features: number of feature channels
+        eps: small constant for numerical stability
     """
     
     def __init__(self, num_features: int, eps: float = 1e-5):
@@ -80,7 +80,7 @@ class LayerNorm2d(nn.Module):
         self.beta = nn.Parameter(torch.zeros(num_features))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply layer normalization."""
+        """apply layer normalization."""
         mean = x.mean(dim=[1, 2, 3], keepdim=True)
         std = x.std(dim=[1, 2, 3], keepdim=True) + self.eps
         
@@ -94,12 +94,12 @@ class LayerNorm2d(nn.Module):
 
 class GroupNorm2d(nn.Module):
     """
-    Group Normalization wrapper with configurable groups.
+    group normalization wrapper with configurable groups.
     
-    Args:
-        num_features: Number of feature channels
-        num_groups: Number of groups (default: 32 or num_features if smaller)
-        eps: Small constant for numerical stability
+    args:
+        num_features: number of feature channels
+        num_groups: number of groups (default: 32 or num_features if smaller)
+        eps: small constant for numerical stability
     """
     
     def __init__(
@@ -118,14 +118,14 @@ class GroupNorm2d(nn.Module):
 
 class SPADE(nn.Module):
     """
-    Spatially-Adaptive Normalization (SPADE) for semantic image synthesis.
+    spatially-adaptive normalization (spade) for semantic image synthesis.
     
-    Modulates normalized activations based on semantic layout.
+    modulates normalized activations based on semantic layout.
     
-    Args:
-        norm_channels: Number of channels to normalize
-        label_channels: Number of label/condition channels
-        hidden_channels: Hidden layer channels in modulation network
+    args:
+        norm_channels: number of channels to normalize
+        label_channels: number of label/condition channels
+        hidden_channels: hidden layer channels in modulation network
     """
     
     def __init__(
@@ -138,7 +138,7 @@ class SPADE(nn.Module):
         
         self.norm = nn.InstanceNorm2d(norm_channels, affine=False)
         
-        # Modulation network
+        # modulation network
         self.shared = nn.Sequential(
             nn.Conv2d(label_channels, hidden_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True)
@@ -148,24 +148,24 @@ class SPADE(nn.Module):
         
     def forward(self, x: torch.Tensor, segmap: torch.Tensor) -> torch.Tensor:
         """
-        Apply SPADE normalization.
+        apply spade normalization.
         
-        Args:
-            x: Input features [B, C, H, W]
-            segmap: Semantic layout [B, label_channels, H', W']
+        args:
+            x: input features [b, c, h, w]
+            segmap: semantic layout [b, label_channels, h', w']
             
-        Returns:
-            Modulated features
+        returns:
+            modulated features
         """
-        # Normalize
+        # normalize
         x_norm = self.norm(x)
         
-        # Resize segmap to match feature size
+        # resize segmap to match feature size
         segmap = nn.functional.interpolate(
             segmap, size=x.shape[2:], mode='nearest'
         )
         
-        # Compute modulation parameters
+        # compute modulation parameters
         shared_out = self.shared(segmap)
         gamma = self.gamma(shared_out)
         beta = self.beta(shared_out)
@@ -175,11 +175,11 @@ class SPADE(nn.Module):
 
 class ConditionalBatchNorm2d(nn.Module):
     """
-    Conditional Batch Normalization for class-conditional generation.
+    conditional batch normalization for class-conditional generation.
     
-    Args:
-        num_features: Number of feature channels
-        num_classes: Number of conditioning classes
+    args:
+        num_features: number of feature channels
+        num_classes: number of conditioning classes
     """
     
     def __init__(self, num_features: int, num_classes: int):
@@ -188,24 +188,24 @@ class ConditionalBatchNorm2d(nn.Module):
         self.num_features = num_features
         self.bn = nn.BatchNorm2d(num_features, affine=False)
         
-        # Class-conditional parameters
+        # class-conditional parameters
         self.embed_gamma = nn.Embedding(num_classes, num_features)
         self.embed_beta = nn.Embedding(num_classes, num_features)
         
-        # Initialize
+        # initialize
         self.embed_gamma.weight.data.fill_(1.0)
         self.embed_beta.weight.data.zero_()
         
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
-        Apply conditional batch normalization.
+        apply conditional batch normalization.
         
-        Args:
-            x: Input features [B, C, H, W]
-            y: Class labels [B] (LongTensor)
+        args:
+            x: input features [b, c, h, w]
+            y: class labels [b] (longtensor)
             
-        Returns:
-            Normalized features
+        returns:
+            normalized features
         """
         out = self.bn(x)
         gamma = self.embed_gamma(y).view(-1, self.num_features, 1, 1)

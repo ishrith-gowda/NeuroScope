@@ -1,21 +1,21 @@
 """
-NeuroScope Data Pipeline Package.
+neuroscope data pipeline package.
 
-Comprehensive data loading, preprocessing, and augmentation
+comprehensive data loading, preprocessing, and augmentation
 for multi-modal medical image analysis.
 
-Modules:
-    - datasets: Dataset classes for BraTS, UPenn-GBM, and custom data
-    - transforms: Image transformation and augmentation pipelines
-    - samplers: Custom sampling strategies for balanced training
-    - loaders: DataLoader factories with proper configuration
+modules:
+    - datasets: dataset classes for brats, upenn-gbm, and custom data
+    - transforms: image transformation and augmentation pipelines
+    - samplers: custom sampling strategies for balanced training
+    - loaders: dataloader factories with proper configuration
 """
 
 from .datasets import (
-    # Base classes
+    # base classes
     BaseMedicalDataset,
 
-    # Medical datasets
+    # medical datasets
     IXIDataset,
     OASISDataset,
     ADNIDataset,
@@ -24,17 +24,17 @@ from .datasets import (
     TCGAGBMDataset,
     VolumetricDataset,
 
-    # Utilities
+    # utilities
     DATASET_REGISTRY,
     create_medical_dataset,
 )
 
 from .transforms import (
-    # Base transforms
+    # base transforms
     BaseTransform,
     Compose,
     
-    # Intensity transforms
+    # intensity transforms
     IntensityNormalization,
     ZScoreNormalization,
     MinMaxNormalization,
@@ -42,7 +42,7 @@ from .transforms import (
     HistogramEqualization,
     AdaptiveHistogramEqualization,
     
-    # Spatial transforms
+    # spatial transforms
     RandomCrop,
     CenterCrop,
     Resize,
@@ -51,19 +51,19 @@ from .transforms import (
     RandomAffine,
     ElasticDeformation,
     
-    # Augmentation transforms
+    # augmentation transforms
     RandomNoise,
     RandomBlur,
     RandomBrightnessContrast,
     RandomGamma,
     BiasFieldAugmentation,
     
-    # Medical-specific transforms
+    # medical-specific transforms
     N4BiasFieldCorrection,
     SkullStripping,
     IntensityClipping,
     
-    # Pipeline builders
+    # pipeline builders
     create_train_transforms,
     create_val_transforms,
     create_test_transforms,
@@ -86,16 +86,16 @@ from .loaders import (
     PrefetchDataLoader,
 )
 
-# Aliases for compatibility
-BraTSDataset = TCGAGBMDataset  # Alias for backward compatibility
-UPennGBMDataset = TCGAGBMDataset  # Using same base class
-MultiModalMRIDataset = VolumetricDataset  # Alias
+# aliases for compatibility
+BraTSDataset = TCGAGBMDataset  # alias for backward compatibility
+UPennGBMDataset = TCGAGBMDataset  # using same base class
+MultiModalMRIDataset = VolumetricDataset  # alias
 
 __all__ = [
-    # Datasets - Base
+    # datasets - base
     'BaseMedicalDataset',
 
-    # Datasets - Medical
+    # datasets - medical
     'IXIDataset',
     'OASISDataset',
     'ADNIDataset',
@@ -103,19 +103,19 @@ __all__ = [
     'HCPDataset',
     'TCGAGBMDataset',
     'VolumetricDataset',
-    'BraTSDataset',  # Alias
-    'UPennGBMDataset',  # Alias
-    'MultiModalMRIDataset',  # Alias
+    'BraTSDataset',  # alias
+    'UPennGBMDataset',  # alias
+    'MultiModalMRIDataset',  # alias
 
-    # Dataset utilities
+    # dataset utilities
     'DATASET_REGISTRY',
     'create_medical_dataset',
     
-    # Transforms - Base
+    # transforms - base
     'BaseTransform',
     'Compose',
     
-    # Transforms - Intensity
+    # transforms - intensity
     'IntensityNormalization',
     'ZScoreNormalization',
     'MinMaxNormalization',
@@ -123,7 +123,7 @@ __all__ = [
     'HistogramEqualization',
     'AdaptiveHistogramEqualization',
     
-    # Transforms - Spatial
+    # transforms - spatial
     'RandomCrop',
     'CenterCrop',
     'Resize',
@@ -132,31 +132,31 @@ __all__ = [
     'RandomAffine',
     'ElasticDeformation',
     
-    # Transforms - Augmentation
+    # transforms - augmentation
     'RandomNoise',
     'RandomBlur',
     'RandomBrightnessContrast',
     'RandomGamma',
     'BiasFieldAugmentation',
     
-    # Transforms - Medical
+    # transforms - medical
     'N4BiasFieldCorrection',
     'SkullStripping',
     'IntensityClipping',
     
-    # Transform builders
+    # transform builders
     'create_train_transforms',
     'create_val_transforms',
     'create_test_transforms',
     
-    # Samplers
+    # samplers
     'BalancedSampler',
     'WeightedRandomSampler',
     'DomainBalancedSampler',
     'StratifiedSampler',
     'SubsetRandomSampler',
     
-    # Loaders
+    # loaders
     'create_dataloader',
     'create_train_loader',
     'create_val_loader',

@@ -1,7 +1,7 @@
 """
-ResNet Feature Extraction Backbones.
+resnet feature extraction backbones.
 
-Provides ResNet-based feature extractors for multi-scale
+provides resnet-based feature extractors for multi-scale
 perceptual loss and feature matching.
 """
 
@@ -12,7 +12,7 @@ import torchvision.models as models
 
 
 class ResNetNormalization(nn.Module):
-    """Normalize input to ResNet expected range."""
+    """normalize input to resnet expected range."""
     
     def __init__(
         self,
@@ -24,7 +24,7 @@ class ResNetNormalization(nn.Module):
         self.register_buffer('std', torch.tensor(std).view(1, 3, 1, 1))
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Normalize input tensor."""
+        """normalize input tensor."""
         if x.size(1) == 1:
             x = x.repeat(1, 3, 1, 1)
         elif x.size(1) > 3:
@@ -38,9 +38,9 @@ class ResNetNormalization(nn.Module):
 
 class ResNet18Features(nn.Module):
     """
-    ResNet18 feature extractor.
+    resnet18 feature extractor.
     
-    Extracts features from multiple stages for multi-scale analysis.
+    extracts features from multiple stages for multi-scale analysis.
     """
     
     def __init__(
@@ -56,13 +56,13 @@ class ResNet18Features(nn.Module):
         self.feature_stages = feature_stages or [1, 2, 3, 4]
         self.normalize_input = normalize_input
         
-        # Load pretrained ResNet18
+        # load pretrained resnet18
         if pretrained:
             resnet = models.resnet18(weights=weights)
         else:
             resnet = models.resnet18(weights=None)
         
-        # Build stages
+        # build stages
         self.conv1 = resnet.conv1
         self.bn1 = resnet.bn1
         self.relu = resnet.relu
@@ -73,12 +73,12 @@ class ResNet18Features(nn.Module):
         self.layer3 = resnet.layer3  # 256 channels
         self.layer4 = resnet.layer4  # 512 channels
         
-        # Freeze parameters
+        # freeze parameters
         if not requires_grad:
             for param in self.parameters():
                 param.requires_grad = False
         
-        # Input normalization
+        # input normalization
         if normalize_input:
             self.normalize = ResNetNormalization()
         else:
@@ -88,18 +88,18 @@ class ResNet18Features(nn.Module):
     
     @property
     def feature_channels(self) -> Dict[int, int]:
-        """Get number of channels at each stage."""
+        """get number of channels at each stage."""
         return {1: 64, 2: 128, 3: 256, 4: 512}
     
     def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
         """
-        Extract features from specified stages.
+        extract features from specified stages.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Dictionary mapping stage number to feature tensors
+        returns:
+            dictionary mapping stage number to feature tensors
         """
         x = self.normalize(x)
         
@@ -130,7 +130,7 @@ class ResNet18Features(nn.Module):
 
 
 class ResNet34Features(nn.Module):
-    """ResNet34 feature extractor with multi-stage outputs."""
+    """resnet34 feature extractor with multi-stage outputs."""
     
     def __init__(
         self,
@@ -205,9 +205,9 @@ class ResNet34Features(nn.Module):
 
 class ResNet50Features(nn.Module):
     """
-    ResNet50 feature extractor.
+    resnet50 feature extractor.
     
-    Deeper features with bottleneck blocks for more
+    deeper features with bottleneck blocks for more
     expressive representations.
     """
     
@@ -291,9 +291,9 @@ class ResNet50Features(nn.Module):
 
 class ResNetPerceptualExtractor(nn.Module):
     """
-    Flexible ResNet-based perceptual feature extractor.
+    flexible resnet-based perceptual feature extractor.
     
-    Supports ResNet18, 34, 50 with configurable stage weights.
+    supports resnet18, 34, 50 with configurable stage weights.
     """
     
     def __init__(
@@ -310,7 +310,7 @@ class ResNetPerceptualExtractor(nn.Module):
         self.resnet_type = resnet_type
         self.normalize_features = normalize_features
         
-        # Default stage weights
+        # default stage weights
         if stage_weights is None:
             stage_weights = {1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
         self.stage_weights = stage_weights
@@ -318,7 +318,7 @@ class ResNetPerceptualExtractor(nn.Module):
         if feature_stages is None:
             feature_stages = list(stage_weights.keys())
         
-        # Build backbone
+        # build backbone
         if resnet_type == 'resnet18':
             self.backbone = ResNet18Features(
                 pretrained=pretrained,
@@ -339,7 +339,7 @@ class ResNetPerceptualExtractor(nn.Module):
             )
     
     def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
-        """Extract features from all stages."""
+        """extract features from all stages."""
         features = self.backbone(x)
         
         if self.normalize_features:
@@ -355,15 +355,15 @@ class ResNetPerceptualExtractor(nn.Module):
         loss_type: str = 'l1'
     ) -> torch.Tensor:
         """
-        Compute perceptual loss between prediction and target.
+        compute perceptual loss between prediction and target.
         
-        Args:
-            pred: Predicted image tensor
-            target: Target image tensor
+        args:
+            pred: predicted image tensor
+            target: target image tensor
             loss_type: 'l1', 'l2', or 'cos'
             
-        Returns:
-            Weighted perceptual loss
+        returns:
+            weighted perceptual loss
         """
         pred_features = self.forward(pred)
         target_features = self.forward(target)
@@ -392,9 +392,9 @@ class ResNetPerceptualExtractor(nn.Module):
 
 class MultiScaleResNetFeatures(nn.Module):
     """
-    Multi-scale feature extraction using ResNet.
+    multi-scale feature extraction using resnet.
     
-    Processes input at multiple scales for robust features.
+    processes input at multiple scales for robust features.
     """
     
     def __init__(
@@ -410,7 +410,7 @@ class MultiScaleResNetFeatures(nn.Module):
         self.scales = scales or [1.0, 0.5, 0.25]
         self.feature_stages = feature_stages or [3, 4]
         
-        # Build backbone
+        # build backbone
         if resnet_type == 'resnet18':
             self.backbone = ResNet18Features(
                 pretrained=pretrained,
@@ -435,13 +435,13 @@ class MultiScaleResNetFeatures(nn.Module):
         x: torch.Tensor
     ) -> Dict[float, Dict[int, torch.Tensor]]:
         """
-        Extract features at multiple scales.
+        extract features at multiple scales.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Dictionary mapping scale to feature dictionaries
+        returns:
+            dictionary mapping scale to feature dictionaries
         """
         multi_scale_features = {}
         
@@ -465,7 +465,7 @@ class MultiScaleResNetFeatures(nn.Module):
         target: torch.Tensor,
         scale_weights: Optional[Dict[float, float]] = None
     ) -> torch.Tensor:
-        """Compute loss across multiple scales."""
+        """compute loss across multiple scales."""
         if scale_weights is None:
             scale_weights = {s: 1.0 / len(self.scales) for s in self.scales}
         

@@ -1,24 +1,24 @@
 """
-NeuroScope Training Infrastructure Package.
+neuroscope training infrastructure package.
 
-Comprehensive training utilities for deep learning models
+comprehensive training utilities for deep learning models
 including trainers, optimizers, schedulers, callbacks, and loggers.
 
-Subpackages:
-    - trainers: Main training loop implementations
-    - optimizers: Optimizer factories and configurations
-    - schedulers: Learning rate scheduling strategies
-    - callbacks: Training callbacks for logging, checkpointing, etc.
-    - loggers: Comprehensive logging infrastructure
-    - samplers: Sample generation during training
-    - figures: Publication-quality figure generation
+subpackages:
+    - trainers: main training loop implementations
+    - optimizers: optimizer factories and configurations
+    - schedulers: learning rate scheduling strategies
+    - callbacks: training callbacks for logging, checkpointing, etc.
+    - loggers: comprehensive logging infrastructure
+    - samplers: sample generation during training
+    - figures: publication-quality figure generation
 """
 
-# Lazy imports to avoid circular dependencies and missing module errors
-# Users should import from subpackages directly:
-#   from neuroscope.training.trainers import ComprehensiveTrainer
-#   from neuroscope.training.loggers import LoggerManager
-#   from neuroscope.training.callbacks import EarlyStopping
+# lazy imports to avoid circular dependencies and missing module errors
+# users should import from subpackages directly:
+#   from neuroscope.training.trainers import comprehensivetrainer
+#   from neuroscope.training.loggers import loggermanager
+#   from neuroscope.training.callbacks import earlystopping
 
 __all__ = [
     'trainers',

@@ -19,7 +19,7 @@ class UniformQuantize(nn.Module):
     """
     uniform scalar quantization with straight-through estimator (ste).
 
-    during training: adds uniform noise U(-0.5, 0.5) as a differentiable
+    during training: adds uniform noise u(-0.5, 0.5) as a differentiable
     proxy for rounding. during inference: rounds to nearest integer.
 
     this is the standard approach from balle et al. (2018) for end-to-end

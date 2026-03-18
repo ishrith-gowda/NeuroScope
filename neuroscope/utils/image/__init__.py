@@ -1,9 +1,9 @@
-"""Image processing utilities for NeuroScope.
+"""image processing utilities for neuroscope.
 
-This module provides image processing utility functions for medical imaging data.
+this module provides image processing utility functions for medical imaging data.
 """
 
-# Placeholder for image processing utilities
-# The actual implementation would be imported here
+# placeholder for image processing utilities
+# the actual implementation would be imported here
 
 __all__ = []

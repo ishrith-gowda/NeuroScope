@@ -1,7 +1,7 @@
 """
-Base Generator Classes.
+base generator classes.
 
-This module provides abstract base classes and common functionality
+this module provides abstract base classes and common functionality
 for generator architectures.
 """
 
@@ -13,9 +13,9 @@ from typing import Optional, Tuple, Dict, Any
 
 class BaseGenerator(nn.Module, ABC):
     """
-    Abstract base class for all generators.
+    abstract base class for all generators.
     
-    Provides common interface and utilities for generator networks.
+    provides common interface and utilities for generator networks.
     """
     
     def __init__(
@@ -26,12 +26,12 @@ class BaseGenerator(nn.Module, ABC):
         **kwargs
     ):
         """
-        Initialize base generator.
+        initialize base generator.
         
-        Args:
-            in_channels: Number of input channels
-            out_channels: Number of output channels
-            ngf: Base number of generator filters
+        args:
+            in_channels: number of input channels
+            out_channels: number of output channels
+            ngf: base number of generator filters
         """
         super().__init__()
         
@@ -42,35 +42,35 @@ class BaseGenerator(nn.Module, ABC):
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Output tensor [B, C', H, W]
+        returns:
+            output tensor [b, c', h, w]
         """
         pass
         
     def count_parameters(self) -> int:
-        """Count trainable parameters."""
+        """count trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
         
     def get_feature_maps(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
-        Get intermediate feature maps for visualization/loss computation.
+        get intermediate feature maps for visualization/loss computation.
         
-        Override in subclasses for specific implementations.
+        override in subclasses for specific implementations.
         """
         return {'output': self.forward(x)}
         
     def init_weights(self, init_type: str = 'normal', gain: float = 0.02):
         """
-        Initialize network weights.
+        initialize network weights.
         
-        Args:
-            init_type: Initialization type ('normal', 'xavier', 'kaiming', 'orthogonal')
-            gain: Scaling factor for initialization
+        args:
+            init_type: initialization type ('normal', 'xavier', 'kaiming', 'orthogonal')
+            gain: scaling factor for initialization
         """
         def init_func(m):
             classname = m.__class__.__name__
@@ -99,9 +99,9 @@ class BaseGenerator(nn.Module, ABC):
 
 class EncoderDecoderGenerator(BaseGenerator):
     """
-    Base class for encoder-decoder style generators.
+    base class for encoder-decoder style generators.
     
-    Provides structure for U-Net, ResNet-based, and other encoder-decoder architectures.
+    provides structure for u-net, resnet-based, and other encoder-decoder architectures.
     """
     
     def __init__(
@@ -120,31 +120,31 @@ class EncoderDecoderGenerator(BaseGenerator):
         self.n_blocks = n_blocks
         self.use_skip = use_skip
         
-        self.encoder = None  # Override in subclass
-        self.decoder = None  # Override in subclass
-        self.bottleneck = None  # Override in subclass
+        self.encoder = None  # override in subclass
+        self.decoder = None  # override in subclass
+        self.bottleneck = None  # override in subclass
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through encoder-decoder."""
-        # Encode
+        """forward pass through encoder-decoder."""
+        # encode
         enc_features = self.encode(x)
         
-        # Bottleneck
+        # bottleneck
         if self.bottleneck is not None:
             bottleneck_out = self.bottleneck(enc_features[-1])
         else:
             bottleneck_out = enc_features[-1]
             
-        # Decode
+        # decode
         output = self.decode(bottleneck_out, enc_features if self.use_skip else None)
         
         return output
         
     def encode(self, x: torch.Tensor) -> list:
         """
-        Encode input to feature representations.
+        encode input to feature representations.
         
-        Returns list of features at each scale.
+        returns list of features at each scale.
         """
         raise NotImplementedError
         
@@ -154,20 +154,20 @@ class EncoderDecoderGenerator(BaseGenerator):
         skip_features: Optional[list] = None
     ) -> torch.Tensor:
         """
-        Decode features to output.
+        decode features to output.
         
-        Args:
-            x: Bottleneck features
-            skip_features: Optional skip connection features
+        args:
+            x: bottleneck features
+            skip_features: optional skip connection features
         """
         raise NotImplementedError
 
 
 class ResidualGenerator(BaseGenerator):
     """
-    Base class for residual-style generators.
+    base class for residual-style generators.
     
-    Generates output as input + learned residual.
+    generates output as input + learned residual.
     """
     
     def __init__(
@@ -183,7 +183,7 @@ class ResidualGenerator(BaseGenerator):
         self.learn_residual = learn_residual
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with residual learning."""
+        """forward pass with residual learning."""
         residual = self.compute_residual(x)
         
         if self.learn_residual and x.size(1) == residual.size(1):
@@ -193,15 +193,15 @@ class ResidualGenerator(BaseGenerator):
             
     @abstractmethod
     def compute_residual(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute residual features."""
+        """compute residual features."""
         pass
 
 
 class MultiScaleGenerator(BaseGenerator):
     """
-    Base class for multi-scale generators.
+    base class for multi-scale generators.
     
-    Generates output at multiple scales for progressive training.
+    generates output at multiple scales for progressive training.
     """
     
     def __init__(
@@ -223,14 +223,14 @@ class MultiScaleGenerator(BaseGenerator):
         return_all_scales: bool = False
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            return_all_scales: If True, return outputs at all scales
+        args:
+            x: input tensor
+            return_all_scales: if true, return outputs at all scales
             
-        Returns:
-            Output at finest scale, or list of outputs at all scales
+        returns:
+            output at finest scale, or list of outputs at all scales
         """
         outputs = []
         
@@ -238,7 +238,7 @@ class MultiScaleGenerator(BaseGenerator):
             if i == 0:
                 out = generator(x)
             else:
-                # Upsample previous output and combine
+                # upsample previous output and combine
                 prev_upsampled = nn.functional.interpolate(
                     outputs[-1], scale_factor=2, mode='bilinear', align_corners=False
                 )
@@ -246,7 +246,7 @@ class MultiScaleGenerator(BaseGenerator):
                 
             outputs.append(out)
             
-            # Downsample input for next scale
+            # downsample input for next scale
             x = nn.functional.avg_pool2d(x, 2)
             
         if return_all_scales:
@@ -257,9 +257,9 @@ class MultiScaleGenerator(BaseGenerator):
 
 class ConditionalGenerator(BaseGenerator):
     """
-    Base class for conditional generators.
+    base class for conditional generators.
     
-    Conditions generation on additional inputs (labels, embeddings, etc.).
+    conditions generation on additional inputs (labels, embeddings, etc.).
     """
     
     def __init__(
@@ -273,7 +273,7 @@ class ConditionalGenerator(BaseGenerator):
         super().__init__(in_channels, out_channels, ngf, **kwargs)
         
         self.condition_dim = condition_dim
-        self.condition_encoder = None  # Override in subclass
+        self.condition_encoder = None  # override in subclass
         
     def forward(
         self,
@@ -281,14 +281,14 @@ class ConditionalGenerator(BaseGenerator):
         condition: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass with conditioning.
+        forward pass with conditioning.
         
-        Args:
-            x: Input tensor
-            condition: Conditioning input (labels, embeddings, etc.)
+        args:
+            x: input tensor
+            condition: conditioning input (labels, embeddings, etc.)
             
-        Returns:
-            Conditional output
+        returns:
+            conditional output
         """
         if condition is not None and self.condition_encoder is not None:
             condition_embedding = self.condition_encoder(condition)
@@ -303,15 +303,15 @@ class ConditionalGenerator(BaseGenerator):
         x: torch.Tensor,
         condition_embedding: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        """Generate output with optional condition embedding."""
+        """generate output with optional condition embedding."""
         pass
 
 
 class StyleGenerator(BaseGenerator):
     """
-    Base class for style-based generators.
+    base class for style-based generators.
     
-    Uses learned style codes for generation control.
+    uses learned style codes for generation control.
     """
     
     def __init__(
@@ -328,11 +328,11 @@ class StyleGenerator(BaseGenerator):
         self.style_dim = style_dim
         self.n_mlp = n_mlp
         
-        # Style mapping network
+        # style mapping network
         self.mapping = self._build_mapping_network()
         
     def _build_mapping_network(self) -> nn.Module:
-        """Build style mapping network."""
+        """build style mapping network."""
         layers = []
         
         for i in range(self.n_mlp):
@@ -346,7 +346,7 @@ class StyleGenerator(BaseGenerator):
         return nn.Sequential(*layers)
         
     def map_style(self, z: torch.Tensor) -> torch.Tensor:
-        """Map latent z to style w."""
+        """map latent z to style w."""
         return self.mapping(z)
         
     def forward(
@@ -355,14 +355,14 @@ class StyleGenerator(BaseGenerator):
         style: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            style: Optional style code (latent z)
+        args:
+            x: input tensor
+            style: optional style code (latent z)
             
-        Returns:
-            Style-controlled output
+        returns:
+            style-controlled output
         """
         if style is not None:
             w = self.map_style(style)
@@ -377,5 +377,5 @@ class StyleGenerator(BaseGenerator):
         x: torch.Tensor,
         w: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        """Synthesize output with style modulation."""
+        """synthesize output with style modulation."""
         pass

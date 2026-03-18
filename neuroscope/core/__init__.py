@@ -1,4 +1,4 @@
-"""Core initialization."""
+"""core initialization."""
 
 from neuroscope.core.config.base_config import config
 

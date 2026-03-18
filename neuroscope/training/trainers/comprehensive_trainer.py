@@ -1,17 +1,17 @@
 """
-Comprehensive 2.5D SA-CycleGAN Trainer.
+comprehensive 2.5d sa-cyclegan trainer.
 
-Professional-grade training pipeline with:
-- Full logging (TensorBoard, CSV, JSON, Console)
-- Sample and figure generation
-- Mixed precision training (AMP)
-- Gradient monitoring and clipping
-- Learning rate scheduling with warmup
-- Early stopping
-- Checkpoint management
-- Reproducibility features
+professional-grade training pipeline with:
+- full logging (tensorboard, csv, json, console)
+- sample and figure generation
+- mixed precision training (amp)
+- gradient monitoring and clipping
+- learning rate scheduling with warmup
+- early stopping
+- checkpoint management
+- reproducibility features
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from dataclasses import dataclass, field, asdict
@@ -28,7 +28,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-# NeuroScope imports
+# neuroscope imports
 from neuroscope.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25D, SACycleGAN25DConfig, create_model
 )
@@ -42,19 +42,19 @@ from neuroscope.training.callbacks.training_callbacks import EarlyStopping, Call
 
 @dataclass
 class TrainingConfig:
-    """Comprehensive training configuration."""
+    """comprehensive training configuration."""
     
-    # Experiment
+    # experiment
     experiment_name: str = "sa_cyclegan_25d"
     seed: int = 42
     deterministic: bool = True
     
-    # Data paths
+    # data paths
     brats_dir: str = "/Volumes/usb drive/neuroscope/preprocessed/brats"
     upenn_dir: str = "/Volumes/usb drive/neuroscope/preprocessed/upenn"
     output_dir: str = "/Volumes/usb drive/neuroscope/experiments"
     
-    # Model architecture
+    # model architecture
     ngf: int = 64
     ndf: int = 64
     n_residual_blocks: int = 9
@@ -63,82 +63,82 @@ class TrainingConfig:
     input_channels: int = 12  # 3 slices * 4 modalities
     output_channels: int = 4  # 4 modalities
     
-    # Training
+    # training
     epochs: int = 100
     batch_size: int = 4
     image_size: int = 128
     num_workers: int = 4
     
-    # Optimizer
+    # optimizer
     lr_G: float = 2e-4
     lr_D: float = 2e-4
     beta1: float = 0.5
     beta2: float = 0.999
     weight_decay: float = 0.0
     
-    # Scheduler
+    # scheduler
     scheduler_type: str = "cosine"  # 'cosine', 'linear', 'step'
     warmup_epochs: int = 5
     min_lr: float = 1e-6
     
-    # Loss weights
+    # loss weights
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
     lambda_ssim: float = 1.0
     lambda_gradient: float = 1.0
     
-    # Regularization
+    # regularization
     gradient_clip_norm: float = 1.0
     gradient_clip_value: Optional[float] = None
     
-    # Mixed precision
-    use_amp: bool = False  # Disabled for MPS
+    # mixed precision
+    use_amp: bool = False  # disabled for mps
     
-    # Validation & Checkpointing
+    # validation & checkpointing
     validate_every: int = 5
     save_every: int = 10
     save_best_only: bool = False
     
-    # Early stopping
+    # early stopping
     early_stopping: bool = True
     patience: int = 20
     min_delta: float = 0.001
     
-    # Logging
+    # logging
     log_every_n_steps: int = 10
     sample_every: int = 10
     figure_every: int = 10
     verbose: int = 2  # 0=silent, 1=minimal, 2=normal, 3=detailed
     
-    # Resume
+    # resume
     resume_from: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
+        """convert to dictionary."""
         return asdict(self)
         
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'TrainingConfig':
-        """Create from dictionary."""
+        """create from dictionary."""
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
         
     @classmethod
     def from_yaml(cls, path: str) -> 'TrainingConfig':
-        """Load from YAML file."""
+        """load from yaml file."""
         import yaml
         with open(path, 'r') as f:
             d = yaml.safe_load(f)
         return cls.from_dict(d)
         
     def save_yaml(self, path: str):
-        """Save to YAML file."""
+        """save to yaml file."""
         import yaml
         with open(path, 'w') as f:
             yaml.dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
 
 
 class ReplayBuffer:
-    """Image replay buffer for discriminator training stability."""
+    """image replay buffer for discriminator training stability."""
     
     def __init__(self, max_size: int = 50):
         self.max_size = max_size
@@ -163,18 +163,18 @@ class ReplayBuffer:
 
 class ComprehensiveTrainer:
     """
-    Professional-grade trainer for 2.5D SA-CycleGAN.
+    professional-grade trainer for 2.5d sa-cyclegan.
     
-    Features:
-    - Complete training/validation loops
-    - Comprehensive logging (TensorBoard, CSV, JSON, Console)
-    - Sample and figure generation
-    - Mixed precision training
-    - Gradient monitoring and clipping
-    - Learning rate scheduling with warmup
-    - Early stopping
-    - Checkpoint management
-    - Full reproducibility
+    features:
+    - complete training/validation loops
+    - comprehensive logging (tensorboard, csv, json, console)
+    - sample and figure generation
+    - mixed precision training
+    - gradient monitoring and clipping
+    - learning rate scheduling with warmup
+    - early stopping
+    - checkpoint management
+    - full reproducibility
     """
     
     def __init__(self, config: TrainingConfig):
@@ -189,18 +189,18 @@ class ComprehensiveTrainer:
         self.setup_logging()
         self.setup_callbacks()
         
-        # Training state
+        # training state
         self.current_epoch = 0
         self.global_step = 0
         self.best_metric = 0.0
         self.history = self._init_history()
         
-        # Replay buffers
+        # replay buffers
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
         
     def setup_reproducibility(self):
-        """Set random seeds for reproducibility."""
+        """set random seeds for reproducibility."""
         seed = self.config.seed
         random.seed(seed)
         np.random.seed(seed)
@@ -214,7 +214,7 @@ class ComprehensiveTrainer:
             torch.backends.cudnn.benchmark = False
             
     def setup_directories(self):
-        """Create output directories."""
+        """create output directories."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.run_dir = Path(self.config.output_dir) / f"{self.config.experiment_name}_{timestamp}"
         
@@ -227,11 +227,11 @@ class ComprehensiveTrainer:
                   self.figures_dir, self.logs_dir]:
             d.mkdir(parents=True, exist_ok=True)
             
-        # Save config
+        # save config
         self.config.save_yaml(str(self.run_dir / "config.yaml"))
         
     def setup_device(self):
-        """Setup compute device."""
+        """setup compute device."""
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
             self.device_name = torch.cuda.get_device_name(0)
@@ -242,7 +242,7 @@ class ComprehensiveTrainer:
             self.device = torch.device('cpu')
             self.device_name = "CPU"
             
-        # AMP only for CUDA
+        # amp only for cuda
         self.use_amp = self.config.use_amp and self.device.type == 'cuda'
         if self.use_amp:
             self.scaler = torch.cuda.amp.GradScaler()
@@ -250,7 +250,7 @@ class ComprehensiveTrainer:
             self.scaler = None
             
     def setup_model(self):
-        """Create and initialize model."""
+        """create and initialize model."""
         model_config = SACycleGAN25DConfig(
             ngf=self.config.ngf,
             ndf=self.config.ndf,
@@ -263,12 +263,12 @@ class ComprehensiveTrainer:
         self.model = create_model(model_config)
         self.model = self.model.to(self.device)
         
-        # Count parameters
+        # count parameters
         self.total_params = sum(p.numel() for p in self.model.parameters())
         self.trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         
     def setup_data(self):
-        """Create data loaders."""
+        """create data loaders."""
         self.train_loader, self.val_loader, self.test_loader = create_dataloaders(
             brats_dir=self.config.brats_dir,
             upenn_dir=self.config.upenn_dir,
@@ -282,8 +282,8 @@ class ComprehensiveTrainer:
         self.test_samples = len(self.test_loader.dataset)
         
     def setup_optimizers(self):
-        """Create optimizers and schedulers."""
-        # Generator optimizer
+        """create optimizers and schedulers."""
+        # generator optimizer
         self.opt_G = optim.Adam(
             list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
             lr=self.config.lr_G,
@@ -291,7 +291,7 @@ class ComprehensiveTrainer:
             weight_decay=self.config.weight_decay
         )
         
-        # Discriminator optimizer
+        # discriminator optimizer
         self.opt_D = optim.Adam(
             list(self.model.D_A.parameters()) + list(self.model.D_B.parameters()),
             lr=self.config.lr_D,
@@ -299,7 +299,7 @@ class ComprehensiveTrainer:
             weight_decay=self.config.weight_decay
         )
         
-        # Schedulers
+        # schedulers
         if self.config.scheduler_type == 'cosine':
             self.scheduler_G = optim.lr_scheduler.CosineAnnealingLR(
                 self.opt_G, T_max=self.config.epochs, eta_min=self.config.min_lr
@@ -317,7 +317,7 @@ class ComprehensiveTrainer:
             self.scheduler_D = optim.lr_scheduler.StepLR(self.opt_D, step_size=30, gamma=0.5)
             
     def setup_losses(self):
-        """Initialize loss functions."""
+        """initialize loss functions."""
         self.losses = CombinedLoss(
             lambda_cycle=self.config.lambda_cycle,
             lambda_identity=self.config.lambda_identity,
@@ -326,7 +326,7 @@ class ComprehensiveTrainer:
         ).to(self.device)
         
     def setup_logging(self):
-        """Initialize all loggers."""
+        """initialize all loggers."""
         self.logger = LoggerManager(
             log_dir=self.logs_dir,
             experiment_name=self.config.experiment_name,
@@ -348,7 +348,7 @@ class ComprehensiveTrainer:
         )
         
     def setup_callbacks(self):
-        """Initialize callbacks."""
+        """initialize callbacks."""
         self.early_stopping = None
         if self.config.early_stopping:
             self.early_stopping = EarlyStopping(
@@ -360,7 +360,7 @@ class ComprehensiveTrainer:
             )
             
     def _init_history(self) -> Dict[str, List]:
-        """Initialize training history."""
+        """initialize training history."""
         return {
             'G_loss': [], 'D_loss': [],
             'cycle_loss': [], 'identity_loss': [],
@@ -372,11 +372,11 @@ class ComprehensiveTrainer:
         }
         
     # =========================================================================
-    # Metrics
+    # metrics
     # =========================================================================
     
     def compute_ssim(self, x: torch.Tensor, y: torch.Tensor) -> float:
-        """Compute SSIM between two tensors."""
+        """compute ssim between two tensors."""
         x = x.detach().cpu().float()
         y = y.detach().cpu().float()
         
@@ -392,14 +392,14 @@ class ComprehensiveTrainer:
         return ssim.item()
         
     def compute_psnr(self, x: torch.Tensor, y: torch.Tensor) -> float:
-        """Compute PSNR between two tensors."""
+        """compute psnr between two tensors."""
         mse = ((x - y) ** 2).mean().item()
         if mse < 1e-10:
             return 100.0
         return 10 * np.log10(1.0 / mse)
         
     def compute_gradient_norm(self, model: nn.Module) -> float:
-        """Compute gradient L2 norm."""
+        """compute gradient l2 norm."""
         total_norm = 0.0
         for param in model.parameters():
             if param.grad is not None:
@@ -407,11 +407,11 @@ class ComprehensiveTrainer:
         return total_norm ** 0.5
         
     # =========================================================================
-    # Training Loop
+    # training loop
     # =========================================================================
     
     def train_epoch(self) -> Dict[str, float]:
-        """Train for one epoch."""
+        """train for one epoch."""
         self.model.train()
         
         epoch_losses = {
@@ -439,7 +439,7 @@ class ComprehensiveTrainer:
             center_A = batch['A_center'].to(self.device)
             center_B = batch['B_center'].to(self.device)
 
-            # Validate input data
+            # validate input data
             if torch.isnan(real_A).any() or torch.isnan(real_B).any():
                 print(f"\nnan in input data at batch {batch_idx+1}")
                 print(f"   real_a has nan: {torch.isnan(real_A).any()}")
@@ -450,15 +450,15 @@ class ComprehensiveTrainer:
                 raise ValueError("inf in input data")
 
             # ================================================================
-            # Train Generators
+            # train generators
             # ================================================================
             self.opt_G.zero_grad()
             
-            # Generate
+            # generate
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
 
-            # Cycle consistency (expand to 3-slice format)
+            # cycle consistency (expand to 3-slice format)
             fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
             fake_A_3slice = fake_A.unsqueeze(2).repeat(1, 1, 3, 1, 1)
@@ -467,7 +467,7 @@ class ComprehensiveTrainer:
             rec_A = self.model.G_B2A(fake_B_3slice)
             rec_B = self.model.G_A2B(fake_A_3slice)
             
-            # Losses
+            # losses
             loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
             loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
             
@@ -490,7 +490,7 @@ class ComprehensiveTrainer:
             
             loss_G.backward()
             
-            # Gradient clipping
+            # gradient clipping
             if self.config.gradient_clip_norm > 0:
                 torch.nn.utils.clip_grad_norm_(
                     list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
@@ -501,7 +501,7 @@ class ComprehensiveTrainer:
             self.opt_G.step()
             
             # ================================================================
-            # Train Discriminators
+            # train discriminators
             # ================================================================
             self.opt_D.zero_grad()
             
@@ -528,7 +528,7 @@ class ComprehensiveTrainer:
             grad_norm_D = self.compute_gradient_norm(self.model.D_A)
             self.opt_D.step()
 
-            # Check for NaN losses
+            # check for nan losses
             if torch.isnan(loss_G) or torch.isnan(loss_D):
                 print(f"\nnan detected at epoch {self.current_epoch}, batch {batch_idx+1}")
                 print(f"   g_loss: {loss_G.item()}")
@@ -540,7 +540,7 @@ class ComprehensiveTrainer:
                 print(f"   grad_norm_g: {grad_norm_G}, grad_norm_d: {grad_norm_D}")
                 raise ValueError("nan loss detected - training stopped")
 
-            # Accumulate
+            # accumulate
             epoch_losses['G_loss'] += loss_G.item()
             epoch_losses['D_loss'] += loss_D.item()
             epoch_losses['cycle_A'] += loss_cycle_A.item()
@@ -551,7 +551,7 @@ class ComprehensiveTrainer:
             epoch_losses['gan_B2A'] += loss_gan_B2A.item()
             epoch_losses['ssim'] += loss_ssim.item()
             
-            # Log batch
+            # log batch
             self.global_step += 1
             if batch_idx % self.config.log_every_n_steps == 0:
                 batch_time = time.time() - batch_start_time
@@ -567,7 +567,7 @@ class ComprehensiveTrainer:
                     samples_per_sec=samples_per_sec
                 )
                 
-                # TensorBoard batch logging
+                # tensorboard batch logging
                 self.logger.log_scalar('Batch/G_loss', loss_G.item(), self.global_step)
                 self.logger.log_scalar('Batch/D_loss', loss_D.item(), self.global_step)
                 self.logger.log_scalar('Batch/grad_norm_G', grad_norm_G, self.global_step)
@@ -581,7 +581,7 @@ class ComprehensiveTrainer:
                 'cyc': f'{(loss_cycle_A + loss_cycle_B).item():.3f}'
             })
             
-        # Average losses
+        # average losses
         for key in epoch_losses:
             epoch_losses[key] /= n_batches
             
@@ -589,7 +589,7 @@ class ComprehensiveTrainer:
         
     @torch.no_grad()
     def validate(self) -> Dict[str, float]:
-        """Run validation."""
+        """run validation."""
         self.model.eval()
         
         ssim_A2B, ssim_B2A = [], []
@@ -627,11 +627,11 @@ class ComprehensiveTrainer:
         }
         
     # =========================================================================
-    # Checkpointing
+    # checkpointing
     # =========================================================================
     
     def save_checkpoint(self, is_best: bool = False, filename: str = None):
-        """Save model checkpoint."""
+        """save model checkpoint."""
         checkpoint = {
             'epoch': self.current_epoch,
             'global_step': self.global_step,
@@ -645,16 +645,16 @@ class ComprehensiveTrainer:
             'config': self.config.to_dict()
         }
         
-        # Save latest
+        # save latest
         latest_path = self.checkpoints_dir / 'checkpoint_latest.pth'
         torch.save(checkpoint, latest_path)
         
-        # Save periodic
+        # save periodic
         if self.current_epoch % self.config.save_every == 0:
             epoch_path = self.checkpoints_dir / f'checkpoint_epoch_{self.current_epoch:04d}.pth'
             torch.save(checkpoint, epoch_path)
             
-        # Save best
+        # save best
         if is_best:
             best_path = self.checkpoints_dir / 'checkpoint_best.pth'
             torch.save(checkpoint, best_path)
@@ -667,7 +667,7 @@ class ComprehensiveTrainer:
         )
         
     def load_checkpoint(self, path: str):
-        """Load checkpoint."""
+        """load checkpoint."""
         checkpoint = torch.load(path, map_location=self.device)
         
         self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -683,15 +683,15 @@ class ComprehensiveTrainer:
         self.logger.log_info(f"Resumed from epoch {checkpoint['epoch']}")
         
     # =========================================================================
-    # Sample Generation
+    # sample generation
     # =========================================================================
     
     @torch.no_grad()
     def generate_samples(self):
-        """Generate and save sample images."""
+        """generate and save sample images."""
         self.model.eval()
         
-        # Get one batch
+        # get one batch
         batch = next(iter(self.val_loader))
         real_A = batch['A'].to(self.device)
         real_B = batch['B'].to(self.device)
@@ -709,14 +709,14 @@ class ComprehensiveTrainer:
         rec_A = self.model.G_B2A(fake_B_3slice)
         rec_B = self.model.G_A2B(fake_A_3slice)
         
-        # Save comparison for each modality
+        # save comparison for each modality
         sample_paths = self.sample_generator.generate_all_samples(
             center_A, fake_B, rec_A,
             center_B, fake_A, rec_B,
             self.current_epoch
         )
         
-        # Log to TensorBoard
+        # log to tensorboard
         self.logger.log_sample_comparison(
             center_A, fake_B, rec_A,
             center_B, fake_A, rec_B,
@@ -728,12 +728,12 @@ class ComprehensiveTrainer:
         return sample_paths
         
     # =========================================================================
-    # Main Training
+    # main training
     # =========================================================================
     
     def train(self):
-        """Main training loop."""
-        # Log configuration
+        """main training loop."""
+        # log configuration
         self.logger.log_config({
             'experiment': self.config.experiment_name,
             'model': {
@@ -758,7 +758,7 @@ class ComprehensiveTrainer:
         
         self.logger.on_training_start(self.config.epochs)
         
-        # Resume if specified
+        # resume if specified
         if self.config.resume_from:
             self.load_checkpoint(self.config.resume_from)
             
@@ -770,10 +770,10 @@ class ComprehensiveTrainer:
             
             self.logger.on_epoch_start(self.current_epoch)
             
-            # Train
+            # train
             train_losses = self.train_epoch()
             
-            # Update schedulers
+            # update schedulers
             old_lr = self.scheduler_G.get_last_lr()[0]
             self.scheduler_G.step()
             self.scheduler_D.step()
@@ -782,14 +782,14 @@ class ComprehensiveTrainer:
             if abs(new_lr - old_lr) > 1e-10:
                 self.logger.log_lr_update(old_lr, new_lr, "scheduler step")
                 
-            # Update history
+            # update history
             self.history['G_loss'].append(train_losses['G_loss'])
             self.history['D_loss'].append(train_losses['D_loss'])
             self.history['cycle_loss'].append(train_losses['cycle_A'] + train_losses['cycle_B'])
             self.history['identity_loss'].append(train_losses['identity_A'] + train_losses['identity_B'])
             self.history['learning_rate'].append(new_lr)
             
-            # Validate
+            # validate
             val_metrics = None
             is_best = False
             
@@ -806,7 +806,7 @@ class ComprehensiveTrainer:
                 if is_best:
                     self.best_metric = avg_ssim
                     
-                # Early stopping check
+                # early stopping check
                 if self.early_stopping:
                     state = CallbackState(
                         epoch=self.current_epoch,
@@ -825,7 +825,7 @@ class ComprehensiveTrainer:
                         
             epoch_time = time.time() - epoch_start
             
-            # Log epoch
+            # log epoch
             train_metrics = {
                 'G_loss': train_losses['G_loss'],
                 'D_loss': train_losses['D_loss'],
@@ -840,14 +840,14 @@ class ComprehensiveTrainer:
                 epoch_time
             )
             
-            # Save checkpoint
+            # save checkpoint
             self.save_checkpoint(is_best)
             
-            # Generate samples
+            # generate samples
             if self.current_epoch % self.config.sample_every == 0:
                 self.generate_samples()
                 
-            # Generate figures
+            # generate figures
             if self.current_epoch % self.config.figure_every == 0:
                 val_history = {
                     'ssim_A2B': self.history['val_ssim_A2B'],
@@ -858,7 +858,7 @@ class ComprehensiveTrainer:
                 self.figure_generator.plot_training_losses(self.history)
                 self.figure_generator.plot_validation_metrics(val_history)
                 
-        # Training complete
+        # training complete
         total_time = time.time() - training_start
         
         final_metrics = {
@@ -873,7 +873,7 @@ class ComprehensiveTrainer:
             
         self.logger.on_training_end(final_metrics)
         
-        # Generate final figures
+        # generate final figures
         val_history = {
             'ssim_A2B': self.history['val_ssim_A2B'],
             'ssim_B2A': self.history['val_ssim_B2A'],
@@ -886,7 +886,7 @@ class ComprehensiveTrainer:
             self.config.experiment_name
         )
         
-        # Save final history
+        # save final history
         with open(self.run_dir / 'training_history.json', 'w') as f:
             json.dump(self.history, f, indent=2)
             
@@ -895,12 +895,12 @@ class ComprehensiveTrainer:
         return final_metrics
         
     def close(self):
-        """Cleanup."""
+        """cleanup."""
         self.logger.close()
 
 
 def main():
-    """Main entry point."""
+    """main entry point."""
     import argparse
     
     parser = argparse.ArgumentParser(description='Train 2.5D SA-CycleGAN')

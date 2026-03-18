@@ -1,7 +1,7 @@
 """
 standard cyclegan baseline for 2.5d medical image translation
 
-this is a baseline implementation WITHOUT attention mechanisms for comparison.
+this is a baseline implementation without attention mechanisms for comparison.
 identical to sa-cyclegan-2.5d except:
 - no self-attention modules
 - no cbam modules
@@ -132,10 +132,10 @@ class BaselineGenerator25D(nn.Module):
         forward pass.
 
         args:
-            x: [B, 12, H, W] - 3 slices x 4 modalities
+            x: [b, 12, h, w] - 3 slices x 4 modalities
 
         returns:
-            [B, 4, H, W] - center slice, 4 modalities
+            [b, 4, h, w] - center slice, 4 modalities
         """
         # initial conv
         x = self.initial(x)
@@ -302,8 +302,8 @@ class BaselineCycleGAN25D(nn.Module):
         training forward pass.
 
         args:
-            slices_a: [B, 12, H, W] - 3 slices from domain a
-            slices_b: [B, 12, H, W] - 3 slices from domain b
+            slices_a: [b, 12, h, w] - 3 slices from domain a
+            slices_b: [b, 12, h, w] - 3 slices from domain b
 
         returns:
             dict with fake and reconstructed images
@@ -362,7 +362,7 @@ def create_baseline_model(config: Optional[BaselineCycleGAN25DConfig] = None) ->
     print(f"generator b→a: {params['g_b2a']:,} parameters")
     print(f"discriminator a: {params['d_a']:,} parameters")
     print(f"discriminator b: {params['d_b']:,} parameters")
-    print(f"total: {params['total']:,} parameters ({params['total']/1e6:.2f}M)")
+    print(f"total: {params['total']:,} parameters ({params['total']/1e6:.2f}m)")
     print("=" * 60)
 
     return model

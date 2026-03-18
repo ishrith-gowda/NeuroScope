@@ -1,16 +1,16 @@
 """
-Volumetric Loss Functions for 3D Brain MRI Harmonization.
+volumetric loss functions for 3d brain mri harmonization.
 
-This module implements 3D-specific loss functions optimized for
+this module implements 3d-specific loss functions optimized for
 volumetric medical image processing:
 
-- VolumetricCycleConsistencyLoss: 3D cycle consistency with spatial awareness
-- VolumetricPerceptualLoss: 3D perceptual loss using MedicalNet features
-- VolumetricSSIMLoss: 3D Structural Similarity Index
-- VolumetricGradientLoss: 3D gradient matching for edge preservation
-- AnatomicalConsistencyLoss: Preserves brain structure during harmonization
-- VolumetricNCELoss: 3D contrastive learning for unpaired translation
-- TissuePreservationLoss: Preserves GM/WM/CSF boundaries
+- volumetriccycleconsistencyloss: 3d cycle consistency with spatial awareness
+- volumetricperceptualloss: 3d perceptual loss using medicalnet features
+- volumetricssimloss: 3d structural similarity index
+- volumetricgradientloss: 3d gradient matching for edge preservation
+- anatomicalconsistencyloss: preserves brain structure during harmonization
+- volumetricnceloss: 3d contrastive learning for unpaired translation
+- tissuepreservationloss: preserves gm/wm/csf boundaries
 """
 
 from typing import Dict, List, Optional, Tuple, Union
@@ -24,9 +24,9 @@ from torch import Tensor
 
 class VolumetricSSIM(nn.Module):
     """
-    3D Structural Similarity Index (SSIM) for volumetric data.
+    3d structural similarity index (ssim) for volumetric data.
     
-    Extends SSIM to 3D using volumetric Gaussian windows.
+    extends ssim to 3d using volumetric gaussian windows.
     """
     
     def __init__(
@@ -40,15 +40,15 @@ class VolumetricSSIM(nn.Module):
         K2: float = 0.03
     ):
         """
-        Initialize 3D SSIM module.
+        initialize 3d ssim module.
         
-        Args:
-            window_size: Size of the Gaussian window
-            sigma: Standard deviation of Gaussian
-            channel: Number of input channels
-            size_average: If True, return mean SSIM
-            data_range: Dynamic range of input (1.0 for normalized)
-            K1, K2: Stability constants
+        args:
+            window_size: size of the gaussian window
+            sigma: standard deviation of gaussian
+            channel: number of input channels
+            size_average: if true, return mean ssim
+            data_range: dynamic range of input (1.0 for normalized)
+            k1, k2: stability constants
         """
         super().__init__()
         self.window_size = window_size
@@ -57,27 +57,27 @@ class VolumetricSSIM(nn.Module):
         self.size_average = size_average
         self.data_range = data_range
         
-        # SSIM constants
+        # ssim constants
         self.C1 = (K1 * data_range) ** 2
         self.C2 = (K2 * data_range) ** 2
         
-        # Create 3D Gaussian window
+        # create 3d gaussian window
         self.register_buffer('window', self._create_3d_window())
     
     def _create_3d_window(self) -> Tensor:
-        """Create 3D Gaussian window."""
-        # 1D Gaussian
+        """create 3d gaussian window."""
+        # 1d gaussian
         gauss_1d = torch.tensor([
             math.exp(-(x - self.window_size // 2) ** 2 / (2 * self.sigma ** 2))
             for x in range(self.window_size)
         ], dtype=torch.float32)
         gauss_1d = gauss_1d / gauss_1d.sum()
         
-        # Create 3D Gaussian by outer product
+        # create 3d gaussian by outer product
         gauss_2d = gauss_1d.outer(gauss_1d)
         gauss_3d = gauss_2d.unsqueeze(-1) * gauss_1d.view(1, 1, -1)
         
-        # Reshape for conv3d: (out_channels, in_channels/groups, D, H, W)
+        # reshape for conv3d: (out_channels, in_channels/groups, d, h, w)
         window = gauss_3d.unsqueeze(0).unsqueeze(0)
         window = window.expand(self.channel, 1, -1, -1, -1).contiguous()
         
@@ -85,14 +85,14 @@ class VolumetricSSIM(nn.Module):
     
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         """
-        Compute 3D SSIM between x and y.
+        compute 3d ssim between x and y.
         
-        Args:
-            x: Input tensor (B, C, D, H, W)
-            y: Target tensor (B, C, D, H, W)
+        args:
+            x: input tensor (b, c, d, h, w)
+            y: target tensor (b, c, d, h, w)
             
-        Returns:
-            SSIM value (scalar if size_average, else per-sample)
+        returns:
+            ssim value (scalar if size_average, else per-sample)
         """
         channel = x.size(1)
         
@@ -103,10 +103,10 @@ class VolumetricSSIM(nn.Module):
         else:
             window = self.window
         
-        # Ensure window is on same device
+        # ensure window is on same device
         window = window.to(x.device)
         
-        # Compute means
+        # compute means
         mu_x = F.conv3d(x, window, padding=self.window_size // 2, groups=channel)
         mu_y = F.conv3d(y, window, padding=self.window_size // 2, groups=channel)
         
@@ -114,12 +114,12 @@ class VolumetricSSIM(nn.Module):
         mu_y_sq = mu_y ** 2
         mu_xy = mu_x * mu_y
         
-        # Compute variances
+        # compute variances
         sigma_x_sq = F.conv3d(x * x, window, padding=self.window_size // 2, groups=channel) - mu_x_sq
         sigma_y_sq = F.conv3d(y * y, window, padding=self.window_size // 2, groups=channel) - mu_y_sq
         sigma_xy = F.conv3d(x * y, window, padding=self.window_size // 2, groups=channel) - mu_xy
         
-        # SSIM formula
+        # ssim formula
         ssim_map = ((2 * mu_xy + self.C1) * (2 * sigma_xy + self.C2)) / \
                    ((mu_x_sq + mu_y_sq + self.C1) * (sigma_x_sq + sigma_y_sq + self.C2))
         
@@ -131,9 +131,9 @@ class VolumetricSSIM(nn.Module):
 
 class VolumetricMultiScaleSSIM(nn.Module):
     """
-    Multi-Scale 3D SSIM (MS-SSIM) for volumetric data.
+    multi-scale 3d ssim (ms-ssim) for volumetric data.
     
-    Computes SSIM at multiple scales using average pooling.
+    computes ssim at multiple scales using average pooling.
     """
     
     def __init__(
@@ -144,13 +144,13 @@ class VolumetricMultiScaleSSIM(nn.Module):
         data_range: float = 1.0
     ):
         """
-        Initialize MS-SSIM 3D.
+        initialize ms-ssim 3d.
         
-        Args:
-            window_size: Size of Gaussian window
-            channel: Number of input channels
-            weights: Weights for each scale (default: 5 scales)
-            data_range: Dynamic range of input
+        args:
+            window_size: size of gaussian window
+            channel: number of input channels
+            weights: weights for each scale (default: 5 scales)
+            data_range: dynamic range of input
         """
         super().__init__()
         
@@ -166,14 +166,14 @@ class VolumetricMultiScaleSSIM(nn.Module):
     
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
         """
-        Compute MS-SSIM between x and y.
+        compute ms-ssim between x and y.
         
-        Args:
-            x: Input tensor (B, C, D, H, W)
-            y: Target tensor (B, C, D, H, W)
+        args:
+            x: input tensor (b, c, d, h, w)
+            y: target tensor (b, c, d, h, w)
             
-        Returns:
-            MS-SSIM value
+        returns:
+            ms-ssim value
         """
         weights = torch.tensor(self.weights, device=x.device)
         
@@ -194,9 +194,9 @@ class VolumetricMultiScaleSSIM(nn.Module):
 
 class VolumetricCycleConsistencyLoss(nn.Module):
     """
-    Volumetric Cycle Consistency Loss with spatial awareness.
+    volumetric cycle consistency loss with spatial awareness.
     
-    Extends cycle consistency to 3D with optional multi-scale
+    extends cycle consistency to 3d with optional multi-scale
     and anatomical region weighting.
     """
     
@@ -210,15 +210,15 @@ class VolumetricCycleConsistencyLoss(nn.Module):
         spatial_weights: bool = False
     ):
         """
-        Initialize volumetric cycle consistency loss.
+        initialize volumetric cycle consistency loss.
         
-        Args:
-            loss_type: Type of base loss function
-            lambda_ssim: Weight for SSIM component
-            lambda_l1: Weight for L1 component
-            multi_scale: Use multi-scale computation
-            num_scales: Number of scales for multi-scale
-            spatial_weights: Apply spatial attention weighting
+        args:
+            loss_type: type of base loss function
+            lambda_ssim: weight for ssim component
+            lambda_l1: weight for l1 component
+            multi_scale: use multi-scale computation
+            num_scales: number of scales for multi-scale
+            spatial_weights: apply spatial attention weighting
         """
         super().__init__()
         
@@ -232,7 +232,7 @@ class VolumetricCycleConsistencyLoss(nn.Module):
         if 'ssim' in loss_type or loss_type == 'combined':
             self.ssim = VolumetricSSIM()
         
-        # Scale weights for multi-scale loss
+        # scale weights for multi-scale loss
         if multi_scale:
             self.scale_weights = [1.0 / (2 ** i) for i in range(num_scales)]
             total = sum(self.scale_weights)
@@ -245,15 +245,15 @@ class VolumetricCycleConsistencyLoss(nn.Module):
         mask: Optional[Tensor] = None
     ) -> Tensor:
         """
-        Compute cycle consistency loss.
+        compute cycle consistency loss.
         
-        Args:
-            real: Original input (B, C, D, H, W)
-            reconstructed: Reconstructed input after cycle (B, C, D, H, W)
-            mask: Optional spatial weight mask
+        args:
+            real: original input (b, c, d, h, w)
+            reconstructed: reconstructed input after cycle (b, c, d, h, w)
+            mask: optional spatial weight mask
             
-        Returns:
-            Cycle consistency loss value
+        returns:
+            cycle consistency loss value
         """
         if self.multi_scale:
             return self._multi_scale_loss(real, reconstructed, mask)
@@ -266,7 +266,7 @@ class VolumetricCycleConsistencyLoss(nn.Module):
         reconstructed: Tensor,
         mask: Optional[Tensor]
     ) -> Tensor:
-        """Compute single-scale loss."""
+        """compute single-scale loss."""
         if self.loss_type == 'l1':
             loss = F.l1_loss(reconstructed, real, reduction='none')
         elif self.loss_type == 'l2':
@@ -294,7 +294,7 @@ class VolumetricCycleConsistencyLoss(nn.Module):
         reconstructed: Tensor,
         mask: Optional[Tensor]
     ) -> Tensor:
-        """Compute multi-scale loss."""
+        """compute multi-scale loss."""
         total_loss = 0.0
         
         for i, weight in enumerate(self.scale_weights):
@@ -312,9 +312,9 @@ class VolumetricCycleConsistencyLoss(nn.Module):
 
 class VolumetricGradientLoss(nn.Module):
     """
-    3D Gradient Matching Loss for edge preservation.
+    3d gradient matching loss for edge preservation.
     
-    Computes gradient differences in all three spatial dimensions
+    computes gradient differences in all three spatial dimensions
     to preserve anatomical boundaries during harmonization.
     """
     
@@ -324,24 +324,24 @@ class VolumetricGradientLoss(nn.Module):
         edge_weight: float = 1.0
     ):
         """
-        Initialize gradient loss.
+        initialize gradient loss.
         
-        Args:
+        args:
             loss_type: 'l1' or 'l2' loss for gradients
-            edge_weight: Weight for edge regions
+            edge_weight: weight for edge regions
         """
         super().__init__()
         self.loss_type = loss_type
         self.edge_weight = edge_weight
         
-        # Sobel kernels for 3D
+        # sobel kernels for 3d
         self.register_buffer('sobel_x', self._create_sobel_kernel('x'))
         self.register_buffer('sobel_y', self._create_sobel_kernel('y'))
         self.register_buffer('sobel_z', self._create_sobel_kernel('z'))
     
     def _create_sobel_kernel(self, direction: str) -> Tensor:
-        """Create 3D Sobel kernel for given direction."""
-        # Base 2D Sobel kernel
+        """create 3d sobel kernel for given direction."""
+        # base 2d sobel kernel
         sobel_2d = torch.tensor([
             [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],
             [[-2, 0, 2], [-4, 0, 4], [-2, 0, 2]],
@@ -357,12 +357,12 @@ class VolumetricGradientLoss(nn.Module):
         else:
             raise ValueError(f"Unknown direction: {direction}")
         
-        # Shape for conv3d: (out, in, D, H, W)
+        # shape for conv3d: (out, in, d, h, w)
         return kernel.unsqueeze(0).unsqueeze(0)
     
     def _compute_gradients(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        """Compute 3D gradients using Sobel filters."""
-        # Apply to each channel
+        """compute 3d gradients using sobel filters."""
+        # apply to each channel
         B, C, D, H, W = x.shape
         
         grad_x = F.conv3d(
@@ -387,14 +387,14 @@ class VolumetricGradientLoss(nn.Module):
     
     def forward(self, pred: Tensor, target: Tensor) -> Tensor:
         """
-        Compute gradient matching loss.
+        compute gradient matching loss.
         
-        Args:
-            pred: Predicted volume (B, C, D, H, W)
-            target: Target volume (B, C, D, H, W)
+        args:
+            pred: predicted volume (b, c, d, h, w)
+            target: target volume (b, c, d, h, w)
             
-        Returns:
-            Gradient loss value
+        returns:
+            gradient loss value
         """
         pred_gx, pred_gy, pred_gz = self._compute_gradients(pred)
         target_gx, target_gy, target_gz = self._compute_gradients(target)
@@ -413,12 +413,12 @@ class VolumetricGradientLoss(nn.Module):
 
 class VolumetricPerceptualLoss(nn.Module):
     """
-    3D Perceptual Loss using pretrained 3D feature extractors.
+    3d perceptual loss using pretrained 3d feature extractors.
     
-    Options include:
-    - MedicalNet (pretrained 3D ResNet on medical images)
-    - Custom 3D VGG-style network
-    - 2.5D approach using pretrained 2D networks on orthogonal slices
+    options include:
+    - medicalnet (pretrained 3d resnet on medical images)
+    - custom 3d vgg-style network
+    - 2.5d approach using pretrained 2d networks on orthogonal slices
     """
     
     def __init__(
@@ -428,12 +428,12 @@ class VolumetricPerceptualLoss(nn.Module):
         normalize_features: bool = True
     ):
         """
-        Initialize perceptual loss.
+        initialize perceptual loss.
         
-        Args:
-            feature_extractor: Type of feature extractor
-            layer_weights: Weights for different layers
-            normalize_features: Whether to normalize features
+        args:
+            feature_extractor: type of feature extractor
+            layer_weights: weights for different layers
+            normalize_features: whether to normalize features
         """
         super().__init__()
         
@@ -441,15 +441,15 @@ class VolumetricPerceptualLoss(nn.Module):
         self.layer_weights = layer_weights or {'layer1': 1.0, 'layer2': 0.5}
         self.normalize_features = normalize_features
         
-        # Build feature extraction network
+        # build feature extraction network
         self.encoder = self._build_encoder()
         
-        # Freeze encoder
+        # freeze encoder
         for param in self.encoder.parameters():
             param.requires_grad = False
     
     def _build_encoder(self) -> nn.Module:
-        """Build 3D feature extraction encoder."""
+        """build 3d feature extraction encoder."""
         if self.feature_extractor == 'resnet3d':
             return ResNet3DEncoder()
         elif self.feature_extractor == 'vgg2.5d':
@@ -463,16 +463,16 @@ class VolumetricPerceptualLoss(nn.Module):
         target: Tensor
     ) -> Tensor:
         """
-        Compute perceptual loss.
+        compute perceptual loss.
         
-        Args:
-            pred: Predicted volume (B, C, D, H, W)
-            target: Target volume (B, C, D, H, W)
+        args:
+            pred: predicted volume (b, c, d, h, w)
+            target: target volume (b, c, d, h, w)
             
-        Returns:
-            Perceptual loss value
+        returns:
+            perceptual loss value
         """
-        # Expand single channel to 3 for pretrained networks
+        # expand single channel to 3 for pretrained networks
         if pred.size(1) == 1:
             pred = pred.expand(-1, 3, -1, -1, -1)
             target = target.expand(-1, 3, -1, -1, -1)
@@ -497,7 +497,7 @@ class VolumetricPerceptualLoss(nn.Module):
 
 
 class ResNet3DEncoder(nn.Module):
-    """Simplified 3D ResNet encoder for perceptual features."""
+    """simplified 3d resnet encoder for perceptual features."""
     
     def __init__(self, base_channels: int = 64):
         super().__init__()
@@ -520,10 +520,10 @@ class ResNet3DEncoder(nn.Module):
         blocks: int,
         stride: int = 1
     ) -> nn.Sequential:
-        """Create residual layer."""
+        """create residual layer."""
         layers = []
         
-        # First block with potential downsampling
+        # first block with potential downsampling
         layers.append(
             ResBlock3D(in_channels, out_channels, stride=stride)
         )
@@ -534,7 +534,7 @@ class ResNet3DEncoder(nn.Module):
         return nn.Sequential(*layers)
     
     def forward(self, x: Tensor) -> Dict[str, Tensor]:
-        """Extract features at multiple levels."""
+        """extract features at multiple levels."""
         features = {}
         
         x = self.conv1(x)
@@ -552,7 +552,7 @@ class ResNet3DEncoder(nn.Module):
 
 
 class ResBlock3D(nn.Module):
-    """Basic 3D residual block."""
+    """basic 3d residual block."""
     
     def __init__(
         self,
@@ -576,7 +576,7 @@ class ResBlock3D(nn.Module):
         
         self.relu = nn.ReLU(inplace=True)
         
-        # Shortcut connection
+        # shortcut connection
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
@@ -597,9 +597,9 @@ class ResBlock3D(nn.Module):
 
 class VGG25DEncoder(nn.Module):
     """
-    2.5D VGG-style encoder using pretrained 2D VGG on orthogonal slices.
+    2.5d vgg-style encoder using pretrained 2d vgg on orthogonal slices.
     
-    Extracts features from axial, sagittal, and coronal views.
+    extracts features from axial, sagittal, and coronal views.
     """
     
     def __init__(self):
@@ -612,42 +612,42 @@ class VGG25DEncoder(nn.Module):
             from torchvision.models import vgg16
             vgg = vgg16(pretrained=True)
         
-        # Extract feature layers
-        self.features = vgg.features[:23]  # Up to relu4_3
+        # extract feature layers
+        self.features = vgg.features[:23]  # up to relu4_3
         
-        # Freeze
+        # freeze
         for param in self.features.parameters():
             param.requires_grad = False
     
     def forward(self, x: Tensor) -> Dict[str, Tensor]:
         """
-        Extract 2.5D features from orthogonal views.
+        extract 2.5d features from orthogonal views.
         
-        Args:
-            x: Input volume (B, C, D, H, W)
+        args:
+            x: input volume (b, c, d, h, w)
             
-        Returns:
-            Dictionary of multi-view features
+        returns:
+            dictionary of multi-view features
         """
         B, C, D, H, W = x.shape
         
-        # Get central slices from each view
+        # get central slices from each view
         axial_idx = D // 2
         sagittal_idx = H // 2
         coronal_idx = W // 2
         
-        # Extract slices
-        axial = x[:, :, axial_idx, :, :]  # (B, C, H, W)
-        sagittal = x[:, :, :, sagittal_idx, :]  # (B, C, D, W)
-        coronal = x[:, :, :, :, coronal_idx]  # (B, C, D, H)
+        # extract slices
+        axial = x[:, :, axial_idx, :, :]  # (b, c, h, w)
+        sagittal = x[:, :, :, sagittal_idx, :]  # (b, c, d, w)
+        coronal = x[:, :, :, :, coronal_idx]  # (b, c, d, h)
         
-        # Expand to 3 channels if needed
+        # expand to 3 channels if needed
         if C == 1:
             axial = axial.expand(-1, 3, -1, -1)
             sagittal = sagittal.expand(-1, 3, -1, -1)
             coronal = coronal.expand(-1, 3, -1, -1)
         
-        # Extract features
+        # extract features
         axial_feat = self.features(axial)
         sagittal_feat = self.features(sagittal)
         coronal_feat = self.features(coronal)
@@ -660,7 +660,7 @@ class VGG25DEncoder(nn.Module):
 
 
 class Custom3DEncoder(nn.Module):
-    """Simple custom 3D encoder for perceptual features."""
+    """simple custom 3d encoder for perceptual features."""
     
     def __init__(self, base_channels: int = 32):
         super().__init__()
@@ -683,9 +683,9 @@ class Custom3DEncoder(nn.Module):
 
 class AnatomicalConsistencyLoss(nn.Module):
     """
-    Anatomical Consistency Loss for brain structure preservation.
+    anatomical consistency loss for brain structure preservation.
     
-    Uses brain parcellation or tissue segmentation to ensure
+    uses brain parcellation or tissue segmentation to ensure
     anatomical regions are preserved during harmonization.
     """
     
@@ -697,13 +697,13 @@ class AnatomicalConsistencyLoss(nn.Module):
         csf_weight: float = 0.5
     ):
         """
-        Initialize anatomical loss.
+        initialize anatomical loss.
         
-        Args:
-            use_tissue_priors: Use tissue probability maps
-            gm_weight: Weight for gray matter preservation
-            wm_weight: Weight for white matter preservation
-            csf_weight: Weight for CSF preservation
+        args:
+            use_tissue_priors: use tissue probability maps
+            gm_weight: weight for gray matter preservation
+            wm_weight: weight for white matter preservation
+            csf_weight: weight for csf preservation
         """
         super().__init__()
         
@@ -721,18 +721,18 @@ class AnatomicalConsistencyLoss(nn.Module):
         tissue_maps: Optional[Dict[str, Tensor]] = None
     ) -> Tensor:
         """
-        Compute anatomical consistency loss.
+        compute anatomical consistency loss.
         
-        Args:
-            pred: Predicted volume (B, C, D, H, W)
-            target: Target volume (B, C, D, H, W)
-            tissue_maps: Optional dictionary of tissue probability maps
+        args:
+            pred: predicted volume (b, c, d, h, w)
+            target: target volume (b, c, d, h, w)
+            tissue_maps: optional dictionary of tissue probability maps
             
-        Returns:
-            Anatomical consistency loss
+        returns:
+            anatomical consistency loss
         """
         if tissue_maps is None:
-            # Use intensity-based pseudo-segmentation
+            # use intensity-based pseudo-segmentation
             tissue_maps = self._estimate_tissue_priors(target)
         
         total_loss = 0.0
@@ -741,7 +741,7 @@ class AnatomicalConsistencyLoss(nn.Module):
             if tissue in tissue_maps:
                 mask = tissue_maps[tissue]
                 
-                # Compute masked L1 loss
+                # compute masked l1 loss
                 diff = torch.abs(pred - target) * mask
                 tissue_loss = diff.sum() / (mask.sum() + 1e-8)
                 
@@ -751,18 +751,18 @@ class AnatomicalConsistencyLoss(nn.Module):
     
     def _estimate_tissue_priors(self, volume: Tensor) -> Dict[str, Tensor]:
         """
-        Estimate tissue probability maps from intensity.
+        estimate tissue probability maps from intensity.
         
-        Uses simple thresholding as a rough approximation.
-        Real implementation should use proper segmentation.
+        uses simple thresholding as a rough approximation.
+        real implementation should use proper segmentation.
         """
-        # Normalize to [0, 1]
+        # normalize to [0, 1]
         vol_min = volume.min()
         vol_max = volume.max()
         normalized = (volume - vol_min) / (vol_max - vol_min + 1e-8)
         
-        # Rough tissue estimation based on intensity
-        # CSF: ~0-0.3, GM: ~0.3-0.6, WM: ~0.6-1.0
+        # rough tissue estimation based on intensity
+        # csf: ~0-0.3, gm: ~0.3-0.6, wm: ~0.6-1.0
         csf_mask = (normalized < 0.3).float()
         gm_mask = ((normalized >= 0.3) & (normalized < 0.6)).float()
         wm_mask = (normalized >= 0.6).float()
@@ -776,23 +776,23 @@ class AnatomicalConsistencyLoss(nn.Module):
 
 class TissuePreservationLoss(nn.Module):
     """
-    Tissue Boundary Preservation Loss.
+    tissue boundary preservation loss.
     
-    Preserves tissue boundaries (GM/WM, WM/CSF) during harmonization
+    preserves tissue boundaries (gm/wm, wm/csf) during harmonization
     by penalizing boundary changes.
     """
     
     def __init__(self, boundary_weight: float = 1.0):
         """
-        Initialize tissue preservation loss.
+        initialize tissue preservation loss.
         
-        Args:
-            boundary_weight: Weight for boundary preservation
+        args:
+            boundary_weight: weight for boundary preservation
         """
         super().__init__()
         self.boundary_weight = boundary_weight
         
-        # 3D Laplacian for edge detection
+        # 3d laplacian for edge detection
         laplacian = torch.tensor([
             [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
             [[0, 1, 0], [1, -6, 1], [0, 1, 0]],
@@ -801,7 +801,7 @@ class TissuePreservationLoss(nn.Module):
         self.register_buffer('laplacian', laplacian.unsqueeze(0).unsqueeze(0))
     
     def _compute_boundaries(self, x: Tensor) -> Tensor:
-        """Compute tissue boundaries using Laplacian."""
+        """compute tissue boundaries using laplacian."""
         B, C, D, H, W = x.shape
         
         boundaries = F.conv3d(
@@ -814,19 +814,19 @@ class TissuePreservationLoss(nn.Module):
     
     def forward(self, pred: Tensor, target: Tensor) -> Tensor:
         """
-        Compute tissue boundary preservation loss.
+        compute tissue boundary preservation loss.
         
-        Args:
-            pred: Predicted volume
-            target: Target volume
+        args:
+            pred: predicted volume
+            target: target volume
             
-        Returns:
-            Boundary preservation loss
+        returns:
+            boundary preservation loss
         """
         pred_boundaries = self._compute_boundaries(pred)
         target_boundaries = self._compute_boundaries(target)
         
-        # Encourage boundary preservation
+        # encourage boundary preservation
         boundary_loss = F.mse_loss(pred_boundaries, target_boundaries)
         
         return self.boundary_weight * boundary_loss
@@ -834,10 +834,10 @@ class TissuePreservationLoss(nn.Module):
 
 class VolumetricNCELoss(nn.Module):
     """
-    3D Contrastive Learning Loss for unpaired volumetric translation.
+    3d contrastive learning loss for unpaired volumetric translation.
     
-    Based on Contrastive Unpaired Translation (CUT) extended to 3D.
-    Uses patch-wise contrastive learning within volumes.
+    based on contrastive unpaired translation (cut) extended to 3d.
+    uses patch-wise contrastive learning within volumes.
     """
     
     def __init__(
@@ -847,12 +847,12 @@ class VolumetricNCELoss(nn.Module):
         nce_layers: List[int] = [0, 4, 8, 12, 16]
     ):
         """
-        Initialize NCE loss.
+        initialize nce loss.
         
-        Args:
-            num_patches: Number of patches to sample
-            temperature: Contrastive temperature
-            nce_layers: Layers to use for NCE
+        args:
+            num_patches: number of patches to sample
+            temperature: contrastive temperature
+            nce_layers: layers to use for nce
         """
         super().__init__()
         
@@ -869,57 +869,57 @@ class VolumetricNCELoss(nn.Module):
         feat_neg: Optional[List[Tensor]] = None
     ) -> Tensor:
         """
-        Compute NCE loss.
+        compute nce loss.
         
-        Args:
-            feat_q: Query features from different layers
-            feat_k: Positive key features
-            feat_neg: Optional negative features (if None, use other patches)
+        args:
+            feat_q: query features from different layers
+            feat_k: positive key features
+            feat_neg: optional negative features (if none, use other patches)
             
-        Returns:
-            NCE loss value
+        returns:
+            nce loss value
         """
         total_loss = 0.0
         
         for idx in range(len(feat_q)):
-            q = feat_q[idx]  # (B, C, D, H, W)
+            q = feat_q[idx]  # (b, c, d, h, w)
             k = feat_k[idx]
             
             B, C, D, H, W = q.shape
             
-            # Flatten spatial dimensions
-            q_flat = q.view(B, C, -1)  # (B, C, DHW)
+            # flatten spatial dimensions
+            q_flat = q.view(B, C, -1)  # (b, c, dhw)
             k_flat = k.view(B, C, -1)
             
-            # Sample random patches
+            # sample random patches
             num_locations = D * H * W
             patch_ids = torch.randperm(num_locations)[:self.num_patches]
             
-            # Extract patches
-            q_patches = q_flat[:, :, patch_ids]  # (B, C, num_patches)
+            # extract patches
+            q_patches = q_flat[:, :, patch_ids]  # (b, c, num_patches)
             k_patches = k_flat[:, :, patch_ids]
             
-            # Normalize
+            # normalize
             q_patches = F.normalize(q_patches, dim=1)
             k_patches = F.normalize(k_patches, dim=1)
             
-            # Compute positive logits
-            l_pos = (q_patches * k_patches).sum(dim=1, keepdim=True)  # (B, 1, num_patches)
+            # compute positive logits
+            l_pos = (q_patches * k_patches).sum(dim=1, keepdim=True)  # (b, 1, num_patches)
             
-            # Compute negative logits
-            l_neg = torch.bmm(q_patches.transpose(1, 2), k_patches)  # (B, num_patches, num_patches)
+            # compute negative logits
+            l_neg = torch.bmm(q_patches.transpose(1, 2), k_patches)  # (b, num_patches, num_patches)
             
-            # Diagonal should be masked (positive pairs)
+            # diagonal should be masked (positive pairs)
             diagonal_mask = torch.eye(self.num_patches, device=q.device).bool()
             l_neg.masked_fill_(diagonal_mask.unsqueeze(0), float('-inf'))
             
-            # Combine logits
+            # combine logits
             logits = torch.cat([l_pos.transpose(1, 2), l_neg], dim=2) / self.temperature
             
-            # Labels (positive is always at index 0)
+            # labels (positive is always at index 0)
             labels = torch.zeros(B, self.num_patches, dtype=torch.long, device=q.device)
             
-            # Compute loss
+            # compute loss
             loss = self.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
             total_loss = total_loss + loss.mean()
         
@@ -928,9 +928,9 @@ class VolumetricNCELoss(nn.Module):
 
 class VolumetricIdentityLoss(nn.Module):
     """
-    Identity Loss for 3D volumes.
+    identity loss for 3d volumes.
     
-    Encourages the generator to be identity when given
+    encourages the generator to be identity when given
     target domain input, preserving content.
     """
     
@@ -940,11 +940,11 @@ class VolumetricIdentityLoss(nn.Module):
         lambda_ssim: float = 0.0
     ):
         """
-        Initialize identity loss.
+        initialize identity loss.
         
-        Args:
-            loss_type: Base loss type ('l1', 'l2')
-            lambda_ssim: Optional SSIM component weight
+        args:
+            loss_type: base loss type ('l1', 'l2')
+            lambda_ssim: optional ssim component weight
         """
         super().__init__()
         self.loss_type = loss_type
@@ -955,14 +955,14 @@ class VolumetricIdentityLoss(nn.Module):
     
     def forward(self, output: Tensor, input: Tensor) -> Tensor:
         """
-        Compute identity loss.
+        compute identity loss.
         
-        Args:
-            output: Generator output when given target domain input
-            input: Target domain input
+        args:
+            output: generator output when given target domain input
+            input: target domain input
             
-        Returns:
-            Identity loss value
+        returns:
+            identity loss value
         """
         if self.loss_type == 'l1':
             loss = F.l1_loss(output, input)
@@ -980,9 +980,9 @@ class VolumetricIdentityLoss(nn.Module):
 
 class CombinedVolumetricLoss(nn.Module):
     """
-    Combined volumetric loss for 3D CycleGAN training.
+    combined volumetric loss for 3d cyclegan training.
     
-    Integrates all volumetric losses with configurable weights.
+    integrates all volumetric losses with configurable weights.
     """
     
     def __init__(
@@ -998,11 +998,11 @@ class CombinedVolumetricLoss(nn.Module):
         use_nce: bool = False
     ):
         """
-        Initialize combined loss.
+        initialize combined loss.
         
-        Args:
-            lambda_*: Weights for each loss component
-            use_nce: Whether to use NCE loss
+        args:
+            lambda_*: weights for each loss component
+            use_nce: whether to use nce loss
         """
         super().__init__()
         
@@ -1015,7 +1015,7 @@ class CombinedVolumetricLoss(nn.Module):
         self.lambda_tissue = lambda_tissue
         self.lambda_nce = lambda_nce
         
-        # Initialize component losses
+        # initialize component losses
         self.cycle_loss = VolumetricCycleConsistencyLoss(
             loss_type='combined',
             multi_scale=True
@@ -1046,27 +1046,27 @@ class CombinedVolumetricLoss(nn.Module):
         features_B: Optional[List[Tensor]] = None
     ) -> Dict[str, Tensor]:
         """
-        Compute all losses.
+        compute all losses.
         
-        Args:
-            real_A, real_B: Real images from domains A and B
-            fake_A, fake_B: Generated images
-            rec_A, rec_B: Reconstructed images after cycle
-            idt_A, idt_B: Identity outputs (optional)
-            features_*: Features for NCE loss (optional)
+        args:
+            real_a, real_b: real images from domains a and b
+            fake_a, fake_b: generated images
+            rec_a, rec_b: reconstructed images after cycle
+            idt_a, idt_b: identity outputs (optional)
+            features_*: features for nce loss (optional)
             
-        Returns:
-            Dictionary of individual and total losses
+        returns:
+            dictionary of individual and total losses
         """
         losses = {}
         
-        # Cycle consistency
+        # cycle consistency
         loss_cycle_A = self.cycle_loss(real_A, rec_A)
         loss_cycle_B = self.cycle_loss(real_B, rec_B)
         losses['cycle_A'] = loss_cycle_A
         losses['cycle_B'] = loss_cycle_B
         
-        # Identity
+        # identity
         if idt_A is not None and idt_B is not None:
             loss_idt_A = self.identity_loss(idt_A, real_A)
             loss_idt_B = self.identity_loss(idt_B, real_B)
@@ -1075,44 +1075,44 @@ class CombinedVolumetricLoss(nn.Module):
         else:
             loss_idt_A = loss_idt_B = 0
         
-        # SSIM
+        # ssim
         loss_ssim_A = 1 - self.ssim_loss(fake_B, real_A)
         loss_ssim_B = 1 - self.ssim_loss(fake_A, real_B)
         losses['ssim_A'] = loss_ssim_A
         losses['ssim_B'] = loss_ssim_B
         
-        # Gradient
+        # gradient
         loss_grad_A = self.gradient_loss(fake_B, real_A)
         loss_grad_B = self.gradient_loss(fake_A, real_B)
         losses['gradient_A'] = loss_grad_A
         losses['gradient_B'] = loss_grad_B
         
-        # Perceptual
+        # perceptual
         loss_perc_A = self.perceptual_loss(fake_B, real_A)
         loss_perc_B = self.perceptual_loss(fake_A, real_B)
         losses['perceptual_A'] = loss_perc_A
         losses['perceptual_B'] = loss_perc_B
         
-        # Anatomical
+        # anatomical
         loss_anat_A = self.anatomical_loss(fake_B, real_A)
         loss_anat_B = self.anatomical_loss(fake_A, real_B)
         losses['anatomical_A'] = loss_anat_A
         losses['anatomical_B'] = loss_anat_B
         
-        # Tissue boundary
+        # tissue boundary
         loss_tissue_A = self.tissue_loss(fake_B, real_A)
         loss_tissue_B = self.tissue_loss(fake_A, real_B)
         losses['tissue_A'] = loss_tissue_A
         losses['tissue_B'] = loss_tissue_B
         
-        # NCE
+        # nce
         if self.nce_loss is not None and features_A is not None:
             loss_nce = self.nce_loss(features_A, features_B)
             losses['nce'] = loss_nce
         else:
             loss_nce = 0
         
-        # Total
+        # total
         total = (
             self.lambda_cycle * (loss_cycle_A + loss_cycle_B) +
             self.lambda_identity * (loss_idt_A + loss_idt_B) +

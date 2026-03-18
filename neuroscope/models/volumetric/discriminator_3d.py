@@ -1,10 +1,10 @@
 """
-3D Discriminator Architectures.
+3d discriminator architectures.
 
-Volumetric discriminators for adversarial training including:
-- 3D PatchGAN Discriminator
-- Multi-scale 3D Discriminator
-- Spectral normalized variants
+volumetric discriminators for adversarial training including:
+- 3d patchgan discriminator
+- multi-scale 3d discriminator
+- spectral normalized variants
 """
 
 from typing import Optional, List, Tuple
@@ -17,9 +17,9 @@ from .blocks_3d import SpectralNorm3d, GroupNorm3D
 
 class Discriminator3D(nn.Module):
     """
-    3D PatchGAN Discriminator.
+    3d patchgan discriminator.
     
-    Classifies overlapping patches as real or fake for
+    classifies overlapping patches as real or fake for
     more stable adversarial training on volumetric data.
     """
     
@@ -36,16 +36,16 @@ class Discriminator3D(nn.Module):
         
         self.use_sigmoid = use_sigmoid
         
-        # Build discriminator layers
+        # build discriminator layers
         layers = []
         
-        # First layer (no normalization)
+        # first layer (no normalization)
         conv = nn.Conv3d(in_channels, ndf, 4, 2, 1, bias=True)
         if use_spectral_norm:
             conv = SpectralNorm3d(conv)
         layers.extend([conv, nn.LeakyReLU(0.2, inplace=True)])
         
-        # Intermediate layers
+        # intermediate layers
         mult = 1
         for i in range(1, n_layers):
             mult_prev = mult
@@ -69,7 +69,7 @@ class Discriminator3D(nn.Module):
             
             layers.extend([conv, norm, nn.LeakyReLU(0.2, inplace=True)])
         
-        # Penultimate layer
+        # penultimate layer
         mult_prev = mult
         mult = min(2 ** n_layers, 8)
         
@@ -89,7 +89,7 @@ class Discriminator3D(nn.Module):
         
         layers.extend([conv, norm, nn.LeakyReLU(0.2, inplace=True)])
         
-        # Output layer
+        # output layer
         output_conv = nn.Conv3d(ndf * mult, 1, 4, 1, 1)
         if use_spectral_norm:
             output_conv = SpectralNorm3d(output_conv)
@@ -106,9 +106,9 @@ class Discriminator3D(nn.Module):
 
 class MultiScaleDiscriminator3D(nn.Module):
     """
-    Multi-Scale 3D Discriminator.
+    multi-scale 3d discriminator.
     
-    Operates at multiple spatial scales to capture both
+    operates at multiple spatial scales to capture both
     fine-grained textures and global structures.
     """
     
@@ -125,7 +125,7 @@ class MultiScaleDiscriminator3D(nn.Module):
         
         self.n_scales = n_scales
         
-        # Create discriminators for each scale
+        # create discriminators for each scale
         self.discriminators = nn.ModuleList()
         for _ in range(n_scales):
             self.discriminators.append(
@@ -138,7 +138,7 @@ class MultiScaleDiscriminator3D(nn.Module):
                 )
             )
         
-        # Downsampling for multi-scale
+        # downsampling for multi-scale
         self.downsample = nn.AvgPool3d(
             kernel_size=3, stride=2, padding=1,
             count_include_pad=False
@@ -146,13 +146,13 @@ class MultiScaleDiscriminator3D(nn.Module):
     
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
         """
-        Forward pass returning predictions at all scales.
+        forward pass returning predictions at all scales.
         
-        Args:
-            x: Input volume [B, C, D, H, W]
+        args:
+            x: input volume [b, c, d, h, w]
             
-        Returns:
-            List of predictions at each scale
+        returns:
+            list of predictions at each scale
         """
         outputs = []
         
@@ -167,9 +167,9 @@ class MultiScaleDiscriminator3D(nn.Module):
 
 class NLayerDiscriminator3D(nn.Module):
     """
-    N-Layer 3D Discriminator with configurable depth.
+    n-layer 3d discriminator with configurable depth.
     
-    More flexible architecture allowing for different
+    more flexible architecture allowing for different
     receptive field sizes.
     """
     
@@ -186,7 +186,7 @@ class NLayerDiscriminator3D(nn.Module):
         
         self.get_intermediate_features = get_intermediate_features
         
-        # First layer
+        # first layer
         sequence = [[
             nn.Conv3d(in_channels, ndf, 4, 2, 1, bias=True),
             nn.LeakyReLU(0.2, inplace=True)
@@ -195,7 +195,7 @@ class NLayerDiscriminator3D(nn.Module):
         nf_mult = 1
         nf_mult_prev = 1
         
-        # Intermediate layers
+        # intermediate layers
         for n in range(1, n_layers):
             nf_mult_prev = nf_mult
             nf_mult = min(2 ** n, 8)
@@ -216,7 +216,7 @@ class NLayerDiscriminator3D(nn.Module):
                 conv, norm, nn.LeakyReLU(0.2, inplace=True)
             ])
         
-        # Penultimate layer
+        # penultimate layer
         nf_mult_prev = nf_mult
         nf_mult = min(2 ** n_layers, 8)
         
@@ -234,10 +234,10 @@ class NLayerDiscriminator3D(nn.Module):
             conv, norm, nn.LeakyReLU(0.2, inplace=True)
         ])
         
-        # Output layer
+        # output layer
         sequence.append([nn.Conv3d(ndf * nf_mult, 1, 4, 1, 1)])
         
-        # Build sequential blocks
+        # build sequential blocks
         if get_intermediate_features:
             self.blocks = nn.ModuleList()
             for block in sequence:
@@ -252,13 +252,13 @@ class NLayerDiscriminator3D(nn.Module):
         self, x: torch.Tensor
     ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
         """
-        Forward pass optionally returning intermediate features.
+        forward pass optionally returning intermediate features.
         
-        Args:
-            x: Input volume
+        args:
+            x: input volume
             
-        Returns:
-            Final prediction and optional intermediate features
+        returns:
+            final prediction and optional intermediate features
         """
         if self.get_intermediate_features:
             features = []
@@ -272,9 +272,9 @@ class NLayerDiscriminator3D(nn.Module):
 
 class ProjectionDiscriminator3D(nn.Module):
     """
-    Projection Discriminator for 3D conditional generation.
+    projection discriminator for 3d conditional generation.
     
-    Uses projection of class embeddings for conditional
+    uses projection of class embeddings for conditional
     adversarial training (e.g., conditioning on tumor type).
     """
     
@@ -290,10 +290,10 @@ class ProjectionDiscriminator3D(nn.Module):
         
         self.num_classes = num_classes
         
-        # Build feature extractor
+        # build feature extractor
         layers = []
         
-        # First layer
+        # first layer
         layers.extend([
             nn.Conv3d(in_channels, ndf, 4, 2, 1),
             nn.LeakyReLU(0.2, inplace=True)
@@ -310,7 +310,7 @@ class ProjectionDiscriminator3D(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True)
             ])
         
-        # Final feature layer
+        # final feature layer
         mult_prev = mult
         mult = min(2 ** n_layers, 8)
         layers.extend([
@@ -322,13 +322,13 @@ class ProjectionDiscriminator3D(nn.Module):
         self.features = nn.Sequential(*layers)
         self.feature_dim = ndf * mult
         
-        # Global pooling
+        # global pooling
         self.global_pool = nn.AdaptiveAvgPool3d(1)
         
-        # Output layer
+        # output layer
         self.output = nn.Linear(self.feature_dim, 1)
         
-        # Class embedding for projection
+        # class embedding for projection
         if num_classes > 0:
             self.embed = nn.Embedding(num_classes, self.feature_dim)
     
@@ -338,14 +338,14 @@ class ProjectionDiscriminator3D(nn.Module):
         y: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass with optional class conditioning.
+        forward pass with optional class conditioning.
         
-        Args:
-            x: Input volume [B, C, D, H, W]
-            y: Optional class labels [B]
+        args:
+            x: input volume [b, c, d, h, w]
+            y: optional class labels [b]
             
-        Returns:
-            Discrimination scores
+        returns:
+            discrimination scores
         """
         h = self.features(x)
         h = self.global_pool(h).view(h.size(0), -1)
@@ -361,9 +361,9 @@ class ProjectionDiscriminator3D(nn.Module):
 
 class FeatureMatchingDiscriminator3D(nn.Module):
     """
-    3D Discriminator with Feature Matching Support.
+    3d discriminator with feature matching support.
     
-    Returns intermediate features for feature matching loss
+    returns intermediate features for feature matching loss
     computation during generator training.
     """
     
@@ -378,10 +378,10 @@ class FeatureMatchingDiscriminator3D(nn.Module):
         
         self.n_layers = n_layers
         
-        # Build layers individually for feature extraction
+        # build layers individually for feature extraction
         self.layers = nn.ModuleList()
         
-        # First layer
+        # first layer
         self.layers.append(nn.Sequential(
             nn.Conv3d(in_channels, ndf, 4, 2, 1),
             nn.LeakyReLU(0.2, inplace=True)
@@ -398,7 +398,7 @@ class FeatureMatchingDiscriminator3D(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True)
             ))
         
-        # Output layer
+        # output layer
         self.output = nn.Conv3d(ndf * mult, 1, 4, 1, 1)
     
     def forward(
@@ -407,14 +407,14 @@ class FeatureMatchingDiscriminator3D(nn.Module):
         return_features: bool = True
     ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
         """
-        Forward pass returning discrimination scores and features.
+        forward pass returning discrimination scores and features.
         
-        Args:
-            x: Input volume
-            return_features: Whether to return intermediate features
+        args:
+            x: input volume
+            return_features: whether to return intermediate features
             
-        Returns:
-            Tuple of (output, list of intermediate features)
+        returns:
+            tuple of (output, list of intermediate features)
         """
         features = []
         

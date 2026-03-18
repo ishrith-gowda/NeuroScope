@@ -1,4 +1,4 @@
-"""3D MRI transforms for neuroscope."""
+"""3d mri transforms for neuroscope."""
 
 import random
 import torch
@@ -13,7 +13,7 @@ except ImportError:
 
 
 class MRITransforms:
-    """3D MRI transforms for data augmentation and preprocessing."""
+    """3d mri transforms for data augmentation and preprocessing."""
     
     @staticmethod
     def get_training_transforms(
@@ -23,41 +23,41 @@ class MRITransforms:
         p_bias_field: float = 0.3,
         p_spatial: float = 0.3,
     ) -> Callable:
-        """Get transforms for training.
+        """get transforms for training.
         
-        Args:
-            normalize: Whether to normalize the data.
-            augment: Whether to apply data augmentation.
-            p_noise: Probability of applying random noise.
-            p_bias_field: Probability of applying random bias field.
-            p_spatial: Probability of applying spatial transformations.
+        args:
+            normalize: whether to normalize the data.
+            augment: whether to apply data augmentation.
+            p_noise: probability of applying random noise.
+            p_bias_field: probability of applying random bias field.
+            p_spatial: probability of applying spatial transformations.
             
-        Returns:
-            Composition of transforms.
+        returns:
+            composition of transforms.
         """
         if tio is None:
             raise ImportError("TorchIO is required for MRI transforms. Install with 'pip install torchio'.")
         
         transforms_list = []
         
-        # Always convert to canonical orientation
+        # always convert to canonical orientation
         transforms_list.append(tio.ToCanonical())
         
-        # Normalization
+        # normalization
         if normalize:
             transforms_list.append(tio.ZNormalization())
         
-        # Data augmentation
+        # data augmentation
         if augment:
-            # Random noise
+            # random noise
             if p_noise > 0:
                 transforms_list.append(tio.RandomNoise(std=(0.01, 0.1), p=p_noise))
             
-            # Random bias field
+            # random bias field
             if p_bias_field > 0:
                 transforms_list.append(tio.RandomBiasField(p=p_bias_field))
             
-            # Spatial transformations
+            # spatial transformations
             if p_spatial > 0:
                 transforms_list.append(
                     tio.RandomAffine(
@@ -72,23 +72,23 @@ class MRITransforms:
     
     @staticmethod
     def get_validation_transforms(normalize: bool = True) -> Callable:
-        """Get transforms for validation.
+        """get transforms for validation.
         
-        Args:
-            normalize: Whether to normalize the data.
+        args:
+            normalize: whether to normalize the data.
             
-        Returns:
-            Composition of transforms.
+        returns:
+            composition of transforms.
         """
         if tio is None:
             raise ImportError("TorchIO is required for MRI transforms. Install with 'pip install torchio'.")
         
         transforms_list = []
         
-        # Always convert to canonical orientation
+        # always convert to canonical orientation
         transforms_list.append(tio.ToCanonical())
         
-        # Normalization
+        # normalization
         if normalize:
             transforms_list.append(tio.ZNormalization())
         
@@ -96,109 +96,109 @@ class MRITransforms:
 
 
 class SliceExtractor:
-    """Extract 2D slices from 3D volumes."""
+    """extract 2d slices from 3d volumes."""
     
     @staticmethod
     def random_slice(volume: torch.Tensor, dim: int = 2) -> torch.Tensor:
-        """Extract a random 2D slice from a 3D volume.
+        """extract a random 2d slice from a 3d volume.
         
-        Args:
-            volume: 3D volume tensor of shape [C, D, H, W].
-            dim: Dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
+        args:
+            volume: 3d volume tensor of shape [c, d, h, w].
+            dim: dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
             
-        Returns:
-            2D slice tensor of shape [C, H, W].
+        returns:
+            2d slice tensor of shape [c, h, w].
         """
-        # Ensure volume has 4 dimensions (batch, channels, height, width)
+        # ensure volume has 4 dimensions (batch, channels, height, width)
         if volume.dim() == 3:
             volume = volume.unsqueeze(0)
         
-        # Get depth along selected dimension
+        # get depth along selected dimension
         depth = volume.shape[dim + 1]  # +1 because of batch dimension
         
-        # Choose random slice index
+        # choose random slice index
         idx = random.randint(0, depth - 1)
         
-        # Extract slice
-        if dim == 0:  # Sagittal
+        # extract slice
+        if dim == 0:  # sagittal
             slice_tensor = volume[:, :, idx, :]
-        elif dim == 1:  # Coronal
+        elif dim == 1:  # coronal
             slice_tensor = volume[:, :, :, idx]
-        else:  # dim == 2, Axial
+        else:  # dim == 2, axial
             slice_tensor = volume[:, idx, :, :]
         
         return slice_tensor
     
     @staticmethod
     def center_slice(volume: torch.Tensor, dim: int = 2) -> torch.Tensor:
-        """Extract the center 2D slice from a 3D volume.
+        """extract the center 2d slice from a 3d volume.
         
-        Args:
-            volume: 3D volume tensor of shape [C, D, H, W].
-            dim: Dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
+        args:
+            volume: 3d volume tensor of shape [c, d, h, w].
+            dim: dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
             
-        Returns:
-            2D slice tensor of shape [C, H, W].
+        returns:
+            2d slice tensor of shape [c, h, w].
         """
-        # Ensure volume has 4 dimensions (batch, channels, height, width)
+        # ensure volume has 4 dimensions (batch, channels, height, width)
         if volume.dim() == 3:
             volume = volume.unsqueeze(0)
         
-        # Get depth along selected dimension
+        # get depth along selected dimension
         depth = volume.shape[dim + 1]  # +1 because of batch dimension
         
-        # Choose center slice index
+        # choose center slice index
         idx = depth // 2
         
-        # Extract slice
-        if dim == 0:  # Sagittal
+        # extract slice
+        if dim == 0:  # sagittal
             slice_tensor = volume[:, :, idx, :]
-        elif dim == 1:  # Coronal
+        elif dim == 1:  # coronal
             slice_tensor = volume[:, :, :, idx]
-        else:  # dim == 2, Axial
+        else:  # dim == 2, axial
             slice_tensor = volume[:, idx, :, :]
         
         return slice_tensor
     
     @staticmethod
     def multi_slice(volume: torch.Tensor, dim: int = 2, n_slices: int = 5) -> List[torch.Tensor]:
-        """Extract multiple evenly spaced 2D slices from a 3D volume.
+        """extract multiple evenly spaced 2d slices from a 3d volume.
         
-        Args:
-            volume: 3D volume tensor of shape [C, D, H, W].
-            dim: Dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
-            n_slices: Number of slices to extract.
+        args:
+            volume: 3d volume tensor of shape [c, d, h, w].
+            dim: dimension to extract slice from (0=sagittal, 1=coronal, 2=axial).
+            n_slices: number of slices to extract.
             
-        Returns:
-            List of 2D slice tensors of shape [C, H, W].
+        returns:
+            list of 2d slice tensors of shape [c, h, w].
         """
-        # Ensure volume has 4 dimensions (batch, channels, height, width)
+        # ensure volume has 4 dimensions (batch, channels, height, width)
         if volume.dim() == 3:
             volume = volume.unsqueeze(0)
         
-        # Get depth along selected dimension
+        # get depth along selected dimension
         depth = volume.shape[dim + 1]  # +1 because of batch dimension
         
-        # Calculate slice indices
+        # calculate slice indices
         if n_slices > depth:
             n_slices = depth
         
         if n_slices == 1:
-            # Just return the center slice
+            # just return the center slice
             indices = [depth // 2]
         else:
-            # Calculate evenly spaced indices
+            # calculate evenly spaced indices
             step = (depth - 1) / (n_slices - 1) if n_slices > 1 else 0
             indices = [int(round(i * step)) for i in range(n_slices)]
         
-        # Extract slices
+        # extract slices
         slices = []
         for idx in indices:
-            if dim == 0:  # Sagittal
+            if dim == 0:  # sagittal
                 slice_tensor = volume[:, :, idx, :]
-            elif dim == 1:  # Coronal
+            elif dim == 1:  # coronal
                 slice_tensor = volume[:, :, :, idx]
-            else:  # dim == 2, Axial
+            else:  # dim == 2, axial
                 slice_tensor = volume[:, idx, :, :]
             
             slices.append(slice_tensor)

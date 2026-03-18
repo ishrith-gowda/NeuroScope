@@ -1,4 +1,4 @@
-"""Dataset class for CycleGAN training."""
+"""dataset class for cyclegan training."""
 
 import os
 import random
@@ -16,10 +16,10 @@ logger = get_logger(__name__)
 
 
 class DomainSliceDataset(Dataset):
-    """Dataset for loading 2D slices from 3D MRI volumes for a specific domain.
+    """dataset for loading 2d slices from 3d mri volumes for a specific domain.
     
-    This dataset loads 2D slices from 3D MRI volumes for CycleGAN training.
-    It can randomly sample slices from each volume or use a fixed slice index.
+    this dataset loads 2d slices from 3d mri volumes for cyclegan training.
+    it can randomly sample slices from each volume or use a fixed slice index.
     """
     
     def __init__(
@@ -32,16 +32,16 @@ class DomainSliceDataset(Dataset):
         seed: int = 42,
         cache_mode: str = "none",
     ):
-        """Initialize dataset.
+        """initialize dataset.
         
-        Args:
-            root_dir: Root directory of dataset.
-            domain_paths: List of relative paths to domain volumes.
-            slice_dim: Dimension to extract slices from (0=sagittal, 1=coronal, 2=axial).
-            transform: Optional transform to apply to slices.
-            slices_per_volume: Number of slices to sample from each volume.
-            seed: Random seed for reproducibility.
-            cache_mode: Caching mode ("none", "slices", "volumes").
+        args:
+            root_dir: root directory of dataset.
+            domain_paths: list of relative paths to domain volumes.
+            slice_dim: dimension to extract slices from (0=sagittal, 1=coronal, 2=axial).
+            transform: optional transform to apply to slices.
+            slices_per_volume: number of slices to sample from each volume.
+            seed: random seed for reproducibility.
+            cache_mode: caching mode ("none", "slices", "volumes").
         """
         self.root_dir = Path(root_dir)
         self.domain_paths = domain_paths
@@ -51,13 +51,13 @@ class DomainSliceDataset(Dataset):
         self.seed = seed
         self.cache_mode = cache_mode.lower()
         
-        # Set random seed for reproducibility
+        # set random seed for reproducibility
         random.seed(seed)
         
-        # List of full paths to volumes
+        # list of full paths to volumes
         self.volume_paths = [self.root_dir / path for path in domain_paths]
         
-        # Validate paths
+        # validate paths
         valid_paths = []
         for path in self.volume_paths:
             if os.path.exists(path):
@@ -68,15 +68,15 @@ class DomainSliceDataset(Dataset):
         self.volume_paths = valid_paths
         logger.info(f"Found {len(self.volume_paths)} valid volume paths")
         
-        # Initialize cache
+        # initialize cache
         self.cache = {}
         
-        # Pre-load volumes or slices if caching is enabled
+        # pre-load volumes or slices if caching is enabled
         if self.cache_mode != "none":
             self._initialize_cache()
     
     def _initialize_cache(self):
-        """Initialize cache with volumes or slices."""
+        """initialize cache with volumes or slices."""
         if self.cache_mode == "volumes":
             logger.info("Caching entire volumes...")
             for path in self.volume_paths:
@@ -84,26 +84,26 @@ class DomainSliceDataset(Dataset):
             
         elif self.cache_mode == "slices":
             logger.info("Caching sampled slices...")
-            # Sample slices for each volume
+            # sample slices for each volume
             for path in self.volume_paths:
                 volume = self._load_volume(path)
-                # Get slice indices
+                # get slice indices
                 slice_indices = self._get_slice_indices(volume)
-                # Cache slices
+                # cache slices
                 self.cache[str(path)] = [
                     self._extract_slice(volume, idx) for idx in slice_indices
                 ]
     
     def _load_volume(self, path: Path) -> torch.Tensor:
-        """Load a volume from disk.
+        """load a volume from disk.
         
-        Args:
-            path: Path to volume file.
+        args:
+            path: path to volume file.
             
-        Returns:
-            Volume tensor.
+        returns:
+            volume tensor.
         """
-        # Load volume using appropriate library based on file extension
+        # load volume using appropriate library based on file extension
         if path.suffix in [".nii", ".nii.gz"]:
             try:
                 import nibabel as nib
@@ -118,36 +118,36 @@ class DomainSliceDataset(Dataset):
             raise ValueError(f"Unsupported file format: {path.suffix}")
     
     def _get_slice_indices(self, volume: torch.Tensor) -> List[int]:
-        """Get random slice indices.
+        """get random slice indices.
         
-        Args:
-            volume: Volume tensor.
+        args:
+            volume: volume tensor.
             
-        Returns:
-            List of slice indices.
+        returns:
+            list of slice indices.
         """
-        # Get volume dimensions
+        # get volume dimensions
         depth = volume.shape[self.slice_dim]
         
-        # Generate random slice indices
+        # generate random slice indices
         if depth <= self.slices_per_volume:
-            # If volume has fewer slices than requested, use all slices
+            # if volume has fewer slices than requested, use all slices
             return list(range(depth))
         else:
-            # Otherwise, randomly sample slices
+            # otherwise, randomly sample slices
             return sorted(random.sample(range(depth), self.slices_per_volume))
     
     def _extract_slice(self, volume: torch.Tensor, idx: int) -> torch.Tensor:
-        """Extract a slice from a volume.
+        """extract a slice from a volume.
         
-        Args:
-            volume: Volume tensor.
-            idx: Slice index.
+        args:
+            volume: volume tensor.
+            idx: slice index.
             
-        Returns:
-            Slice tensor.
+        returns:
+            slice tensor.
         """
-        # Extract slice based on slice dimension
+        # extract slice based on slice dimension
         if self.slice_dim == 0:
             slice_tensor = volume[idx, :, :].clone()
         elif self.slice_dim == 1:
@@ -155,36 +155,36 @@ class DomainSliceDataset(Dataset):
         else:  # self.slice_dim == 2
             slice_tensor = volume[:, :, idx].clone()
         
-        # Ensure slice has 3 dimensions (add channel dimension)
+        # ensure slice has 3 dimensions (add channel dimension)
         if slice_tensor.dim() == 2:
             slice_tensor = slice_tensor.unsqueeze(0)
         
         return slice_tensor
     
     def __len__(self) -> int:
-        """Get dataset length.
+        """get dataset length.
         
-        Returns:
-            Number of slices in dataset.
+        returns:
+            number of slices in dataset.
         """
         if self.cache_mode == "slices":
-            # Count all cached slices
+            # count all cached slices
             return sum(len(slices) for slices in self.cache.values())
         else:
-            # Estimate based on number of volumes and slices per volume
+            # estimate based on number of volumes and slices per volume
             return len(self.volume_paths) * self.slices_per_volume
     
     def __getitem__(self, idx: int) -> torch.Tensor:
-        """Get item at index.
+        """get item at index.
         
-        Args:
-            idx: Index of item.
+        args:
+            idx: index of item.
             
-        Returns:
-            Slice tensor.
+        returns:
+            slice tensor.
         """
         if self.cache_mode == "slices":
-            # Determine which volume and which slice within that volume
+            # determine which volume and which slice within that volume
             volume_idx = 0
             remaining_idx = idx
             
@@ -193,7 +193,7 @@ class DomainSliceDataset(Dataset):
                 slices = self.cache[path]
                 
                 if remaining_idx < len(slices):
-                    # Found the right volume and slice
+                    # found the right volume and slice
                     slice_tensor = slices[remaining_idx]
                     break
                 
@@ -203,36 +203,36 @@ class DomainSliceDataset(Dataset):
             if volume_idx >= len(self.volume_paths):
                 raise IndexError(f"Index {idx} out of range")
         else:
-            # Determine which volume to use
+            # determine which volume to use
             volume_idx = idx // self.slices_per_volume
             slice_idx_within_volume = idx % self.slices_per_volume
             
             if volume_idx >= len(self.volume_paths):
-                # Handle edge case: wrap around to beginning of dataset
+                # handle edge case: wrap around to beginning of dataset
                 volume_idx = volume_idx % len(self.volume_paths)
             
             path = self.volume_paths[volume_idx]
             
-            # Load volume or get from cache
+            # load volume or get from cache
             if self.cache_mode == "volumes" and str(path) in self.cache:
                 volume = self.cache[str(path)]
             else:
                 volume = self._load_volume(path)
             
-            # Get slice indices for this volume
+            # get slice indices for this volume
             slice_indices = self._get_slice_indices(volume)
             
-            # Get slice index within the selected volume
+            # get slice index within the selected volume
             if slice_idx_within_volume >= len(slice_indices):
-                # Handle edge case: use the first slice index
+                # handle edge case: use the first slice index
                 slice_idx = slice_indices[0]
             else:
                 slice_idx = slice_indices[slice_idx_within_volume]
             
-            # Extract slice
+            # extract slice
             slice_tensor = self._extract_slice(volume, slice_idx)
         
-        # Apply transform if provided
+        # apply transform if provided
         if self.transform:
             slice_tensor = self.transform(slice_tensor)
         
@@ -248,42 +248,42 @@ def get_cycle_domain_loaders(
     seed: int = 42,
     cache_mode: str = "none",
 ) -> Dict[str, DataLoader]:
-    """Get data loaders for CycleGAN training.
+    """get data loaders for cyclegan training.
     
-    Args:
-        preprocessed_dir: Directory containing preprocessed data.
-        metadata_json: Path to metadata JSON file.
-        batch_size: Batch size.
-        num_workers: Number of workers for data loading.
-        slices_per_subject: Number of slices to sample per subject.
-        seed: Random seed for reproducibility.
-        cache_mode: Caching mode ("none", "slices", "volumes").
+    args:
+        preprocessed_dir: directory containing preprocessed data.
+        metadata_json: path to metadata json file.
+        batch_size: batch size.
+        num_workers: number of workers for data loading.
+        slices_per_subject: number of slices to sample per subject.
+        seed: random seed for reproducibility.
+        cache_mode: caching mode ("none", "slices", "volumes").
         
-    Returns:
-        Dictionary of data loaders.
+    returns:
+        dictionary of data loaders.
     """
     import json
     
-    # Load metadata
+    # load metadata
     with open(metadata_json, "r") as f:
         metadata = json.load(f)
     
-    # Get domain paths
+    # get domain paths
     domain_a_paths = metadata.get("domain_a", [])
     domain_b_paths = metadata.get("domain_b", [])
     
-    # Validate domain paths
+    # validate domain paths
     if not domain_a_paths:
         logger.error("No paths found for domain A")
     if not domain_b_paths:
         logger.error("No paths found for domain B")
     
-    # Create transforms
+    # create transforms
     transform = transforms.Compose([
-        transforms.Lambda(lambda x: (x - 0.5) * 2.0)  # Scale from [0, 1] to [-1, 1]
+        transforms.Lambda(lambda x: (x - 0.5) * 2.0)  # scale from [0, 1] to [-1, 1]
     ])
     
-    # Create datasets
+    # create datasets
     train_dataset_A = DomainSliceDataset(
         root_dir=preprocessed_dir,
         domain_paths=domain_a_paths,
@@ -302,7 +302,7 @@ def get_cycle_domain_loaders(
         cache_mode=cache_mode,
     )
     
-    # Create data loaders
+    # create data loaders
     train_loader_A = DataLoader(
         train_dataset_A,
         batch_size=batch_size,

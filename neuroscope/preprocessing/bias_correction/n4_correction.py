@@ -1,4 +1,4 @@
-"""N4 bias field correction for MRI."""
+"""n4 bias field correction for mri."""
 
 import os
 import numpy as np
@@ -12,10 +12,10 @@ logger = get_logger(__name__)
 
 
 class N4BiasFieldCorrection:
-    """N4 bias field correction for MRI volumes.
+    """n4 bias field correction for mri volumes.
     
-    This class provides methods for performing N4 bias field correction
-    on MRI volumes using SimpleITK.
+    this class provides methods for performing n4 bias field correction
+    on mri volumes using simpleitk.
     """
     
     def __init__(
@@ -28,16 +28,16 @@ class N4BiasFieldCorrection:
         history_weight: float = 0.5,
         save_bias_field: bool = False,
     ):
-        """Initialize N4BiasFieldCorrection.
+        """initialize n4biasfieldcorrection.
         
-        Args:
-            shrink_factor: Shrink factor for downsampling.
-            iterations: Number of iterations at each resolution level.
-            convergence_threshold: Convergence threshold.
-            spline_order: Order of BSpline used in the approximation.
-            spline_distance: Distance between B-spline control points.
-            history_weight: Weight for historical gradient values.
-            save_bias_field: Whether to save the estimated bias field.
+        args:
+            shrink_factor: shrink factor for downsampling.
+            iterations: number of iterations at each resolution level.
+            convergence_threshold: convergence threshold.
+            spline_order: order of bspline used in the approximation.
+            spline_distance: distance between b-spline control points.
+            history_weight: weight for historical gradient values.
+            save_bias_field: whether to save the estimated bias field.
         """
         self.shrink_factor = shrink_factor
         self.iterations = iterations or [50, 50, 30, 20]
@@ -52,43 +52,43 @@ class N4BiasFieldCorrection:
         input_image: np.ndarray,
         mask: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Apply N4 bias field correction to a volume.
+        """apply n4 bias field correction to a volume.
         
-        Args:
-            input_image: Input volume as numpy array.
-            mask: Optional mask to specify foreground voxels.
+        args:
+            input_image: input volume as numpy array.
+            mask: optional mask to specify foreground voxels.
             
-        Returns:
-            Tuple of (corrected_image, bias_field).
+        returns:
+            tuple of (corrected_image, bias_field).
         """
         try:
             import SimpleITK as sitk
         except ImportError:
             raise ImportError("SimpleITK is required for N4BiasFieldCorrection")
         
-        # Convert numpy array to SimpleITK image
+        # convert numpy array to simpleitk image
         if isinstance(input_image, torch.Tensor):
             input_image = input_image.numpy()
         
         sitk_image = sitk.GetImageFromArray(input_image)
         
-        # Create mask if not provided
+        # create mask if not provided
         if mask is None:
-            # Create an otsu mask based on the input image
+            # create an otsu mask based on the input image
             otsu_filter = sitk.OtsuThresholdImageFilter()
             otsu_filter.SetInsideValue(0)
             otsu_filter.SetOutsideValue(1)
             sitk_mask = otsu_filter.Execute(sitk_image)
         else:
-            # Use provided mask
+            # use provided mask
             if isinstance(mask, torch.Tensor):
                 mask = mask.numpy()
             sitk_mask = sitk.GetImageFromArray(mask.astype(np.uint8))
         
-        # Create N4 bias field correction filter
+        # create n4 bias field correction filter
         n4_filter = sitk.N4BiasFieldCorrectionImageFilter()
         
-        # Set parameters
+        # set parameters
         n4_filter.SetMaximumNumberOfIterations(self.iterations)
         n4_filter.SetConvergenceThreshold(self.convergence_threshold)
         n4_filter.SetSplineOrder(self.spline_order)
@@ -97,21 +97,21 @@ class N4BiasFieldCorrection:
         n4_filter.SetBiasFieldFullWidthAtHalfMaximum(0.15)
         n4_filter.SetUseOptimalMetricValue(True)
         
-        # Apply N4 correction
+        # apply n4 correction
         try:
             corrected_image = n4_filter.Execute(sitk_image, sitk_mask)
         except RuntimeError as e:
             logger.warning(f"N4 correction failed: {e}. Using original image.")
             return input_image, np.ones_like(input_image)
         
-        # Convert back to numpy array
+        # convert back to numpy array
         corrected_array = sitk.GetArrayFromImage(corrected_image)
         
-        # Get bias field (log domain)
+        # get bias field (log domain)
         if self.save_bias_field:
             bias_field = sitk.GetArrayFromImage(n4_filter.GetBiasField(sitk_image))
         else:
-            # Compute bias field by dividing the corrected image by the original image
+            # compute bias field by dividing the corrected image by the original image
             epsilon = 1e-6
             bias_field = np.divide(
                 corrected_array + epsilon,
@@ -128,17 +128,17 @@ class N4BiasFieldCorrection:
         mask_dir: Optional[Union[str, Path]] = None,
         save_bias: bool = False,
     ) -> Dict[str, Dict[str, float]]:
-        """Batch process multiple volumes.
+        """batch process multiple volumes.
         
-        Args:
-            input_dir: Input directory with MRI volumes.
-            output_dir: Output directory for corrected volumes.
-            file_pattern: Glob pattern for input files.
-            mask_dir: Optional directory with masks.
-            save_bias: Whether to save bias fields.
+        args:
+            input_dir: input directory with mri volumes.
+            output_dir: output directory for corrected volumes.
+            file_pattern: glob pattern for input files.
+            mask_dir: optional directory with masks.
+            save_bias: whether to save bias fields.
             
-        Returns:
-            Dictionary with correction metrics.
+        returns:
+            dictionary with correction metrics.
         """
         import glob
         
@@ -146,14 +146,14 @@ class N4BiasFieldCorrection:
         output_dir = Path(output_dir)
         os.makedirs(output_dir, exist_ok=True)
         
-        # List input files
+        # list input files
         input_files = glob.glob(str(input_dir / file_pattern))
         
         if not input_files:
             logger.warning(f"No files found matching pattern: {file_pattern}")
             return {}
         
-        # Process each file
+        # process each file
         results = {}
         for input_file in input_files:
             try:
@@ -162,27 +162,27 @@ class N4BiasFieldCorrection:
                 output_file = output_dir / file_name
                 bias_file = output_dir / f"bias_{file_name}"
                 
-                # Load volume
+                # load volume
                 volume = self._load_volume(input_file)
                 
-                # Load mask if available
+                # load mask if available
                 mask = None
                 if mask_dir:
                     mask_file = Path(mask_dir) / file_name
                     if os.path.exists(mask_file):
                         mask = self._load_volume(mask_file)
                 
-                # Apply correction
+                # apply correction
                 corrected_volume, bias_field = self.correct_volume(volume, mask)
                 
-                # Save corrected volume
+                # save corrected volume
                 self._save_volume(corrected_volume, output_file, reference_file=input_file)
                 
-                # Save bias field if requested
+                # save bias field if requested
                 if save_bias:
                     self._save_volume(bias_field, bias_file, reference_file=input_file)
                 
-                # Calculate metrics
+                # calculate metrics
                 metrics = self._calculate_metrics(volume, corrected_volume, bias_field)
                 results[file_name] = metrics
                 
@@ -194,13 +194,13 @@ class N4BiasFieldCorrection:
         return results
     
     def _load_volume(self, file_path: Union[str, Path]) -> np.ndarray:
-        """Load a volume from file.
+        """load a volume from file.
         
-        Args:
-            file_path: Path to volume file.
+        args:
+            file_path: path to volume file.
             
-        Returns:
-            Volume as numpy array.
+        returns:
+            volume as numpy array.
         """
         if str(file_path).endswith(".nii") or str(file_path).endswith(".nii.gz"):
             try:
@@ -219,26 +219,26 @@ class N4BiasFieldCorrection:
         output_file: Union[str, Path],
         reference_file: Optional[Union[str, Path]] = None,
     ):
-        """Save a volume to file.
+        """save a volume to file.
         
-        Args:
-            volume: Volume as numpy array.
-            output_file: Output file path.
-            reference_file: Optional reference file for header information.
+        args:
+            volume: volume as numpy array.
+            output_file: output file path.
+            reference_file: optional reference file for header information.
         """
         if str(output_file).endswith(".nii") or str(output_file).endswith(".nii.gz"):
             try:
                 import nibabel as nib
                 
-                # Copy header information from reference file if available
+                # copy header information from reference file if available
                 if reference_file:
                     ref_nii = nib.load(reference_file)
                     new_nii = nib.Nifti1Image(volume, ref_nii.affine, ref_nii.header)
                 else:
-                    # Create new NIfTI image
+                    # create new nifti image
                     new_nii = nib.Nifti1Image(volume, np.eye(4))
                 
-                # Save to file
+                # save to file
                 nib.save(new_nii, output_file)
                 
             except ImportError:
@@ -254,32 +254,32 @@ class N4BiasFieldCorrection:
         corrected_volume: np.ndarray,
         bias_field: np.ndarray,
     ) -> Dict[str, float]:
-        """Calculate correction metrics.
+        """calculate correction metrics.
         
-        Args:
-            original_volume: Original volume.
-            corrected_volume: Corrected volume.
-            bias_field: Estimated bias field.
+        args:
+            original_volume: original volume.
+            corrected_volume: corrected volume.
+            bias_field: estimated bias field.
             
-        Returns:
-            Dictionary of metrics.
+        returns:
+            dictionary of metrics.
         """
-        # Create a foreground mask to exclude background voxels
+        # create a foreground mask to exclude background voxels
         mean_volume = (original_volume + corrected_volume) / 2
         threshold = np.mean(mean_volume) * 0.1
         mask = mean_volume > threshold
         
-        # Apply mask to volumes
+        # apply mask to volumes
         original_masked = original_volume[mask]
         corrected_masked = corrected_volume[mask]
         bias_masked = bias_field[mask]
         
-        # Calculate metrics
+        # calculate metrics
         original_cv = np.std(original_masked) / np.mean(original_masked)
         corrected_cv = np.std(corrected_masked) / np.mean(corrected_masked)
         cv_improvement = (original_cv - corrected_cv) / original_cv * 100
         
-        # Bias field statistics
+        # bias field statistics
         bias_mean = np.mean(bias_masked)
         bias_std = np.std(bias_masked)
         bias_max = np.max(bias_masked)

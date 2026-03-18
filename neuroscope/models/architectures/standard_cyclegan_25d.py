@@ -1,17 +1,17 @@
 """
-2.5D Self-Attention CycleGAN Architecture
+2.5d self-attention cyclegan architecture
 
-Novel architecture for brain MRI harmonization using 2.5D slice processing
+novel architecture for brain mri harmonization using 2.5d slice processing
 with multi-scale self-attention mechanisms.
 
-Key Innovations:
-1. 2.5D processing: Input 3 adjacent slices, output center slice
-2. Multi-scale self-attention in generator bottleneck
-3. CBAM attention in encoder/decoder paths  
-4. Spectral-normalized multi-scale discriminator
-5. Skip connections with attention-based fusion
+key innovations:
+1. 2.5d processing: input 3 adjacent slices, output center slice
+2. multi-scale self-attention in generator bottleneck
+3. cbam attention in encoder/decoder paths  
+4. spectral-normalized multi-scale discriminator
+5. skip connections with attention-based fusion
 
-This architecture is specifically designed for multi-modal MRI translation,
+this architecture is specifically designed for multi-modal mri translation,
 preserving anatomical structures and inter-slice continuity.
 """
 
@@ -24,31 +24,31 @@ import math
 
 
 # =============================================================================
-# Configuration
+# configuration
 # =============================================================================
 
 @dataclass
 class SACycleGAN25DConfig:
-    """Configuration for 2.5D SA-CycleGAN."""
+    """configuration for 2.5d sa-cyclegan."""
     
-    # 2.5D settings
-    n_input_slices: int = 3  # Number of adjacent slices (2.5D)
-    n_modalities: int = 4    # T1, T1ce, T2, FLAIR
+    # 2.5d settings
+    n_input_slices: int = 3  # number of adjacent slices (2.5d)
+    n_modalities: int = 4    # t1, t1ce, t2, flair
     
-    # Generator settings
-    ngf: int = 64            # Base generator filters
+    # generator settings
+    ngf: int = 64            # base generator filters
     n_residual_blocks: int = 9
-    attention_layers: Tuple[int, ...] = (3, 4, 5)  # Which blocks get self-attention
+    attention_layers: Tuple[int, ...] = (3, 4, 5)  # which blocks get self-attention
     use_modality_encoder: bool = True
     
-    # Discriminator settings
-    ndf: int = 64            # Base discriminator filters
+    # discriminator settings
+    ndf: int = 64            # base discriminator filters
     n_disc_layers: int = 3
     n_disc_scales: int = 2
     use_spectral_norm: bool = True
-    use_disc_attention: bool = True  # Self-attention in discriminator
+    use_disc_attention: bool = True  # self-attention in discriminator
 
-    # Loss weights
+    # loss weights
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
     lambda_perceptual: float = 1.0
@@ -57,23 +57,23 @@ class SACycleGAN25DConfig:
     
     @property
     def input_channels(self) -> int:
-        """Total input channels = slices x modalities."""
+        """total input channels = slices x modalities."""
         return self.n_input_slices * self.n_modalities  # 3 x 4 = 12
     
     @property
     def output_channels(self) -> int:
-        """Output channels = modalities (center slice only)."""
+        """output channels = modalities (center slice only)."""
         return self.n_modalities  # 4
 
 
 # =============================================================================
-# Attention Modules
+# attention modules
 # =============================================================================
 
 class SelfAttention2D(nn.Module):
     """
-    Self-attention for 2D feature maps.
-    Captures long-range spatial dependencies crucial for anatomical consistency.
+    self-attention for 2d feature maps.
+    captures long-range spatial dependencies crucial for anatomical consistency.
     """
     
     def __init__(self, in_channels: int, reduction: int = 8):
@@ -90,27 +90,27 @@ class SelfAttention2D(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
 
-        q = self.query(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, HW, C']
-        k = self.key(x).view(B, -1, H * W)                      # [B, C', HW]
-        v = self.value(x).view(B, -1, H * W)                    # [B, C, HW]
+        q = self.query(x).view(B, -1, H * W).permute(0, 2, 1)  # [b, hw, c']
+        k = self.key(x).view(B, -1, H * W)                      # [b, c', hw]
+        v = self.value(x).view(B, -1, H * W)                    # [b, c, hw]
 
-        # Compute attention with numerical stability
-        C_reduced = q.size(-1)  # Reduced channel dimension
-        attn = torch.bmm(q, k)  # [B, HW, HW]
+        # compute attention with numerical stability
+        C_reduced = q.size(-1)  # reduced channel dimension
+        attn = torch.bmm(q, k)  # [b, hw, hw]
 
-        # Clamp attention logits to prevent overflow in softmax
+        # clamp attention logits to prevent overflow in softmax
         attn = torch.clamp(attn / math.sqrt(C_reduced), min=-50, max=50)
         attn = F.softmax(attn, dim=-1)
 
         out = torch.bmm(v, attn.permute(0, 2, 1)).view(B, C, H, W)
 
-        # Clamp gamma to prevent amplification of unstable outputs
+        # clamp gamma to prevent amplification of unstable outputs
         gamma_clamped = torch.clamp(self.gamma, min=-1.0, max=1.0)
         return gamma_clamped * self.norm(out) + x
 
 
 class ChannelAttention(nn.Module):
-    """Squeeze-and-excitation style channel attention."""
+    """squeeze-and-excitation style channel attention."""
 
     def __init__(self, channels: int, reduction: int = 16):
         super().__init__()
@@ -124,13 +124,13 @@ class ChannelAttention(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Clamp attention weights to prevent complete suppression
+        # clamp attention weights to prevent complete suppression
         attn = torch.clamp(self.fc(x), min=0.01, max=1.0)
         return x * attn
 
 
 class SpatialAttention(nn.Module):
-    """Spatial attention using channel statistics."""
+    """spatial attention using channel statistics."""
     
     def __init__(self, kernel_size: int = 7):
         super().__init__()
@@ -140,13 +140,13 @@ class SpatialAttention(nn.Module):
         avg = x.mean(dim=1, keepdim=True)
         max_val, _ = x.max(dim=1, keepdim=True)
         attn = torch.sigmoid(self.conv(torch.cat([avg, max_val], dim=1)))
-        # Clamp attention weights to prevent complete suppression
+        # clamp attention weights to prevent complete suppression
         attn = torch.clamp(attn, min=0.01, max=1.0)
         return x * attn
 
 
 class CBAM(nn.Module):
-    """Convolutional Block Attention Module."""
+    """convolutional block attention module."""
     
     def __init__(self, channels: int, reduction: int = 16, kernel_size: int = 7):
         super().__init__()
@@ -160,11 +160,11 @@ class CBAM(nn.Module):
 
 
 # =============================================================================
-# Building Blocks
+# building blocks
 # =============================================================================
 
 class ResidualBlock(nn.Module):
-    """Residual block with optional attention."""
+    """residual block with optional attention."""
     
     def __init__(self, channels: int, use_attention: bool = False, attention_type: str = 'cbam'):
         super().__init__()
@@ -195,10 +195,10 @@ class ResidualBlock(nn.Module):
 
 class SliceEncoder25D(nn.Module):
     """
-    2.5D Slice Encoder: Processes 3 adjacent slices with modality awareness.
+    2.5d slice encoder: processes 3 adjacent slices with modality awareness.
     
-    Input: [B, 12, H, W] (3 slices x 4 modalities)
-    Output: [B, ngf, H, W] with inter-slice context
+    input: [b, 12, h, w] (3 slices x 4 modalities)
+    output: [b, ngf, h, w] with inter-slice context
     """
     
     def __init__(self, n_slices: int = 3, n_modalities: int = 4, ngf: int = 64):
@@ -206,7 +206,7 @@ class SliceEncoder25D(nn.Module):
         
         in_channels = n_slices * n_modalities  # 12
         
-        # Slice-aware convolution: learns to combine adjacent slices
+        # slice-aware convolution: learns to combine adjacent slices
         self.slice_conv = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, ngf, 7, bias=False),
@@ -214,15 +214,15 @@ class SliceEncoder25D(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Attention to weight slice importance
+        # attention to weight slice importance
         self.slice_attention = CBAM(ngf)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: [B, 12, H, W] - 3 slices x 4 modalities stacked
-        Returns:
-            [B, ngf, H, W] - Encoded features with slice context
+        args:
+            x: [b, 12, h, w] - 3 slices x 4 modalities stacked
+        returns:
+            [b, ngf, h, w] - encoded features with slice context
         """
         x = self.slice_conv(x)
         x = self.slice_attention(x)
@@ -230,14 +230,14 @@ class SliceEncoder25D(nn.Module):
 
 
 # =============================================================================
-# Generator
+# generator
 # =============================================================================
 
 class SAGenerator25D(nn.Module):
     """
-    2.5D Self-Attention Generator.
+    2.5d self-attention generator.
     
-    Takes 3 adjacent slices as input and outputs the center slice,
+    takes 3 adjacent slices as input and outputs the center slice,
     using inter-slice context for better anatomical consistency.
     """
     
@@ -246,14 +246,14 @@ class SAGenerator25D(nn.Module):
         self.config = config
         ngf = config.ngf
         
-        # 2.5D slice encoder
+        # 2.5d slice encoder
         self.encoder_initial = SliceEncoder25D(
             n_slices=config.n_input_slices,
             n_modalities=config.n_modalities,
             ngf=ngf
         )
         
-        # Downsampling encoder
+        # downsampling encoder
         self.encoder = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
@@ -269,7 +269,7 @@ class SAGenerator25D(nn.Module):
             )
         ])
         
-        # Bottleneck with self-attention at specified layers
+        # bottleneck with self-attention at specified layers
         self.bottleneck = nn.ModuleList()
         for i in range(config.n_residual_blocks):
             use_self_attn = i in config.attention_layers
@@ -281,10 +281,10 @@ class SAGenerator25D(nn.Module):
                 )
             )
         
-        # Global self-attention
+        # global self-attention
         self.global_attention = SelfAttention2D(ngf * 4, reduction=4)
         
-        # Upsampling decoder
+        # upsampling decoder
         self.decoder = nn.ModuleList([
             nn.Sequential(
                 nn.ConvTranspose2d(ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False),
@@ -300,13 +300,13 @@ class SAGenerator25D(nn.Module):
             )
         ])
         
-        # Skip connection fusion
+        # skip connection fusion
         self.skip_fuse = nn.ModuleList([
             nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False),
             nn.Conv2d(ngf * 2, ngf, 1, bias=False)
         ])
         
-        # Output: center slice only (4 modalities)
+        # output: center slice only (4 modalities)
         self.output = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, config.output_channels, 7),
@@ -315,26 +315,26 @@ class SAGenerator25D(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: [B, 12, H, W] - 3 adjacent slices x 4 modalities
-        Returns:
-            [B, 4, H, W] - Translated center slice (4 modalities)
+        args:
+            x: [b, 12, h, w] - 3 adjacent slices x 4 modalities
+        returns:
+            [b, 4, h, w] - translated center slice (4 modalities)
         """
-        # Initial encoding with slice awareness
+        # initial encoding with slice awareness
         x = self.encoder_initial(x)
         
-        # Encoder with skip connections
+        # encoder with skip connections
         skips = [x]
         for enc in self.encoder:
             x = enc(x)
             skips.append(x)
         
-        # Bottleneck
+        # bottleneck
         for block in self.bottleneck:
             x = block(x)
         x = self.global_attention(x)
         
-        # Decoder with skip connections
+        # decoder with skip connections
         for i, dec in enumerate(self.decoder):
             x = dec(x)
             skip = self.skip_fuse[i](skips[-(i+1)])
@@ -345,11 +345,11 @@ class SAGenerator25D(nn.Module):
 
 
 # =============================================================================
-# Discriminator
+# discriminator
 # =============================================================================
 
 class PatchDiscriminator(nn.Module):
-    """PatchGAN discriminator with optional spectral normalization."""
+    """patchgan discriminator with optional spectral normalization."""
 
     def __init__(
         self,
@@ -382,11 +382,11 @@ class PatchDiscriminator(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True)
             ])
 
-        # Optional self-attention before final layers
+        # optional self-attention before final layers
         if use_attention:
             layers.append(SelfAttention2D(nf))
 
-        # Final layers
+        # final layers
         nf_prev = nf
         nf = min(nf * 2, 512)
         layers.extend([
@@ -403,7 +403,7 @@ class PatchDiscriminator(nn.Module):
 
 
 class MultiScaleDiscriminator(nn.Module):
-    """Multi-scale discriminator for multi-frequency analysis."""
+    """multi-scale discriminator for multi-frequency analysis."""
 
     def __init__(
         self,
@@ -432,27 +432,27 @@ class MultiScaleDiscriminator(nn.Module):
 
 
 # =============================================================================
-# Complete SA-CycleGAN 2.5D
+# complete sa-cyclegan 2.5d
 # =============================================================================
 
 class SACycleGAN25D(nn.Module):
     """
-    Complete 2.5D Self-Attention CycleGAN for MRI Harmonization.
+    complete 2.5d self-attention cyclegan for mri harmonization.
     
-    Bidirectional domain translation between:
-    - Domain A: BraTS (multi-institutional)
-    - Domain B: UPenn-GBM (single-institution)
+    bidirectional domain translation between:
+    - domain a: brats (multi-institutional)
+    - domain b: upenn-gbm (single-institution)
     """
     
     def __init__(self, config: Optional[SACycleGAN25DConfig] = None):
         super().__init__()
         self.config = config or SACycleGAN25DConfig()
         
-        # Generators: A→B and B→A
+        # generators: a→b and b→a
         self.G_A2B = SAGenerator25D(self.config)
         self.G_B2A = SAGenerator25D(self.config)
         
-        # Discriminators (operate on single slices = 4 channels)
+        # discriminators (operate on single slices = 4 channels)
         self.D_A = MultiScaleDiscriminator(
             in_channels=self.config.output_channels,  # 4
             ndf=self.config.ndf,
@@ -476,24 +476,24 @@ class SACycleGAN25D(nn.Module):
         slices_B: torch.Tensor
     ) -> Dict[str, torch.Tensor]:
         """
-        Training forward pass.
+        training forward pass.
         
-        Args:
-            slices_A: [B, 12, H, W] - 3 adjacent slices from domain A
-            slices_B: [B, 12, H, W] - 3 adjacent slices from domain B
+        args:
+            slices_a: [b, 12, h, w] - 3 adjacent slices from domain a
+            slices_b: [b, 12, h, w] - 3 adjacent slices from domain b
             
-        Returns:
-            Dictionary with fake and reconstructed images
+        returns:
+            dictionary with fake and reconstructed images
         """
-        # Forward cycle: A → B → A
-        fake_B = self.G_A2B(slices_A)   # [B, 4, H, W]
+        # forward cycle: a → b → a
+        fake_B = self.G_A2B(slices_A)   # [b, 4, h, w]
         
-        # For reconstruction, we need 3 slices in domain B
-        # Simplified: use fake_B repeated (in practice, translate adjacent slices)
-        fake_B_3slice = fake_B.repeat(1, 3, 1, 1)  # [B, 12, H, W]
+        # for reconstruction, we need 3 slices in domain b
+        # simplified: use fake_b repeated (in practice, translate adjacent slices)
+        fake_B_3slice = fake_B.repeat(1, 3, 1, 1)  # [b, 12, h, w]
         rec_A = self.G_B2A(fake_B_3slice)
         
-        # Backward cycle: B → A → B
+        # backward cycle: b → a → b
         fake_A = self.G_B2A(slices_B)
         fake_A_3slice = fake_A.repeat(1, 3, 1, 1)
         rec_B = self.G_A2B(fake_A_3slice)
@@ -507,16 +507,16 @@ class SACycleGAN25D(nn.Module):
     
     @torch.no_grad()
     def translate_A2B(self, slices: torch.Tensor) -> torch.Tensor:
-        """Translate from domain A to B."""
+        """translate from domain a to b."""
         return self.G_A2B(slices)
     
     @torch.no_grad()
     def translate_B2A(self, slices: torch.Tensor) -> torch.Tensor:
-        """Translate from domain B to A."""
+        """translate from domain b to a."""
         return self.G_B2A(slices)
     
     def get_parameter_count(self) -> Dict[str, int]:
-        """Get parameter counts for each component."""
+        """get parameter counts for each component."""
         return {
             'G_A2B': sum(p.numel() for p in self.G_A2B.parameters()),
             'G_B2A': sum(p.numel() for p in self.G_B2A.parameters()),
@@ -527,37 +527,37 @@ class SACycleGAN25D(nn.Module):
 
 
 # =============================================================================
-# Factory and Testing
+# factory and testing
 # =============================================================================
 
 def create_model(config: Optional[SACycleGAN25DConfig] = None) -> SACycleGAN25D:
-    """Create and initialize the 2.5D SA-CycleGAN model."""
+    """create and initialize the 2.5d sa-cyclegan model."""
     model = SACycleGAN25D(config)
     
-    # Print summary
+    # print summary
     params = model.get_parameter_count()
     print("=" * 60)
-    print("2.5D SA-CycleGAN Model Summary")
+    print("2.5d sa-cyclegan model summary")
     print("=" * 60)
-    print(f"Generator A→B: {params['G_A2B']:,} parameters")
-    print(f"Generator B→A: {params['G_B2A']:,} parameters")
-    print(f"Discriminator A: {params['D_A']:,} parameters")
-    print(f"Discriminator B: {params['D_B']:,} parameters")
-    print(f"Total: {params['total']:,} parameters ({params['total']/1e6:.2f}M)")
+    print(f"generator a→b: {params['G_A2B']:,} parameters")
+    print(f"generator b→a: {params['G_B2A']:,} parameters")
+    print(f"discriminator a: {params['D_A']:,} parameters")
+    print(f"discriminator b: {params['D_B']:,} parameters")
+    print(f"total: {params['total']:,} parameters ({params['total']/1e6:.2f}m)")
     print("=" * 60)
     
     return model
 
 
 if __name__ == '__main__':
-    # Quick test
+    # quick test
     config = SACycleGAN25DConfig()
     model = create_model(config)
     
-    # Test input: 3 slices x 4 modalities = 12 channels
+    # test input: 3 slices x 4 modalities = 12 channels
     x = torch.randn(2, 12, 128, 128)
     
-    # Test generator
+    # test generator
     out = model.G_A2B(x)
-    print(f"Input shape: {x.shape}")
-    print(f"Output shape: {out.shape}")  # Should be [2, 4, 128, 128]
+    print(f"input shape: {x.shape}")
+    print(f"output shape: {out.shape}")  # should be [2, 4, 128, 128]

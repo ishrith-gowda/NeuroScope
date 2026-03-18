@@ -1,7 +1,7 @@
 """
-Custom Samplers for Training Data.
+custom samplers for training data.
 
-Provides balanced and stratified sampling strategies for
+provides balanced and stratified sampling strategies for
 handling imbalanced datasets in medical imaging.
 """
 
@@ -14,9 +14,9 @@ from torch.utils.data import Sampler, Dataset
 
 class BalancedSampler(Sampler[int]):
     """
-    Balanced sampler that ensures equal sampling from each class/domain.
+    balanced sampler that ensures equal sampling from each class/domain.
     
-    Useful for domain adaptation where source and target domains
+    useful for domain adaptation where source and target domains
     may have different sizes.
     """
     
@@ -28,31 +28,31 @@ class BalancedSampler(Sampler[int]):
         replacement: bool = True
     ):
         """
-        Args:
-            dataset: Dataset to sample from
-            labels: Class/domain labels for each sample. If None, tries to
+        args:
+            dataset: dataset to sample from
+            labels: class/domain labels for each sample. if none, tries to
                    extract from dataset.
-            samples_per_class: Number of samples per class. If None, uses
+            samples_per_class: number of samples per class. if none, uses
                               the size of the smallest class.
-            replacement: Whether to sample with replacement
+            replacement: whether to sample with replacement
         """
         self.dataset = dataset
         self.replacement = replacement
         
-        # Get labels
+        # get labels
         if labels is not None:
             self.labels = np.array(labels)
         else:
             self.labels = self._extract_labels()
         
-        # Find unique classes and their indices
+        # find unique classes and their indices
         self.classes = np.unique(self.labels)
         self.class_indices = {
             cls: np.where(self.labels == cls)[0]
             for cls in self.classes
         }
         
-        # Determine samples per class
+        # determine samples per class
         if samples_per_class is not None:
             self.samples_per_class = samples_per_class
         else:
@@ -62,7 +62,7 @@ class BalancedSampler(Sampler[int]):
         self.num_samples = self.samples_per_class * len(self.classes)
     
     def _extract_labels(self) -> np.ndarray:
-        """Try to extract labels from dataset."""
+        """try to extract labels from dataset."""
         labels = []
         for i in range(len(self.dataset)):
             item = self.dataset[i]
@@ -90,14 +90,14 @@ class BalancedSampler(Sampler[int]):
                     replace=self.replacement
                 )
             else:
-                # Repeat indices if not enough samples
+                # repeat indices if not enough samples
                 repeats = self.samples_per_class // len(class_indices) + 1
                 expanded = np.tile(class_indices, repeats)
                 sampled = expanded[:self.samples_per_class]
             
             indices.extend(sampled)
         
-        # Shuffle
+        # shuffle
         random.shuffle(indices)
         return iter(indices)
     
@@ -107,9 +107,9 @@ class BalancedSampler(Sampler[int]):
 
 class WeightedRandomSampler(Sampler[int]):
     """
-    Weighted random sampler with customizable weights.
+    weighted random sampler with customizable weights.
     
-    Can handle both class-based and sample-based weighting.
+    can handle both class-based and sample-based weighting.
     """
     
     def __init__(
@@ -120,11 +120,11 @@ class WeightedRandomSampler(Sampler[int]):
         generator: Optional[torch.Generator] = None
     ):
         """
-        Args:
-            weights: Weight for each sample
-            num_samples: Number of samples to draw
-            replacement: Whether to sample with replacement
-            generator: Optional random generator
+        args:
+            weights: weight for each sample
+            num_samples: number of samples to draw
+            replacement: whether to sample with replacement
+            generator: optional random generator
         """
         self.weights = torch.as_tensor(weights, dtype=torch.float64)
         self.num_samples = num_samples
@@ -150,16 +150,16 @@ class WeightedRandomSampler(Sampler[int]):
         num_samples: Optional[int] = None
     ) -> 'WeightedRandomSampler':
         """
-        Create sampler from class labels with inverse frequency weighting.
+        create sampler from class labels with inverse frequency weighting.
         
-        Args:
-            labels: Class label for each sample
-            num_samples: Number of samples to draw (default: len(labels))
+        args:
+            labels: class label for each sample
+            num_samples: number of samples to draw (default: len(labels))
         """
         labels = np.array(labels)
         class_counts = np.bincount(labels)
         
-        # Inverse frequency weighting
+        # inverse frequency weighting
         class_weights = 1.0 / class_counts
         sample_weights = class_weights[labels]
         
@@ -171,9 +171,9 @@ class WeightedRandomSampler(Sampler[int]):
 
 class DomainBalancedSampler(Sampler[int]):
     """
-    Sampler for balanced sampling across domains.
+    sampler for balanced sampling across domains.
     
-    Specifically designed for domain adaptation scenarios
+    specifically designed for domain adaptation scenarios
     with multiple source/target domains.
     """
     
@@ -184,22 +184,22 @@ class DomainBalancedSampler(Sampler[int]):
         strategy: str = 'uniform'  # 'uniform', 'proportional', 'inverse'
     ):
         """
-        Args:
-            domain_datasets: Dictionary mapping domain names to datasets
-            samples_per_domain: Samples per domain per epoch
-            strategy: Sampling strategy
+        args:
+            domain_datasets: dictionary mapping domain names to datasets
+            samples_per_domain: samples per domain per epoch
+            strategy: sampling strategy
         """
         self.domain_datasets = domain_datasets
         self.domains = list(domain_datasets.keys())
         self.strategy = strategy
         
-        # Compute domain sizes
+        # compute domain sizes
         self.domain_sizes = {
             domain: len(dataset)
             for domain, dataset in domain_datasets.items()
         }
         
-        # Determine samples per domain
+        # determine samples per domain
         if samples_per_domain is not None:
             self.samples_per_domain = samples_per_domain
         elif strategy == 'uniform':
@@ -207,7 +207,7 @@ class DomainBalancedSampler(Sampler[int]):
         else:
             self.samples_per_domain = max(self.domain_sizes.values())
         
-        # Compute domain weights
+        # compute domain weights
         if strategy == 'uniform':
             self.domain_weights = {d: 1.0 for d in self.domains}
         elif strategy == 'proportional':
@@ -220,11 +220,11 @@ class DomainBalancedSampler(Sampler[int]):
             total = sum(inv_sizes.values())
             self.domain_weights = {d: w / total for d, w in inv_sizes.items()}
         
-        # Build global index mapping
+        # build global index mapping
         self._build_index_mapping()
     
     def _build_index_mapping(self):
-        """Build mapping from global index to (domain, local_index)."""
+        """build mapping from global index to (domain, local_index)."""
         self.index_mapping = []
         offset = 0
         
@@ -242,7 +242,7 @@ class DomainBalancedSampler(Sampler[int]):
         for domain in self.domains:
             domain_size = self.domain_sizes[domain]
             
-            # Sample from this domain
+            # sample from this domain
             if domain_size >= self.samples_per_domain:
                 domain_indices = np.random.choice(
                     domain_size,
@@ -256,7 +256,7 @@ class DomainBalancedSampler(Sampler[int]):
                     replace=True
                 )
             
-            # Convert to global indices
+            # convert to global indices
             offset = sum(
                 self.domain_sizes[d]
                 for d in self.domains[:self.domains.index(domain)]
@@ -271,15 +271,15 @@ class DomainBalancedSampler(Sampler[int]):
         return self.samples_per_domain * len(self.domains)
     
     def get_domain_for_index(self, global_idx: int) -> str:
-        """Get domain name for a global index."""
+        """get domain name for a global index."""
         return self.index_mapping[global_idx][0]
 
 
 class StratifiedSampler(Sampler[int]):
     """
-    Stratified sampler that maintains class distribution in batches.
+    stratified sampler that maintains class distribution in batches.
     
-    Useful for maintaining consistent class ratios within each batch.
+    useful for maintaining consistent class ratios within each batch.
     """
     
     def __init__(
@@ -290,25 +290,25 @@ class StratifiedSampler(Sampler[int]):
         drop_last: bool = False
     ):
         """
-        Args:
-            labels: Class label for each sample
-            batch_size: Batch size
-            shuffle: Whether to shuffle within strata
-            drop_last: Whether to drop incomplete batches
+        args:
+            labels: class label for each sample
+            batch_size: batch size
+            shuffle: whether to shuffle within strata
+            drop_last: whether to drop incomplete batches
         """
         self.labels = np.array(labels)
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.drop_last = drop_last
         
-        # Group indices by class
+        # group indices by class
         self.classes = np.unique(self.labels)
         self.class_indices = {
             cls: np.where(self.labels == cls)[0].tolist()
             for cls in self.classes
         }
         
-        # Compute samples per class per batch
+        # compute samples per class per batch
         class_counts = {cls: len(indices) for cls, indices in self.class_indices.items()}
         total = sum(class_counts.values())
         
@@ -317,7 +317,7 @@ class StratifiedSampler(Sampler[int]):
             for cls, count in class_counts.items()
         }
         
-        # Adjust to match batch size
+        # adjust to match batch size
         while sum(self.class_batch_sizes.values()) != batch_size:
             diff = batch_size - sum(self.class_batch_sizes.values())
             if diff > 0:
@@ -328,12 +328,12 @@ class StratifiedSampler(Sampler[int]):
                 self.class_batch_sizes[cls] = max(1, self.class_batch_sizes[cls] - 1)
     
     def __iter__(self) -> Iterator[int]:
-        # Shuffle within each class
+        # shuffle within each class
         if self.shuffle:
             for cls in self.classes:
                 random.shuffle(self.class_indices[cls])
         
-        # Create iterators for each class
+        # create iterators for each class
         class_iters = {
             cls: iter(self.class_indices[cls])
             for cls in self.classes
@@ -377,9 +377,9 @@ class StratifiedSampler(Sampler[int]):
 
 class SubsetRandomSampler(Sampler[int]):
     """
-    Random sampler from a subset of indices.
+    random sampler from a subset of indices.
     
-    Useful for train/val splits or selecting specific samples.
+    useful for train/val splits or selecting specific samples.
     """
     
     def __init__(
@@ -388,9 +388,9 @@ class SubsetRandomSampler(Sampler[int]):
         generator: Optional[torch.Generator] = None
     ):
         """
-        Args:
-            indices: Sequence of indices to sample from
-            generator: Optional random generator
+        args:
+            indices: sequence of indices to sample from
+            generator: optional random generator
         """
         self.indices = list(indices)
         self.generator = generator
@@ -416,15 +416,15 @@ class SubsetRandomSampler(Sampler[int]):
         seed: Optional[int] = None
     ) -> tuple:
         """
-        Create train/val samplers from random split.
+        create train/val samplers from random split.
         
-        Args:
-            dataset_size: Total number of samples
-            train_ratio: Ratio for training set
-            seed: Random seed for reproducibility
+        args:
+            dataset_size: total number of samples
+            train_ratio: ratio for training set
+            seed: random seed for reproducibility
             
-        Returns:
-            Tuple of (train_sampler, val_sampler)
+        returns:
+            tuple of (train_sampler, val_sampler)
         """
         if seed is not None:
             random.seed(seed)

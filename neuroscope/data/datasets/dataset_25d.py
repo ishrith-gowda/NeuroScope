@@ -1,7 +1,7 @@
 """
-2.5D MRI Dataset for SA-CycleGAN Training.
+2.5d mri dataset for sa-cyclegan training.
 
-Loads 3 adjacent slices from 3D MRI volumes for 2.5D processing,
+loads 3 adjacent slices from 3d mri volumes for 2.5d processing,
 enabling inter-slice context while maintaining memory efficiency.
 """
 
@@ -21,38 +21,38 @@ except ImportError:
 
 class MRIDataset25D(Dataset):
     """
-    2.5D MRI Dataset for unpaired domain translation.
+    2.5d mri dataset for unpaired domain translation.
     
-    For each sample, returns 3 adjacent slices stacked with all modalities:
-    - Output shape: [12, H, W] = 3 slices x 4 modalities
+    for each sample, returns 3 adjacent slices stacked with all modalities:
+    - output shape: [12, h, w] = 3 slices x 4 modalities
     
-    This enables the model to use inter-slice context for better
+    this enables the model to use inter-slice context for better
     anatomical consistency in the translated output.
     """
     
-    MODALITIES = ['t1', 't1gd', 't2', 'flair']  # Standard BraTS modalities
+    MODALITIES = ['t1', 't1gd', 't2', 'flair']  # standard brats modalities
     
     def __init__(
         self,
         root_dir: str,
-        slice_range: Tuple[int, int] = (30, 125),  # Central slices with brain
+        slice_range: Tuple[int, int] = (30, 125),  # central slices with brain
         n_context_slices: int = 1,  # 1 = use slice-1, slice, slice+1
-        image_size: Optional[Tuple[int, int]] = (128, 128),  # Resize for memory
+        image_size: Optional[Tuple[int, int]] = (128, 128),  # resize for memory
         transform: Optional[Callable] = None,
         modalities: Optional[List[str]] = None,
-        cache_volumes: bool = False,  # Cache loaded volumes in memory
+        cache_volumes: bool = False,  # cache loaded volumes in memory
         precompute_valid_slices: bool = True
     ):
         """
-        Args:
-            root_dir: Directory containing subject folders
-            slice_range: Range of axial slices to use (avoiding empty slices)
-            n_context_slices: Number of slices on each side (1 = 3 total slices)
-            image_size: Resize images to this size (H, W), None to keep original
-            transform: Optional transforms to apply
-            modalities: List of modalities to use, defaults to all 4
-            cache_volumes: Whether to cache volumes in memory
-            precompute_valid_slices: Precompute which slices have brain content
+        args:
+            root_dir: directory containing subject folders
+            slice_range: range of axial slices to use (avoiding empty slices)
+            n_context_slices: number of slices on each side (1 = 3 total slices)
+            image_size: resize images to this size (h, w), none to keep original
+            transform: optional transforms to apply
+            modalities: list of modalities to use, defaults to all 4
+            cache_volumes: whether to cache volumes in memory
+            precompute_valid_slices: precompute which slices have brain content
         """
         if not HAS_NIBABEL:
             raise ImportError("nibabel is required: pip install nibabel")
@@ -65,23 +65,23 @@ class MRIDataset25D(Dataset):
         self.modalities = modalities or self.MODALITIES
         self.cache_volumes = cache_volumes
         
-        # Find all valid subjects
+        # find all valid subjects
         self.subjects = self._find_subjects()
-        print(f"Found {len(self.subjects)} subjects in {root_dir}")
+        print(f"found {len(self.subjects)} subjects in {root_dir}")
         
-        # Create index mapping: (subject_idx, slice_idx)
+        # create index mapping: (subject_idx, slice_idx)
         self.samples = self._create_sample_index()
-        print(f"Total samples (slice triplets): {len(self.samples)}")
+        print(f"total samples (slice triplets): {len(self.samples)}")
         
-        # Volume cache
+        # volume cache
         self._cache: Dict[str, np.ndarray] = {}
         
     def _find_subjects(self) -> List[Path]:
-        """Find all valid subject directories."""
+        """find all valid subject directories."""
         subjects = []
         for subj_dir in sorted(self.root_dir.iterdir()):
             if subj_dir.is_dir():
-                # Check if all modalities exist
+                # check if all modalities exist
                 has_all = all(
                     (subj_dir / f"{mod}.nii.gz").exists() or
                     (subj_dir / f"{subj_dir.name}_{mod}.nii.gz").exists()
@@ -92,7 +92,7 @@ class MRIDataset25D(Dataset):
         return subjects
     
     def _create_sample_index(self) -> List[Tuple[int, int]]:
-        """Create list of (subject_idx, center_slice_idx) pairs."""
+        """create list of (subject_idx, center_slice_idx) pairs."""
         samples = []
         start = self.slice_range[0] + self.n_context
         end = self.slice_range[1] - self.n_context
@@ -104,13 +104,13 @@ class MRIDataset25D(Dataset):
         return samples
     
     def _get_modality_path(self, subj_dir: Path, modality: str) -> Path:
-        """Get path to modality file (handles different naming conventions)."""
-        # Try simple naming
+        """get path to modality file (handles different naming conventions)."""
+        # try simple naming
         simple = subj_dir / f"{modality}.nii.gz"
         if simple.exists():
             return simple
         
-        # Try with subject prefix
+        # try with subject prefix
         prefixed = subj_dir / f"{subj_dir.name}_{modality}.nii.gz"
         if prefixed.exists():
             return prefixed
@@ -119,10 +119,10 @@ class MRIDataset25D(Dataset):
     
     def _load_volume(self, subj_dir: Path) -> np.ndarray:
         """
-        Load all modalities for a subject.
+        load all modalities for a subject.
         
-        Returns:
-            np.ndarray of shape [4, D, H, W] where D is depth (number of slices)
+        returns:
+            np.ndarray of shape [4, d, h, w] where d is depth (number of slices)
         """
         cache_key = str(subj_dir)
         if self.cache_volumes and cache_key in self._cache:
@@ -134,9 +134,9 @@ class MRIDataset25D(Dataset):
             vol = nib.load(str(path)).get_fdata().astype(np.float32)
             modality_volumes.append(vol)
         
-        # Stack: [4, H, W, D] then transpose to [4, D, H, W]
-        volume = np.stack(modality_volumes, axis=0)  # [4, H, W, D]
-        volume = np.transpose(volume, (0, 3, 1, 2))  # [4, D, H, W]
+        # stack: [4, h, w, d] then transpose to [4, d, h, w]
+        volume = np.stack(modality_volumes, axis=0)  # [4, h, w, d]
+        volume = np.transpose(volume, (0, 3, 1, 2))  # [4, d, h, w]
         
         if self.cache_volumes:
             self._cache[cache_key] = volume
@@ -144,11 +144,11 @@ class MRIDataset25D(Dataset):
         return volume
     
     def _resize_slice(self, slice_2d: np.ndarray) -> np.ndarray:
-        """Resize a 2D slice using bilinear interpolation."""
+        """resize a 2d slice using bilinear interpolation."""
         if self.image_size is None:
             return slice_2d
         
-        # Use torch for resizing
+        # use torch for resizing
         tensor = torch.from_numpy(slice_2d).unsqueeze(0).unsqueeze(0)
         resized = torch.nn.functional.interpolate(
             tensor, 
@@ -163,22 +163,22 @@ class MRIDataset25D(Dataset):
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         """
-        Get a sample (3 adjacent slices x 4 modalities).
+        get a sample (3 adjacent slices x 4 modalities).
         
-        Returns:
-            Dictionary with:
-                'image': [12, H, W] tensor (3 slices x 4 modalities)
-                'center_slice': [4, H, W] tensor (center slice only, for reference)
+        returns:
+            dictionary with:
+                'image': [12, h, w] tensor (3 slices x 4 modalities)
+                'center_slice': [4, h, w] tensor (center slice only, for reference)
                 'subject_id': subject identifier
                 'slice_idx': center slice index
         """
         subj_idx, center_slice = self.samples[idx]
         subj_dir = self.subjects[subj_idx]
         
-        # Load volume [4, D, H, W]
+        # load volume [4, d, h, w]
         volume = self._load_volume(subj_dir)
         
-        # Extract 3 adjacent slices
+        # extract 3 adjacent slices
         slices = []
         for offset in range(-self.n_context, self.n_context + 1):
             slice_idx = center_slice + offset
@@ -187,20 +187,20 @@ class MRIDataset25D(Dataset):
                 slice_2d = self._resize_slice(slice_2d)
                 slices.append(slice_2d)
         
-        # Stack: [12, H, W] = 3 slices x 4 modalities
-        # Order: [s-1_t1, s-1_t1gd, s-1_t2, s-1_flair, s_t1, ..., s+1_flair]
+        # stack: [12, h, w] = 3 slices x 4 modalities
+        # order: [s-1_t1, s-1_t1gd, s-1_t2, s-1_flair, s_t1, ..., s+1_flair]
         image = np.stack(slices, axis=0)
         
-        # Also get center slice separately for reference
+        # also get center slice separately for reference
         center_start = self.n_context * len(self.modalities)
         center_end = center_start + len(self.modalities)
         center_image = image[center_start:center_end]
         
-        # Convert to tensors
+        # convert to tensors
         image = torch.from_numpy(image).float()
         center_image = torch.from_numpy(center_image).float()
         
-        # Apply transforms if any
+        # apply transforms if any
         if self.transform is not None:
             image = self.transform(image)
         
@@ -214,9 +214,9 @@ class MRIDataset25D(Dataset):
 
 class UnpairedMRIDataset25D(Dataset):
     """
-    Unpaired dataset for CycleGAN training.
+    unpaired dataset for cyclegan training.
 
-    Returns samples from both domains A (BraTS) and B (UPenn)
+    returns samples from both domains a (brats) and b (upenn)
     without explicit pairing.
     """
 
@@ -229,7 +229,7 @@ class UnpairedMRIDataset25D(Dataset):
         transform: Optional[Callable] = None,
         cache_in_memory: bool = True
     ):
-        # Enable volume caching to eliminate disk I/O during training
+        # enable volume caching to eliminate disk i/o during training
         self.dataset_a = MRIDataset25D(
             root_dir=domain_a_dir,
             slice_range=slice_range,
@@ -245,49 +245,49 @@ class UnpairedMRIDataset25D(Dataset):
             cache_volumes=cache_in_memory
         )
 
-        # Pre-cache all volumes if caching enabled
+        # pre-cache all volumes if caching enabled
         if cache_in_memory:
             self._precache_all_volumes()
         
-        # Match lengths by cycling through smaller dataset
+        # match lengths by cycling through smaller dataset
         self.len_a = len(self.dataset_a)
         self.len_b = len(self.dataset_b)
         self.length = max(self.len_a, self.len_b)
 
-        print(f"Domain A samples: {self.len_a}")
-        print(f"Domain B samples: {self.len_b}")
-        print(f"Epoch length: {self.length}")
+        print(f"domain a samples: {self.len_a}")
+        print(f"domain b samples: {self.len_b}")
+        print(f"epoch length: {self.length}")
 
     def _precache_all_volumes(self):
-        """pre-cache all volumes into memory to eliminate disk I/O during training."""
+        """pre-cache all volumes into memory to eliminate disk i/o during training."""
         import time
         print("\n[cache] pre-loading all volumes into memory...")
         start = time.time()
 
-        # Cache domain A
-        print(f"[cache] loading domain A ({len(self.dataset_a.subjects)} subjects)...")
+        # cache domain a
+        print(f"[cache] loading domain a ({len(self.dataset_a.subjects)} subjects)...")
         for i, subj in enumerate(self.dataset_a.subjects):
             self.dataset_a._load_volume(subj)
             if (i + 1) % 20 == 0:
-                print(f"[cache] domain A: {i + 1}/{len(self.dataset_a.subjects)}")
+                print(f"[cache] domain a: {i + 1}/{len(self.dataset_a.subjects)}")
 
-        # Cache domain B
-        print(f"[cache] loading domain B ({len(self.dataset_b.subjects)} subjects)...")
+        # cache domain b
+        print(f"[cache] loading domain b ({len(self.dataset_b.subjects)} subjects)...")
         for i, subj in enumerate(self.dataset_b.subjects):
             self.dataset_b._load_volume(subj)
             if (i + 1) % 100 == 0:
-                print(f"[cache] domain B: {i + 1}/{len(self.dataset_b.subjects)}")
+                print(f"[cache] domain b: {i + 1}/{len(self.dataset_b.subjects)}")
 
         elapsed = time.time() - start
         cache_size_a = sum(v.nbytes for v in self.dataset_a._cache.values()) / 1e9
         cache_size_b = sum(v.nbytes for v in self.dataset_b._cache.values()) / 1e9
-        print(f"[cache] complete: {cache_size_a + cache_size_b:.1f} GB cached in {elapsed:.1f}s")
+        print(f"[cache] complete: {cache_size_a + cache_size_b:.1f} gb cached in {elapsed:.1f}s")
         
     def __len__(self) -> int:
         return self.length
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
-        # Get sample from each domain (cycling if needed)
+        # get sample from each domain (cycling if needed)
         idx_a = idx % self.len_a
         idx_b = idx % self.len_b
         
@@ -295,8 +295,8 @@ class UnpairedMRIDataset25D(Dataset):
         sample_b = self.dataset_b[idx_b]
         
         return {
-            'A': sample_a['image'],           # [12, H, W]
-            'B': sample_b['image'],           # [12, H, W]
+            'A': sample_a['image'],           # [12, h, w]
+            'B': sample_b['image'],           # [12, h, w]
             'A_center': sample_a['center_slice'],
             'B_center': sample_b['center_slice'],
             'A_subject': sample_a['subject_id'],
@@ -317,24 +317,24 @@ def create_dataloaders(
     seed: int = 42
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """
-    Create train/val/test dataloaders.
+    create train/val/test dataloaders.
     
-    Returns:
+    returns:
         train_loader, val_loader, test_loader
     """
-    # Set seed for reproducibility
+    # set seed for reproducibility
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     
-    # Create full dataset
+    # create full dataset
     full_dataset = UnpairedMRIDataset25D(
         domain_a_dir=brats_dir,
         domain_b_dir=upenn_dir,
         image_size=image_size
     )
     
-    # Split indices
+    # split indices
     n_total = len(full_dataset)
     n_train = int(n_total * train_split)
     n_val = int(n_total * val_split)
@@ -347,18 +347,18 @@ def create_dataloaders(
     val_indices = indices[n_train:n_train + n_val]
     test_indices = indices[n_train + n_val:]
     
-    # Create subset datasets
+    # create subset datasets
     train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
     val_dataset = torch.utils.data.Subset(full_dataset, val_indices)
     test_dataset = torch.utils.data.Subset(full_dataset, test_indices)
     
-    print(f"\nDataset splits:")
-    print(f"  Train: {len(train_dataset)}")
-    print(f"  Val: {len(val_dataset)}")
-    print(f"  Test: {len(test_dataset)}")
+    print(f"\ndataset splits:")
+    print(f"  train: {len(train_dataset)}")
+    print(f"  val: {len(val_dataset)}")
+    print(f"  test: {len(test_dataset)}")
     
-    # Create dataloaders - optimized to avoid synchronization stalls
-    # persistent_workers=False prevents periodic stalls every num_workers batches
+    # create dataloaders - optimized to avoid synchronization stalls
+    # persistent_workers=false prevents periodic stalls every num_workers batches
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -394,13 +394,13 @@ def create_dataloaders(
 
 
 if __name__ == '__main__':
-    # Test the dataset
+    # test the dataset
     import sys
     
     brats_dir = "/Volumes/usb drive/neuroscope/preprocessed/brats"
     upenn_dir = "/Volumes/usb drive/neuroscope/preprocessed/upenn"
     
-    print("Testing 2.5D MRI Dataset...")
+    print("testing 2.5d mri dataset...")
     print("=" * 60)
     
     dataset = UnpairedMRIDataset25D(
@@ -409,13 +409,13 @@ if __name__ == '__main__':
         image_size=(128, 128)
     )
     
-    print(f"\nTotal samples: {len(dataset)}")
+    print(f"\ntotal samples: {len(dataset)}")
     
-    # Get a sample
+    # get a sample
     sample = dataset[0]
-    print(f"\nSample shapes:")
-    print(f"  A (3 slices x 4 mod): {sample['A'].shape}")
-    print(f"  B (3 slices x 4 mod): {sample['B'].shape}")
-    print(f"  A center slice: {sample['A_center'].shape}")
-    print(f"  A subject: {sample['A_subject']}, slice: {sample['A_slice']}")
-    print(f"  B subject: {sample['B_subject']}, slice: {sample['B_slice']}")
+    print(f"\nsample shapes:")
+    print(f"  a (3 slices x 4 mod): {sample['A'].shape}")
+    print(f"  b (3 slices x 4 mod): {sample['B'].shape}")
+    print(f"  a center slice: {sample['A_center'].shape}")
+    print(f"  a subject: {sample['A_subject']}, slice: {sample['A_slice']}")
+    print(f"  b subject: {sample['B_subject']}, slice: {sample['B_slice']}")

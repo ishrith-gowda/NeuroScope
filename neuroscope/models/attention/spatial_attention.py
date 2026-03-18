@@ -1,7 +1,7 @@
 """
-Spatial Attention mechanisms.
+spatial attention mechanisms.
 
-Implements various spatial attention modules for adaptive feature selection.
+implements various spatial attention modules for adaptive feature selection.
 """
 
 import torch
@@ -12,13 +12,13 @@ from typing import Optional, Tuple
 
 class SpatialAttention(nn.Module):
     """
-    Spatial Attention Module (SAM).
+    spatial attention module (sam).
     
-    Computes spatial attention using channel pooling and convolution.
-    Based on CBAM (Woo et al., 2018).
+    computes spatial attention using channel pooling and convolution.
+    based on cbam (woo et al., 2018).
     
-    Args:
-        kernel_size: Convolution kernel size (must be odd)
+    args:
+        kernel_size: convolution kernel size (must be odd)
     """
     
     def __init__(self, kernel_size: int = 7):
@@ -34,36 +34,36 @@ class SpatialAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Compute spatial attention.
+        compute spatial attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Spatial attention weights [B, 1, H, W]
+        returns:
+            spatial attention weights [b, 1, h, w]
         """
-        # Channel pooling
-        avg_out = torch.mean(x, dim=1, keepdim=True)  # [B, 1, H, W]
-        max_out, _ = torch.max(x, dim=1, keepdim=True)  # [B, 1, H, W]
+        # channel pooling
+        avg_out = torch.mean(x, dim=1, keepdim=True)  # [b, 1, h, w]
+        max_out, _ = torch.max(x, dim=1, keepdim=True)  # [b, 1, h, w]
         
-        # Concatenate and convolve
-        combined = torch.cat([avg_out, max_out], dim=1)  # [B, 2, H, W]
-        attention = self.conv(combined)  # [B, 1, H, W]
+        # concatenate and convolve
+        combined = torch.cat([avg_out, max_out], dim=1)  # [b, 2, h, w]
+        attention = self.conv(combined)  # [b, 1, h, w]
         
         return attention
 
 
 class CBAM(nn.Module):
     """
-    Convolutional Block Attention Module (CBAM).
+    convolutional block attention module (cbam).
     
-    Combines channel and spatial attention sequentially.
-    Based on Woo et al., 2018.
+    combines channel and spatial attention sequentially.
+    based on woo et al., 2018.
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Channel attention reduction ratio
-        spatial_kernel: Spatial attention kernel size
+    args:
+        in_channels: number of input channels
+        reduction: channel attention reduction ratio
+        spatial_kernel: spatial attention kernel size
     """
     
     def __init__(
@@ -81,19 +81,19 @@ class CBAM(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply CBAM attention.
+        apply cbam attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Attended tensor [B, C, H, W]
+        returns:
+            attended tensor [b, c, h, w]
         """
-        # Channel attention
+        # channel attention
         ca = self.channel_attention(x)
         x = x * ca
         
-        # Spatial attention
+        # spatial attention
         sa = self.spatial_attention(x)
         x = x * sa
         
@@ -102,14 +102,14 @@ class CBAM(nn.Module):
 
 class CoordinateAttention(nn.Module):
     """
-    Coordinate Attention.
+    coordinate attention.
     
-    Embeds positional information into channel attention.
-    Based on Hou et al., 2021.
+    embeds positional information into channel attention.
+    based on hou et al., 2021.
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Reduction ratio
+    args:
+        in_channels: number of input channels
+        reduction: reduction ratio
     """
     
     def __init__(self, in_channels: int, reduction: int = 32):
@@ -129,31 +129,31 @@ class CoordinateAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply coordinate attention.
+        apply coordinate attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Attended tensor [B, C, H, W]
+        returns:
+            attended tensor [b, c, h, w]
         """
         B, C, H, W = x.size()
         
-        # Pool along each direction
-        x_h = self.pool_h(x)  # [B, C, H, 1]
-        x_w = self.pool_w(x).permute(0, 1, 3, 2)  # [B, C, W, 1] -> [B, C, 1, W] permuted
+        # pool along each direction
+        x_h = self.pool_h(x)  # [b, c, h, 1]
+        x_w = self.pool_w(x).permute(0, 1, 3, 2)  # [b, c, w, 1] -> [b, c, 1, w] permuted
         
-        # Concatenate
-        y = torch.cat([x_h, x_w], dim=2)  # [B, C, H+W, 1]
+        # concatenate
+        y = torch.cat([x_h, x_w], dim=2)  # [b, c, h+w, 1]
         y = self.conv1(y)
         y = self.bn1(y)
         y = self.act(y)
         
-        # Split
+        # split
         x_h, x_w = torch.split(y, [H, W], dim=2)
         x_w = x_w.permute(0, 1, 3, 2)
         
-        # Generate attention
+        # generate attention
         a_h = self.conv_h(x_h).sigmoid()
         a_w = self.conv_w(x_w).sigmoid()
         
@@ -162,13 +162,13 @@ class CoordinateAttention(nn.Module):
 
 class PolarizedSelfAttention(nn.Module):
     """
-    Polarized Self-Attention.
+    polarized self-attention.
     
-    Combines channel and spatial attention in a parallel manner.
-    Based on Liu et al., 2021.
+    combines channel and spatial attention in a parallel manner.
+    based on liu et al., 2021.
     
-    Args:
-        in_channels: Number of input channels
+    args:
+        in_channels: number of input channels
     """
     
     def __init__(self, in_channels: int):
@@ -176,14 +176,14 @@ class PolarizedSelfAttention(nn.Module):
         
         self.in_channels = in_channels
         
-        # Channel-only branch
+        # channel-only branch
         self.ch_wv = nn.Conv2d(in_channels, in_channels // 2, kernel_size=1)
         self.ch_wq = nn.Conv2d(in_channels, 1, kernel_size=1)
         self.ch_softmax = nn.Softmax(dim=1)
         self.ch_wz = nn.Conv2d(in_channels // 2, in_channels, kernel_size=1)
         self.ln = nn.LayerNorm([in_channels, 1, 1])
         
-        # Spatial-only branch
+        # spatial-only branch
         self.sp_wv = nn.Conv2d(in_channels, in_channels // 2, kernel_size=1)
         self.sp_wq = nn.Conv2d(in_channels, in_channels // 2, kernel_size=1)
         self.sp_softmax = nn.Softmax(dim=-1)
@@ -191,35 +191,35 @@ class PolarizedSelfAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply polarized self-attention.
+        apply polarized self-attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Attended tensor [B, C, H, W]
+        returns:
+            attended tensor [b, c, h, w]
         """
         B, C, H, W = x.size()
         
-        # Channel-only branch
-        ch_wv = self.ch_wv(x)  # [B, C//2, H, W]
-        ch_wq = self.ch_wq(x)  # [B, 1, H, W]
-        ch_wv = ch_wv.view(B, C // 2, -1)  # [B, C//2, HW]
-        ch_wq = ch_wq.view(B, -1, 1)  # [B, HW, 1]
+        # channel-only branch
+        ch_wv = self.ch_wv(x)  # [b, c//2, h, w]
+        ch_wq = self.ch_wq(x)  # [b, 1, h, w]
+        ch_wv = ch_wv.view(B, C // 2, -1)  # [b, c//2, hw]
+        ch_wq = ch_wq.view(B, -1, 1)  # [b, hw, 1]
         ch_wq = self.ch_softmax(ch_wq)  # softmax over spatial
         
-        ch_wz = torch.matmul(ch_wv, ch_wq).unsqueeze(-1)  # [B, C//2, 1, 1]
-        ch_out = self.ch_wz(ch_wz)  # [B, C, 1, 1]
+        ch_wz = torch.matmul(ch_wv, ch_wq).unsqueeze(-1)  # [b, c//2, 1, 1]
+        ch_out = self.ch_wz(ch_wz)  # [b, c, 1, 1]
         ch_out = self.ln(ch_out).sigmoid()
         
-        # Spatial-only branch
-        sp_wv = self.sp_wv(x).view(B, C // 2, -1)  # [B, C//2, HW]
-        sp_wq = self.sp_wq(x).view(B, C // 2, -1)  # [B, C//2, HW]
+        # spatial-only branch
+        sp_wv = self.sp_wv(x).view(B, C // 2, -1)  # [b, c//2, hw]
+        sp_wq = self.sp_wq(x).view(B, C // 2, -1)  # [b, c//2, hw]
         
-        sp_attn = torch.matmul(sp_wq.permute(0, 2, 1), sp_wv)  # [B, HW, HW]
+        sp_attn = torch.matmul(sp_wq.permute(0, 2, 1), sp_wv)  # [b, hw, hw]
         sp_attn = self.sp_softmax(sp_attn)
         
-        sp_out = torch.matmul(sp_wv, sp_attn.permute(0, 2, 1))  # [B, C//2, HW]
+        sp_out = torch.matmul(sp_wv, sp_attn.permute(0, 2, 1))  # [b, c//2, hw]
         sp_out = sp_out.view(B, C // 2, H, W)
         sp_out = self.sp_wz(sp_out).sigmoid()
         

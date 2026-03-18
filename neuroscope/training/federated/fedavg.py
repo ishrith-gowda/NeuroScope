@@ -165,10 +165,10 @@ class FederatedSimulator:
 
     partitions data by site and simulates federated training rounds:
     1. server distributes global model to all clients
-    2. each client trains locally for E epochs
+    2. each client trains locally for e epochs
     3. clients send updated models to server
     4. server aggregates updates via fedavg
-    5. repeat for R communication rounds
+    5. repeat for r communication rounds
 
     metrics tracked: convergence speed, final quality, communication cost,
     and model divergence across clients.

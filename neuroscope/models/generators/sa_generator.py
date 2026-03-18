@@ -1,7 +1,7 @@
 """
-Self-Attention Generator (SA-Generator).
+self-attention generator (sa-generator).
 
-Advanced generator with multi-scale self-attention for
+advanced generator with multi-scale self-attention for
 improved long-range dependency modeling.
 """
 
@@ -19,27 +19,27 @@ from .base import BaseGenerator
 
 class SAGenerator(BaseGenerator):
     """
-    Self-Attention Generator for image-to-image translation.
+    self-attention generator for image-to-image translation.
     
-    Incorporates multi-scale self-attention for capturing long-range
+    incorporates multi-scale self-attention for capturing long-range
     dependencies, essential for medical image translation.
     
-    Architecture:
-    - Initial Conv
-    - Multi-scale Encoder with Attention
-    - Attention-enhanced Residual Bottleneck
-    - Multi-scale Decoder with Attention
-    - Final Conv
+    architecture:
+    - initial conv
+    - multi-scale encoder with attention
+    - attention-enhanced residual bottleneck
+    - multi-scale decoder with attention
+    - final conv
     
-    Args:
-        in_channels: Input channels (e.g., 4 for multi-modal MRI)
-        out_channels: Output channels
-        ngf: Base number of generator filters
-        n_residual: Number of residual blocks in bottleneck
-        n_downsampling: Number of downsampling layers
-        attention_type: Type of attention ('self', 'cbam', 'multi_scale')
-        use_spectral_norm: Whether to use spectral normalization
-        norm_type: Normalization type
+    args:
+        in_channels: input channels (e.g., 4 for multi-modal mri)
+        out_channels: output channels
+        ngf: base number of generator filters
+        n_residual: number of residual blocks in bottleneck
+        n_downsampling: number of downsampling layers
+        attention_type: type of attention ('self', 'cbam', 'multi_scale')
+        use_spectral_norm: whether to use spectral normalization
+        norm_type: normalization type
     """
     
     def __init__(
@@ -59,7 +59,7 @@ class SAGenerator(BaseGenerator):
         self.n_downsampling = n_downsampling
         self.attention_type = attention_type
         
-        # Normalization layer
+        # normalization layer
         if norm_type == 'instance':
             norm_layer = nn.InstanceNorm2d
         elif norm_type == 'batch':
@@ -67,7 +67,7 @@ class SAGenerator(BaseGenerator):
         else:
             norm_layer = nn.Identity
             
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             self._apply_sn(nn.Conv2d(in_channels, ngf, 7), use_spectral_norm),
@@ -75,28 +75,28 @@ class SAGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder with attention
+        # encoder with attention
         self.encoder = SAEncoder(
             ngf, n_downsampling, norm_layer,
             attention_type, use_spectral_norm
         )
         
-        # Bottleneck channels
+        # bottleneck channels
         bottleneck_channels = ngf * (2 ** n_downsampling)
         
-        # Attention-enhanced residual bottleneck
+        # attention-enhanced residual bottleneck
         self.bottleneck = SABottleneck(
             bottleneck_channels, n_residual,
             norm_layer, attention_type, use_spectral_norm
         )
         
-        # Decoder with attention
+        # decoder with attention
         self.decoder = SADecoder(
             bottleneck_channels, ngf, n_downsampling,
             norm_layer, attention_type, use_spectral_norm
         )
         
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             self._apply_sn(nn.Conv2d(ngf, out_channels, 7), use_spectral_norm),
@@ -104,32 +104,32 @@ class SAGenerator(BaseGenerator):
         )
         
     def _apply_sn(self, module: nn.Module, use_sn: bool) -> nn.Module:
-        """Apply spectral normalization if enabled."""
+        """apply spectral normalization if enabled."""
         if use_sn:
             return nn.utils.spectral_norm(module)
         return module
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
-        # Initial
+        """forward pass."""
+        # initial
         out = self.initial(x)
         
-        # Encode
+        # encode
         encoded, skip_features = self.encoder(out)
         
-        # Bottleneck
+        # bottleneck
         bottleneck = self.bottleneck(encoded)
         
-        # Decode with skip connections
+        # decode with skip connections
         decoded = self.decoder(bottleneck, skip_features)
         
-        # Final
+        # final
         output = self.final(decoded)
         
         return output
         
     def get_feature_maps(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """Get intermediate feature maps for visualization."""
+        """get intermediate feature maps for visualization."""
         features = {}
         
         out = self.initial(x)
@@ -153,7 +153,7 @@ class SAGenerator(BaseGenerator):
 
 
 class SAEncoder(nn.Module):
-    """Self-Attention Encoder."""
+    """self-attention encoder."""
     
     def __init__(
         self,
@@ -175,7 +175,7 @@ class SAEncoder(nn.Module):
             in_ch = in_channels * mult
             out_ch = in_channels * mult * 2
             
-            # Downsampling block
+            # downsampling block
             down = nn.Sequential(
                 nn.Conv2d(in_ch, out_ch, 3, stride=2, padding=1),
                 norm_layer(out_ch),
@@ -186,7 +186,7 @@ class SAEncoder(nn.Module):
                 
             self.down_blocks.append(down)
             
-            # Attention block
+            # attention block
             if attention_type == 'multi_scale':
                 attn = MultiScaleSelfAttention(out_ch)
             elif attention_type == 'cbam':
@@ -199,7 +199,7 @@ class SAEncoder(nn.Module):
             mult *= 2
             
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
-        """Forward pass returning encoded features and skip connections."""
+        """forward pass returning encoded features and skip connections."""
         skip_features = []
         
         for down, attn in zip(self.down_blocks, self.attention_blocks):
@@ -211,7 +211,7 @@ class SAEncoder(nn.Module):
 
 
 class SABottleneck(nn.Module):
-    """Self-Attention Bottleneck."""
+    """self-attention bottleneck."""
     
     def __init__(
         self,
@@ -223,16 +223,16 @@ class SABottleneck(nn.Module):
     ):
         super().__init__()
         
-        # Residual blocks with periodic attention
+        # residual blocks with periodic attention
         self.blocks = nn.ModuleList()
         
         for i in range(n_residual):
-            # Residual block
+            # residual block
             self.blocks.append(
                 ResidualBlock(channels, norm_type='instance')
             )
             
-            # Add attention every 3 blocks
+            # add attention every 3 blocks
             if (i + 1) % 3 == 0:
                 if attention_type == 'multi_scale':
                     self.blocks.append(MultiScaleSelfAttention(channels))
@@ -241,11 +241,11 @@ class SABottleneck(nn.Module):
                 else:
                     self.blocks.append(SelfAttention2d(channels))
                     
-        # Final attention
+        # final attention
         self.final_attention = EfficientSelfAttention(channels)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through bottleneck."""
+        """forward pass through bottleneck."""
         for block in self.blocks:
             x = block(x)
             
@@ -255,7 +255,7 @@ class SABottleneck(nn.Module):
 
 
 class SADecoder(nn.Module):
-    """Self-Attention Decoder."""
+    """self-attention decoder."""
     
     def __init__(
         self,
@@ -278,7 +278,7 @@ class SADecoder(nn.Module):
             in_ch = in_channels // (2 ** i)
             out_ch = in_channels // (2 ** (i + 1))
             
-            # Upsampling block
+            # upsampling block
             up = nn.Sequential(
                 nn.ConvTranspose2d(in_ch, out_ch, 3, stride=2, padding=1, output_padding=1),
                 norm_layer(out_ch),
@@ -289,16 +289,16 @@ class SADecoder(nn.Module):
                 
             self.up_blocks.append(up)
             
-            # Skip connection processing - match skip channels to decoder channels
-            # Skip from encoder at this level has in_ch channels (same as decoder input at this level)
+            # skip connection processing - match skip channels to decoder channels
+            # skip from encoder at this level has in_ch channels (same as decoder input at this level)
             self.skip_convs.append(
                 nn.Sequential(
-                    nn.Conv2d(in_ch, out_ch, 1),  # Project from skip channels to output channels
+                    nn.Conv2d(in_ch, out_ch, 1),  # project from skip channels to output channels
                     norm_layer(out_ch)
                 )
             )
             
-            # Attention block
+            # attention block
             if attention_type == 'multi_scale':
                 attn = MultiScaleSelfAttention(out_ch)
             elif attention_type == 'cbam':
@@ -313,8 +313,8 @@ class SADecoder(nn.Module):
         x: torch.Tensor,
         skip_features: List[torch.Tensor]
     ) -> torch.Tensor:
-        """Forward pass with skip connections."""
-        # Reverse skip features for decoder order
+        """forward pass with skip connections."""
+        # reverse skip features for decoder order
         skips = skip_features[::-1]
         
         for i, (up, skip_conv, attn) in enumerate(
@@ -322,7 +322,7 @@ class SADecoder(nn.Module):
         ):
             x = up(x)
             
-            # Add skip connection if available
+            # add skip connection if available
             if i < len(skips):
                 skip = skips[i]
                 if skip.shape[-2:] != x.shape[-2:]:
@@ -337,15 +337,15 @@ class SADecoder(nn.Module):
 
 class MultiScaleSAGenerator(BaseGenerator):
     """
-    Multi-Scale Self-Attention Generator.
+    multi-scale self-attention generator.
     
-    Processes input at multiple scales and fuses results.
+    processes input at multiple scales and fuses results.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_scales: Number of scales to process
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_scales: number of scales to process
     """
     
     def __init__(
@@ -359,10 +359,10 @@ class MultiScaleSAGenerator(BaseGenerator):
         
         self.n_scales = n_scales
         
-        # Scale-specific generators
+        # scale-specific generators
         self.scale_generators = nn.ModuleList()
         for i in range(n_scales):
-            scale_ngf = ngf // (2 ** i)  # Smaller networks for coarser scales
+            scale_ngf = ngf // (2 ** i)  # smaller networks for coarser scales
             self.scale_generators.append(
                 SAGenerator(
                     in_channels, out_channels, scale_ngf,
@@ -370,31 +370,31 @@ class MultiScaleSAGenerator(BaseGenerator):
                 )
             )
             
-        # Multi-scale fusion
+        # multi-scale fusion
         self.fusion = MultiScaleFusion(out_channels, n_scales)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with multi-scale processing."""
+        """forward pass with multi-scale processing."""
         scale_outputs = []
         
         current_input = x
         for i, generator in enumerate(self.scale_generators):
-            # Generate at this scale
+            # generate at this scale
             output = generator(current_input)
             scale_outputs.append(output)
             
-            # Downsample for next scale
+            # downsample for next scale
             if i < self.n_scales - 1:
                 current_input = F.avg_pool2d(x, 2 ** (i + 1))
                 
-        # Fuse multi-scale outputs
+        # fuse multi-scale outputs
         fused = self.fusion(scale_outputs)
         
         return fused
 
 
 class MultiScaleFusion(nn.Module):
-    """Fuses outputs from multiple scales."""
+    """fuses outputs from multiple scales."""
     
     def __init__(self, channels: int, n_scales: int):
         super().__init__()
@@ -403,13 +403,13 @@ class MultiScaleFusion(nn.Module):
         self.softmax = nn.Softmax(dim=0)
         
     def forward(self, scale_outputs: List[torch.Tensor]) -> torch.Tensor:
-        """Fuse multi-scale outputs."""
+        """fuse multi-scale outputs."""
         target_size = scale_outputs[0].shape[-2:]
         
-        # Normalize weights
+        # normalize weights
         weights = self.softmax(self.scale_weights)
         
-        # Weighted sum with upsampling
+        # weighted sum with upsampling
         fused = torch.zeros_like(scale_outputs[0])
         for i, output in enumerate(scale_outputs):
             if output.shape[-2:] != target_size:
@@ -421,17 +421,17 @@ class MultiScaleFusion(nn.Module):
 
 class DenseSAGenerator(BaseGenerator):
     """
-    Dense Self-Attention Generator.
+    dense self-attention generator.
     
-    Uses dense connections in addition to attention for maximum
+    uses dense connections in addition to attention for maximum
     feature reuse.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_dense_blocks: Number of dense blocks
-        growth_rate: Growth rate for dense connections
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_dense_blocks: number of dense blocks
+        growth_rate: growth rate for dense connections
     """
     
     def __init__(
@@ -444,7 +444,7 @@ class DenseSAGenerator(BaseGenerator):
     ):
         super().__init__(in_channels, out_channels, ngf)
         
-        # Initial
+        # initial
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, ngf, 7),
@@ -452,7 +452,7 @@ class DenseSAGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Downsample
+        # downsample
         self.downsample = nn.Sequential(
             nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1),
             nn.InstanceNorm2d(ngf * 2),
@@ -462,7 +462,7 @@ class DenseSAGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Dense blocks with attention
+        # dense blocks with attention
         self.dense_blocks = nn.ModuleList()
         current_channels = ngf * 4
         
@@ -473,13 +473,13 @@ class DenseSAGenerator(BaseGenerator):
             self.dense_blocks.append(block)
             current_channels += growth_rate * 4
             
-            # Add attention after each dense block
+            # add attention after each dense block
             self.dense_blocks.append(SelfAttention2d(current_channels))
             
-        # Compress channels
+        # compress channels
         self.compress = nn.Conv2d(current_channels, ngf * 4, 1)
         
-        # Upsample
+        # upsample
         self.upsample = nn.Sequential(
             nn.ConvTranspose2d(ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1),
             nn.InstanceNorm2d(ngf * 2),
@@ -489,7 +489,7 @@ class DenseSAGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Final
+        # final
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, out_channels, 7),
@@ -497,7 +497,7 @@ class DenseSAGenerator(BaseGenerator):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
+        """forward pass."""
         out = self.initial(x)
         out = self.downsample(out)
         
@@ -505,7 +505,7 @@ class DenseSAGenerator(BaseGenerator):
             if isinstance(block, DenseResidualBlock):
                 out = block(out)
             else:
-                out = block(out)  # Attention
+                out = block(out)  # attention
                 
         out = self.compress(out)
         out = self.upsample(out)

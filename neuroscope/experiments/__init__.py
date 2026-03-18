@@ -1,7 +1,7 @@
 """
-Experiments Module.
+experiments module.
 
-Experiment runners, ablation studies, and
+experiment runners, ablation studies, and
 reproducible experiment management.
 """
 
@@ -25,17 +25,17 @@ from .analysis import (
 
 
 __all__ = [
-    # Runners
+    # runners
     'ExperimentRunner',
     'AblationRunner',
     'BaselineRunner',
     
-    # Ablation
+    # ablation
     'AblationStudy',
     'AblationConfig',
     'run_ablation_suite',
     
-    # Analysis
+    # analysis
     'ExperimentAnalyzer',
     'compare_experiments',
     'generate_comparison_report',
