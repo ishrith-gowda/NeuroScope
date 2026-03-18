@@ -73,7 +73,7 @@ class AttentionExtractor:
     def _get_channel_attention_hook(self, name: str):
         """create hook for channel attention"""
         def hook(module, input, output):
-            # channel attention typically outputs [B, C, 1, 1]
+            # channel attention typically outputs [b, c, 1, 1]
             if isinstance(output, torch.Tensor):
                 self.attention_maps[f'{name}_output'] = output.detach().cpu()
         return hook
@@ -81,7 +81,7 @@ class AttentionExtractor:
     def _get_spatial_attention_hook(self, name: str):
         """create hook for spatial attention"""
         def hook(module, input, output):
-            # spatial attention typically outputs [B, 1, H, W]
+            # spatial attention typically outputs [b, 1, h, w]
             if isinstance(output, torch.Tensor):
                 self.attention_maps[f'{name}_output'] = output.detach().cpu()
         return hook
@@ -90,7 +90,7 @@ class AttentionExtractor:
         """create hook for self-attention"""
         def hook(module, input, output):
             # self-attention output can vary by implementation
-            # typically [B, C, H, W] or attention weights [B, heads, HW, HW]
+            # typically [b, c, h, w] or attention weights [b, heads, hw, hw]
             if isinstance(output, tuple):
                 # some implementations return (output, attention_weights)
                 self.attention_maps[f'{name}_output'] = output[0].detach().cpu()

@@ -1,6 +1,6 @@
-"""Setup script for the NeuroScope package.
+"""setup script for the neuroscope package.
 
-This script provides comprehensive package configuration including
+this script provides comprehensive package configuration including
 dependencies, entry points, and package metadata.
 """
 
@@ -9,25 +9,25 @@ import sys
 from pathlib import Path
 from setuptools import setup, find_packages, find_namespace_packages
 
-# Read README for long description
+# read readme for long description
 def read_readme():
-    """Read README file for long description."""
+    """read readme file for long description."""
     readme_path = Path(__file__).parent / "README.md"
     if readme_path.exists():
         with open(readme_path, "r", encoding="utf-8") as fh:
             return fh.read()
     return "NeuroScope: Domain-aware standardization of multimodal glioma MRI"
 
-# Read requirements
+# read requirements
 def read_requirements():
-    """Read requirements from requirements.txt."""
+    """read requirements from requirements.txt."""
     requirements_path = Path(__file__).parent / "requirements.txt"
     if requirements_path.exists():
         with open(requirements_path, "r", encoding="utf-8") as fh:
             return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
     return []
 
-# Package configuration
+# package configuration
 setup(
     name="neuroscope",
     version="0.1.0",
@@ -43,7 +43,7 @@ setup(
         "Documentation": "https://neuroscope.readthedocs.io/",
     },
     
-    # Package discovery
+    # package discovery
     packages=find_packages(),
     package_dir={"neuroscope": "neuroscope"},
     include_package_data=True,
@@ -57,10 +57,10 @@ setup(
         ]
     },
     
-    # Python version requirements
+    # python version requirements
     python_requires=">=3.9",
     
-    # Dependencies
+    # dependencies
     install_requires=[
         "torch>=1.11.0",
         "torchvision>=0.12.0",
@@ -81,7 +81,7 @@ setup(
         "tensorboard>=2.8.0",
     ],
     
-    # Optional dependencies
+    # optional dependencies
     extras_require={
         "dev": [
             "pytest>=7.0.0",
@@ -151,7 +151,7 @@ setup(
         ],
     },
     
-    # Entry points for CLI
+    # entry points for cli
     entry_points={
         "console_scripts": [
             "neuroscope=neuroscope.scripts.cli.neuroscope_cli:main",
@@ -162,7 +162,7 @@ setup(
         ],
     },
     
-    # Classifiers
+    # classifiers
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
@@ -180,7 +180,7 @@ setup(
         "Environment :: Console",
     ],
     
-    # Keywords
+    # keywords
     keywords=[
         "medical imaging",
         "mri",
@@ -194,28 +194,28 @@ setup(
         "biomedical",
     ],
     
-    # License
+    # license
     license="MIT",
     
-    # Minimum Python version
+    # minimum python version
     python_requires=">=3.9",
     
-    # Zip safe
+    # zip safe
     zip_safe=False,
     
-    # Test suite
+    # test suite
     test_suite="tests",
     
-    # Command line options
+    # command line options
     cmdclass={},
     
-    # Data files
+    # data files
     data_files=[
         ("neuroscope/config", ["neuroscope/config/defaults/training_config.py"]),
         ("neuroscope/tests/fixtures", []),
     ],
     
-    # Scripts
+    # scripts
     scripts=[
         "scripts/cli/neuroscope_cli.py",
         "scripts/pipeline/data_preparation/preprocessing_pipeline.py",
