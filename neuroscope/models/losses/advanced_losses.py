@@ -1,16 +1,16 @@
 """
-Advanced Loss Functions for Medical Image Domain Adaptation
+advanced loss functions for medical image domain adaptation
 
-This module implements state-of-the-art loss functions for improving
-the quality and clinical validity of domain-translated brain MRI:
+this module implements state-of-the-art loss functions for improving
+the quality and clinical validity of domain-translated brain mri:
 
-1. Perceptual Loss - VGG-based feature matching
-2. Contrastive Loss - PatchNCE-style feature preservation  
-3. Tumor Preservation Loss - Domain-specific loss for GBM imaging
-4. Multi-Scale SSIM Loss - Structure-preserving loss
-5. Gradient Correlation Loss - Edge preservation
+1. perceptual loss - vgg-based feature matching
+2. contrastive loss - patchnce-style feature preservation  
+3. tumor preservation loss - domain-specific loss for gbm imaging
+4. multi-scale ssim loss - structure-preserving loss
+5. gradient correlation loss - edge preservation
 
-These losses address the limitations of standard L1/L2 reconstruction
+these losses address the limitations of standard l1/l2 reconstruction
 losses by capturing perceptual and structural similarity.
 """
 
@@ -23,12 +23,12 @@ import torchvision.models as models
 
 class VGGFeatureExtractor(nn.Module):
     """
-    VGG-19 based feature extractor for perceptual loss computation.
+    vgg-19 based feature extractor for perceptual loss computation.
     
-    Extracts features from multiple layers to capture both low-level
+    extracts features from multiple layers to capture both low-level
     textures and high-level semantic information.
     
-    Adapted for single-channel/grayscale images by replicating channels.
+    adapted for single-channel/grayscale images by replicating channels.
     """
     
     def __init__(self, 
@@ -46,41 +46,41 @@ class VGGFeatureExtractor(nn.Module):
             for param in self.features.parameters():
                 param.requires_grad = False
                 
-        # Normalization parameters (ImageNet stats)
+        # normalization parameters (imagenet stats)
         self.register_buffer('mean', torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
         self.register_buffer('std', torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
         
     def _preprocess(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Preprocess input for VGG.
-        Handles 1-channel (grayscale) and 4-channel (multi-modal MRI) inputs.
+        preprocess input for vgg.
+        handles 1-channel (grayscale) and 4-channel (multi-modal mri) inputs.
         """
         if x.shape[1] == 1:
-            # Grayscale: replicate to 3 channels
+            # grayscale: replicate to 3 channels
             x = x.repeat(1, 3, 1, 1)
         elif x.shape[1] == 4:
-            # Multi-modal MRI: use first 3 channels or average
-            x = x[:, :3, :, :]  # T1, T1ce, T2
+            # multi-modal mri: use first 3 channels or average
+            x = x[:, :3, :, :]  # t1, t1ce, t2
         elif x.shape[1] != 3:
             raise ValueError(f"Expected 1, 3, or 4 channels, got {x.shape[1]}")
         
-        # Scale from [-1, 1] to [0, 1]
+        # scale from [-1, 1] to [0, 1]
         x = (x + 1) / 2
         
-        # Normalize
+        # normalize
         x = (x - self.mean.to(x.device)) / self.std.to(x.device)
         
         return x
         
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
-        Extract features from multiple VGG layers.
+        extract features from multiple vgg layers.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W), range [-1, 1]
+        args:
+            x: input tensor of shape (b, c, h, w), range [-1, 1]
             
-        Returns:
-            Dictionary mapping layer names to feature tensors
+        returns:
+            dictionary mapping layer names to feature tensors
         """
         x = self._preprocess(x)
         
@@ -96,18 +96,18 @@ class VGGFeatureExtractor(nn.Module):
 
 class PerceptualLoss(nn.Module):
     """
-    Perceptual Loss using VGG features.
+    perceptual loss using vgg features.
     
-    Computes L1 distance between VGG features of input and target images,
+    computes l1 distance between vgg features of input and target images,
     capturing perceptual similarity beyond pixel-level differences.
     
-    Reference:
-    - Johnson et al., "Perceptual Losses for Real-Time Style Transfer" (ECCV 2016)
+    reference:
+    - johnson et al., "perceptual losses for real-time style transfer" (eccv 2016)
     
-    Args:
-        layers: VGG layer indices to use (default: relu1_2, relu2_2, relu3_4, relu4_4)
-        weights: Per-layer weights (default: equal weights)
-        criterion: Loss criterion (default: L1)
+    args:
+        layers: vgg layer indices to use (default: relu1_2, relu2_2, relu3_4, relu4_4)
+        weights: per-layer weights (default: equal weights)
+        criterion: loss criterion (default: l1)
     """
     
     def __init__(self,
@@ -128,14 +128,14 @@ class PerceptualLoss(nn.Module):
             
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
-        Compute perceptual loss between x and y.
+        compute perceptual loss between x and y.
         
-        Args:
-            x: Generated/reconstructed image, shape (B, C, H, W)
-            y: Target/original image, shape (B, C, H, W)
+        args:
+            x: generated/reconstructed image, shape (b, c, h, w)
+            y: target/original image, shape (b, c, h, w)
             
-        Returns:
-            Scalar perceptual loss
+        returns:
+            scalar perceptual loss
         """
         x_features = self.vgg(x)
         y_features = self.vgg(y)
@@ -149,18 +149,18 @@ class PerceptualLoss(nn.Module):
 
 class PatchNCELoss(nn.Module):
     """
-    Patch-based Contrastive Loss (PatchNCE).
+    patch-based contrastive loss (patchnce).
     
-    Encourages corresponding patches in input and output to have similar
-    features while being dissimilar to other patches. This preserves
+    encourages corresponding patches in input and output to have similar
+    features while being dissimilar to other patches. this preserves
     local structure during translation.
     
-    Reference:
-    - Park et al., "Contrastive Learning for Unpaired Image-to-Image Translation" (ECCV 2020)
+    reference:
+    - park et al., "contrastive learning for unpaired image-to-image translation" (eccv 2020)
     
-    Args:
-        num_patches: Number of patches to sample per image
-        temperature: Temperature for softmax scaling
+    args:
+        num_patches: number of patches to sample per image
+        temperature: temperature for softmax scaling
     """
     
     def __init__(self, num_patches: int = 256, temperature: float = 0.07):
@@ -175,52 +175,52 @@ class PatchNCELoss(nn.Module):
                 feat_k: torch.Tensor,
                 feat_k_neg: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
-        Compute PatchNCE loss.
+        compute patchnce loss.
         
-        Args:
-            feat_q: Query features (from generated image), shape (B, C, H, W)
-            feat_k: Key features (from input image, positive), shape (B, C, H, W)
-            feat_k_neg: Negative key features (optional, from other images)
+        args:
+            feat_q: query features (from generated image), shape (b, c, h, w)
+            feat_k: key features (from input image, positive), shape (b, c, h, w)
+            feat_k_neg: negative key features (optional, from other images)
             
-        Returns:
-            Scalar contrastive loss
+        returns:
+            scalar contrastive loss
         """
         B, C, H, W = feat_q.shape
         
-        # Reshape to (B, C, N) where N = H*W
-        feat_q = feat_q.view(B, C, -1)  # (B, C, N)
-        feat_k = feat_k.view(B, C, -1)  # (B, C, N)
+        # reshape to (b, c, n) where n = h*w
+        feat_q = feat_q.view(B, C, -1)  # (b, c, n)
+        feat_k = feat_k.view(B, C, -1)  # (b, c, n)
         
-        # Sample patch locations
+        # sample patch locations
         N = H * W
         if N > self.num_patches:
             indices = torch.randperm(N, device=feat_q.device)[:self.num_patches]
-            feat_q = feat_q[:, :, indices]  # (B, C, num_patches)
-            feat_k = feat_k[:, :, indices]  # (B, C, num_patches)
+            feat_q = feat_q[:, :, indices]  # (b, c, num_patches)
+            feat_k = feat_k[:, :, indices]  # (b, c, num_patches)
         
-        # L2 normalize
+        # l2 normalize
         feat_q = F.normalize(feat_q, dim=1)
         feat_k = F.normalize(feat_k, dim=1)
         
-        # Positive logits: (B, num_patches)
+        # positive logits: (b, num_patches)
         l_pos = torch.sum(feat_q * feat_k, dim=1) / self.temperature
         
-        # Negative logits from same image, different locations
-        # (B, num_patches, num_patches)
+        # negative logits from same image, different locations
+        # (b, num_patches, num_patches)
         l_neg = torch.bmm(feat_q.transpose(1, 2), feat_k) / self.temperature
         
-        # Mask out positive pairs on diagonal
+        # mask out positive pairs on diagonal
         mask = torch.eye(feat_q.shape[2], device=feat_q.device).bool()
         l_neg = l_neg.masked_fill(mask.unsqueeze(0), float('-inf'))
         
-        # Logits: positive + negatives
-        # (B, num_patches, 1 + num_patches - 1)
+        # logits: positive + negatives
+        # (b, num_patches, 1 + num_patches - 1)
         logits = torch.cat([l_pos.unsqueeze(-1), l_neg], dim=-1)
         
-        # Labels: positive is always index 0
+        # labels: positive is always index 0
         labels = torch.zeros(B, feat_q.shape[2], dtype=torch.long, device=feat_q.device)
         
-        # Cross-entropy loss
+        # cross-entropy loss
         loss = self.cross_entropy(logits.view(-1, logits.shape[-1]), labels.view(-1))
         
         return loss
@@ -228,14 +228,14 @@ class PatchNCELoss(nn.Module):
 
 class MultiScaleSSIMLoss(nn.Module):
     """
-    Multi-Scale Structural Similarity (MS-SSIM) Loss.
+    multi-scale structural similarity (ms-ssim) loss.
     
-    Computes SSIM at multiple scales to capture both fine details
+    computes ssim at multiple scales to capture both fine details
     and coarse structures, which is important for medical imaging.
     
-    Args:
-        scales: Number of scales to use (default: 3)
-        weights: Per-scale weights
+    args:
+        scales: number of scales to use (default: 3)
+        weights: per-scale weights
     """
     
     def __init__(self, scales: int = 3, weights: Optional[List[float]] = None):
@@ -243,13 +243,13 @@ class MultiScaleSSIMLoss(nn.Module):
         
         self.scales = scales
         self.weights = weights or [0.5 ** i for i in range(scales)]
-        self.weights = [w / sum(self.weights) for w in self.weights]  # Normalize
+        self.weights = [w / sum(self.weights) for w in self.weights]  # normalize
         
     def _ssim(self, x: torch.Tensor, y: torch.Tensor, 
               window_size: int = 11, C1: float = 0.01**2, C2: float = 0.03**2) -> torch.Tensor:
-        """Compute SSIM between x and y."""
+        """compute ssim between x and y."""
         
-        # Create Gaussian window
+        # create gaussian window
         def gaussian_window(size, sigma=1.5):
             coords = torch.arange(size, dtype=torch.float32) - size // 2
             g = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
@@ -278,14 +278,14 @@ class MultiScaleSSIMLoss(nn.Module):
         
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
-        Compute MS-SSIM loss.
+        compute ms-ssim loss.
         
-        Args:
-            x: Generated image, shape (B, C, H, W)
-            y: Target image, shape (B, C, H, W)
+        args:
+            x: generated image, shape (b, c, h, w)
+            y: target image, shape (b, c, h, w)
             
-        Returns:
-            Scalar MS-SSIM loss (1 - MS-SSIM for minimization)
+        returns:
+            scalar ms-ssim loss (1 - ms-ssim for minimization)
         """
         ms_ssim = 0.0
         
@@ -302,13 +302,13 @@ class MultiScaleSSIMLoss(nn.Module):
 
 class GradientCorrelationLoss(nn.Module):
     """
-    Gradient Correlation Loss for edge preservation.
+    gradient correlation loss for edge preservation.
     
-    Ensures that edges and boundaries in the translated image
+    ensures that edges and boundaries in the translated image
     match those in the original, which is crucial for preserving
-    anatomical structures in brain MRI.
+    anatomical structures in brain mri.
     
-    Args:
+    args:
         loss_type: 'correlation' or 'l1'
     """
     
@@ -317,7 +317,7 @@ class GradientCorrelationLoss(nn.Module):
         
         self.loss_type = loss_type
         
-        # Sobel kernels
+        # sobel kernels
         sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32)
         sobel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32)
         
@@ -325,10 +325,10 @@ class GradientCorrelationLoss(nn.Module):
         self.register_buffer('sobel_y', sobel_y.view(1, 1, 3, 3))
         
     def _compute_gradients(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Compute image gradients using Sobel operators."""
+        """compute image gradients using sobel operators."""
         B, C, H, W = x.shape
         
-        # Apply Sobel to each channel
+        # apply sobel to each channel
         grad_x = []
         grad_y = []
         for c in range(C):
@@ -341,14 +341,14 @@ class GradientCorrelationLoss(nn.Module):
         
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
-        Compute gradient correlation loss.
+        compute gradient correlation loss.
         
-        Args:
-            x: Generated image, shape (B, C, H, W)
-            y: Target image, shape (B, C, H, W)
+        args:
+            x: generated image, shape (b, c, h, w)
+            y: target image, shape (b, c, h, w)
             
-        Returns:
-            Scalar gradient loss
+        returns:
+            scalar gradient loss
         """
         grad_x_x, grad_y_x = self._compute_gradients(x)
         grad_x_y, grad_y_y = self._compute_gradients(y)
@@ -356,11 +356,11 @@ class GradientCorrelationLoss(nn.Module):
         if self.loss_type == 'l1':
             loss = F.l1_loss(grad_x_x, grad_x_y) + F.l1_loss(grad_y_x, grad_y_y)
         else:
-            # Correlation-based
+            # correlation-based
             grad_x = torch.sqrt(grad_x_x ** 2 + grad_y_x ** 2 + 1e-8)
             grad_y = torch.sqrt(grad_x_y ** 2 + grad_y_y ** 2 + 1e-8)
             
-            # Normalize
+            # normalize
             grad_x = grad_x / (grad_x.mean() + 1e-8)
             grad_y = grad_y / (grad_y.mean() + 1e-8)
             
@@ -371,18 +371,18 @@ class GradientCorrelationLoss(nn.Module):
 
 class TumorPreservationLoss(nn.Module):
     """
-    Tumor Region Preservation Loss.
+    tumor region preservation loss.
     
-    A domain-specific loss for glioblastoma MRI that emphasizes
+    a domain-specific loss for glioblastoma mri that emphasizes
     preservation of high-intensity regions (likely tumor areas)
     during domain translation.
     
-    This is a NOVEL contribution specific to medical imaging GAN.
+    this is a novel contribution specific to medical imaging gan.
     
-    Args:
-        intensity_threshold: Threshold for identifying potential tumor regions
-        weight_tumor: Weight for tumor region loss
-        weight_normal: Weight for normal tissue loss
+    args:
+        intensity_threshold: threshold for identifying potential tumor regions
+        weight_tumor: weight for tumor region loss
+        weight_normal: weight for normal tissue loss
     """
     
     def __init__(self, 
@@ -400,28 +400,28 @@ class TumorPreservationLoss(nn.Module):
                 y: torch.Tensor,
                 modality_idx: int = 1) -> torch.Tensor:
         """
-        Compute tumor-weighted preservation loss.
+        compute tumor-weighted preservation loss.
         
-        Args:
-            x: Generated/reconstructed image, shape (B, 4, H, W)
-            y: Original image, shape (B, 4, H, W)
-            modality_idx: Which modality to use for tumor detection (default: 1 = T1ce)
+        args:
+            x: generated/reconstructed image, shape (b, 4, h, w)
+            y: original image, shape (b, 4, h, w)
+            modality_idx: which modality to use for tumor detection (default: 1 = t1ce)
             
-        Returns:
-            Scalar weighted loss
+        returns:
+            scalar weighted loss
         """
-        # Use T1ce (contrast-enhanced) for tumor detection
+        # use t1ce (contrast-enhanced) for tumor detection
         reference = y[:, modality_idx, :, :]
         
-        # Create tumor mask (high intensity regions)
+        # create tumor mask (high intensity regions)
         tumor_mask = (reference > self.intensity_threshold).float()
         normal_mask = 1 - tumor_mask
         
-        # Expand mask to all channels
+        # expand mask to all channels
         tumor_mask = tumor_mask.unsqueeze(1).expand_as(x)
         normal_mask = normal_mask.unsqueeze(1).expand_as(x)
         
-        # Compute weighted L1 loss
+        # compute weighted l1 loss
         tumor_loss = F.l1_loss(x * tumor_mask, y * tumor_mask)
         normal_loss = F.l1_loss(x * normal_mask, y * normal_mask)
         
@@ -432,17 +432,17 @@ class TumorPreservationLoss(nn.Module):
 
 class CombinedAdvancedLoss(nn.Module):
     """
-    Combined loss function with all advanced components.
+    combined loss function with all advanced components.
     
-    Aggregates multiple loss terms with learnable or fixed weights
+    aggregates multiple loss terms with learnable or fixed weights
     for comprehensive image quality optimization.
     
-    Args:
-        lambda_perceptual: Weight for perceptual loss
-        lambda_contrastive: Weight for contrastive loss  
-        lambda_ssim: Weight for MS-SSIM loss
-        lambda_gradient: Weight for gradient loss
-        lambda_tumor: Weight for tumor preservation loss
+    args:
+        lambda_perceptual: weight for perceptual loss
+        lambda_contrastive: weight for contrastive loss  
+        lambda_ssim: weight for ms-ssim loss
+        lambda_gradient: weight for gradient loss
+        lambda_tumor: weight for tumor preservation loss
     """
     
     def __init__(self,
@@ -485,16 +485,16 @@ class CombinedAdvancedLoss(nn.Module):
                 features_gen: Optional[torch.Tensor] = None,
                 features_tar: Optional[torch.Tensor] = None) -> Dict[str, torch.Tensor]:
         """
-        Compute all loss terms.
+        compute all loss terms.
         
-        Args:
-            generated: Generated image
-            target: Target image
-            features_gen: Features from generator (for contrastive loss)
-            features_tar: Features from target (for contrastive loss)
+        args:
+            generated: generated image
+            target: target image
+            features_gen: features from generator (for contrastive loss)
+            features_tar: features from target (for contrastive loss)
             
-        Returns:
-            Dictionary of loss terms and total loss
+        returns:
+            dictionary of loss terms and total loss
         """
         loss_dict = {}
         total = 0.0

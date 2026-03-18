@@ -1,9 +1,9 @@
-"""Interactive dashboard utilities for NeuroScope.
+"""interactive dashboard utilities for neuroscope.
 
-This module provides utilities for creating interactive dashboards and web interfaces.
+this module provides utilities for creating interactive dashboards and web interfaces.
 """
 
-# Placeholder for dashboard utilities
-# The actual implementation would be imported here
+# placeholder for dashboard utilities
+# the actual implementation would be imported here
 
 __all__ = []

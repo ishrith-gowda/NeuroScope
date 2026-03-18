@@ -1,99 +1,99 @@
 """
-NeuroScope Evaluation Package.
+neuroscope evaluation package.
 
-Comprehensive evaluation framework for medical image harmonization
+comprehensive evaluation framework for medical image harmonization
 including image quality metrics, statistical analysis, and reporting.
 
-Modules:
-    - metrics: Image quality and similarity metrics
-    - statistical: Statistical testing and confidence intervals
-    - analyzers: Result analysis and interpretation
-    - reporters: Report generation (LaTeX, CSV, JSON)
-    - validators: Cross-validation and model validation
+modules:
+    - metrics: image quality and similarity metrics
+    - statistical: statistical testing and confidence intervals
+    - analyzers: result analysis and interpretation
+    - reporters: report generation (latex, csv, json)
+    - validators: cross-validation and model validation
 """
 
 from .metrics import (
-    # Core metrics
+    # core metrics
     SSIM,
     MultiScaleSSIM,
     PSNR,
     LPIPS,
     FID,
     
-    # Medical metrics
+    # medical metrics
     TumorPreservationScore,
     TissueContrastRatio,
     VolumePreservation,
     
-    # Metric collections
+    # metric collections
     ImageQualityMetrics,
     MedicalImageMetrics,
     
-    # Convenience functions
+    # convenience functions
     compute_ssim,
     compute_psnr,
     compute_all_metrics,
 )
 
 from .statistical import (
-    # Hypothesis tests
+    # hypothesis tests
     paired_t_test,
     wilcoxon_test,
     anova_test,
     
-    # Confidence intervals
+    # confidence intervals
     bootstrap_ci,
     compute_effect_size,
     
-    # Multiple comparisons
+    # multiple comparisons
     bonferroni_correction,
     benjamini_hochberg,
     
-    # Statistical summary
+    # statistical summary
     StatisticalAnalysis,
 )
 
 from .analyzers import (
-    # Analyzers
+    # analyzers
     ModalityAnalyzer,
     RegionAnalyzer,
     AblationAnalyzer,
     CrossDatasetAnalyzer,
     
-    # Analysis results
+    # analysis results
     AnalysisResult,
 )
 
 from .reporters import (
-    # Reporters
+    # reporters
     LaTeXReporter,
     CSVReporter,
     JSONReporter,
     
-    # Report types
+    # report types
     EvaluationReport,
     AblationReport,
     ComparisonReport,
 )
 
 from .validators import (
-    # Validators
+    # validators
     CrossValidator,
     HoldoutValidator,
     TemporalValidator,
     
-    # Validation results
+    # validation results
     ValidationResult,
 )
 
-# Aliases for compatibility
+# aliases for compatibility
 SSIMMetric = SSIM
 PSNRMetric = PSNR
 FIDMetric = FID
 LPIPSMetric = LPIPS
 
 __all__ = [
-    # Metrics
+    # metrics
     'SSIM',
     'SSIMMetric',
     'MultiScaleSSIM',
@@ -112,7 +112,7 @@ __all__ = [
     'compute_psnr',
     'compute_all_metrics',
     
-    # Statistical
+    # statistical
     'paired_t_test',
     'wilcoxon_test',
     'anova_test',
@@ -122,14 +122,14 @@ __all__ = [
     'benjamini_hochberg',
     'StatisticalAnalysis',
     
-    # Analyzers
+    # analyzers
     'ModalityAnalyzer',
     'RegionAnalyzer',
     'AblationAnalyzer',
     'CrossDatasetAnalyzer',
     'AnalysisResult',
     
-    # Reporters
+    # reporters
     'LaTeXReporter',
     'CSVReporter',
     'JSONReporter',
@@ -137,7 +137,7 @@ __all__ = [
     'AblationReport',
     'ComparisonReport',
     
-    # Validators
+    # validators
     'CrossValidator',
     'HoldoutValidator',
     'TemporalValidator',

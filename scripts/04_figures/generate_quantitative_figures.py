@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Generate Quantitative Results Figures for Publication
+generate quantitative results figures for publication
 
-Creates publication-grade LaTeX-rendered figures showing:
-- Metric distribution box plots
-- Quantitative comparison tables
-- Cycle consistency comparisons
-- Statistical visualizations
+creates publication-grade latex-rendered figures showing:
+- metric distribution box plots
+- quantitative comparison tables
+- cycle consistency comparisons
+- statistical visualizations
 
-Author: NeuroScope Research Team
-Date: January 2026
+author: neuroscope research team
+date: january 2026
 """
 
 import sys
@@ -24,7 +24,7 @@ from latex_figure_config import (
     FIGURE_SIZES, COLORS, save_figure
 )
 
-# Load evaluation results
+# load evaluation results
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 EVAL_PATH = PROJECT_ROOT / 'results/evaluation/evaluation_results.json'
 CYCLE_PATH = PROJECT_ROOT / 'results/evaluation/cycle_consistency_results.json'
@@ -33,7 +33,7 @@ TABLES_DIR = PROJECT_ROOT / 'figures/tables'
 
 
 def load_evaluation_results():
-    """Load evaluation results from JSON."""
+    """load evaluation results from json."""
     with open(EVAL_PATH) as f:
         eval_results = json.load(f)
     with open(CYCLE_PATH) as f:
@@ -43,11 +43,11 @@ def load_evaluation_results():
 
 def generate_box_plots_figure(eval_results):
     """
-    Figure: Metric Distribution Box Plots
+    figure: metric distribution box plots
 
-    Shows distribution of evaluation metrics across test set.
+    shows distribution of evaluation metrics across test set.
     """
-    print("Generating: Metric Distribution Box Plots...")
+    print("generating: metric distribution box plots...")
 
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     fig.suptitle(r'\textbf{SA-CycleGAN-2.5D: Test Set Metric Distributions}', y=1)
@@ -59,7 +59,7 @@ def generate_box_plots_figure(eval_results):
         ax = axes[idx // 3, idx % 3]
 
         if metric == 'fid':
-            # FID is a single value, show as bar
+            # fid is a single value, show as bar
             fid_a2b = eval_results['a2b']['fid']['value']
             fid_b2a = eval_results['b2a']['fid']['value']
             ax.bar([0, 1], [fid_a2b, fid_b2a],
@@ -69,12 +69,12 @@ def generate_box_plots_figure(eval_results):
             ax.set_xticklabels([r'$A\!\rightarrow\!B$', r'$B\!\rightarrow\!A$'])
             ax.set_ylabel(title)
         else:
-            # Other metrics have distributions
+            # other metrics have distributions
             data_a2b = eval_results['a2b'][metric].get('values', [])
             data_b2a = eval_results['b2a'][metric].get('values', [])
 
             if len(data_a2b) == 0:
-                # Use mean ± std if values not available
+                # use mean ± std if values not available
                 mean_a2b = eval_results['a2b'][metric]['mean']
                 std_a2b = eval_results['a2b'][metric]['std']
                 mean_b2a = eval_results['b2a'][metric]['mean']
@@ -87,7 +87,7 @@ def generate_box_plots_figure(eval_results):
                 ax.set_xticks([0, 1])
                 ax.set_xticklabels([r'$A\!\rightarrow\!B$', r'$B\!\rightarrow\!A$'])
             else:
-                # Box plot with distributions
+                # box plot with distributions
                 bp = ax.boxplot([data_a2b, data_b2a],
                                labels=[r'$A\!\rightarrow\!B$', r'$B\!\rightarrow\!A$'],
                                patch_artist=True,
@@ -105,22 +105,22 @@ def generate_box_plots_figure(eval_results):
     plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.90)
     output_path = OUTPUT_DIR / 'fig06_metric_distributions.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
 
 def generate_cycle_consistency_figure(cycle_results):
     """
-    Figure: Cycle Consistency Comparison
+    figure: cycle consistency comparison
 
-    Compares cycle A and cycle B reconstruction quality.
+    compares cycle a and cycle b reconstruction quality.
     """
-    print("Generating: Cycle Consistency Comparison...")
+    print("generating: cycle consistency comparison...")
 
     fig, axes = plt.subplots(1, 3, figsize=(16, 6))
     plt.subplots_adjust(wspace=0.3, top=0.85)
 
-    # Colors: cerulean blue and fern green
+    # colors: cerulean blue and fern green
     c_cycle_a = '#2A52BE'  # cerulean blue
     c_cycle_b = '#4F7942'  # fern green
 
@@ -155,19 +155,19 @@ def generate_cycle_consistency_figure(cycle_results):
                  fontsize=16, y=0.97)
     output_path = OUTPUT_DIR / 'fig07_cycle_consistency.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
 
 def generate_quantitative_tables(eval_results, cycle_results):
     """
-    Generate LaTeX tables for quantitative results.
+    generate latex tables for quantitative results.
     """
-    print("Generating: Quantitative Results Tables...")
+    print("generating: quantitative results tables...")
 
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Table 1: Translation Quality Metrics
+    # table 1: translation quality metrics
     table1 = []
     table1.append(r'\begin{table}[htbp]')
     table1.append(r'\centering')
@@ -178,7 +178,7 @@ def generate_quantitative_tables(eval_results, cycle_results):
     table1.append(r'Metric & $A \rightarrow B$ (BraTS $\rightarrow$ UPenn) & $B \rightarrow A$ (UPenn $\rightarrow$ BraTS) \\')
     table1.append(r'\hline')
 
-    # Add metrics
+    # add metrics
     metrics = [
         ('SSIM', 'ssim', ''),
         ('PSNR (dB)', 'psnr', ''),
@@ -204,11 +204,11 @@ def generate_quantitative_tables(eval_results, cycle_results):
     table1.append(r'\end{tabular}')
     table1.append(r'\end{table}')
 
-    # Save table 1
+    # save table 1
     with open(TABLES_DIR / 'table1_quantitative_results.tex', 'w') as f:
         f.write('\n'.join(table1))
 
-    # Table 2: Cycle Consistency Metrics
+    # table 2: cycle consistency metrics
     table2 = []
     table2.append(r'\begin{table}[htbp]')
     table2.append(r'\centering')
@@ -230,34 +230,34 @@ def generate_quantitative_tables(eval_results, cycle_results):
     table2.append(r'\end{tabular}')
     table2.append(r'\end{table}')
 
-    # Save table 2
+    # save table 2
     with open(TABLES_DIR / 'table2_cycle_consistency.tex', 'w') as f:
         f.write('\n'.join(table2))
 
-    print(f"  Saved: {TABLES_DIR}/table1_quantitative_results.tex")
-    print(f"  Saved: {TABLES_DIR}/table2_cycle_consistency.tex")
+    print(f"  saved: {TABLES_DIR}/table1_quantitative_results.tex")
+    print(f"  saved: {TABLES_DIR}/table2_cycle_consistency.tex")
 
 
 def main():
-    """Generate all quantitative figures."""
+    """generate all quantitative figures."""
     print("="*60)
-    print("Generating Quantitative Figures and Tables")
+    print("generating quantitative figures and tables")
     print("="*60)
 
-    # Load results
+    # load results
     eval_results, cycle_results = load_evaluation_results()
-    print(f"Loaded evaluation results: {eval_results['test_samples']} test samples")
-    print(f"Loaded cycle consistency results: {cycle_results['test_samples']} test samples")
+    print(f"loaded evaluation results: {eval_results['test_samples']} test samples")
+    print(f"loaded cycle consistency results: {cycle_results['test_samples']} test samples")
 
-    # Generate figures
+    # generate figures
     generate_box_plots_figure(eval_results)
     generate_cycle_consistency_figure(cycle_results)
     generate_quantitative_tables(eval_results, cycle_results)
 
     print("\n" + "="*60)
-    print("Quantitative figures generation complete!")
-    print(f"Figures saved to: {OUTPUT_DIR}/")
-    print(f"Tables saved to: {TABLES_DIR}/")
+    print("quantitative figures generation complete!")
+    print(f"figures saved to: {OUTPUT_DIR}/")
+    print(f"tables saved to: {TABLES_DIR}/")
     print("="*60)
 
 

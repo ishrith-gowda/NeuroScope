@@ -11,7 +11,7 @@ from preprocessing_utils import verify_mri_path
 
 
 def configure_logging() -> None:
-    """Configure logging format and level for preprocessing."""
+    """configure logging format and level for preprocessing."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
@@ -20,10 +20,10 @@ def configure_logging() -> None:
 
 def find_modality_paths_fixed(section: str, subj_id: str) -> List[str]:
     """
-    Locate modality files for a subject, avoiding segmentation masks.
-    Uses neuroscope_config.py for path resolution.
+    locate modality files for a subject, avoiding segmentation masks.
+    uses neuroscope_config.py for path resolution.
     
-    Returns a list of four modality paths if complete, else empty list.
+    returns a list of four modality paths if complete, else empty list.
     """
     if section == 'brats':
         subj_dir = PATHS['raw_data_root'] / PATHS['raw_brats_root'] / subj_id
@@ -37,7 +37,7 @@ def find_modality_paths_fixed(section: str, subj_id: str) -> List[str]:
         return []
     
     files = os.listdir(str(subj_dir))
-    # Exclude segmentation files
+    # exclude segmentation files
     files = [f for f in files if not ('_seg' in f.lower() or 'segmentation' in f.lower())]
     
     paths = []
@@ -55,83 +55,83 @@ def find_modality_paths_fixed(section: str, subj_id: str) -> List[str]:
 
 def fast_intensity_normalize(
     image: sitk.Image, 
-    background_percentile: float = 5.0,  # More conservative background threshold
+    background_percentile: float = 5.0,  # more conservative background threshold
     brain_low: float = 1.0, 
     brain_high: float = 99.0
 ) -> sitk.Image:
     """
-    Fast intensity normalization for CycleGAN preprocessing.
+    fast intensity normalization for cyclegan preprocessing.
     
-    Normalizes brain tissue to [0,1] range while keeping background at 0.
-    This ensures clean input for CycleGAN training.
+    normalizes brain tissue to [0,1] range while keeping background at 0.
+    this ensures clean input for cyclegan training.
     
-    Args:
-        image: Input SimpleITK image
-        background_percentile: Percentile threshold for background detection
-        brain_low: Lower percentile for brain tissue normalization
-        brain_high: Upper percentile for brain tissue normalization
+    args:
+        image: input simpleitk image
+        background_percentile: percentile threshold for background detection
+        brain_low: lower percentile for brain tissue normalization
+        brain_high: upper percentile for brain tissue normalization
         
-    Returns:
-        Normalized image with brain tissue in [0,1] and background at 0
+    returns:
+        normalized image with brain tissue in [0,1] and background at 0
     """
     try:
         arr = sitk.GetArrayFromImage(image).astype(np.float32)
         
-        # Validate input
+        # validate input
         if arr.size == 0:
             logging.error("Empty image array")
             return image
             
-        # Check for NaN or infinite values
+        # check for nan or infinite values
         if not np.isfinite(arr).all():
             logging.warning("Image contains NaN or infinite values, cleaning...")
             arr = np.nan_to_num(arr, nan=0.0, posinf=arr.max(), neginf=arr.min())
         
-        # Step 1: Identify background threshold (exclude bottom background_percentile)
+        # step 1: identify background threshold (exclude bottom background_percentile)
         background_threshold = np.percentile(arr.flatten(), background_percentile)
         
-        # Step 2: Get brain tissue voxels (above background threshold)
+        # step 2: get brain tissue voxels (above background threshold)
         brain_mask = arr > background_threshold
         brain_voxels = arr[brain_mask]
         
         if brain_voxels.size == 0:
             logging.warning("no brain voxels found after background exclusion, using global normalization")
-            # Fallback: use global normalization
+            # fallback: use global normalization
             arr_min, arr_max = arr.min(), arr.max()
             if arr_max > arr_min:
                 arr_normalized = (arr - arr_min) / (arr_max - arr_min)
             else:
                 arr_normalized = np.zeros_like(arr)
         else:
-            # Step 3: Compute normalization range from brain tissue only
+            # step 3: compute normalization range from brain tissue only
             brain_low_val = np.percentile(brain_voxels, brain_low)
             brain_high_val = np.percentile(brain_voxels, brain_high)
             
             if brain_high_val <= brain_low_val:
                 logging.warning("invalid percentile range: low=%.2f, high=%.2f, using global normalization", 
                                brain_low_val, brain_high_val)
-                # Fallback: use global normalization
+                # fallback: use global normalization
                 arr_min, arr_max = arr.min(), arr.max()
                 if arr_max > arr_min:
                     arr_normalized = (arr - arr_min) / (arr_max - arr_min)
                 else:
                     arr_normalized = np.zeros_like(arr)
             else:
-                # Step 4: Initialize output array
+                # step 4: initialize output array
                 arr_normalized = np.zeros_like(arr)
                 
-                # Step 5: Normalize brain tissue to [0,1]
+                # step 5: normalize brain tissue to [0,1]
                 brain_intensities = np.clip(arr[brain_mask], brain_low_val, brain_high_val)
                 arr_normalized[brain_mask] = (brain_intensities - brain_low_val) / (brain_high_val - brain_low_val)
         
-        # Step 6: Ensure values are in [0,1] range (safety clamp)
+        # step 6: ensure values are in [0,1] range (safety clamp)
         arr_normalized = np.clip(arr_normalized, 0.0, 1.0)
         
-        # Create output image
+        # create output image
         normalized_img = sitk.GetImageFromArray(arr_normalized)
         normalized_img.CopyInformation(image)
         
-        # Validate output
+        # validate output
         output_min, output_max = arr_normalized.min(), arr_normalized.max()
         logging.debug("normalization: bg_thresh=%.2f, brain_range=[%.2f, %.2f] → [%.3f, %.3f]", 
                      background_threshold, brain_low_val if 'brain_low_val' in locals() else 'N/A', 
@@ -146,7 +146,7 @@ def fast_intensity_normalize(
 
 def resample_to_isotropic(image: sitk.Image, spacing: Tuple[float, float, float]) -> sitk.Image:
     """
-    Resample image to target isotropic spacing with linear interpolation.
+    resample image to target isotropic spacing with linear interpolation.
     """
     orig_size = image.GetSize()
     orig_spacing = image.GetSpacing()
@@ -174,29 +174,29 @@ def process_subject_fast_intensity_only(
     start_time = time.time()
     logging.info("[%s/%s] starting fast intensity normalization", section, subj_id)
     
-    # Verify all input files are MRI data
+    # verify all input files are mri data
     for i, path in enumerate(paths):
         if not verify_mri_path(path):
             logging.error("[%s/%s] aborting: input file %d appears to be a mask: %s", 
                          section, subj_id, i, path)
             return False
     
-    # Create output directory
+    # create output directory
     subj_out_dir = PATHS['preprocessed_dir'] / section / subj_id
     subj_out_dir.mkdir(parents=True, exist_ok=True)
     
-    # Process each modality with fast intensity normalization
-    # Standardized output naming for consistency
+    # process each modality with fast intensity normalization
+    # standardized output naming for consistency
     modality_names = ['t1.nii.gz', 't1gd.nii.gz', 't2.nii.gz', 'flair.nii.gz']
     
     for i, (input_path, mod_name) in enumerate(zip(paths, modality_names)):
         mod_start = time.time()
         logging.info("[%s/%s] processing modality %s", section, subj_id, mod_name)
         
-        # Step 1: Load image
+        # step 1: load image
         img = sitk.ReadImage(input_path)
         
-        # Step 2: Fast intensity normalization with configurable parameters
+        # step 2: fast intensity normalization with configurable parameters
         normalized_img = fast_intensity_normalize(
             img, 
             background_percentile=background_percentile,
@@ -204,17 +204,17 @@ def process_subject_fast_intensity_only(
             brain_high=brain_high
         )
         
-        # Step 3: Optional isotropic resampling
+        # step 3: optional isotropic resampling
         if enable_resampling:
             final_img = resample_to_isotropic(normalized_img, target_spacing)
         else:
             final_img = normalized_img
         
-        # Step 4: Save with standardized naming
+        # step 4: save with standardized naming
         output_path = str(subj_out_dir / mod_name)
         sitk.WriteImage(final_img, output_path)
         
-        # Verify final output
+        # verify final output
         if not verify_mri_path(output_path):
             logging.error("[%s/%s] error: final output appears corrupted: %s", section, subj_id, mod_name)
             return False
@@ -234,7 +234,7 @@ def process_subjects_from_splits(
     background_percentile: float = 5.0,
     brain_low: float = 1.0,
     brain_high: float = 99.0,
-    splits_to_process: List[str] = ['train']  # Can be ['train', 'val', 'test']
+    splits_to_process: List[str] = ['train']  # can be ['train', 'val', 'test']
 ) -> None:
 
     start_all = time.time()
@@ -247,7 +247,7 @@ def process_subjects_from_splits(
     logging.info("  brain percentiles: %.1f%% - %.1f%%", brain_low, brain_high)
     logging.info("  splits to process: %s", splits_to_process)
     
-    # Load metadata with splits
+    # load metadata with splits
     if not PATHS['metadata_splits'].exists():
         logging.error("metadata splits file not found: %s", PATHS['metadata_splits'])
         return
@@ -255,7 +255,7 @@ def process_subjects_from_splits(
     with open(str(PATHS['metadata_splits']), 'r') as f:
         meta = json.load(f)
 
-    # Build task list from specified splits
+    # build task list from specified splits
     tasks = []
     for section in ('brats', 'upenn'):
         for sid, info in meta.get(section, {}).get('valid_subjects', {}).items():
@@ -269,7 +269,7 @@ def process_subjects_from_splits(
         logging.error("no subjects found in specified splits: %s", splits_to_process)
         return
 
-    # Process subjects with configurable fast intensity normalization
+    # process subjects with configurable fast intensity normalization
     success_count = 0
     failed_subjects = []
     total_processing_time = 0
@@ -283,7 +283,7 @@ def process_subjects_from_splits(
             failed_subjects.append(f"{section}/{sid}")
             continue
             
-        # Process with configurable fast intensity normalization
+        # process with configurable fast intensity normalization
         subject_start = time.time()
         if process_subject_fast_intensity_only(
             section, sid, paths, target_spacing, enable_resampling,
@@ -301,7 +301,7 @@ def process_subjects_from_splits(
             logging.error("failed: %s/%s", section, sid)
             failed_subjects.append(f"{section}/{sid}")
 
-    # Summary
+    # summary
     elapsed_total = time.time() - start_all
     logging.info("=== FAST INTENSITY NORMALIZATION SUMMARY ===")
     logging.info("successfully processed: %d/%d subjects", success_count, total)
@@ -319,7 +319,7 @@ def process_subjects_from_splits(
 
 def dump_split_txts() -> None:
     """
-    Dump train/val/test subject lists from JSON to text files for convenience.
+    dump train/val/test subject lists from json to text files for convenience.
     """
     with open(str(PATHS['metadata_splits']), 'r') as f:
         meta = json.load(f)
@@ -354,8 +354,8 @@ def main() -> None:
     args = parse_args()
     configure_logging()
     
-    # Process only training subjects by default (for CycleGAN training)
-    # You can modify splits_to_process to include ['train', 'val'] or ['train', 'val', 'test']
+    # process only training subjects by default (for cyclegan training)
+    # you can modify splits_to_process to include ['train', 'val'] or ['train', 'val', 'test']
     process_subjects_from_splits(
         target_spacing=tuple(args.target_spacing),
         enable_resampling=not args.disable_resample,
@@ -365,7 +365,7 @@ def main() -> None:
         splits_to_process=[s.strip() for s in args.splits.split(',') if s.strip()]
     )
     
-    # Generate convenience text files
+    # generate convenience text files
     dump_split_txts()
 
 if __name__ == '__main__':

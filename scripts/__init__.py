@@ -1,6 +1,6 @@
-"""Scripts for NeuroScope.
+"""scripts for neuroscope.
 
-This module provides command-line scripts and utilities for NeuroScope.
+this module provides command-line scripts and utilities for neuroscope.
 """
 
-# Script initialization
+# script initialization

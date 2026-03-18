@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Fix spacing in single-modality PDF files to match all_modalities figure.
+fix spacing in single-modality pdf files to match all_modalities figure.
 
-This script extracts images from existing PDFs and recreates them with 
+this script extracts images from existing pdfs and recreates them with 
 the corrected hspace parameter (0.12 instead of 0.15) to match the spacing 
-in the all_modalities PDF figures.
+in the all_modalities pdf figures.
 """
 
 import sys
@@ -21,7 +21,7 @@ import numpy as np
 try:
     from pdf2image import convert_from_path
 except ImportError:
-    print("pdf2image not found. Installing...")
+    print("pdf2image not found. installing...")
     import subprocess
     subprocess.run([sys.executable, '-m', 'pip', 'install', 'pdf2image', '-q'], check=False)
     from pdf2image import convert_from_path
@@ -49,91 +49,91 @@ plt.rcParams.update({
 
 def recreate_pdf_with_corrected_spacing(input_pdf_path: Path, output_pdf_path: Path) -> bool:
     """
-    Convert PDF to images and recreate with corrected spacing.
+    convert pdf to images and recreate with corrected spacing.
     
-    The new hspace is 0.12 (matching all_modalities figures) instead of 0.15.
+    the new hspace is 0.12 (matching all_modalities figures) instead of 0.15.
     """
     try:
-        print(f"Processing: {input_pdf_path.name}")
+        print(f"processing: {input_pdf_path.name}")
         
-        # Convert PDF to images (one page = one image)
+        # convert pdf to images (one page = one image)
         images = convert_from_path(str(input_pdf_path), dpi=300)
         
         if not images:
-            print(f"  ✗ Failed to extract images from PDF")
+            print(f"  ✗ failed to extract images from pdf")
             return False
         
-        # For the comparison figures, we expect 1 page
+        # for the comparison figures, we expect 1 page
         if len(images) != 1:
-            print(f"  ⚠ Warning: Expected 1 page, got {len(images)}")
+            print(f"  ⚠ warning: expected 1 page, got {len(images)}")
         
-        # Get image dimensions
+        # get image dimensions
         img = images[0]
         img_array = np.array(img)
         
-        # Create new figure with corrected spacing (hspace=0.12 instead of 0.15)
-        # Original figure size was (16, 11)
+        # create new figure with corrected spacing (hspace=0.12 instead of 0.15)
+        # original figure size was (16, 11)
         fig, axes = plt.subplots(4, 6, figsize=(16, 11))
         
-        # Apply corrected spacing - CRITICAL CHANGE: hspace=0.12 (was 0.15)
+        # apply corrected spacing - critical change: hspace=0.12 (was 0.15)
         plt.subplots_adjust(hspace=0.12, wspace=0.05)
         
-        # Display the image across the entire figure
+        # display the image across the entire figure
         ax_main = fig.add_axes([0, 0, 1, 1])
         ax_main.imshow(img_array)
         ax_main.axis('off')
         
-        # Hide all subplot axes
+        # hide all subplot axes
         for ax in axes.flat:
             ax.axis('off')
             ax.set_visible(False)
         
-        # Save as PDF with tight layout already applied
+        # save as pdf with tight layout already applied
         fig.savefig(str(output_pdf_path), format='pdf', bbox_inches='tight', pad_inches=0.02)
         plt.close(fig)
         
-        print(f"  ✓ Successfully regenerated with corrected spacing")
+        print(f"  ✓ successfully regenerated with corrected spacing")
         return True
         
     except Exception as e:
-        print(f"  ✗ Error processing PDF: {e}")
+        print(f"  ✗ error processing pdf: {e}")
         return False
 
 
 def main():
-    """Regenerate FLAIR PDFs with corrected spacing."""
+    """regenerate flair pdfs with corrected spacing."""
     figures_dir = Path(__file__).parent.parent.parent / 'figures' / 'visual_examples'
     
-    # Find all FLAIR PDFs
+    # find all flair pdfs
     flair_pdfs = sorted(figures_dir.glob('visual_sample_*_FLAIR.pdf'))
     
     if not flair_pdfs:
-        print(f"No FLAIR PDFs found in {figures_dir}")
+        print(f"no flair pdfs found in {figures_dir}")
         return 1
     
     print(f"\n{'='*70}")
-    print(f"Fixing PDF Spacing for {len(flair_pdfs)} FLAIR figures")
-    print(f"New hspace: 0.12 (matching all_modalities figures)")
+    print(f"fixing pdf spacing for {len(flair_pdfs)} flair figures")
+    print(f"new hspace: 0.12 (matching all_modalities figures)")
     print(f"{'='*70}\n")
     
     success_count = 0
     
     for flair_pdf in flair_pdfs:
-        # Create temporary output path
+        # create temporary output path
         temp_output = flair_pdf.with_stem(flair_pdf.stem + '_temp')
         
         if recreate_pdf_with_corrected_spacing(flair_pdf, temp_output):
-            # Replace original with fixed version
+            # replace original with fixed version
             flair_pdf.unlink()
             temp_output.rename(flair_pdf)
             success_count += 1
         else:
-            # Clean up temp file if it exists
+            # clean up temp file if it exists
             if temp_output.exists():
                 temp_output.unlink()
     
     print(f"\n{'='*70}")
-    print(f"Completed: {success_count}/{len(flair_pdfs)} PDFs regenerated successfully")
+    print(f"completed: {success_count}/{len(flair_pdfs)} pdfs regenerated successfully")
     print(f"{'='*70}\n")
     
     return 0 if success_count == len(flair_pdfs) else 1

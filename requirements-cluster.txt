@@ -1,0 +1,26 @@
+# core training dependencies for chameleon cloud gpu cluster
+# install: pip install -r requirements-cluster.txt
+
+# deep learning
+torch>=2.0.0
+torchvision>=0.15.0
+
+# medical imaging
+nibabel>=4.0.0
+simpleitk>=2.2.0
+
+# scientific computing
+numpy>=1.23.0
+scipy>=1.9.0
+scikit-image>=0.19.0
+scikit-learn>=1.1.0
+
+# training infrastructure
+tensorboard>=2.8.0
+tqdm>=4.64.0
+pyyaml>=6.0
+
+# data and visualization
+matplotlib>=3.5.0
+pandas>=1.4.0
+h5py>=3.7.0

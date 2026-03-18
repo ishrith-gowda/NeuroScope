@@ -1,13 +1,13 @@
 """
-NeuroScope Path Configuration Module
+neuroscope path configuration module
 
-Centralized configuration for all data paths to resolve new USB-based setup:
-- Both project files (neuroscope) and data files (neuroscope (data)) live on the same USB drive.
+centralized configuration for all data paths to resolve new usb-based setup:
+- both project files (neuroscope) and data files (neuroscope (data)) live on the same usb drive.
 
-Usage:
-    from neuroscope_config import PATHS
-    metadata_path = PATHS['metadata_splits']
-    raw_brats_dir = PATHS['raw_brats_root']
+usage:
+    from neuroscope_config import paths
+    metadata_path = paths['metadata_splits']
+    raw_brats_dir = paths['raw_brats_root']
 """
 
 import os
@@ -15,29 +15,29 @@ from pathlib import Path
 
 def get_neuroscope_paths():
     """
-    Generate standardized paths for NeuroScope project.
+    generate standardized paths for neuroscope project.
     
-    Returns:
-        dict: Dictionary containing all standardized paths
+    returns:
+        dict: dictionary containing all standardized paths
     """
-    # === USB DRIVE ROOT (Update if needed) ===
-    USB_DRIVE_ROOT = Path("/Volumes/usb drive/")  # macOS
-    # USB_DRIVE_ROOT = Path("/media/usb")        # Linux alternative
-    # USB_DRIVE_ROOT = Path("D:/")               # Windows alternative
+    # === usb drive root (update if needed) ===
+    USB_DRIVE_ROOT = Path("/Volumes/usb drive/")  # macos
+    # usb_drive_root = path("/media/usb")        # linux alternative
+    # usb_drive_root = path("d:/")               # windows alternative
 
-    # Project and Data folders on USB
+    # project and data folders on usb
     PROJECT_ROOT = USB_DRIVE_ROOT / "neuroscope"
     DATA_ROOT = USB_DRIVE_ROOT / "neuroscope (data)"
     
     paths = {
-        # === USB DATA PATHS ===
+        # === usb data paths ===
         'usb_root': USB_DRIVE_ROOT,
         'raw_data_root': DATA_ROOT,
         'raw_brats_root': DATA_ROOT / "BraTS-TCGA-GBM" / "Pre-operative_TCGA_GBM_NIfTI_and_Segmentations",
         'raw_upenn_root': DATA_ROOT / "PKG - UPENN-GBM-NIfTI" / "UPENN-GBM" / "NIfTI-files" / "images_structural",
         'upenn_acquisition_csv': DATA_ROOT / "PKG - UPENN-GBM-NIfTI" / "UPENN-GBM_acquisition.csv",
 
-        # === PROJECT PATHS (on USB) ===
+        # === project paths (on usb) ===
         'local_root': PROJECT_ROOT,
         'scripts_dir': PROJECT_ROOT / "scripts",
         'preprocessed_dir': PROJECT_ROOT / "preprocessed",
@@ -48,7 +48,7 @@ def get_neuroscope_paths():
         'logs_dir': PROJECT_ROOT / "runs",
         'templates_dir': PROJECT_ROOT / "scripts" / "templates",
         
-        # === METADATA FILES ===
+        # === metadata files ===
         'metadata_base': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "neuroscope_dataset_metadata.json",
         'metadata_enriched': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "neuroscope_dataset_metadata_enriched.json",
         'metadata_splits': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "neuroscope_dataset_metadata_splits.json",
@@ -56,12 +56,12 @@ def get_neuroscope_paths():
         'slice_bias_assessment': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "neuroscope_slice_bias_assessment.json",
         'preprocessing_report': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "preprocessing_verification_report_v2.json",
         
-        # === SPLIT FILES ===
+        # === split files ===
         'train_subjects_txt': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "train_subjects.txt",
         'val_subjects_txt': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "val_subjects.txt",
         'test_subjects_txt': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "test_subjects.txt",
         
-        # === TEMPLATES ===
+        # === templates ===
         'mni_template': PROJECT_ROOT / "scripts" / "01_data_preparation_pipeline" / "templates" / "MNI152_T1_1mm.nii.gz",
     }
     
@@ -69,7 +69,7 @@ def get_neuroscope_paths():
 
 def ensure_directories(paths_dict):
     """
-    Create necessary project directories if they don't exist.
+    create necessary project directories if they don't exist.
     """
     local_dirs = [
         'local_root', 'scripts_dir', 'preprocessed_dir', 'preprocessed_registered_dir',
@@ -82,13 +82,13 @@ def ensure_directories(paths_dict):
 
 def validate_usb_access(paths_dict):
     """
-    Validate that USB drive paths are accessible.
+    validate that usb drive paths are accessible.
     
-    Parameters:
-        paths_dict (dict): Dictionary of paths from get_neuroscope_paths()
+    parameters:
+        paths_dict (dict): dictionary of paths from get_neuroscope_paths()
         
-    Returns:
-        bool: True if USB drive is accessible, False otherwise
+    returns:
+        bool: true if usb drive is accessible, false otherwise
     """
     usb_root = paths_dict['usb_root']
     if not usb_root.exists():
@@ -102,19 +102,19 @@ def validate_usb_access(paths_dict):
         
     return True
 
-# === GLOBAL PATHS OBJECT ===
+# === global paths object ===
 PATHS = get_neuroscope_paths()
 
-# Auto-create project directories
+# auto-create project directories
 ensure_directories(PATHS)
 
-# Validate USB access (optional - will print warnings if issues found)
+# validate usb access (optional - will print warnings if issues found)
 validate_usb_access(PATHS)
 
-# === CONVENIENCE FUNCTIONS ===
+# === convenience functions ===
 def get_raw_subject_dir(section: str, subject_id: str) -> Path:
     """
-    Get the raw data directory for a specific subject.
+    get the raw data directory for a specific subject.
     """
     if section == 'brats':
         return PATHS['raw_brats_root'] / subject_id
@@ -125,13 +125,13 @@ def get_raw_subject_dir(section: str, subject_id: str) -> Path:
 
 def get_preprocessed_subject_dir(section: str, subject_id: str) -> Path:
     """
-    Get the preprocessed data directory for a specific subject.
+    get the preprocessed data directory for a specific subject.
     """
     return PATHS['preprocessed_dir'] / section / subject_id
 
 if __name__ == "__main__":
-    # Test the configuration
-    print("=== NEUROSCOPE PATH CONFIGURATION TEST ===")
+    # test the configuration
+    print("=== neuroscope path configuration test ===")
     
     print("usb drive paths (raw data):")
     print(f"  usb root: {PATHS['usb_root']}")
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     
     print("key files:")
     print(f"  metadata splits: {PATHS['metadata_splits']}")
-    print(f"  mni Template: {PATHS['mni_template']}")
+    print(f"  mni template: {PATHS['mni_template']}")
     
     print("test subject paths:")
     test_subject = "TCGA-02-0001 (example)"

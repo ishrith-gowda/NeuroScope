@@ -1,7 +1,7 @@
 """
-Adversarial Loss functions for GAN training.
+adversarial loss functions for gan training.
 
-This module provides various adversarial loss formulations.
+this module provides various adversarial loss formulations.
 """
 
 import torch
@@ -12,13 +12,13 @@ from typing import List, Union
 
 class VanillaGANLoss(nn.Module):
     """
-    Vanilla GAN loss using binary cross entropy.
+    vanilla gan loss using binary cross entropy.
     
-    L_D = -E[log(D(x))] - E[log(1 - D(G(z)))]
-    L_G = -E[log(D(G(z)))]
+    l_d = -e[log(d(x))] - e[log(1 - d(g(z)))]
+    l_g = -e[log(d(g(z)))]
     
-    Args:
-        label_smoothing: Smoothing factor for real labels
+    args:
+        label_smoothing: smoothing factor for real labels
     """
     
     def __init__(self, label_smoothing: float = 0.0):
@@ -31,7 +31,7 @@ class VanillaGANLoss(nn.Module):
         real_pred: torch.Tensor,
         fake_pred: torch.Tensor
     ) -> torch.Tensor:
-        """Compute discriminator loss."""
+        """compute discriminator loss."""
         real_label = torch.ones_like(real_pred) * (1.0 - self.label_smoothing)
         fake_label = torch.zeros_like(fake_pred)
         
@@ -41,19 +41,19 @@ class VanillaGANLoss(nn.Module):
         return (real_loss + fake_loss) * 0.5
         
     def generator_loss(self, fake_pred: torch.Tensor) -> torch.Tensor:
-        """Compute generator loss."""
+        """compute generator loss."""
         real_label = torch.ones_like(fake_pred)
         return self.bce(fake_pred, real_label)
 
 
 class LSGANLoss(nn.Module):
     """
-    Least Squares GAN loss.
+    least squares gan loss.
     
-    L_D = 0.5 * E[(D(x) - 1)²] + 0.5 * E[D(G(z))²]
-    L_G = 0.5 * E[(D(G(z)) - 1)²]
+    l_d = 0.5 * e[(d(x) - 1)²] + 0.5 * e[d(g(z))²]
+    l_g = 0.5 * e[(d(g(z)) - 1)²]
     
-    More stable training compared to vanilla GAN.
+    more stable training compared to vanilla gan.
     """
     
     def __init__(self):
@@ -64,25 +64,25 @@ class LSGANLoss(nn.Module):
         real_pred: torch.Tensor,
         fake_pred: torch.Tensor
     ) -> torch.Tensor:
-        """Compute discriminator loss."""
+        """compute discriminator loss."""
         real_loss = torch.mean((real_pred - 1) ** 2)
         fake_loss = torch.mean(fake_pred ** 2)
         return (real_loss + fake_loss) * 0.5
         
     def generator_loss(self, fake_pred: torch.Tensor) -> torch.Tensor:
-        """Compute generator loss."""
+        """compute generator loss."""
         return torch.mean((fake_pred - 1) ** 2) * 0.5
 
 
 class WassersteinGANLoss(nn.Module):
     """
-    Wasserstein GAN loss with gradient penalty.
+    wasserstein gan loss with gradient penalty.
     
-    L_D = E[D(G(z))] - E[D(x)] + λ * GP
-    L_G = -E[D(G(z))]
+    l_d = e[d(g(z))] - e[d(x)] + λ * gp
+    l_g = -e[d(g(z))]
     
-    Args:
-        gp_weight: Weight for gradient penalty term
+    args:
+        gp_weight: weight for gradient penalty term
     """
     
     def __init__(self, gp_weight: float = 10.0):
@@ -95,21 +95,21 @@ class WassersteinGANLoss(nn.Module):
         real: torch.Tensor,
         fake: torch.Tensor
     ) -> torch.Tensor:
-        """Compute gradient penalty for WGAN-GP."""
+        """compute gradient penalty for wgan-gp."""
         batch_size = real.size(0)
         device = real.device
         
-        # Random interpolation
+        # random interpolation
         alpha = torch.rand(batch_size, 1, 1, 1, device=device)
         interpolated = alpha * real + (1 - alpha) * fake.detach()
         interpolated.requires_grad_(True)
         
-        # Discriminator output
+        # discriminator output
         d_interpolated = discriminator(interpolated)
         if isinstance(d_interpolated, list):
-            d_interpolated = d_interpolated[-1]  # Use last scale
+            d_interpolated = d_interpolated[-1]  # use last scale
             
-        # Compute gradients
+        # compute gradients
         gradients = torch.autograd.grad(
             outputs=d_interpolated,
             inputs=interpolated,
@@ -133,7 +133,7 @@ class WassersteinGANLoss(nn.Module):
         real: torch.Tensor = None,
         fake: torch.Tensor = None
     ) -> torch.Tensor:
-        """Compute discriminator loss with gradient penalty."""
+        """compute discriminator loss with gradient penalty."""
         loss = fake_pred.mean() - real_pred.mean()
         
         if discriminator is not None and real is not None and fake is not None:
@@ -143,18 +143,18 @@ class WassersteinGANLoss(nn.Module):
         return loss
         
     def generator_loss(self, fake_pred: torch.Tensor) -> torch.Tensor:
-        """Compute generator loss."""
+        """compute generator loss."""
         return -fake_pred.mean()
 
 
 class HingeGANLoss(nn.Module):
     """
-    Hinge GAN loss.
+    hinge gan loss.
     
-    L_D = E[ReLU(1 - D(x))] + E[ReLU(1 + D(G(z)))]
-    L_G = -E[D(G(z))]
+    l_d = e[relu(1 - d(x))] + e[relu(1 + d(g(z)))]
+    l_g = -e[d(g(z))]
     
-    Used in SAGAN and BigGAN.
+    used in sagan and biggan.
     """
     
     def __init__(self):
@@ -165,25 +165,25 @@ class HingeGANLoss(nn.Module):
         real_pred: torch.Tensor,
         fake_pred: torch.Tensor
     ) -> torch.Tensor:
-        """Compute discriminator loss."""
+        """compute discriminator loss."""
         real_loss = F.relu(1.0 - real_pred).mean()
         fake_loss = F.relu(1.0 + fake_pred).mean()
         return real_loss + fake_loss
         
     def generator_loss(self, fake_pred: torch.Tensor) -> torch.Tensor:
-        """Compute generator loss."""
+        """compute generator loss."""
         return -fake_pred.mean()
 
 
 class MultiScaleGANLoss(nn.Module):
     """
-    Multi-scale adversarial loss for multi-scale discriminators.
+    multi-scale adversarial loss for multi-scale discriminators.
     
-    Aggregates losses from multiple discriminator scales.
+    aggregates losses from multiple discriminator scales.
     
-    Args:
-        loss_type: Base loss type ('lsgan', 'hinge', 'vanilla')
-        weights: Weights for each scale (uniform if None)
+    args:
+        loss_type: base loss type ('lsgan', 'hinge', 'vanilla')
+        weights: weights for each scale (uniform if none)
     """
     
     def __init__(
@@ -209,7 +209,7 @@ class MultiScaleGANLoss(nn.Module):
         real_preds: List[torch.Tensor],
         fake_preds: List[torch.Tensor]
     ) -> torch.Tensor:
-        """Compute multi-scale discriminator loss."""
+        """compute multi-scale discriminator loss."""
         weights = self.weights or [1.0] * len(real_preds)
         
         total_loss = 0.0
@@ -222,7 +222,7 @@ class MultiScaleGANLoss(nn.Module):
         self,
         fake_preds: List[torch.Tensor]
     ) -> torch.Tensor:
-        """Compute multi-scale generator loss."""
+        """compute multi-scale generator loss."""
         weights = self.weights or [1.0] * len(fake_preds)
         
         total_loss = 0.0
@@ -232,10 +232,10 @@ class MultiScaleGANLoss(nn.Module):
         return total_loss / sum(weights)
 
 
-# Aliases for compatibility
-GANLoss = LSGANLoss  # Default GAN loss
+# aliases for compatibility
+GANLoss = LSGANLoss  # default gan loss
 WassersteinLoss = WassersteinGANLoss
 HingeLoss = HingeGANLoss
-RelativisticLoss = VanillaGANLoss  # Placeholder
-RelativisticAverageLoss = VanillaGANLoss  # Placeholder
-SoftplusLoss = VanillaGANLoss  # Placeholder
+RelativisticLoss = VanillaGANLoss  # placeholder
+RelativisticAverageLoss = VanillaGANLoss  # placeholder
+SoftplusLoss = VanillaGANLoss  # placeholder

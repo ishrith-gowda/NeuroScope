@@ -185,9 +185,9 @@ class ComparisonTableGenerator:
 
         table = f"""\\begin{{table}}[t]
   \\centering
-  \\caption{{Method comparison across reconstruction and alignment metrics.
-    \\textbf{{Bold}}: best result. All differences $p < 0.001$ (paired $t$-test,
-    Bonferroni-corrected).}}
+  \\caption{{method comparison across reconstruction and alignment metrics.
+    \\textbf{{bold}}: best result. all differences $p < 0.001$ (paired $t$-test,
+    bonferroni-corrected).}}
   \\label{{tab:method_comparison}}
   \\small
   \\begin{{tabular}}{{l{'c' * n_metrics}}}
@@ -252,13 +252,13 @@ class ComparisonTableGenerator:
 
         table = f"""\\begin{{table}}[t]
   \\centering
-  \\caption{{Rate-distortion comparison. Harmonize-and-compress (joint) vs
+  \\caption{{rate-distortion comparison. harmonize-and-compress (joint) vs
     sequential harmonize-then-compress at matched bitrates.}}
   \\label{{tab:compression_rd}}
   \\small
   \\begin{{tabular}}{{lccc}}
     \\toprule
-    Configuration & BPV~$\\downarrow$ & SSIM~$\\uparrow$ & PSNR~$\\uparrow$ \\\\
+    configuration & bpv~$\\downarrow$ & ssim~$\\uparrow$ & psnr~$\\uparrow$ \\\\
     \\midrule
 {chr(10).join(rows)}
     \\bottomrule

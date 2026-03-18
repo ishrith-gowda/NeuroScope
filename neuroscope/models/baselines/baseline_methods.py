@@ -1,18 +1,18 @@
 """
-Baseline Methods for Domain Adaptation Comparison
+baseline methods for domain adaptation comparison
 
-This module implements multiple baseline methods for comparison with SA-CycleGAN:
+this module implements multiple baseline methods for comparison with sa-cyclegan:
 
-1. ComBat - Statistical harmonization (Fortin et al., 2017)
-2. CycleGAN - Original architecture (Zhu et al., 2017)
-3. CUT - Contrastive Unpaired Translation (Park et al., 2020)
-4. UNIT - Coupled VAE-GAN (Liu et al., 2017)
-5. Histogram Matching - Traditional image processing
+1. combat - statistical harmonization (fortin et al., 2017)
+2. cyclegan - original architecture (zhu et al., 2017)
+3. cut - contrastive unpaired translation (park et al., 2020)
+4. unit - coupled vae-gan (liu et al., 2017)
+5. histogram matching - traditional image processing
 
-These baselines are essential for demonstrating the superiority of our approach
-in a NeurIPS-level publication.
+these baselines are essential for demonstrating the superiority of our approach
+in a neurips-level publication.
 
-Reference implementations are simplified for reproducibility.
+reference implementations are simplified for reproducibility.
 """
 
 import numpy as np
@@ -25,35 +25,35 @@ from sklearn.preprocessing import StandardScaler
 
 
 # ============================================================================
-# ComBat: Statistical Harmonization
+# combat: statistical harmonization
 # ============================================================================
 
 class ComBat:
     """
-    ComBat harmonization for multi-site neuroimaging data.
+    combat harmonization for multi-site neuroimaging data.
     
-    Reference: Fortin et al., "Harmonization of multi-site diffusion tensor 
-    imaging data", NeuroImage, 2017.
+    reference: fortin et al., "harmonization of multi-site diffusion tensor 
+    imaging data", neuroimage, 2017.
     
-    This is a simplified implementation focusing on the core algorithm:
-    1. Standardize features
-    2. Estimate batch effects using empirical Bayes
-    3. Remove batch effects while preserving biological variance
+    this is a simplified implementation focusing on the core algorithm:
+    1. standardize features
+    2. estimate batch effects using empirical bayes
+    3. remove batch effects while preserving biological variance
     """
     
     def __init__(self, parametric: bool = True):
         """
-        Args:
-            parametric: Use parametric (Normal) priors for batch effects
+        args:
+            parametric: use parametric (normal) priors for batch effects
         """
         self.parametric = parametric
         self.fitted = False
         
-        # Estimated parameters
+        # estimated parameters
         self.grand_mean = None
         self.var_pooled = None
-        self.gamma_star = None  # Batch mean effects
-        self.delta_star = None  # Batch variance effects
+        self.gamma_star = None  # batch mean effects
+        self.delta_star = None  # batch variance effects
         self.stand_mean = None
         
     def fit(
@@ -63,49 +63,49 @@ class ComBat:
         covariates: Optional[np.ndarray] = None
     ):
         """
-        Fit ComBat model to estimate batch effects.
+        fit combat model to estimate batch effects.
         
-        Args:
-            data: Feature matrix [n_samples, n_features]
-            batch: Batch labels [n_samples] (0 for domain A, 1 for domain B)
-            covariates: Optional biological covariates [n_samples, n_covariates]
+        args:
+            data: feature matrix [n_samples, n_features]
+            batch: batch labels [n_samples] (0 for domain a, 1 for domain b)
+            covariates: optional biological covariates [n_samples, n_covariates]
         """
         n_samples, n_features = data.shape
         batch = np.asarray(batch)
         batches = np.unique(batch)
         n_batch = len(batches)
         
-        # Create batch indicator matrix
+        # create batch indicator matrix
         batch_design = np.zeros((n_samples, n_batch))
         for i, b in enumerate(batches):
             batch_design[batch == b, i] = 1
         
-        # Compute grand mean and pooled variance
+        # compute grand mean and pooled variance
         self.grand_mean = np.mean(data, axis=0)
         self.var_pooled = np.var(data, axis=0, ddof=1)
-        self.var_pooled[self.var_pooled < 1e-10] = 1e-10  # Numerical stability
+        self.var_pooled[self.var_pooled < 1e-10] = 1e-10  # numerical stability
         
-        # Standardize data
+        # standardize data
         stand_data = (data - self.grand_mean) / np.sqrt(self.var_pooled)
         self.stand_mean = np.mean(stand_data, axis=0)
         
-        # Estimate batch effects for each batch
-        gamma_hat = np.zeros((n_batch, n_features))  # Mean effects
-        delta_hat = np.zeros((n_batch, n_features))  # Variance effects
+        # estimate batch effects for each batch
+        gamma_hat = np.zeros((n_batch, n_features))  # mean effects
+        delta_hat = np.zeros((n_batch, n_features))  # variance effects
         
         for i, b in enumerate(batches):
             batch_data = stand_data[batch == b]
             gamma_hat[i] = np.mean(batch_data, axis=0)
             delta_hat[i] = np.var(batch_data, axis=0, ddof=1)
         
-        # Empirical Bayes estimation of batch parameters
+        # empirical bayes estimation of batch parameters
         if self.parametric:
-            # Parametric estimation using Normal-Inverse-Gamma priors
+            # parametric estimation using normal-inverse-gamma priors
             self.gamma_star, self.delta_star = self._parametric_eb(
                 gamma_hat, delta_hat, batch, batches
             )
         else:
-            # Non-parametric estimation
+            # non-parametric estimation
             self.gamma_star, self.delta_star = self._non_parametric_eb(
                 gamma_hat, delta_hat, batch, batches, stand_data
             )
@@ -122,7 +122,7 @@ class ComBat:
         batch: np.ndarray,
         batches: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Parametric empirical Bayes estimation."""
+        """parametric empirical bayes estimation."""
         n_batch = len(batches)
         n_features = gamma_hat.shape[1]
         
@@ -130,16 +130,16 @@ class ComBat:
         delta_star = np.zeros_like(delta_hat)
         
         for i in range(n_batch):
-            # Prior parameters for gamma (Normal)
+            # prior parameters for gamma (normal)
             gamma_bar = np.mean(gamma_hat[i])
             tau_bar_sq = np.var(gamma_hat[i])
             
-            # Prior parameters for delta (Inverse-Gamma)
+            # prior parameters for delta (inverse-gamma)
             n_b = np.sum(batch == batches[i])
             m = np.mean(delta_hat[i])
             s2 = np.var(delta_hat[i])
             
-            # Method of moments for IG parameters
+            # method of moments for ig parameters
             if s2 > 0:
                 lambda_bar = (m ** 2 / s2) + 2
                 theta_bar = m * (lambda_bar - 1)
@@ -147,9 +147,9 @@ class ComBat:
                 lambda_bar = 3
                 theta_bar = m * 2
             
-            # Posterior estimates
+            # posterior estimates
             for j in range(n_features):
-                # Gamma posterior (Normal)
+                # gamma posterior (normal)
                 if tau_bar_sq > 0:
                     gamma_star[i, j] = (
                         (n_b * delta_hat[i, j] * gamma_hat[i, j] + tau_bar_sq * gamma_bar) /
@@ -158,7 +158,7 @@ class ComBat:
                 else:
                     gamma_star[i, j] = gamma_hat[i, j]
                 
-                # Delta posterior (IG)
+                # delta posterior (ig)
                 delta_star[i, j] = (
                     (theta_bar + 0.5 * (n_b - 1) * delta_hat[i, j]) /
                     (lambda_bar + 0.5 * n_b - 1)
@@ -174,8 +174,8 @@ class ComBat:
         batches: np.ndarray,
         stand_data: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Non-parametric empirical Bayes using kernel density estimation."""
-        # Simplified: just use sample estimates
+        """non-parametric empirical bayes using kernel density estimation."""
+        # simplified: just use sample estimates
         return gamma_hat.copy(), delta_hat.copy()
     
     def transform(
@@ -185,38 +185,38 @@ class ComBat:
         target_batch: int = 0
     ) -> np.ndarray:
         """
-        Apply ComBat harmonization to transform data.
+        apply combat harmonization to transform data.
         
-        Args:
-            data: Feature matrix [n_samples, n_features]
-            batch: Batch labels for each sample
-            target_batch: Target batch to harmonize to (default: 0)
+        args:
+            data: feature matrix [n_samples, n_features]
+            batch: batch labels for each sample
+            target_batch: target batch to harmonize to (default: 0)
             
-        Returns:
-            Harmonized data [n_samples, n_features]
+        returns:
+            harmonized data [n_samples, n_features]
         """
         if not self.fitted:
             raise ValueError("ComBat model not fitted. Call fit() first.")
         
         batch = np.asarray(batch)
         
-        # Standardize
+        # standardize
         stand_data = (data - self.grand_mean) / np.sqrt(self.var_pooled)
         
-        # Remove batch effects
+        # remove batch effects
         harmonized = np.zeros_like(stand_data)
         
         for i, b in enumerate(self.batches):
             mask = batch == b
             if np.any(mask):
                 batch_data = stand_data[mask]
-                # Remove batch effect
+                # remove batch effect
                 harmonized[mask] = (
                     (batch_data - self.gamma_star[i]) / 
                     np.sqrt(self.delta_star[i] + 1e-10)
                 )
         
-        # Destandardize (to target batch distribution)
+        # destandardize (to target batch distribution)
         target_idx = np.where(self.batches == target_batch)[0][0]
         harmonized = (
             harmonized * np.sqrt(self.var_pooled) * np.sqrt(self.delta_star[target_idx]) +
@@ -228,9 +228,9 @@ class ComBat:
 
 class ComBatTorch(nn.Module):
     """
-    PyTorch-compatible ComBat for end-to-end training.
+    pytorch-compatible combat for end-to-end training.
     
-    This version can be integrated into neural network pipelines
+    this version can be integrated into neural network pipelines
     for differentiable harmonization.
     """
     
@@ -239,11 +239,11 @@ class ComBatTorch(nn.Module):
         self.n_features = n_features
         self.n_batches = n_batches
         
-        # Learnable batch effect parameters
+        # learnable batch effect parameters
         self.gamma = nn.Parameter(torch.zeros(n_batches, n_features))
         self.log_delta = nn.Parameter(torch.zeros(n_batches, n_features))
         
-        # Running statistics
+        # running statistics
         self.register_buffer('running_mean', torch.zeros(n_features))
         self.register_buffer('running_var', torch.ones(n_features))
         
@@ -254,30 +254,30 @@ class ComBatTorch(nn.Module):
         target_batch: int = 0
     ) -> torch.Tensor:
         """
-        Apply differentiable ComBat harmonization.
+        apply differentiable combat harmonization.
         
-        Args:
-            x: Input tensor [B, C, H, W] or [B, N]
-            batch: Batch indicator per sample [B]
-            target_batch: Target batch index
+        args:
+            x: input tensor [b, c, h, w] or [b, n]
+            batch: batch indicator per sample [b]
+            target_batch: target batch index
             
-        Returns:
-            Harmonized tensor
+        returns:
+            harmonized tensor
         """
         original_shape = x.shape
         
-        # Flatten spatial dimensions
+        # flatten spatial dimensions
         if len(x.shape) == 4:
             B, C, H, W = x.shape
-            x = x.view(B, C, -1)  # [B, C, H*W]
-            x = x.permute(0, 2, 1).reshape(-1, C)  # [B*H*W, C]
+            x = x.view(B, C, -1)  # [b, c, h*w]
+            x = x.permute(0, 2, 1).reshape(-1, C)  # [b*h*w, c]
             batch = batch.unsqueeze(-1).expand(-1, H*W).reshape(-1)
         
-        # Standardize
+        # standardize
         x_stand = (x - self.running_mean) / torch.sqrt(self.running_var + 1e-8)
         
-        # Remove batch effect
-        delta = torch.exp(self.log_delta)  # Ensure positive
+        # remove batch effect
+        delta = torch.exp(self.log_delta)  # ensure positive
         
         x_corrected = torch.zeros_like(x_stand)
         for i in range(self.n_batches):
@@ -288,14 +288,14 @@ class ComBatTorch(nn.Module):
                     torch.sqrt(delta[i] + 1e-8)
                 )
         
-        # Transform to target batch
+        # transform to target batch
         x_out = (
             x_corrected * torch.sqrt(self.running_var + 1e-8) * 
             torch.sqrt(delta[target_batch]) +
             self.running_mean + self.gamma[target_batch] * torch.sqrt(self.running_var + 1e-8)
         )
         
-        # Reshape back
+        # reshape back
         if len(original_shape) == 4:
             B, C, H, W = original_shape
             x_out = x_out.view(B, H*W, C).permute(0, 2, 1).view(B, C, H, W)
@@ -304,15 +304,15 @@ class ComBatTorch(nn.Module):
 
 
 # ============================================================================
-# CUT: Contrastive Unpaired Translation
+# cut: contrastive unpaired translation
 # ============================================================================
 
 class PatchSampleF(nn.Module):
     """
-    Patch-based feature sampling for contrastive loss.
+    patch-based feature sampling for contrastive loss.
     
-    Reference: Park et al., "Contrastive Learning for Unpaired Image-to-Image
-    Translation", ECCV 2020.
+    reference: park et al., "contrastive learning for unpaired image-to-image
+    translation", eccv 2020.
     """
     
     def __init__(
@@ -339,33 +339,33 @@ class PatchSampleF(nn.Module):
         patch_ids: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Sample patches from feature maps.
+        sample patches from feature maps.
         
-        Args:
-            feats: Feature tensor [B, C, H, W]
-            num_patches: Number of patches to sample
-            patch_ids: Optional pre-computed patch indices
+        args:
+            feats: feature tensor [b, c, h, w]
+            num_patches: number of patches to sample
+            patch_ids: optional pre-computed patch indices
             
-        Returns:
-            Sampled patches and their indices
+        returns:
+            sampled patches and their indices
         """
         B, C, H, W = feats.shape
         feat_reshape = feats.permute(0, 2, 3, 1).reshape(B, H * W, C)
         
         if patch_ids is None:
-            # Random sampling
+            # random sampling
             patch_ids = torch.randperm(H * W, device=feats.device)[:num_patches]
             patch_ids = patch_ids.unsqueeze(0).expand(B, -1)
         
-        # Sample patches
+        # sample patches
         sample_ids = patch_ids.unsqueeze(-1).expand(-1, -1, C)
-        patches = feat_reshape.gather(1, sample_ids)  # [B, num_patches, C]
+        patches = feat_reshape.gather(1, sample_ids)  # [b, num_patches, c]
         
-        # Apply MLP
+        # apply mlp
         if self.use_mlp:
             patches = self.mlp(patches)
         
-        # L2 normalize
+        # l2 normalize
         patches = F.normalize(patches, dim=-1)
         
         return patches, patch_ids
@@ -373,9 +373,9 @@ class PatchSampleF(nn.Module):
 
 class PatchNCELoss(nn.Module):
     """
-    PatchNCE loss for contrastive unpaired translation.
+    patchnce loss for contrastive unpaired translation.
     
-    Maximizes mutual information between corresponding patches
+    maximizes mutual information between corresponding patches
     in the source and generated images.
     """
     
@@ -396,37 +396,37 @@ class PatchNCELoss(nn.Module):
         feat_k_neg: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Compute PatchNCE loss.
+        compute patchnce loss.
         
-        Args:
-            feat_q: Query features [B, N, C]
-            feat_k: Positive key features [B, N, C]
-            feat_k_neg: Negative key features [B, N, C] (optional)
+        args:
+            feat_q: query features [b, n, c]
+            feat_k: positive key features [b, n, c]
+            feat_k_neg: negative key features [b, n, c] (optional)
             
-        Returns:
-            NCE loss value
+        returns:
+            nce loss value
         """
         B, N, C = feat_q.shape
         
-        # Positive logits
+        # positive logits
         l_pos = torch.bmm(feat_q.view(B * N, 1, C), 
-                         feat_k.view(B * N, C, 1)).squeeze(-1)  # [B*N, 1]
+                         feat_k.view(B * N, C, 1)).squeeze(-1)  # [b*n, 1]
         l_pos = l_pos / self.nce_t
         
-        # Negative logits (from other patches in the batch)
+        # negative logits (from other patches in the batch)
         if feat_k_neg is None:
             feat_k_neg = feat_k
         
         l_neg = torch.bmm(feat_q.view(B * N, 1, C),
-                         feat_k_neg.view(B, N, C).permute(0, 2, 1))  # [B*N, N]
+                         feat_k_neg.view(B, N, C).permute(0, 2, 1))  # [b*n, n]
         l_neg = l_neg.view(B * N, -1) / self.nce_t
         
-        # Exclude positive from negatives
+        # exclude positive from negatives
         diag_mask = torch.eye(N, device=feat_q.device, dtype=torch.bool)
         diag_mask = diag_mask.unsqueeze(0).expand(B, -1, -1).reshape(B * N, N)
         l_neg = l_neg.masked_fill(diag_mask, float('-inf'))
         
-        # InfoNCE loss
+        # infonce loss
         logits = torch.cat([l_pos, l_neg], dim=1)
         labels = torch.zeros(B * N, dtype=torch.long, device=feat_q.device)
         
@@ -437,9 +437,9 @@ class PatchNCELoss(nn.Module):
 
 class CUTGenerator(nn.Module):
     """
-    Generator for Contrastive Unpaired Translation (CUT).
+    generator for contrastive unpaired translation (cut).
     
-    Simplified ResNet-based generator with feature extraction
+    simplified resnet-based generator with feature extraction
     for contrastive learning.
     """
     
@@ -453,7 +453,7 @@ class CUTGenerator(nn.Module):
     ):
         super().__init__()
         
-        # Initial convolution
+        # initial convolution
         model = [
             nn.ReflectionPad2d(3),
             nn.Conv2d(input_nc, ngf, 7, bias=False),
@@ -461,7 +461,7 @@ class CUTGenerator(nn.Module):
             nn.ReLU(inplace=True)
         ]
         
-        # Downsampling
+        # downsampling
         self.feat_layers = []
         for i in range(n_downsampling):
             mult = 2 ** i
@@ -469,16 +469,16 @@ class CUTGenerator(nn.Module):
                                    stride=2, padding=1, bias=False))
             model.append(nn.InstanceNorm2d(ngf * mult * 2))
             model.append(nn.ReLU(inplace=True))
-            self.feat_layers.append(len(model) - 1)  # Index for feature extraction
+            self.feat_layers.append(len(model) - 1)  # index for feature extraction
         
-        # Residual blocks
+        # residual blocks
         mult = 2 ** n_downsampling
         for _ in range(n_blocks):
             model.append(ResidualBlock(ngf * mult))
         
-        self.feat_layers.append(len(model) - 1)  # Bottleneck features
+        self.feat_layers.append(len(model) - 1)  # bottleneck features
         
-        # Upsampling
+        # upsampling
         for i in range(n_downsampling):
             mult = 2 ** (n_downsampling - i)
             model.append(nn.ConvTranspose2d(ngf * mult, ngf * mult // 2, 3,
@@ -487,14 +487,14 @@ class CUTGenerator(nn.Module):
             model.append(nn.InstanceNorm2d(ngf * mult // 2))
             model.append(nn.ReLU(inplace=True))
         
-        # Output layer
+        # output layer
         model.append(nn.ReflectionPad2d(3))
         model.append(nn.Conv2d(ngf, output_nc, 7))
         model.append(nn.Tanh())
         
         self.model = nn.Sequential(*model)
         
-        # Feature sampler
+        # feature sampler
         self.patch_sampler = PatchSampleF(nc=ngf * mult)
     
     def forward(
@@ -503,17 +503,17 @@ class CUTGenerator(nn.Module):
         encode_only: bool = False
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input image [B, C, H, W]
-            encode_only: If True, only return encoded features
+        args:
+            x: input image [b, c, h, w]
+            encode_only: if true, only return encoded features
             
-        Returns:
-            Generated image or encoded features
+        returns:
+            generated image or encoded features
         """
         if encode_only:
-            # Extract intermediate features for contrastive loss
+            # extract intermediate features for contrastive loss
             features = []
             feat = x
             for i, layer in enumerate(self.model):
@@ -526,7 +526,7 @@ class CUTGenerator(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    """Residual block for generators."""
+    """residual block for generators."""
     
     def __init__(self, channels: int):
         super().__init__()
@@ -545,15 +545,15 @@ class ResidualBlock(nn.Module):
 
 
 # ============================================================================
-# UNIT: Unsupervised Image-to-Image Translation
+# unit: unsupervised image-to-image translation
 # ============================================================================
 
 class VAEEncoder(nn.Module):
     """
-    VAE Encoder for UNIT.
+    vae encoder for unit.
     
-    Reference: Liu et al., "Unsupervised Image-to-Image Translation Networks",
-    NeurIPS 2017.
+    reference: liu et al., "unsupervised image-to-image translation networks",
+    neurips 2017.
     """
     
     def __init__(
@@ -572,7 +572,7 @@ class VAEEncoder(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         ]
         
-        # Downsampling
+        # downsampling
         for i in range(n_downsampling):
             mult = 2 ** i
             layers.extend([
@@ -583,16 +583,16 @@ class VAEEncoder(nn.Module):
         
         self.encoder = nn.Sequential(*layers)
         
-        # Latent space (mean and log variance)
+        # latent space (mean and log variance)
         self.fc_mu = nn.Conv2d(ngf * (2 ** n_downsampling), latent_dim, 1)
         self.fc_logvar = nn.Conv2d(ngf * (2 ** n_downsampling), latent_dim, 1)
     
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Encode input to latent space.
+        encode input to latent space.
         
-        Returns:
-            Mean and log variance of latent distribution
+        returns:
+            mean and log variance of latent distribution
         """
         h = self.encoder(x)
         return self.fc_mu(h), self.fc_logvar(h)
@@ -602,14 +602,14 @@ class VAEEncoder(nn.Module):
         mu: torch.Tensor,
         logvar: torch.Tensor
     ) -> torch.Tensor:
-        """Reparameterization trick for VAE."""
+        """reparameterization trick for vae."""
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
 
 
 class VAEDecoder(nn.Module):
-    """VAE Decoder for UNIT."""
+    """vae decoder for unit."""
     
     def __init__(
         self,
@@ -622,10 +622,10 @@ class VAEDecoder(nn.Module):
         
         mult = 2 ** n_upsampling
         
-        # Project from latent
+        # project from latent
         self.fc = nn.Conv2d(latent_dim, ngf * mult, 1)
         
-        # Upsampling
+        # upsampling
         layers = []
         for i in range(n_upsampling):
             mult = 2 ** (n_upsampling - i)
@@ -645,16 +645,16 @@ class VAEDecoder(nn.Module):
         self.decoder = nn.Sequential(*layers)
     
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        """Decode latent to image."""
+        """decode latent to image."""
         h = self.fc(z)
         return self.decoder(h)
 
 
 class UNIT(nn.Module):
     """
-    Complete UNIT model for unsupervised image-to-image translation.
+    complete unit model for unsupervised image-to-image translation.
     
-    Uses shared latent space assumption with VAE-GAN framework.
+    uses shared latent space assumption with vae-gan framework.
     """
     
     def __init__(
@@ -666,11 +666,11 @@ class UNIT(nn.Module):
     ):
         super().__init__()
         
-        # Domain A encoder/decoder
+        # domain a encoder/decoder
         self.enc_a = VAEEncoder(input_nc, ngf, latent_dim=latent_dim)
         self.dec_a = VAEDecoder(output_nc, ngf, latent_dim=latent_dim)
         
-        # Domain B encoder/decoder
+        # domain b encoder/decoder
         self.enc_b = VAEEncoder(input_nc, ngf, latent_dim=latent_dim)
         self.dec_b = VAEDecoder(output_nc, ngf, latent_dim=latent_dim)
     
@@ -680,25 +680,25 @@ class UNIT(nn.Module):
         x_b: torch.Tensor
     ) -> Dict[str, torch.Tensor]:
         """
-        Forward pass for training.
+        forward pass for training.
         
-        Returns dict with all reconstructions and translations.
+        returns dict with all reconstructions and translations.
         """
-        # Encode
+        # encode
         mu_a, logvar_a = self.enc_a(x_a)
         mu_b, logvar_b = self.enc_b(x_b)
         
-        # Sample latent
+        # sample latent
         z_a = self.enc_a.reparameterize(mu_a, logvar_a)
         z_b = self.enc_b.reparameterize(mu_b, logvar_b)
         
-        # Decode (reconstruction)
+        # decode (reconstruction)
         x_a_recon = self.dec_a(z_a)
         x_b_recon = self.dec_b(z_b)
         
-        # Cross-domain translation (shared latent space)
-        x_ab = self.dec_b(z_a)  # A -> B
-        x_ba = self.dec_a(z_b)  # B -> A
+        # cross-domain translation (shared latent space)
+        x_ab = self.dec_b(z_a)  # a -> b
+        x_ba = self.dec_a(z_b)  # b -> a
         
         return {
             'x_a_recon': x_a_recon,
@@ -710,27 +710,27 @@ class UNIT(nn.Module):
         }
     
     def translate_a2b(self, x: torch.Tensor) -> torch.Tensor:
-        """Translate from domain A to B."""
+        """translate from domain a to b."""
         mu, logvar = self.enc_a(x)
         z = self.enc_a.reparameterize(mu, logvar)
         return self.dec_b(z)
     
     def translate_b2a(self, x: torch.Tensor) -> torch.Tensor:
-        """Translate from domain B to A."""
+        """translate from domain b to a."""
         mu, logvar = self.enc_b(x)
         z = self.enc_b.reparameterize(mu, logvar)
         return self.dec_a(z)
 
 
 # ============================================================================
-# Histogram Matching (Traditional Baseline)
+# histogram matching (traditional baseline)
 # ============================================================================
 
 class HistogramMatching:
     """
-    Traditional histogram matching for domain adaptation.
+    traditional histogram matching for domain adaptation.
     
-    Simple but effective baseline that matches intensity distributions
+    simple but effective baseline that matches intensity distributions
     without learning.
     """
     
@@ -741,19 +741,19 @@ class HistogramMatching:
         
     def fit(self, target: np.ndarray):
         """
-        Fit to target domain distribution.
+        fit to target domain distribution.
         
-        Args:
-            target: Target domain images [N, H, W] or [N, C, H, W]
+        args:
+            target: target domain images [n, h, w] or [n, c, h, w]
         """
         target = target.flatten()
         
-        # Compute histogram
+        # compute histogram
         self.target_hist, bin_edges = np.histogram(
             target, bins=self.n_bins, range=(target.min(), target.max())
         )
         
-        # Compute CDF
+        # compute cdf
         self.target_cdf = np.cumsum(self.target_hist).astype(float)
         self.target_cdf /= self.target_cdf[-1]
         
@@ -764,28 +764,28 @@ class HistogramMatching:
     
     def transform(self, source: np.ndarray) -> np.ndarray:
         """
-        Match source histogram to target.
+        match source histogram to target.
         
-        Args:
-            source: Source domain images
+        args:
+            source: source domain images
             
-        Returns:
-            Histogram-matched images
+        returns:
+            histogram-matched images
         """
         original_shape = source.shape
         source = source.flatten()
         
-        # Compute source histogram and CDF
+        # compute source histogram and cdf
         src_hist, src_edges = np.histogram(
             source, bins=self.n_bins, range=(source.min(), source.max())
         )
         src_cdf = np.cumsum(src_hist).astype(float)
         src_cdf /= src_cdf[-1]
         
-        # Map source to target via CDF matching
+        # map source to target via cdf matching
         interp_values = np.interp(src_cdf, self.target_cdf, self.bin_centers)
         
-        # Apply mapping
+        # apply mapping
         source_indices = np.clip(
             np.digitize(source, src_edges) - 1, 0, self.n_bins - 1
         )
@@ -795,14 +795,14 @@ class HistogramMatching:
 
 
 # ============================================================================
-# Baseline Runner
+# baseline runner
 # ============================================================================
 
 class BaselineRunner:
     """
-    Unified interface for running all baseline methods.
+    unified interface for running all baseline methods.
     
-    Provides consistent API for fair comparison.
+    provides consistent api for fair comparison.
     """
     
     def __init__(self, device: str = 'cuda'):
@@ -810,21 +810,21 @@ class BaselineRunner:
         self.baselines = {}
         
     def add_combat(self, name: str = 'combat'):
-        """Add ComBat baseline."""
+        """add combat baseline."""
         self.baselines[name] = {
             'type': 'combat',
             'model': ComBat(parametric=True)
         }
         
     def add_histogram_matching(self, name: str = 'hist_match'):
-        """Add histogram matching baseline."""
+        """add histogram matching baseline."""
         self.baselines[name] = {
             'type': 'hist_match',
             'model': HistogramMatching()
         }
         
     def add_cut(self, input_nc: int = 4, name: str = 'cut'):
-        """Add CUT baseline."""
+        """add cut baseline."""
         model = CUTGenerator(input_nc=input_nc, output_nc=input_nc)
         self.baselines[name] = {
             'type': 'cut',
@@ -832,7 +832,7 @@ class BaselineRunner:
         }
         
     def add_unit(self, input_nc: int = 4, name: str = 'unit'):
-        """Add UNIT baseline."""
+        """add unit baseline."""
         model = UNIT(input_nc=input_nc, output_nc=input_nc)
         self.baselines[name] = {
             'type': 'unit',
@@ -840,63 +840,63 @@ class BaselineRunner:
         }
     
     def list_baselines(self) -> List[str]:
-        """List available baselines."""
+        """list available baselines."""
         return list(self.baselines.keys())
     
     def get_baseline(self, name: str):
-        """Get a specific baseline model."""
+        """get a specific baseline model."""
         return self.baselines.get(name, {}).get('model')
 
 
 # ============================================================================
-# Summary of baselines
+# summary of baselines
 # ============================================================================
 
 BASELINE_SUMMARY = """
-Baseline Methods for MRI Domain Adaptation
+baseline methods for mri domain adaptation
 ==========================================
 
-1. ComBat (Statistical Harmonization)
-   - Empirical Bayes approach for batch effect removal
-   - Widely used in neuroimaging for multi-site harmonization
-   - No learning required, only statistical estimation
-   - Reference: Fortin et al., NeuroImage 2017
+1. combat (statistical harmonization)
+   - empirical bayes approach for batch effect removal
+   - widely used in neuroimaging for multi-site harmonization
+   - no learning required, only statistical estimation
+   - reference: fortin et al., neuroimage 2017
 
-2. Histogram Matching (Traditional)
-   - Simple intensity distribution matching
-   - Fast, no training required
-   - Baseline for all learning methods
+2. histogram matching (traditional)
+   - simple intensity distribution matching
+   - fast, no training required
+   - baseline for all learning methods
 
-3. CUT (Contrastive Unpaired Translation)
-   - State-of-the-art one-sided translation
-   - Patch-based contrastive learning
-   - Reference: Park et al., ECCV 2020
+3. cut (contrastive unpaired translation)
+   - state-of-the-art one-sided translation
+   - patch-based contrastive learning
+   - reference: park et al., eccv 2020
 
-4. UNIT (Unsupervised Image Translation)
-   - Shared latent space with VAE-GAN
-   - Bidirectional translation
-   - Reference: Liu et al., NeurIPS 2017
+4. unit (unsupervised image translation)
+   - shared latent space with vae-gan
+   - bidirectional translation
+   - reference: liu et al., neurips 2017
 
-5. CycleGAN (Original)
-   - Cycle-consistency constraint
-   - Strong baseline for unpaired translation
-   - Reference: Zhu et al., ICCV 2017
+5. cyclegan (original)
+   - cycle-consistency constraint
+   - strong baseline for unpaired translation
+   - reference: zhu et al., iccv 2017
 
-Comparison with SA-CycleGAN (Ours):
-- SA-CycleGAN adds multi-scale self-attention
-- Modality-aware encoding for 4-channel MRI
-- Tumor preservation loss for clinical validity
-- Expected improvements: +2-5% SSIM, +1-2 dB PSNR
+comparison with sa-cyclegan (ours):
+- sa-cyclegan adds multi-scale self-attention
+- modality-aware encoding for 4-channel mri
+- tumor preservation loss for clinical validity
+- expected improvements: +2-5% ssim, +1-2 db psnr
 """
 
 
 if __name__ == '__main__':
     print(BASELINE_SUMMARY)
     
-    # Quick test
-    print("\nTesting baseline implementations...")
+    # quick test
+    print("\ntesting baseline implementations...")
     
-    # Test ComBat
+    # test combat
     np.random.seed(42)
     data = np.random.randn(100, 50).astype(np.float32)
     batch = np.array([0] * 50 + [1] * 50)
@@ -904,18 +904,18 @@ if __name__ == '__main__':
     combat = ComBat()
     combat.fit(data, batch)
     harmonized = combat.transform(data, batch)
-    print(f"ComBat: Input shape {data.shape}, Output shape {harmonized.shape}")
+    print(f"combat: input shape {data.shape}, output shape {harmonized.shape}")
     
-    # Test histogram matching
+    # test histogram matching
     target = np.random.randn(50, 64, 64).astype(np.float32)
     source = np.random.randn(50, 64, 64).astype(np.float32) * 2 + 1
     
     hist_match = HistogramMatching()
     hist_match.fit(target)
     matched = hist_match.transform(source)
-    print(f"Histogram Matching: Input shape {source.shape}, Output shape {matched.shape}")
+    print(f"histogram matching: input shape {source.shape}, output shape {matched.shape}")
     
-    # Test neural baselines
+    # test neural baselines
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     x = torch.randn(2, 4, 256, 256).to(device)
@@ -923,11 +923,11 @@ if __name__ == '__main__':
     cut = CUTGenerator(input_nc=4, output_nc=4).to(device)
     with torch.no_grad():
         y_cut = cut(x)
-    print(f"CUT: Input shape {x.shape}, Output shape {y_cut.shape}")
+    print(f"cut: input shape {x.shape}, output shape {y_cut.shape}")
     
     unit = UNIT(input_nc=4, output_nc=4).to(device)
     with torch.no_grad():
         y_unit = unit.translate_a2b(x)
-    print(f"UNIT: Input shape {x.shape}, Output shape {y_unit.shape}")
+    print(f"unit: input shape {x.shape}, output shape {y_unit.shape}")
     
-    print("\nAll baseline implementations verified!")
+    print("\nall baseline implementations verified!")

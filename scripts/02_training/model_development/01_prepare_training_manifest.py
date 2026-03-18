@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple
 
 import SimpleITK as sitk
 
-# Import PATHS from preprocessing config (sibling folder)
+# import paths from preprocessing config (sibling folder)
 HERE = Path(__file__).resolve().parent
 PREP_DIR = HERE.parent / '01_data_preparation_pipeline'
 if str(PREP_DIR) not in sys.path:
@@ -62,7 +62,7 @@ def verify_modalities_and_depth(preprocessed_dir: Path, section: str, sid: str) 
                 
             try:
                 img = sitk.ReadImage(str(p))
-                arr_size = img.GetSize()  # (W,H,D)
+                arr_size = img.GetSize()  # (w,h,d)
                 sizes.append(arr_size[2])
                 logging.debug(f"Read {mod} for {section}/{sid}, depth: {arr_size[2]}")
             except Exception as e:
@@ -124,7 +124,7 @@ def build_manifest(splits: List[str], verbose: bool = False) -> Dict:
                 processed_count += 1
                 total_subjects_processed += 1
                 
-                # Print progress update every 10 subjects or if 5+ seconds passed since last update
+                # print progress update every 10 subjects or if 5+ seconds passed since last update
                 current_time = time.time()
                 if i % 10 == 0 or current_time - last_update_time >= 5:
                     progress_pct = (processed_count / total_to_process) * 100
@@ -186,7 +186,7 @@ def write_manifest_files(manifest: Dict) -> Tuple[Path, Path]:
     elapsed = time.time() - start_time
     logging.info(f"Manifest files written successfully in {elapsed:.2f}s")
     
-    # Print summary information
+    # print summary information
     logging.info("=== Manifest Summary ===")
     for split, info in manifest.get('summary', {}).items():
         logging.info(f"Split '{split}': {info.get('total_subjects', 0)} total subjects")
@@ -207,12 +207,12 @@ def main():
     start_time = time.time()
     args = parse_args()
     
-    # Show start message with timestamp
-    print(f"=== NeuroScope Training Manifest Preparation ===")
-    print(f"Start time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    # show start message with timestamp
+    print(f"=== neuroscope training manifest preparation ===")
+    print(f"start time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     splits = [s.strip() for s in args.splits.split(',') if s.strip()]
-    print(f"Processing splits: {', '.join(splits)}")
+    print(f"processing splits: {', '.join(splits)}")
     
     manifest = build_manifest(splits, verbose=args.verbose)
     full_path, summary_path = write_manifest_files(manifest)
@@ -220,10 +220,10 @@ def main():
     total_time = time.time() - start_time
     minutes, seconds = divmod(total_time, 60)
     
-    print(f"\n=== Processing Complete ===")
-    print(f"Total time: {int(minutes)} minutes {seconds:.2f} seconds")
-    print(f"Full manifest: {full_path}")
-    print(f"Summary manifest: {summary_path}")
+    print(f"\n=== processing complete ===")
+    print(f"total time: {int(minutes)} minutes {seconds:.2f} seconds")
+    print(f"full manifest: {full_path}")
+    print(f"summary manifest: {summary_path}")
     
     logging.info(f"Training manifest preparation completed successfully in {total_time:.2f}s")
 

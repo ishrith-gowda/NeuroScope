@@ -62,7 +62,7 @@ def run_stage(entry, base_args, dry_run=False):
     if dry_run:
         return True
     
-    # Run process with real-time output
+    # run process with real-time output
     logging.info(f"=== STARTING STAGE: {entry['name']} ===")
     process = subprocess.Popen(
         cmd, 
@@ -73,7 +73,7 @@ def run_stage(entry, base_args, dry_run=False):
         universal_newlines=True
     )
     
-    # Print output in real time with timestamps
+    # print output in real time with timestamps
     import time
     last_output_time = time.time()
     
@@ -92,15 +92,15 @@ def run_stage(entry, base_args, dry_run=False):
     stdout_thread.start()
     stderr_thread.start()
     
-    # Add progress indicator when no output for a while
+    # add progress indicator when no output for a while
     while process.poll() is None:
-        time.sleep(5)  # Check every 5 seconds
+        time.sleep(5)  # check every 5 seconds
         current_time = time.time()
-        if current_time - last_output_time > 15:  # No output for 15 seconds
-            print(f"[{entry['name']}] Still running... (no output for {int(current_time - last_output_time)} seconds)")
+        if current_time - last_output_time > 15:  # no output for 15 seconds
+            print(f"[{entry['name']}] still running... (no output for {int(current_time - last_output_time)} seconds)")
             last_output_time = current_time
     
-    # Wait for threads to complete
+    # wait for threads to complete
     stdout_thread.join()
     stderr_thread.join()
     
@@ -113,16 +113,16 @@ def run_stage(entry, base_args, dry_run=False):
     return True
 
 def check_outputs(entry):
-    # Heuristic checks
+    # heuristic checks
     missing = []
     for out_name in entry['required_outputs']:
-        # Special case for slice_bias_assessment.json which is stored in scripts dir
+        # special case for slice_bias_assessment.json which is stored in scripts dir
         if out_name == 'slice_bias_assessment.json':
             candidate = PATHS['slice_bias_assessment']
-        # Special case for n4_diagnostic_analysis.json which doesn't exist in PATHS
+        # special case for n4_diagnostic_analysis.json which doesn't exist in paths
         elif out_name == 'n4_diagnostic_analysis.json':
             candidate = PATHS['preprocessed_dir'] / out_name
-        # Other JSON results go to preprocessed_dir root; images validated per subject
+        # other json results go to preprocessed_dir root; images validated per subject
         elif out_name.endswith('.json'):
             candidate = PATHS['preprocessed_dir'] / out_name
         else:
@@ -167,7 +167,7 @@ def main():
     logging.info(f"Starting preprocessing pipeline for splits: {splits}")
     logging.info(f"Configuration: force={args.force}, dry_run={args.dry_run}, stop_on_fail={args.stop_on_fail}")
     
-    # Display the pipeline stages for clarity
+    # display the pipeline stages for clarity
     logging.info("Pipeline stages to run:")
     for i, stage in enumerate(STAGES):
         logging.info(f"  {i+1}. {stage['name']} (script: {stage['script']})")
@@ -190,11 +190,11 @@ def main():
             continue
             
         logging.info(f"Running stage {stage_num}/{total_stages} '{stage['name']}'")
-        start_time = time.time()  # Add time tracking
+        start_time = time.time()  # add time tracking
         
         success = run_stage(stage, base_args, dry_run=args.dry_run)
         
-        # Calculate elapsed time
+        # calculate elapsed time
         elapsed = time.time() - start_time
         hours, remainder = divmod(elapsed, 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -207,7 +207,7 @@ def main():
                 logging.error(f"Stopping pipeline due to failure (--stop-on-fail)")
                 break
         else:
-            # Re-check outputs
+            # re-check outputs
             produced = check_outputs(stage)
             status = 'ok' if produced else 'warning_outputs_missing'
             summary.append({stage['name']: status})
@@ -221,7 +221,7 @@ def main():
                 logging.error(f"Stopping pipeline due to missing outputs (--stop-on-fail)")
                 break
 
-    # Create final report
+    # create final report
     report_path = PATHS['preprocessed_dir'] / 'pipeline_run_summary.json'
     try:
         with open(report_path, 'w') as f:
@@ -230,7 +230,7 @@ def main():
     except Exception as e:
         logging.warning(f"Could not write summary: {e}")
 
-    # Print a nice summary table
+    # print a nice summary table
     logging.info(f"\n{'='*80}")
     logging.info("PIPELINE EXECUTION SUMMARY")
     logging.info(f"{'='*80}")
@@ -242,7 +242,7 @@ def main():
     for item in summary:
         for stage_name, status in item.items():
             status_count[status] = status_count.get(status, 0) + 1
-            # Format status for display
+            # format status for display
             display_status = {
                 "ok": "+ SUCCESS", 
                 "failed": "x FAILED",

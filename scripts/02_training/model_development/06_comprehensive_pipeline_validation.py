@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Comprehensive Pipeline Validation Script
+comprehensive pipeline validation script
 
-This script validates the entire preprocessing -> CycleGAN pipeline to ensure:
-1. Preprocessing produces [0,1] normalized tensors
-2. Dataset loader correctly maps [0,1] -> [-1,1] 
-3. Domain mapping is correct (A=brats, B=upenn)
-4. Data consistency between preprocessing and training
-5. All required files and directories exist
+this script validates the entire preprocessing -> cyclegan pipeline to ensure:
+1. preprocessing produces [0,1] normalized tensors
+2. dataset loader correctly maps [0,1] -> [-1,1] 
+3. domain mapping is correct (a=brats, b=upenn)
+4. data consistency between preprocessing and training
+5. all required files and directories exist
 """
 
 import argparse
@@ -23,7 +23,7 @@ import SimpleITK as sitk
 import torch
 from neuroscope_dataset_loader import get_cycle_domain_loaders
 
-# Import PATHS from preprocessing config
+# import paths from preprocessing config
 HERE = Path(__file__).resolve().parent
 PREP_DIR = HERE.parent / '01_data_preparation_pipeline'
 if str(PREP_DIR) not in sys.path:
@@ -33,7 +33,7 @@ PATHS = npc.PATHS
 
 
 def setup_logging(verbose: bool = False):
-    """Setup logging configuration."""
+    """setup logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
@@ -44,10 +44,10 @@ def setup_logging(verbose: bool = False):
 
 def validate_preprocessing_outputs() -> Dict[str, any]:
     """
-    Validate that preprocessing outputs are correctly normalized to [0,1].
+    validate that preprocessing outputs are correctly normalized to [0,1].
     
-    Returns:
-        Dict with validation results
+    returns:
+        dict with validation results
     """
     logging.info("=== VALIDATING PREPROCESSING OUTPUTS ===")
     
@@ -69,12 +69,12 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
         results['issues'].append(f"Metadata file not found: {metadata_path}")
         return results
     
-    # Load metadata
+    # load metadata
     with open(metadata_path, 'r') as f:
         meta = json.load(f)
     
-    # Check a sample of subjects from each domain
-    sample_size = 5  # Check first 5 subjects from each domain
+    # check a sample of subjects from each domain
+    sample_size = 5  # check first 5 subjects from each domain
     
     for section in ['brats', 'upenn']:
         subjects = list(meta.get(section, {}).get('valid_subjects', {}).keys())[:sample_size]
@@ -85,7 +85,7 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
                 results['failed_subjects'].append(f"{section}/{subject_id} (directory not found)")
                 continue
             
-            # Check all modalities
+            # check all modalities
             modalities = ['t1.nii.gz', 't1gd.nii.gz', 't2.nii.gz', 'flair.nii.gz']
             subject_valid = True
             
@@ -97,17 +97,17 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
                     continue
                 
                 try:
-                    # Load and check tensor values
+                    # load and check tensor values
                     img = sitk.ReadImage(str(modality_path))
                     arr = sitk.GetArrayFromImage(img).astype(np.float32)
                     
-                    # Check for non-finite values
+                    # check for non-finite values
                     if not np.isfinite(arr).all():
                         results['issues'].append(f"{section}/{subject_id}/{modality} contains non-finite values")
                         subject_valid = False
                         continue
                     
-                    # Check value range
+                    # check value range
                     min_val, max_val = arr.min(), arr.max()
                     results['tensor_ranges'].append({
                         'subject': f"{section}/{subject_id}",
@@ -135,10 +135,10 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
 
 def validate_dataset_loader() -> Dict[str, any]:
     """
-    Validate that dataset loader correctly handles tensor normalization.
+    validate that dataset loader correctly handles tensor normalization.
     
-    Returns:
-        Dict with validation results
+    returns:
+        dict with validation results
     """
     logging.info("=== VALIDATING DATASET LOADER ===")
     
@@ -151,17 +151,17 @@ def validate_dataset_loader() -> Dict[str, any]:
     }
     
     try:
-        # Create loaders
+        # create loaders
         loaders = get_cycle_domain_loaders(
             preprocessed_dir=str(PATHS['preprocessed_dir']),
             metadata_json=str(PATHS['metadata_splits']),
-            batch_size=2,  # Small batch for testing
+            batch_size=2,  # small batch for testing
             num_workers=0,
             slices_per_subject=1,
             seed=42
         )
         
-        # Check domain mapping
+        # check domain mapping
         expected_mapping = {'brats': 'A', 'upenn': 'B'}
         for section, domain in expected_mapping.items():
             train_key = f'train_{domain}'
@@ -179,7 +179,7 @@ def validate_dataset_loader() -> Dict[str, any]:
             else:
                 results['loaders_failed'].append(val_key)
         
-        # Test tensor ranges
+        # test tensor ranges
         for loader_name, loader in loaders.items():
             try:
                 batch = next(iter(loader))
@@ -209,10 +209,10 @@ def validate_dataset_loader() -> Dict[str, any]:
 
 def validate_data_consistency() -> Dict[str, any]:
     """
-    Validate consistency between preprocessing outputs and dataset loader inputs.
+    validate consistency between preprocessing outputs and dataset loader inputs.
     
-    Returns:
-        Dict with validation results
+    returns:
+        dict with validation results
     """
     logging.info("=== VALIDATING DATA CONSISTENCY ===")
     
@@ -222,33 +222,33 @@ def validate_data_consistency() -> Dict[str, any]:
     }
     
     try:
-        # Load metadata
+        # load metadata
         with open(PATHS['metadata_splits'], 'r') as f:
             meta = json.load(f)
         
-        # Get a sample subject from each domain
+        # get a sample subject from each domain
         sample_subjects = {}
         for section in ['brats', 'upenn']:
             subjects = list(meta.get(section, {}).get('valid_subjects', {}).keys())
             if subjects:
                 sample_subjects[section] = subjects[0]
         
-        # Check preprocessing outputs directly
+        # check preprocessing outputs directly
         preprocessed_dir = PATHS['preprocessed_dir']
         
         for section, subject_id in sample_subjects.items():
             subject_dir = preprocessed_dir / section / subject_id
             
-            # Load one modality directly from preprocessing
+            # load one modality directly from preprocessing
             modality_path = subject_dir / 't1.nii.gz'
             if modality_path.exists():
                 img = sitk.ReadImage(str(modality_path))
                 arr = sitk.GetArrayFromImage(img).astype(np.float32)
                 
-                # Check preprocessing range
+                # check preprocessing range
                 preproc_min, preproc_max = arr.min(), arr.max()
                 
-                # Now check what dataset loader produces
+                # now check what dataset loader produces
                 loaders = get_cycle_domain_loaders(
                     preprocessed_dir=str(preprocessed_dir),
                     metadata_json=str(PATHS['metadata_splits']),
@@ -262,7 +262,7 @@ def validate_data_consistency() -> Dict[str, any]:
                 loader_key = f'train_{domain}'
                 
                 if loader_key in loaders:
-                    # Get a batch from the loader
+                    # get a batch from the loader
                     batch = next(iter(loaders[loader_key]))
                     loader_min, loader_max = batch.min().item(), batch.max().item()
                     
@@ -275,7 +275,7 @@ def validate_data_consistency() -> Dict[str, any]:
                         'transformation_correct': abs(loader_min - (preproc_min * 2.0 - 1.0)) < 0.01
                     })
                     
-                    # Validate transformation
+                    # validate transformation
                     expected_min = preproc_min * 2.0 - 1.0
                     expected_max = preproc_max * 2.0 - 1.0
                     
@@ -294,10 +294,10 @@ def validate_data_consistency() -> Dict[str, any]:
 
 def validate_file_structure() -> Dict[str, any]:
     """
-    Validate that all required files and directories exist.
+    validate that all required files and directories exist.
     
-    Returns:
-        Dict with validation results
+    returns:
+        dict with validation results
     """
     logging.info("=== VALIDATING FILE STRUCTURE ===")
     
@@ -307,7 +307,7 @@ def validate_file_structure() -> Dict[str, any]:
         'issues': []
     }
     
-    # Required files
+    # required files
     required_files = {
         'metadata_splits': PATHS['metadata_splits'],
         'preprocessing_config': PATHS['metadata_base'],
@@ -323,7 +323,7 @@ def validate_file_structure() -> Dict[str, any]:
         if not exists:
             results['issues'].append(f"Required file missing: {name} at {path}")
     
-    # Required directories
+    # required directories
     required_dirs = {
         'preprocessed_dir': PATHS['preprocessed_dir'],
         'checkpoints_dir': PATHS['checkpoints_dir'],
@@ -344,7 +344,7 @@ def validate_file_structure() -> Dict[str, any]:
 
 
 def generate_validation_report(results: Dict[str, any]) -> None:
-    """Generate a comprehensive validation report."""
+    """generate a comprehensive validation report."""
     logging.info("=== GENERATING VALIDATION REPORT ===")
     
     report = {
@@ -359,7 +359,7 @@ def generate_validation_report(results: Dict[str, any]) -> None:
         }
     }
     
-    # Save report
+    # save report
     report_path = PATHS['scripts_dir'] / '02_model_development_pipeline' / 'pipeline_validation_report.json'
     report_path.parent.mkdir(parents=True, exist_ok=True)
     
@@ -368,7 +368,7 @@ def generate_validation_report(results: Dict[str, any]) -> None:
     
     logging.info(f"Validation report saved to: {report_path}")
     
-    # Print summary
+    # print summary
     summary = report['summary']
     logging.info("=== VALIDATION SUMMARY ===")
     logging.info(f"Total issues found: {summary['total_issues']}")
@@ -384,7 +384,7 @@ def generate_validation_report(results: Dict[str, any]) -> None:
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """parse command line arguments."""
     parser = argparse.ArgumentParser(description='Comprehensive pipeline validation')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose logging')
     parser.add_argument('--skip-preprocessing', action='store_true', help='Skip preprocessing validation')
@@ -395,7 +395,7 @@ def parse_args():
 
 
 def main():
-    """Main validation function."""
+    """main validation function."""
     args = parse_args()
     setup_logging(args.verbose)
     
@@ -403,7 +403,7 @@ def main():
     
     results = {}
     
-    # Run validations
+    # run validations
     if not args.skip_preprocessing:
         results['preprocessing'] = validate_preprocessing_outputs()
     
@@ -416,7 +416,7 @@ def main():
     if not args.skip_files:
         results['file_structure'] = validate_file_structure()
     
-    # Generate report
+    # generate report
     generate_validation_report(results)
 
 

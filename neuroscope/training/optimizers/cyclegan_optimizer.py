@@ -1,8 +1,8 @@
 """
-Optimizer Factories and Configurations.
+optimizer factories and configurations.
 
-Provides flexible optimizer creation with proper configuration
-for GAN training scenarios.
+provides flexible optimizer creation with proper configuration
+for gan training scenarios.
 """
 
 from typing import Dict, List, Optional, Any, Iterator, Tuple
@@ -14,7 +14,7 @@ from torch.optim import Optimizer
 
 @dataclass
 class OptimizerConfig:
-    """Base optimizer configuration."""
+    """base optimizer configuration."""
     name: str = 'adam'
     lr: float = 2e-4
     weight_decay: float = 0.0
@@ -25,7 +25,7 @@ class OptimizerConfig:
 
 @dataclass
 class AdamConfig(OptimizerConfig):
-    """Adam optimizer configuration."""
+    """adam optimizer configuration."""
     name: str = 'adam'
     lr: float = 2e-4
     beta1: float = 0.5
@@ -37,7 +37,7 @@ class AdamConfig(OptimizerConfig):
 
 @dataclass
 class AdamWConfig(OptimizerConfig):
-    """AdamW optimizer configuration."""
+    """adamw optimizer configuration."""
     name: str = 'adamw'
     lr: float = 2e-4
     beta1: float = 0.9
@@ -49,7 +49,7 @@ class AdamWConfig(OptimizerConfig):
 
 @dataclass
 class SGDConfig(OptimizerConfig):
-    """SGD optimizer configuration."""
+    """sgd optimizer configuration."""
     name: str = 'sgd'
     lr: float = 0.01
     momentum: float = 0.9
@@ -60,7 +60,7 @@ class SGDConfig(OptimizerConfig):
 
 @dataclass
 class RMSpropConfig(OptimizerConfig):
-    """RMSprop optimizer configuration."""
+    """rmsprop optimizer configuration."""
     name: str = 'rmsprop'
     lr: float = 0.01
     alpha: float = 0.99
@@ -78,17 +78,17 @@ def create_optimizer(
     **kwargs
 ) -> Optimizer:
     """
-    Create optimizer from configuration or parameters.
+    create optimizer from configuration or parameters.
     
-    Args:
-        params: Model parameters to optimize
-        config: Optimizer configuration object
-        name: Optimizer name (if no config provided)
-        lr: Learning rate (if no config provided)
-        **kwargs: Additional optimizer arguments
+    args:
+        params: model parameters to optimize
+        config: optimizer configuration object
+        name: optimizer name (if no config provided)
+        lr: learning rate (if no config provided)
+        **kwargs: additional optimizer arguments
         
-    Returns:
-        Configured optimizer
+    returns:
+        configured optimizer
     """
     if config is not None:
         name = config.name
@@ -164,20 +164,20 @@ def create_gan_optimizers(
     beta2: float = 0.999
 ) -> Tuple[Optimizer, Optimizer]:
     """
-    Create optimizers for GAN training.
+    create optimizers for gan training.
     
-    Args:
-        generator: Generator model
-        discriminator: Discriminator model
-        g_config: Generator optimizer config
-        d_config: Discriminator optimizer config
-        lr_g: Generator learning rate
-        lr_d: Discriminator learning rate
-        beta1: Adam beta1
-        beta2: Adam beta2
+    args:
+        generator: generator model
+        discriminator: discriminator model
+        g_config: generator optimizer config
+        d_config: discriminator optimizer config
+        lr_g: generator learning rate
+        lr_d: discriminator learning rate
+        beta1: adam beta1
+        beta2: adam beta2
         
-    Returns:
-        Tuple of (generator_optimizer, discriminator_optimizer)
+    returns:
+        tuple of (generator_optimizer, discriminator_optimizer)
     """
     if g_config is None:
         g_config = AdamConfig(lr=lr_g, beta1=beta1, beta2=beta2)
@@ -202,23 +202,23 @@ def create_cyclegan_optimizers(
     beta2: float = 0.999
 ) -> Tuple[Optimizer, Optimizer]:
     """
-    Create optimizers for CycleGAN training.
+    create optimizers for cyclegan training.
     
-    Combines generator parameters and discriminator parameters
+    combines generator parameters and discriminator parameters
     into joint optimizers.
     
-    Args:
-        G_A2B: A to B generator
-        G_B2A: B to A generator
-        D_A: Domain A discriminator
-        D_B: Domain B discriminator
-        lr_g: Generator learning rate
-        lr_d: Discriminator learning rate
-        beta1: Adam beta1
-        beta2: Adam beta2
+    args:
+        g_a2b: a to b generator
+        g_b2a: b to a generator
+        d_a: domain a discriminator
+        d_b: domain b discriminator
+        lr_g: generator learning rate
+        lr_d: discriminator learning rate
+        beta1: adam beta1
+        beta2: adam beta2
         
-    Returns:
-        Tuple of (generator_optimizer, discriminator_optimizer)
+    returns:
+        tuple of (generator_optimizer, discriminator_optimizer)
     """
     g_params = list(G_A2B.parameters()) + list(G_B2A.parameters())
     d_params = list(D_A.parameters()) + list(D_B.parameters())
@@ -240,11 +240,11 @@ def create_cyclegan_optimizers(
 
 class TTUR:
     """
-    Two Time-Scale Update Rule for GANs.
+    two time-scale update rule for gans.
     
-    Uses different learning rates for generator and discriminator
-    as proposed in "GANs Trained by a Two Time-Scale Update Rule
-    Converge to a Local Nash Equilibrium".
+    uses different learning rates for generator and discriminator
+    as proposed in "gans trained by a two time-scale update rule
+    converge to a local nash equilibrium".
     """
     
     @staticmethod
@@ -257,18 +257,18 @@ class TTUR:
         beta2: float = 0.9
     ) -> Tuple[Optimizer, Optimizer]:
         """
-        Create TTUR optimizers.
+        create ttur optimizers.
         
-        Args:
-            generator: Generator model
-            discriminator: Discriminator model
-            lr_g: Generator learning rate (smaller)
-            lr_d: Discriminator learning rate (larger)
-            beta1: Adam beta1 (typically 0 for TTUR)
-            beta2: Adam beta2
+        args:
+            generator: generator model
+            discriminator: discriminator model
+            lr_g: generator learning rate (smaller)
+            lr_d: discriminator learning rate (larger)
+            beta1: adam beta1 (typically 0 for ttur)
+            beta2: adam beta2
             
-        Returns:
-            Tuple of (generator_optimizer, discriminator_optimizer)
+        returns:
+            tuple of (generator_optimizer, discriminator_optimizer)
         """
         opt_g = torch.optim.Adam(
             generator.parameters(),
@@ -287,9 +287,9 @@ class TTUR:
 
 class DifferentialLR:
     """
-    Differential learning rates for different model parts.
+    differential learning rates for different model parts.
     
-    Useful for fine-tuning pretrained models where different
+    useful for fine-tuning pretrained models where different
     layers should have different learning rates.
     """
     
@@ -301,18 +301,18 @@ class DifferentialLR:
         num_groups: int = 4
     ) -> List[Dict[str, Any]]:
         """
-        Create parameter groups with differential learning rates.
+        create parameter groups with differential learning rates.
         
-        Args:
-            model: Model to create groups for
-            base_lr: Base learning rate for the last layer
-            layer_decay: Decay factor for each layer group
-            num_groups: Number of parameter groups
+        args:
+            model: model to create groups for
+            base_lr: base learning rate for the last layer
+            layer_decay: decay factor for each layer group
+            num_groups: number of parameter groups
             
-        Returns:
-            List of parameter groups for optimizer
+        returns:
+            list of parameter groups for optimizer
         """
-        # Get all named parameters
+        # get all named parameters
         named_params = list(model.named_parameters())
         num_params = len(named_params)
         params_per_group = max(1, num_params // num_groups)
@@ -343,17 +343,17 @@ class DifferentialLR:
         **kwargs
     ) -> Optimizer:
         """
-        Create optimizer with differential learning rates.
+        create optimizer with differential learning rates.
         
-        Args:
-            model: Model to optimize
-            base_lr: Base learning rate
-            layer_decay: Decay factor
-            optimizer_cls: Optimizer class to use
-            **kwargs: Additional optimizer arguments
+        args:
+            model: model to optimize
+            base_lr: base learning rate
+            layer_decay: decay factor
+            optimizer_cls: optimizer class to use
+            **kwargs: additional optimizer arguments
             
-        Returns:
-            Configured optimizer
+        returns:
+            configured optimizer
         """
         param_groups = DifferentialLR.create_param_groups(
             model, base_lr, layer_decay
@@ -364,9 +364,9 @@ class DifferentialLR:
 
 class ExponentialMovingAverage:
     """
-    Exponential Moving Average of model parameters.
+    exponential moving average of model parameters.
     
-    Maintains an EMA of model parameters for improved stability
+    maintains an ema of model parameters for improved stability
     and evaluation performance.
     """
     
@@ -377,16 +377,16 @@ class ExponentialMovingAverage:
         device: Optional[torch.device] = None
     ):
         """
-        Args:
-            model: Model to track
-            decay: EMA decay rate
-            device: Device for EMA parameters
+        args:
+            model: model to track
+            decay: ema decay rate
+            device: device for ema parameters
         """
         self.model = model
         self.decay = decay
         self.device = device
         
-        # Create shadow parameters
+        # create shadow parameters
         self.shadow = {}
         self.backup = {}
         
@@ -398,7 +398,7 @@ class ExponentialMovingAverage:
                     self.shadow[name] = param.data.clone()
     
     def update(self):
-        """Update EMA parameters."""
+        """update ema parameters."""
         for name, param in self.model.named_parameters():
             if param.requires_grad and name in self.shadow:
                 new_average = (
@@ -408,27 +408,27 @@ class ExponentialMovingAverage:
                 self.shadow[name] = new_average.clone()
     
     def apply_shadow(self):
-        """Apply EMA parameters to model."""
+        """apply ema parameters to model."""
         for name, param in self.model.named_parameters():
             if param.requires_grad and name in self.shadow:
                 self.backup[name] = param.data.clone()
                 param.data = self.shadow[name]
     
     def restore(self):
-        """Restore original parameters."""
+        """restore original parameters."""
         for name, param in self.model.named_parameters():
             if param.requires_grad and name in self.backup:
                 param.data = self.backup[name]
         self.backup = {}
     
     def state_dict(self) -> Dict[str, torch.Tensor]:
-        """Return EMA state dict."""
+        """return ema state dict."""
         return {
             'decay': self.decay,
             'shadow': self.shadow
         }
     
     def load_state_dict(self, state_dict: Dict[str, Any]):
-        """Load EMA state dict."""
+        """load ema state dict."""
         self.decay = state_dict['decay']
         self.shadow = state_dict['shadow']

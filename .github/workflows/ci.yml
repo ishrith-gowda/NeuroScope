@@ -1,0 +1,118 @@
+# neuroscope ci pipeline
+# runs on every push and pull request to main
+
+name: ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort ruff flake8 flake8-bugbear flake8-comprehensions
+
+      - name: check formatting with black
+        run: black --check --diff neuroscope/ journal_extension/ scripts/ tools/
+
+      - name: check import sorting with isort
+        run: isort --check-only --diff neuroscope/ journal_extension/ scripts/ tools/
+
+      - name: lint with ruff
+        run: ruff check neuroscope/ journal_extension/ scripts/ tools/
+
+      - name: lint with flake8
+        run: flake8 neuroscope/ journal_extension/ scripts/ tools/
+
+  typecheck:
+    name: type checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: run mypy
+        run: mypy neuroscope/
+
+  test:
+    name: test (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: run unit tests
+        run: |
+          pytest neuroscope/tests/unit/ -v --tb=short \
+            -m "not slow and not gpu and not data" \
+            --timeout=120 \
+            --cov=neuroscope \
+            --cov-report=xml
+
+      - name: upload coverage
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  security:
+    name: security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: install bandit
+        run: pip install "bandit[toml]"
+
+      - name: run bandit security scan
+        run: bandit -c pyproject.toml -r neuroscope/ -ll

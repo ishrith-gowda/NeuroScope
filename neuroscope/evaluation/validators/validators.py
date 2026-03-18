@@ -1,7 +1,7 @@
 """
-Model Validators.
+model validators.
 
-Cross-validation and validation frameworks for
+cross-validation and validation frameworks for
 robust model evaluation.
 """
 
@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class ValidationResult:
-    """Result from validation run."""
+    """result from validation run."""
     fold: int
     train_metrics: Dict[str, float]
     val_metrics: Dict[str, float]
@@ -26,7 +26,7 @@ class ValidationResult:
 
 @dataclass
 class ValidationSummary:
-    """Summary of all validation folds."""
+    """summary of all validation folds."""
     n_folds: int
     metric_means: Dict[str, float]
     metric_stds: Dict[str, float]
@@ -34,7 +34,7 @@ class ValidationSummary:
     best_fold: int = 0
     
     def get_summary_string(self) -> str:
-        """Get human-readable summary."""
+        """get human-readable summary."""
         lines = [f"Validation Summary ({self.n_folds} folds)"]
         lines.append("-" * 40)
         
@@ -46,7 +46,7 @@ class ValidationSummary:
 
 
 class BaseValidator(ABC):
-    """Base class for validators."""
+    """base class for validators."""
     
     @abstractmethod
     def get_splits(
@@ -54,13 +54,13 @@ class BaseValidator(ABC):
         data_indices: np.ndarray
     ) -> List[Tuple[np.ndarray, np.ndarray]]:
         """
-        Get train/validation splits.
+        get train/validation splits.
         
-        Args:
-            data_indices: Array of data indices
+        args:
+            data_indices: array of data indices
             
-        Returns:
-            List of (train_indices, val_indices) tuples
+        returns:
+            list of (train_indices, val_indices) tuples
         """
         pass
     
@@ -72,24 +72,24 @@ class BaseValidator(ABC):
         data_indices: np.ndarray
     ) -> ValidationSummary:
         """
-        Run validation.
+        run validation.
         
-        Args:
-            train_fn: Function to train model
-            eval_fn: Function to evaluate model
-            data_indices: Data indices
+        args:
+            train_fn: function to train model
+            eval_fn: function to evaluate model
+            data_indices: data indices
             
-        Returns:
-            ValidationSummary
+        returns:
+            validationsummary
         """
         pass
 
 
 class CrossValidator(BaseValidator):
     """
-    K-Fold Cross-Validation.
+    k-fold cross-validation.
     
-    Standard cross-validation with optional stratification.
+    standard cross-validation with optional stratification.
     """
     
     def __init__(
@@ -100,11 +100,11 @@ class CrossValidator(BaseValidator):
         stratified: bool = False
     ):
         """
-        Args:
-            n_folds: Number of folds
-            shuffle: Shuffle before splitting
-            random_state: Random seed
-            stratified: Stratified sampling
+        args:
+            n_folds: number of folds
+            shuffle: shuffle before splitting
+            random_state: random seed
+            stratified: stratified sampling
         """
         self.n_folds = n_folds
         self.shuffle = shuffle
@@ -117,14 +117,14 @@ class CrossValidator(BaseValidator):
         labels: np.ndarray = None
     ) -> List[Tuple[np.ndarray, np.ndarray]]:
         """
-        Get K-fold splits.
+        get k-fold splits.
         
-        Args:
-            data_indices: Array of data indices
-            labels: Optional labels for stratification
+        args:
+            data_indices: array of data indices
+            labels: optional labels for stratification
             
-        Returns:
-            List of (train_indices, val_indices) tuples
+        returns:
+            list of (train_indices, val_indices) tuples
         """
         n_samples = len(data_indices)
         indices = data_indices.copy()
@@ -136,7 +136,7 @@ class CrossValidator(BaseValidator):
         if self.stratified and labels is not None:
             return self._stratified_splits(indices, labels)
         
-        # Regular K-fold
+        # regular k-fold
         fold_sizes = np.full(self.n_folds, n_samples // self.n_folds)
         fold_sizes[:n_samples % self.n_folds] += 1
         
@@ -159,16 +159,16 @@ class CrossValidator(BaseValidator):
         indices: np.ndarray,
         labels: np.ndarray
     ) -> List[Tuple[np.ndarray, np.ndarray]]:
-        """Create stratified splits."""
+        """create stratified splits."""
         unique_labels = np.unique(labels)
         
-        # Group indices by label
+        # group indices by label
         label_indices = {
             label: indices[labels == label]
             for label in unique_labels
         }
         
-        # Split each group
+        # split each group
         splits = [
             (np.array([], dtype=int), np.array([], dtype=int))
             for _ in range(self.n_folds)
@@ -198,16 +198,16 @@ class CrossValidator(BaseValidator):
         labels: np.ndarray = None
     ) -> ValidationSummary:
         """
-        Run K-fold cross-validation.
+        run k-fold cross-validation.
         
-        Args:
-            train_fn: Function(train_indices) -> model
-            eval_fn: Function(model, val_indices) -> metrics
-            data_indices: Array of data indices
-            labels: Optional labels for stratification
+        args:
+            train_fn: function(train_indices) -> model
+            eval_fn: function(model, val_indices) -> metrics
+            data_indices: array of data indices
+            labels: optional labels for stratification
             
-        Returns:
-            ValidationSummary
+        returns:
+            validationsummary
         """
         import time
         
@@ -217,10 +217,10 @@ class CrossValidator(BaseValidator):
         for fold, (train_indices, val_indices) in enumerate(splits):
             start_time = time.time()
             
-            # Train
+            # train
             model, train_metrics = train_fn(train_indices)
             
-            # Evaluate
+            # evaluate
             val_metrics = eval_fn(model, val_indices)
             
             training_time = time.time() - start_time
@@ -233,14 +233,14 @@ class CrossValidator(BaseValidator):
             )
             fold_results.append(result)
         
-        # Aggregate results
+        # aggregate results
         return self._aggregate_results(fold_results)
     
     def _aggregate_results(
         self,
         fold_results: List[ValidationResult]
     ) -> ValidationSummary:
-        """Aggregate fold results."""
+        """aggregate fold results."""
         all_metrics = {}
         
         for result in fold_results:
@@ -256,7 +256,7 @@ class CrossValidator(BaseValidator):
             k: float(np.std(v)) for k, v in all_metrics.items()
         }
         
-        # Find best fold (highest mean metric)
+        # find best fold (highest mean metric)
         primary_metric = list(all_metrics.keys())[0]
         best_fold = int(np.argmax(all_metrics[primary_metric]))
         
@@ -271,9 +271,9 @@ class CrossValidator(BaseValidator):
 
 class HoldoutValidator(BaseValidator):
     """
-    Holdout Validation.
+    holdout validation.
     
-    Simple train/validation/test split.
+    simple train/validation/test split.
     """
     
     def __init__(
@@ -284,11 +284,11 @@ class HoldoutValidator(BaseValidator):
         random_state: int = 42
     ):
         """
-        Args:
-            val_ratio: Validation set ratio
-            test_ratio: Test set ratio
-            shuffle: Shuffle before splitting
-            random_state: Random seed
+        args:
+            val_ratio: validation set ratio
+            test_ratio: test set ratio
+            shuffle: shuffle before splitting
+            random_state: random seed
         """
         self.val_ratio = val_ratio
         self.test_ratio = test_ratio
@@ -299,7 +299,7 @@ class HoldoutValidator(BaseValidator):
         self,
         data_indices: np.ndarray
     ) -> List[Tuple[np.ndarray, np.ndarray]]:
-        """Get train/val split."""
+        """get train/val split."""
         return [self.get_train_val_test_split(data_indices)[:2]]
     
     def get_train_val_test_split(
@@ -307,13 +307,13 @@ class HoldoutValidator(BaseValidator):
         data_indices: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Get train/validation/test split.
+        get train/validation/test split.
         
-        Args:
-            data_indices: Array of data indices
+        args:
+            data_indices: array of data indices
             
-        Returns:
-            Tuple of (train, val, test) indices
+        returns:
+            tuple of (train, val, test) indices
         """
         n_samples = len(data_indices)
         indices = data_indices.copy()
@@ -339,15 +339,15 @@ class HoldoutValidator(BaseValidator):
         data_indices: np.ndarray
     ) -> ValidationSummary:
         """
-        Run holdout validation.
+        run holdout validation.
         
-        Args:
-            train_fn: Training function
-            eval_fn: Evaluation function
-            data_indices: Data indices
+        args:
+            train_fn: training function
+            eval_fn: evaluation function
+            data_indices: data indices
             
-        Returns:
-            ValidationSummary
+        returns:
+            validationsummary
         """
         import time
         
@@ -381,9 +381,9 @@ class HoldoutValidator(BaseValidator):
 
 class TemporalValidator(BaseValidator):
     """
-    Temporal Validation.
+    temporal validation.
     
-    Time-based splitting for temporal data.
+    time-based splitting for temporal data.
     """
     
     def __init__(
@@ -393,10 +393,10 @@ class TemporalValidator(BaseValidator):
         test_size: int = None
     ):
         """
-        Args:
-            n_splits: Number of splits
-            gap: Gap between train and test
-            test_size: Fixed test size
+        args:
+            n_splits: number of splits
+            gap: gap between train and test
+            test_size: fixed test size
         """
         self.n_splits = n_splits
         self.gap = gap
@@ -408,17 +408,17 @@ class TemporalValidator(BaseValidator):
         timestamps: np.ndarray = None
     ) -> List[Tuple[np.ndarray, np.ndarray]]:
         """
-        Get temporal splits.
+        get temporal splits.
         
-        Args:
-            data_indices: Data indices (assumed sorted by time)
-            timestamps: Optional timestamps for sorting
+        args:
+            data_indices: data indices (assumed sorted by time)
+            timestamps: optional timestamps for sorting
             
-        Returns:
-            List of (train_indices, val_indices)
+        returns:
+            list of (train_indices, val_indices)
         """
         if timestamps is not None:
-            # Sort by timestamp
+            # sort by timestamp
             sort_idx = np.argsort(timestamps)
             data_indices = data_indices[sort_idx]
         
@@ -450,16 +450,16 @@ class TemporalValidator(BaseValidator):
         timestamps: np.ndarray = None
     ) -> ValidationSummary:
         """
-        Run temporal validation.
+        run temporal validation.
         
-        Args:
-            train_fn: Training function
-            eval_fn: Evaluation function
-            data_indices: Data indices
-            timestamps: Timestamps
+        args:
+            train_fn: training function
+            eval_fn: evaluation function
+            data_indices: data indices
+            timestamps: timestamps
             
-        Returns:
-            ValidationSummary
+        returns:
+            validationsummary
         """
         import time
         
@@ -482,7 +482,7 @@ class TemporalValidator(BaseValidator):
             )
             fold_results.append(result)
         
-        # Aggregate
+        # aggregate
         all_metrics = {}
         for result in fold_results:
             for metric, value in result.val_metrics.items():
@@ -503,9 +503,9 @@ class TemporalValidator(BaseValidator):
 
 class NestedCrossValidator:
     """
-    Nested Cross-Validation.
+    nested cross-validation.
     
-    Inner loop for hyperparameter tuning,
+    inner loop for hyperparameter tuning,
     outer loop for unbiased evaluation.
     """
     
@@ -516,10 +516,10 @@ class NestedCrossValidator:
         random_state: int = 42
     ):
         """
-        Args:
-            outer_folds: Outer CV folds
-            inner_folds: Inner CV folds
-            random_state: Random seed
+        args:
+            outer_folds: outer cv folds
+            inner_folds: inner cv folds
+            random_state: random seed
         """
         self.outer_cv = CrossValidator(
             n_folds=outer_folds,
@@ -538,27 +538,27 @@ class NestedCrossValidator:
         data_indices: np.ndarray
     ) -> ValidationSummary:
         """
-        Run nested cross-validation.
+        run nested cross-validation.
         
-        Args:
-            train_fn: Training function(indices, hyperparams) -> model
-            eval_fn: Evaluation function
-            hyperparams_fn: Hyperparameter search function
-            data_indices: Data indices
+        args:
+            train_fn: training function(indices, hyperparams) -> model
+            eval_fn: evaluation function
+            hyperparams_fn: hyperparameter search function
+            data_indices: data indices
             
-        Returns:
-            ValidationSummary
+        returns:
+            validationsummary
         """
         outer_splits = self.outer_cv.get_splits(data_indices)
         fold_results = []
         
         for fold, (train_indices, test_indices) in enumerate(outer_splits):
-            # Inner loop: hyperparameter tuning
+            # inner loop: hyperparameter tuning
             best_hyperparams = hyperparams_fn(
                 train_fn, eval_fn, train_indices, self.inner_cv
             )
             
-            # Outer loop: train with best hyperparams, test
+            # outer loop: train with best hyperparams, test
             model, train_metrics = train_fn(train_indices, best_hyperparams)
             test_metrics = eval_fn(model, test_indices)
             

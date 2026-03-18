@@ -60,7 +60,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     plt.subplots_adjust(hspace=0.35, wspace=0.25, top=0.88)
     axes = axes.flatten()
 
-    # Colors: viridian and soft lavender (matching approximated distributions)
+    # colors: viridian and soft lavender (matching approximated distributions)
     c_a2b = '#40826D'  # viridian
     c_b2a = '#E8A5FF'  # soft lavender
 
@@ -118,7 +118,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
                  fontsize=16, y=0.97)
     output_path = OUTPUT_DIR / 'fig15_comprehensive_comparison.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
     print("generated figure 15: comprehensive metric comparison")
@@ -134,23 +134,23 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
 
     fig = plt.figure(figsize=(16, 9))
 
-    # Top row: 3 plots spanning full width
-    # Bottom row: 2 plots centered (using columns 0.5-1.5 and 1.5-2.5 of 3)
+    # top row: 3 plots spanning full width
+    # bottom row: 2 plots centered (using columns 0.5-1.5 and 1.5-2.5 of 3)
     gs_top = gridspec.GridSpec(2, 3, figure=fig, hspace=0.35, wspace=0.3,
                                 top=0.88, bottom=0.06)
-    # Bottom row: 7-col grid, each plot spans 2 cols with 1 col gap in middle
+    # bottom row: 7-col grid, each plot spans 2 cols with 1 col gap in middle
     gs_bot = gridspec.GridSpec(2, 7, figure=fig, hspace=0.35, wspace=0.3,
                                 top=0.88, bottom=0.06)
 
     axes = []
-    # Top row: 3 evenly spaced
+    # top row: 3 evenly spaced
     for c in range(3):
         axes.append(fig.add_subplot(gs_top[0, c]))
-    # Bottom row: 2 centered with small gap (cols 1-2 and 4-5 of a 7-col grid)
+    # bottom row: 2 centered with small gap (cols 1-2 and 4-5 of a 7-col grid)
     axes.append(fig.add_subplot(gs_bot[1, 1:3]))
     axes.append(fig.add_subplot(gs_bot[1, 4:6]))
 
-    # Colors: viridian and soft lavender
+    # colors: viridian and soft lavender
     c_a2b = '#40826D'  # viridian
     c_b2a = '#E8A5FF'  # soft lavender
     c_mean = '#C41E3A'  # cardinal red for mean markers
@@ -245,7 +245,7 @@ def generate_approximated_distributions(metrics_a2b, metrics_b2a):
                  fontsize=16, y=0.97)
     output_path = OUTPUT_DIR / 'fig16_approximated_distributions.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
     print("generated figure 16: approximated box plot distributions")
@@ -259,7 +259,7 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
     """
     fig = plt.figure(figsize=(10, 8))
 
-    # Colors: dark cyan and tangerine
+    # colors: dark cyan and tangerine
     c_a2b = '#008B8B'  # dark cyan
     c_b2a = '#FF9966'  # tangerine
 
@@ -328,7 +328,7 @@ def generate_performance_radar(metrics_a2b, metrics_b2a):
     plt.subplots_adjust(top=0.88)
     output_path = OUTPUT_DIR / 'fig17_performance_radar.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
     print("generated figure 17: performance radar chart")
@@ -417,7 +417,7 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
     """
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Colors: light blue positive, orange negative
+    # colors: light blue positive, orange negative
     c_pos = '#7EB5D6'  # light blue
     c_neg = '#F18F01'  # orange
 
@@ -481,7 +481,7 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
     plt.subplots_adjust(top=0.88)
     output_path = OUTPUT_DIR / 'fig19_effect_size_analysis.pdf'
     fig.savefig(output_path, format='pdf', bbox_inches='tight', pad_inches=0.15)
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
     plt.close()
 
     print("generated figure 19: effect size analysis")

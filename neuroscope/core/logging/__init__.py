@@ -1,4 +1,4 @@
-"""Logging initialization."""
+"""logging initialization."""
 
 from neuroscope.core.logging.logger import setup_logging, get_logger, logger
 

@@ -1,7 +1,7 @@
 """
-VGG Feature Extraction Backbones.
+vgg feature extraction backbones.
 
-Provides VGG-based feature extractors for perceptual loss
+provides vgg-based feature extractors for perceptual loss
 computation and feature matching in image translation.
 """
 
@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 @dataclass
 class VGGConfig:
-    """Configuration for VGG feature extractor."""
+    """configuration for vgg feature extractor."""
     feature_layers: List[str] = None
     use_bn: bool = False
     pretrained: bool = True
@@ -30,7 +30,7 @@ class VGGConfig:
 
 
 class VGGNormalization(nn.Module):
-    """Normalize input to VGG expected range."""
+    """normalize input to vgg expected range."""
     
     def __init__(
         self,
@@ -42,14 +42,14 @@ class VGGNormalization(nn.Module):
         self.register_buffer('std', torch.tensor(std).view(1, 3, 1, 1))
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Normalize input tensor."""
-        # Handle single channel by repeating
+        """normalize input tensor."""
+        # handle single channel by repeating
         if x.size(1) == 1:
             x = x.repeat(1, 3, 1, 1)
         elif x.size(1) > 3:
-            x = x[:, :3]  # Take first 3 channels
+            x = x[:, :3]  # take first 3 channels
         
-        # Normalize from [-1, 1] to [0, 1] if needed
+        # normalize from [-1, 1] to [0, 1] if needed
         if x.min() < 0:
             x = (x + 1) / 2
         
@@ -58,12 +58,12 @@ class VGGNormalization(nn.Module):
 
 class VGG16Features(nn.Module):
     """
-    VGG16 feature extractor for perceptual loss.
+    vgg16 feature extractor for perceptual loss.
     
-    Extracts intermediate features from specified layers.
+    extracts intermediate features from specified layers.
     """
     
-    # Layer name mapping for VGG16
+    # layer name mapping for vgg16
     LAYER_NAMES = {
         '0': 'conv1_1', '1': 'relu1_1', '2': 'conv1_2', '3': 'relu1_2', '4': 'pool1',
         '5': 'conv2_1', '6': 'relu2_1', '7': 'conv2_2', '8': 'relu2_2', '9': 'pool2',
@@ -88,34 +88,34 @@ class VGG16Features(nn.Module):
         self.feature_layers = feature_layers or ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3']
         self.normalize_input = normalize_input
         
-        # Load pretrained VGG16
+        # load pretrained vgg16
         if pretrained:
             vgg = models.vgg16(weights=weights)
         else:
             vgg = models.vgg16(weights=None)
         
-        # Build feature extraction layers
+        # build feature extraction layers
         self.features = vgg.features
         
-        # Find the last layer we need
+        # find the last layer we need
         name_to_idx = {v: int(k) for k, v in self.LAYER_NAMES.items()}
         max_idx = max(name_to_idx.get(layer, 0) for layer in self.feature_layers)
         
-        # Truncate to only needed layers
+        # truncate to only needed layers
         self.features = self.features[:max_idx + 1]
         
-        # Store layer indices
+        # store layer indices
         self.layer_indices = {
             layer: name_to_idx[layer] for layer in self.feature_layers
             if layer in name_to_idx
         }
         
-        # Freeze parameters
+        # freeze parameters
         if not requires_grad:
             for param in self.parameters():
                 param.requires_grad = False
         
-        # Input normalization
+        # input normalization
         if normalize_input:
             self.normalize = VGGNormalization()
         else:
@@ -125,13 +125,13 @@ class VGG16Features(nn.Module):
     
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
-        Extract features from specified layers.
+        extract features from specified layers.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Dictionary mapping layer names to feature tensors
+        returns:
+            dictionary mapping layer names to feature tensors
         """
         x = self.normalize(x)
         
@@ -145,7 +145,7 @@ class VGG16Features(nn.Module):
         return features
     
     def get_feature_channels(self) -> Dict[str, int]:
-        """Get number of channels for each feature layer."""
+        """get number of channels for each feature layer."""
         channels = {
             'relu1_1': 64, 'relu1_2': 64,
             'relu2_1': 128, 'relu2_2': 128,
@@ -158,12 +158,12 @@ class VGG16Features(nn.Module):
 
 class VGG19Features(nn.Module):
     """
-    VGG19 feature extractor for perceptual loss.
+    vgg19 feature extractor for perceptual loss.
     
-    Standard choice for perceptual losses in image generation.
+    standard choice for perceptual losses in image generation.
     """
     
-    # Layer name mapping for VGG19
+    # layer name mapping for vgg19
     LAYER_NAMES = {
         '0': 'conv1_1', '1': 'relu1_1', '2': 'conv1_2', '3': 'relu1_2', '4': 'pool1',
         '5': 'conv2_1', '6': 'relu2_1', '7': 'conv2_2', '8': 'relu2_2', '9': 'pool2',
@@ -185,40 +185,40 @@ class VGG19Features(nn.Module):
     ):
         super().__init__()
         
-        # Default layers for perceptual loss
+        # default layers for perceptual loss
         self.feature_layers = feature_layers or [
             'relu1_2', 'relu2_2', 'relu3_4', 'relu4_4', 'relu5_4'
         ]
         self.normalize_input = normalize_input
         
-        # Load pretrained VGG19
+        # load pretrained vgg19
         if pretrained:
             vgg = models.vgg19(weights=weights)
         else:
             vgg = models.vgg19(weights=None)
         
-        # Build feature extraction layers
+        # build feature extraction layers
         self.features = vgg.features
         
-        # Find the last layer we need
+        # find the last layer we need
         name_to_idx = {v: int(k) for k, v in self.LAYER_NAMES.items()}
         max_idx = max(name_to_idx.get(layer, 0) for layer in self.feature_layers)
         
-        # Truncate to only needed layers
+        # truncate to only needed layers
         self.features = self.features[:max_idx + 1]
         
-        # Store layer indices
+        # store layer indices
         self.layer_indices = {
             layer: name_to_idx[layer] for layer in self.feature_layers
             if layer in name_to_idx
         }
         
-        # Freeze parameters
+        # freeze parameters
         if not requires_grad:
             for param in self.parameters():
                 param.requires_grad = False
         
-        # Input normalization
+        # input normalization
         if normalize_input:
             self.normalize = VGGNormalization()
         else:
@@ -227,7 +227,7 @@ class VGG19Features(nn.Module):
         self.eval()
     
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """Extract features from specified layers."""
+        """extract features from specified layers."""
         x = self.normalize(x)
         
         features = {}
@@ -240,7 +240,7 @@ class VGG19Features(nn.Module):
         return features
     
     def get_feature_channels(self) -> Dict[str, int]:
-        """Get number of channels for each feature layer."""
+        """get number of channels for each feature layer."""
         channels = {
             'relu1_1': 64, 'relu1_2': 64,
             'relu2_1': 128, 'relu2_2': 128,
@@ -253,9 +253,9 @@ class VGG19Features(nn.Module):
 
 class VGGPerceptualExtractor(nn.Module):
     """
-    Flexible VGG-based perceptual feature extractor.
+    flexible vgg-based perceptual feature extractor.
     
-    Supports both VGG16 and VGG19, with configurable layer weights
+    supports both vgg16 and vgg19, with configurable layer weights
     for computing perceptual loss.
     """
     
@@ -275,7 +275,7 @@ class VGGPerceptualExtractor(nn.Module):
         self.normalize_features = normalize_features
         self.pool_type = pool_type
         
-        # Default layer weights
+        # default layer weights
         if layer_weights is None:
             layer_weights = {
                 'relu1_2': 1.0,
@@ -285,11 +285,11 @@ class VGGPerceptualExtractor(nn.Module):
             }
         self.layer_weights = layer_weights
         
-        # Feature layers from weights
+        # feature layers from weights
         if feature_layers is None:
             feature_layers = list(layer_weights.keys())
         
-        # Build backbone
+        # build backbone
         if vgg_type == 'vgg16':
             self.backbone = VGG16Features(
                 feature_layers=feature_layers,
@@ -303,7 +303,7 @@ class VGGPerceptualExtractor(nn.Module):
                 normalize_input=normalize_input
             )
         
-        # Pooling layers
+        # pooling layers
         if pool_type == 'avg':
             self.pool = nn.AdaptiveAvgPool2d(1)
         elif pool_type == 'max':
@@ -312,7 +312,7 @@ class VGGPerceptualExtractor(nn.Module):
             self.pool = None
     
     def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """Extract weighted features."""
+        """extract weighted features."""
         features = self.backbone(x)
         
         if self.normalize_features:
@@ -332,15 +332,15 @@ class VGGPerceptualExtractor(nn.Module):
         loss_type: str = 'l1'
     ) -> torch.Tensor:
         """
-        Compute perceptual loss between prediction and target.
+        compute perceptual loss between prediction and target.
         
-        Args:
-            pred: Predicted image tensor
-            target: Target image tensor
+        args:
+            pred: predicted image tensor
+            target: target image tensor
             loss_type: 'l1', 'l2', or 'cos'
             
-        Returns:
-            Weighted perceptual loss
+        returns:
+            weighted perceptual loss
         """
         pred_features = self.forward(pred)
         target_features = self.forward(target)
@@ -369,9 +369,9 @@ class VGGPerceptualExtractor(nn.Module):
 
 class MultiLayerVGG(nn.Module):
     """
-    Multi-layer VGG extractor with Gram matrix computation.
+    multi-layer vgg extractor with gram matrix computation.
     
-    Computes both content and style features.
+    computes both content and style features.
     """
     
     def __init__(
@@ -398,13 +398,13 @@ class MultiLayerVGG(nn.Module):
     
     def gram_matrix(self, features: torch.Tensor) -> torch.Tensor:
         """
-        Compute Gram matrix for style representation.
+        compute gram matrix for style representation.
         
-        Args:
-            features: Feature tensor [B, C, H, W]
+        args:
+            features: feature tensor [b, c, h, w]
             
-        Returns:
-            Gram matrix [B, C, C]
+        returns:
+            gram matrix [b, c, c]
         """
         B, C, H, W = features.size()
         features = features.view(B, C, H * W)
@@ -416,13 +416,13 @@ class MultiLayerVGG(nn.Module):
         x: torch.Tensor
     ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
         """
-        Extract content and style features.
+        extract content and style features.
         
-        Args:
-            x: Input tensor
+        args:
+            x: input tensor
             
-        Returns:
-            Tuple of (content_features, style_features)
+        returns:
+            tuple of (content_features, style_features)
         """
         all_features = self.backbone(x)
         
@@ -445,7 +445,7 @@ class MultiLayerVGG(nn.Module):
         pred: torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        """Compute content loss."""
+        """compute content loss."""
         pred_content, _ = self.forward(pred)
         target_content, _ = self.forward(target)
         
@@ -463,7 +463,7 @@ class MultiLayerVGG(nn.Module):
         pred: torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        """Compute style loss using Gram matrices."""
+        """compute style loss using gram matrices."""
         _, pred_style = self.forward(pred)
         _, target_style = self.forward(target)
         

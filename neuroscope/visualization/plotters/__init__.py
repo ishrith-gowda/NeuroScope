@@ -1,9 +1,9 @@
-"""Plotting utilities for NeuroScope.
+"""plotting utilities for neuroscope.
 
-This module provides plotting utilities for various data types and visualizations.
+this module provides plotting utilities for various data types and visualizations.
 """
 
-# Placeholder for plotting utilities
-# The actual implementation would be imported here
+# placeholder for plotting utilities
+# the actual implementation would be imported here
 
 __all__ = []

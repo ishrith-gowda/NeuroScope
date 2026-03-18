@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-CycleGAN Fast Training Script
+cyclegan fast training script
 
-Optimizations for speed:
-1. Pre-load and cache slices in memory
-2. Simplified but effective architecture
-3. Reduced iterations per epoch
-4. Real-time output with proper flushing
+optimizations for speed:
+1. pre-load and cache slices in memory
+2. simplified but effective architecture
+3. reduced iterations per epoch
+4. real-time output with proper flushing
 """
 
 import os
@@ -27,44 +27,44 @@ import torch.nn.functional as F
 import numpy as np
 import SimpleITK as sitk
 
-# Force unbuffered output
+# force unbuffered output
 os.environ['PYTHONUNBUFFERED'] = '1'
 
 def pprint(*args, **kwargs):
-    """Print with flush"""
+    """print with flush"""
     print(*args, **kwargs, flush=True)
 
 # ============================================================================
-# Memory-Cached Dataset - Pre-loads slices for speed
+# memory-cached dataset - pre-loads slices for speed
 # ============================================================================
 class CachedSliceDataset(Dataset):
-    """Pre-caches 2D slices in memory for fast training"""
+    """pre-caches 2d slices in memory for fast training"""
     
     def __init__(self, data_root, section, split, meta_json, 
                  max_subjects=None, slices_per_subject=8, 
                  slice_range=(50, 110)):
         """
-        Args:
-            data_root: Path to preprocessed data
+        args:
+            data_root: path to preprocessed data
             section: 'brats' or 'upenn'
             split: 'train', 'val', or 'test'
-            meta_json: Path to metadata JSON
-            max_subjects: Limit subjects for faster loading
-            slices_per_subject: Number of slices to cache per subject
+            meta_json: path to metadata json
+            max_subjects: limit subjects for faster loading
+            slices_per_subject: number of slices to cache per subject
             slice_range: (min_z, max_z) to sample from (brain region)
         """
         self.slices = []
         self.section = section
         self.split = split
         
-        # Modality names match preprocessed directory structure
+        # modality names match preprocessed directory structure
         modalities = ['t1.nii.gz', 't1gd.nii.gz', 't2.nii.gz', 'flair.nii.gz']
         
-        # Load metadata
+        # load metadata
         with open(meta_json, 'r') as f:
             meta = json.load(f)
         
-        # Get valid_subjects for this section
+        # get valid_subjects for this section
         subjects_meta = meta.get(section, {}).get('valid_subjects', {})
         subject_ids = [sid for sid, info in subjects_meta.items() 
                        if info.get('split') == split]
@@ -72,26 +72,26 @@ class CachedSliceDataset(Dataset):
         if max_subjects:
             subject_ids = subject_ids[:max_subjects]
         
-        pprint(f"Loading {section}/{split}: {len(subject_ids)} subjects...")
+        pprint(f"loading {section}/{split}: {len(subject_ids)} subjects...")
         
         for idx, sid in enumerate(subject_ids):
             subject_dir = Path(data_root) / section / sid
             
-            # Check all modalities exist
+            # check all modalities exist
             mod_paths = [subject_dir / mod for mod in modalities]
             if not all(p.exists() for p in mod_paths):
                 continue
             
             try:
-                # Load all modalities
+                # load all modalities
                 vols = []
                 for mp in mod_paths:
                     img = sitk.ReadImage(str(mp))
                     arr = sitk.GetArrayFromImage(img).astype(np.float32)
                     vols.append(arr)
-                vol = np.stack(vols, axis=0)  # [4, D, H, W]
+                vol = np.stack(vols, axis=0)  # [4, d, h, w]
                 
-                # Sample slices from brain region
+                # sample slices from brain region
                 depth = vol.shape[1]
                 z_min = max(0, min(slice_range[0], depth - 1))
                 z_max = min(depth - 1, slice_range[1])
@@ -99,7 +99,7 @@ class CachedSliceDataset(Dataset):
                 if z_max <= z_min:
                     z_min, z_max = 0, depth - 1
                 
-                # Sample random slices
+                # sample random slices
                 z_indices = np.random.choice(
                     range(z_min, z_max + 1), 
                     size=min(slices_per_subject, z_max - z_min + 1),
@@ -107,22 +107,22 @@ class CachedSliceDataset(Dataset):
                 )
                 
                 for z in z_indices:
-                    slice_4ch = vol[:, z, :, :]  # [4, H, W]
+                    slice_4ch = vol[:, z, :, :]  # [4, h, w]
                     
-                    # Normalize to [-1, 1]
+                    # normalize to [-1, 1]
                     slice_4ch = np.clip(slice_4ch, 0, 1)
                     slice_4ch = slice_4ch * 2 - 1
                     
                     self.slices.append(torch.from_numpy(slice_4ch).float())
                 
                 if (idx + 1) % 20 == 0:
-                    pprint(f"  Loaded {idx + 1}/{len(subject_ids)} subjects, {len(self.slices)} slices")
+                    pprint(f"  loaded {idx + 1}/{len(subject_ids)} subjects, {len(self.slices)} slices")
                     
             except Exception as e:
-                pprint(f"  Warning: Failed to load {sid}: {e}")
+                pprint(f"  warning: failed to load {sid}: {e}")
                 continue
         
-        pprint(f"  Cached {len(self.slices)} slices for {section}/{split}")
+        pprint(f"  cached {len(self.slices)} slices for {section}/{split}")
     
     def __len__(self):
         return len(self.slices)
@@ -132,7 +132,7 @@ class CachedSliceDataset(Dataset):
 
 
 # ============================================================================
-# Lightweight Generator - Faster but still effective
+# lightweight generator - faster but still effective
 # ============================================================================
 class ResidualBlock(nn.Module):
     def __init__(self, channels):
@@ -152,12 +152,12 @@ class ResidualBlock(nn.Module):
 
 
 class FastGenerator(nn.Module):
-    """Generator with same architecture as original (9 residual blocks)"""
+    """generator with same architecture as original (9 residual blocks)"""
     
     def __init__(self, in_channels=4, out_channels=4, n_residual=9, ngf=64):
         super().__init__()
         
-        # Initial convolution
+        # initial convolution
         model = [
             nn.ReflectionPad2d(3),
             nn.Conv2d(in_channels, ngf, 7),
@@ -165,7 +165,7 @@ class FastGenerator(nn.Module):
             nn.ReLU(inplace=True),
         ]
         
-        # Downsampling (2 layers)
+        # downsampling (2 layers)
         in_ch = ngf
         for _ in range(2):
             out_ch = in_ch * 2
@@ -176,11 +176,11 @@ class FastGenerator(nn.Module):
             ]
             in_ch = out_ch
         
-        # Residual blocks
+        # residual blocks
         for _ in range(n_residual):
             model.append(ResidualBlock(in_ch))
         
-        # Upsampling (2 layers)
+        # upsampling (2 layers)
         for _ in range(2):
             out_ch = in_ch // 2
             model += [
@@ -190,7 +190,7 @@ class FastGenerator(nn.Module):
             ]
             in_ch = out_ch
         
-        # Output layer
+        # output layer
         model += [
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, out_channels, 7),
@@ -204,7 +204,7 @@ class FastGenerator(nn.Module):
 
 
 class FastDiscriminator(nn.Module):
-    """PatchGAN discriminator with spectral normalization"""
+    """patchgan discriminator with spectral normalization"""
     
     def __init__(self, in_channels=4, ndf=64):
         super().__init__()
@@ -230,7 +230,7 @@ class FastDiscriminator(nn.Module):
 
 
 # ============================================================================
-# Replay Buffer
+# replay buffer
 # ============================================================================
 class ReplayBuffer:
     def __init__(self, max_size=50):
@@ -255,32 +255,32 @@ class ReplayBuffer:
 
 
 # ============================================================================
-# Training Function
+# training function
 # ============================================================================
 def train(args):
     pprint("\n" + "=" * 70)
-    pprint("CYCLEGAN FAST TRAINING")
+    pprint("cyclegan fast training")
     pprint("=" * 70)
     
-    # Device
+    # device
     device = torch.device(
         'cuda' if torch.cuda.is_available()
         else 'mps' if torch.backends.mps.is_available()
         else 'cpu'
     )
-    pprint(f"Device: {device}")
+    pprint(f"device: {device}")
     
-    # Set seed
+    # set seed
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     random.seed(args.seed)
     
-    # Create directories
+    # create directories
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     os.makedirs(args.sample_dir, exist_ok=True)
     
-    # Load datasets (cached in memory)
-    pprint("\nLoading and caching datasets...")
+    # load datasets (cached in memory)
+    pprint("\nloading and caching datasets...")
     
     dataset_A = CachedSliceDataset(
         args.data_root, 'brats', 'train', args.meta_json,
@@ -298,23 +298,23 @@ def train(args):
     loader_B = DataLoader(dataset_B, batch_size=args.batch_size, shuffle=True,
                           num_workers=0, drop_last=True)
     
-    pprint(f"\nDataset A (BraTS): {len(dataset_A)} slices")
-    pprint(f"Dataset B (UPenn): {len(dataset_B)} slices")
+    pprint(f"\ndataset a (brats): {len(dataset_A)} slices")
+    pprint(f"dataset b (upenn): {len(dataset_B)} slices")
     
-    # Initialize models
-    pprint("\nInitializing models...")
+    # initialize models
+    pprint("\ninitializing models...")
     G_A2B = FastGenerator(n_residual=6).to(device)
     G_B2A = FastGenerator(n_residual=6).to(device)
     D_A = FastDiscriminator().to(device)
     D_B = FastDiscriminator().to(device)
     
-    # Count parameters
+    # count parameters
     n_params_G = sum(p.numel() for p in G_A2B.parameters())
     n_params_D = sum(p.numel() for p in D_A.parameters())
-    pprint(f"Generator params: {n_params_G:,}")
-    pprint(f"Discriminator params: {n_params_D:,}")
+    pprint(f"generator params: {n_params_G:,}")
+    pprint(f"discriminator params: {n_params_D:,}")
     
-    # Initialize weights
+    # initialize weights
     def init_weights(m):
         if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
             nn.init.normal_(m.weight, 0.0, 0.02)
@@ -324,16 +324,16 @@ def train(args):
     G_A2B.apply(init_weights)
     G_B2A.apply(init_weights)
     
-    # Replay buffers
+    # replay buffers
     fake_A_buffer = ReplayBuffer(50)
     fake_B_buffer = ReplayBuffer(50)
     
-    # Loss functions
+    # loss functions
     criterion_GAN = nn.MSELoss()
     criterion_cycle = nn.L1Loss()
     criterion_identity = nn.L1Loss()
     
-    # Optimizers (TTUR: generator learns faster)
+    # optimizers (ttur: generator learns faster)
     opt_G = optim.Adam(
         itertools.chain(G_A2B.parameters(), G_B2A.parameters()),
         lr=args.lr, betas=(0.5, 0.999)
@@ -343,34 +343,34 @@ def train(args):
         lr=args.lr * 0.5, betas=(0.5, 0.999)
     )
     
-    # LR schedulers
+    # lr schedulers
     def lr_lambda(epoch):
         return 1.0 - max(0, epoch - args.decay_epoch) / (args.n_epochs - args.decay_epoch + 1)
     
     scheduler_G = optim.lr_scheduler.LambdaLR(opt_G, lr_lambda)
     scheduler_D = optim.lr_scheduler.LambdaLR(opt_D, lr_lambda)
     
-    # Training parameters
+    # training parameters
     lambda_cycle = args.lambda_cycle
     lambda_id = args.lambda_identity
     
-    # Loss tracking
+    # loss tracking
     loss_history = {
         'G_total': [], 'G_GAN': [], 'G_cycle': [], 'G_identity': [],
         'D_A': [], 'D_B': []
     }
     
-    # Fixed samples for visualization
+    # fixed samples for visualization
     fixed_A = next(iter(loader_A))[:4].to(device)
     fixed_B = next(iter(loader_B))[:4].to(device)
     
     pprint("\n" + "=" * 70)
-    pprint("STARTING TRAINING")
+    pprint("starting training")
     pprint("=" * 70)
-    pprint(f"Epochs: {args.n_epochs}")
-    pprint(f"Batch size: {args.batch_size}")
-    pprint(f"Learning rate: {args.lr}")
-    pprint(f"Lambda cycle: {lambda_cycle}, Lambda identity: {lambda_id}")
+    pprint(f"epochs: {args.n_epochs}")
+    pprint(f"batch size: {args.batch_size}")
+    pprint(f"learning rate: {args.lr}")
+    pprint(f"lambda cycle: {lambda_cycle}, lambda identity: {lambda_id}")
     pprint("=" * 70 + "\n")
     
     start_time = datetime.now()
@@ -395,23 +395,23 @@ def train(args):
             
             batch_size = real_A.size(0)
             
-            # Valid and fake labels (with smoothing)
+            # valid and fake labels (with smoothing)
             valid = torch.full((batch_size, 1, 15, 15), 0.9, device=device)
             fake_label = torch.full((batch_size, 1, 15, 15), 0.1, device=device)
             
             # ================
-            # Train Generators
+            # train generators
             # ================
             opt_G.zero_grad()
             
-            # Identity loss
+            # identity loss
             same_A = G_B2A(real_A)
             loss_id_A = criterion_identity(same_A, real_A) * lambda_id
             
             same_B = G_A2B(real_B)
             loss_id_B = criterion_identity(same_B, real_B) * lambda_id
             
-            # GAN loss
+            # gan loss
             fake_B = G_A2B(real_A)
             pred_fake_B = D_B(fake_B)
             loss_GAN_A2B = criterion_GAN(pred_fake_B, valid)
@@ -420,14 +420,14 @@ def train(args):
             pred_fake_A = D_A(fake_A)
             loss_GAN_B2A = criterion_GAN(pred_fake_A, valid)
             
-            # Cycle loss
+            # cycle loss
             recovered_A = G_B2A(fake_B)
             loss_cycle_A = criterion_cycle(recovered_A, real_A) * lambda_cycle
             
             recovered_B = G_A2B(fake_A)
             loss_cycle_B = criterion_cycle(recovered_B, real_B) * lambda_cycle
             
-            # Total generator loss
+            # total generator loss
             loss_G = (loss_GAN_A2B + loss_GAN_B2A + 
                       loss_cycle_A + loss_cycle_B + 
                       loss_id_A + loss_id_B)
@@ -438,11 +438,11 @@ def train(args):
             opt_G.step()
             
             # ====================
-            # Train Discriminators
+            # train discriminators
             # ====================
             opt_D.zero_grad()
             
-            # D_A
+            # d_a
             pred_real_A = D_A(real_A)
             loss_D_real_A = criterion_GAN(pred_real_A, valid)
             
@@ -452,7 +452,7 @@ def train(args):
             
             loss_D_A = (loss_D_real_A + loss_D_fake_A) * 0.5
             
-            # D_B
+            # d_b
             pred_real_B = D_B(real_B)
             loss_D_real_B = criterion_GAN(pred_real_B, valid)
             
@@ -466,7 +466,7 @@ def train(args):
             loss_D.backward()
             opt_D.step()
             
-            # Track losses
+            # track losses
             epoch_losses['G_total'] += loss_G.item()
             epoch_losses['G_GAN'] += (loss_GAN_A2B + loss_GAN_B2A).item()
             epoch_losses['G_cycle'] += (loss_cycle_A + loss_cycle_B).item()
@@ -476,27 +476,27 @@ def train(args):
             n_batches += 1
             global_step += 1
             
-            # Log progress
+            # log progress
             if (i + 1) % args.log_interval == 0 or i == 0:
                 pprint(f"  [{epoch}/{args.n_epochs}] [{i+1}/{n_iters}] "
                        f"G: {loss_G.item():.4f} D_A: {loss_D_A.item():.4f} D_B: {loss_D_B.item():.4f} "
                        f"Cycle: {(loss_cycle_A + loss_cycle_B).item():.4f}")
         
-        # Epoch summary
+        # epoch summary
         epoch_time = (datetime.now() - epoch_start).total_seconds()
         
         for k in epoch_losses:
             epoch_losses[k] /= max(n_batches, 1)
             loss_history[k].append(epoch_losses[k])
         
-        pprint(f"\n[Epoch {epoch}/{args.n_epochs}] Time: {epoch_time:.1f}s | "
+        pprint(f"\n[epoch {epoch}/{args.n_epochs}] time: {epoch_time:.1f}s | "
                f"G: {epoch_losses['G_total']:.4f} | D_A: {epoch_losses['D_A']:.4f} | D_B: {epoch_losses['D_B']:.4f}")
         
-        # Update learning rates
+        # update learning rates
         scheduler_G.step()
         scheduler_D.step()
         
-        # Save sample images
+        # save sample images
         if epoch % args.sample_interval == 0 or epoch == 1:
             G_A2B.eval()
             G_B2A.eval()
@@ -506,7 +506,7 @@ def train(args):
                 recovered_A = G_B2A(fake_B_sample)
                 recovered_B = G_A2B(fake_A_sample)
             
-            # Save grid
+            # save grid
             img_sample = torch.cat([
                 fixed_A[:, 0:1], fake_B_sample[:, 0:1], recovered_A[:, 0:1],
                 fixed_B[:, 0:1], fake_A_sample[:, 0:1], recovered_B[:, 0:1]
@@ -515,12 +515,12 @@ def train(args):
             save_image(img_sample, 
                        os.path.join(args.sample_dir, f'fast_epoch_{epoch:03d}.png'),
                        nrow=4, normalize=True, value_range=(-1, 1))
-            pprint(f"  Saved sample: fast_epoch_{epoch:03d}.png")
+            pprint(f"  saved sample: fast_epoch_{epoch:03d}.png")
             
             G_A2B.train()
             G_B2A.train()
         
-        # Save checkpoints
+        # save checkpoints
         if epoch % args.checkpoint_interval == 0:
             torch.save(G_A2B.state_dict(), 
                        os.path.join(args.checkpoint_dir, f'fast_G_A2B_{epoch}.pth'))
@@ -530,26 +530,26 @@ def train(args):
                        os.path.join(args.checkpoint_dir, f'fast_D_A_{epoch}.pth'))
             torch.save(D_B.state_dict(), 
                        os.path.join(args.checkpoint_dir, f'fast_D_B_{epoch}.pth'))
-            pprint(f"  Saved checkpoint at epoch {epoch}")
+            pprint(f"  saved checkpoint at epoch {epoch}")
         
         pprint("")
     
-    # Training complete
+    # training complete
     total_time = (datetime.now() - start_time).total_seconds()
     pprint("\n" + "=" * 70)
-    pprint("TRAINING COMPLETE")
+    pprint("training complete")
     pprint("=" * 70)
-    pprint(f"Total time: {total_time/60:.1f} minutes")
-    pprint(f"Final losses - G: {loss_history['G_total'][-1]:.4f}, "
+    pprint(f"total time: {total_time/60:.1f} minutes")
+    pprint(f"final losses - g: {loss_history['G_total'][-1]:.4f}, "
            f"D_A: {loss_history['D_A'][-1]:.4f}, D_B: {loss_history['D_B'][-1]:.4f}")
     
-    # Save final models
+    # save final models
     torch.save(G_A2B.state_dict(), os.path.join(args.checkpoint_dir, 'fast_G_A2B_final.pth'))
     torch.save(G_B2A.state_dict(), os.path.join(args.checkpoint_dir, 'fast_G_B2A_final.pth'))
     torch.save(D_A.state_dict(), os.path.join(args.checkpoint_dir, 'fast_D_A_final.pth'))
     torch.save(D_B.state_dict(), os.path.join(args.checkpoint_dir, 'fast_D_B_final.pth'))
     
-    # Save loss history
+    # save loss history
     with open(os.path.join(args.sample_dir, 'fast_training_loss.json'), 'w') as f:
         json.dump(loss_history, f, indent=2)
     

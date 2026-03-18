@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Ablation Studies Script for SA-CycleGAN.
+ablation studies script for sa-cyclegan.
 
-Systematically evaluates the contribution of each component:
-1. Full SA-CycleGAN (baseline)
-2. Without self-attention
-3. Without perceptual loss
-4. Without tumor preservation loss
-5. Without anatomical consistency loss
-6. Without cycle consistency loss (control)
-7. Different attention mechanisms (CBAM, Multi-Head, etc.)
-8. Different numbers of residual blocks
-9. Different discriminator architectures
+systematically evaluates the contribution of each component:
+1. full sa-cyclegan (baseline)
+2. without self-attention
+3. without perceptual loss
+4. without tumor preservation loss
+5. without anatomical consistency loss
+6. without cycle consistency loss (control)
+7. different attention mechanisms (cbam, multi-head, etc.)
+8. different numbers of residual blocks
+9. different discriminator architectures
 
-This script automates ablation experiments to justify design choices.
+this script automates ablation experiments to justify design choices.
 
-Usage:
+usage:
     python scripts/run_ablation_studies.py \
         --data-dir ./data/processed \
         --output-dir ./experiments/ablations \
@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# Setup logging
+# setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 
 class AblationStudyOrchestrator:
-    """Orchestrates ablation study experiments."""
+    """orchestrates ablation study experiments."""
 
     def __init__(
         self,
@@ -53,14 +53,14 @@ class AblationStudyOrchestrator:
         gpu: int = 0,
     ):
         """
-        Initialize orchestrator.
+        initialize orchestrator.
 
-        Args:
-            data_dir: Directory with preprocessed data
-            output_dir: Output directory for ablation experiments
-            epochs: Number of training epochs (fewer than main experiment)
-            batch_size: Batch size
-            gpu: GPU ID to use
+        args:
+            data_dir: directory with preprocessed data
+            output_dir: output directory for ablation experiments
+            epochs: number of training epochs (fewer than main experiment)
+            batch_size: batch size
+            gpu: gpu id to use
         """
         self.data_dir = Path(data_dir)
         self.output_dir = Path(output_dir)
@@ -72,15 +72,15 @@ class AblationStudyOrchestrator:
 
         self.scripts_dir = Path(__file__).parent
 
-        # Ablation configurations
+        # ablation configurations
         self.ablations = self._define_ablations()
 
-        # Results tracking
+        # results tracking
         self.results = {}
         self.start_time = None
 
     def _define_ablations(self) -> Dict:
-        """Define all ablation configurations."""
+        """define all ablation configurations."""
         return {
             'full_model': {
                 'description': 'Full SA-CycleGAN (all components)',
@@ -213,14 +213,14 @@ class AblationStudyOrchestrator:
 
     def run_ablation(self, name: str, config: Dict) -> Dict:
         """
-        Run a single ablation experiment.
+        run a single ablation experiment.
 
-        Args:
-            name: Name of the ablation
-            config: Configuration dictionary
+        args:
+            name: name of the ablation
+            config: configuration dictionary
 
-        Returns:
-            Results dictionary
+        returns:
+            results dictionary
         """
         logger.info("\n" + "="*80)
         logger.info(f"Running ablation: {name}")
@@ -230,9 +230,9 @@ class AblationStudyOrchestrator:
         output_dir = self.output_dir / name
         log_file = output_dir / 'training.log'
 
-        # Build command
-        # Note: This assumes we have a configurable training script
-        # You may need to adapt this based on your actual training script
+        # build command
+        # note: this assumes we have a configurable training script
+        # you may need to adapt this based on your actual training script
         cmd = [
             'python',
             str(self.scripts_dir / 'train_sa_cyclegan_complete.py'),
@@ -244,7 +244,7 @@ class AblationStudyOrchestrator:
             '--mixed-precision',
         ]
 
-        # Add configuration flags
+        # add configuration flags
         for key, value in config.items():
             if isinstance(value, bool):
                 if value:
@@ -252,17 +252,17 @@ class AblationStudyOrchestrator:
             else:
                 cmd.extend([f'--{key.replace("_", "-")}', str(value)])
 
-        # Set environment
+        # set environment
         env = os.environ.copy()
         env['CUDA_VISIBLE_DEVICES'] = str(self.gpu)
 
-        # Save configuration
+        # save configuration
         config_file = output_dir / 'ablation_config.json'
         config_file.parent.mkdir(parents=True, exist_ok=True)
         with open(config_file, 'w') as f:
             json.dump(config, f, indent=2)
 
-        # Run training
+        # run training
         start_time = time.time()
 
         logger.info(f"Command: {' '.join(cmd)}")
@@ -279,7 +279,7 @@ class AblationStudyOrchestrator:
 
         duration = time.time() - start_time
 
-        # Collect results
+        # collect results
         result = {
             'name': name,
             'description': self.ablations[name]['description'],
@@ -300,10 +300,10 @@ class AblationStudyOrchestrator:
 
     def run_all_ablations(self, specific_ablations: Optional[List[str]] = None):
         """
-        Run all ablation studies.
+        run all ablation studies.
 
-        Args:
-            specific_ablations: List of specific ablations to run (if None, runs all)
+        args:
+            specific_ablations: list of specific ablations to run (if none, runs all)
         """
         self.start_time = time.time()
 
@@ -317,7 +317,7 @@ class AblationStudyOrchestrator:
         logger.info(f"GPU: {self.gpu}")
         logger.info("="*80 + "\n")
 
-        # Determine which ablations to run
+        # determine which ablations to run
         if specific_ablations:
             ablations_to_run = {k: v for k, v in self.ablations.items() if k in specific_ablations}
         else:
@@ -328,19 +328,19 @@ class AblationStudyOrchestrator:
             logger.info(f"  - {name}: {self.ablations[name]['description']}")
         logger.info("")
 
-        # Run each ablation
+        # run each ablation
         for name, ablation_info in ablations_to_run.items():
             result = self.run_ablation(name, ablation_info['config'])
             self.results[name] = result
 
-        # Save results
+        # save results
         self._save_results()
 
-        # Print summary
+        # print summary
         self._print_summary()
 
     def _save_results(self):
-        """Save ablation results to JSON."""
+        """save ablation results to json."""
         results_file = self.output_dir / 'ablation_results.json'
 
         results_data = {
@@ -362,12 +362,12 @@ class AblationStudyOrchestrator:
         logger.info(f"\nResults saved to: {results_file}")
 
     def _print_summary(self):
-        """Print summary of ablation studies."""
+        """print summary of ablation studies."""
         logger.info("\n" + "="*80)
         logger.info("ABLATION STUDIES SUMMARY")
         logger.info("="*80)
 
-        # Count successes and failures
+        # count successes and failures
         successes = sum(1 for r in self.results.values() if r['status'] == 'success')
         failures = sum(1 for r in self.results.values() if r['status'] == 'failed')
 
@@ -376,7 +376,7 @@ class AblationStudyOrchestrator:
         logger.info(f"Failed: {failures}")
         logger.info("")
 
-        # List each ablation
+        # list each ablation
         for name, result in self.results.items():
             status_symbol = "+" if result['status'] == 'success' else "✗"
             logger.info(f"{status_symbol} {name}")
@@ -391,7 +391,7 @@ class AblationStudyOrchestrator:
 
 
 def main():
-    """Main execution function."""
+    """main execution function."""
     parser = argparse.ArgumentParser(
         description='Run ablation studies for SA-CycleGAN'
     )
@@ -440,7 +440,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize orchestrator
+    # initialize orchestrator
     orchestrator = AblationStudyOrchestrator(
         data_dir=Path(args.data_dir),
         output_dir=Path(args.output_dir),
@@ -449,7 +449,7 @@ def main():
         gpu=args.gpu,
     )
 
-    # Run ablations
+    # run ablations
     orchestrator.run_all_ablations(specific_ablations=args.ablations)
 
 

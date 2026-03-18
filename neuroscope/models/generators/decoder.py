@@ -1,7 +1,7 @@
 """
-Decoder Modules for Generator Architectures.
+decoder modules for generator architectures.
 
-This module provides various decoder implementations for image-to-image translation.
+this module provides various decoder implementations for image-to-image translation.
 """
 
 import torch
@@ -17,20 +17,20 @@ from ..attention.spatial_attention import CBAM
 
 class ConvDecoder(nn.Module):
     """
-    Standard Convolutional Decoder.
+    standard convolutional decoder.
     
-    Progressive upsampling with optional skip connections and attention.
+    progressive upsampling with optional skip connections and attention.
     
-    Args:
-        in_channels: Input channels (from encoder)
-        out_channels: Output channels
-        base_channels: Base channel count
-        n_upsample: Number of upsampling layers
-        norm_type: Normalization type
-        activation: Activation type
-        use_attention: Whether to use self-attention
-        attention_layers: Which layers to add attention to
-        use_skip: Whether to use skip connections
+    args:
+        in_channels: input channels (from encoder)
+        out_channels: output channels
+        base_channels: base channel count
+        n_upsample: number of upsampling layers
+        norm_type: normalization type
+        activation: activation type
+        use_attention: whether to use self-attention
+        attention_layers: which layers to add attention to
+        use_skip: whether to use skip connections
     """
     
     def __init__(
@@ -52,7 +52,7 @@ class ConvDecoder(nn.Module):
         self.attention_layers = attention_layers or []
         self.use_skip = use_skip
         
-        # Upsampling layers
+        # upsampling layers
         self.upsample_layers = nn.ModuleList()
         self.attention_modules = nn.ModuleDict()
         
@@ -60,7 +60,7 @@ class ConvDecoder(nn.Module):
         for i in range(n_upsample):
             out_ch = max(current_channels // 2, base_channels)
             
-            # If using skip connections, input channels are doubled
+            # if using skip connections, input channels are doubled
             skip_channels = out_ch if use_skip else 0
             
             self.upsample_layers.append(
@@ -77,7 +77,7 @@ class ConvDecoder(nn.Module):
                 
             current_channels = out_ch
             
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(current_channels, out_channels, 7),
@@ -90,22 +90,22 @@ class ConvDecoder(nn.Module):
         skip_features: Optional[List[torch.Tensor]] = None
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor from encoder
-            skip_features: Optional skip connection features (in reverse order)
+        args:
+            x: input tensor from encoder
+            skip_features: optional skip connection features (in reverse order)
             
-        Returns:
-            Decoded output
+        returns:
+            decoded output
         """
         for i, up in enumerate(self.upsample_layers):
-            # Concatenate skip features if available
+            # concatenate skip features if available
             if self.use_skip and skip_features is not None and i > 0:
                 skip_idx = len(skip_features) - i - 1
                 if skip_idx >= 0 and skip_idx < len(skip_features):
                     skip = skip_features[skip_idx]
-                    # Resize skip if necessary
+                    # resize skip if necessary
                     if skip.shape[-2:] != x.shape[-2:]:
                         skip = F.interpolate(skip, size=x.shape[-2:], mode='bilinear', align_corners=False)
                     x = torch.cat([x, skip], dim=1)
@@ -120,17 +120,17 @@ class ConvDecoder(nn.Module):
 
 class ResidualDecoder(nn.Module):
     """
-    Residual Decoder with residual blocks.
+    residual decoder with residual blocks.
     
-    Uses residual blocks between upsampling stages.
+    uses residual blocks between upsampling stages.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        base_channels: Base channel count
-        n_upsample: Number of upsampling layers
-        n_residual: Residual blocks per scale
-        norm_type: Normalization type
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        base_channels: base channel count
+        n_upsample: number of upsampling layers
+        n_residual: residual blocks per scale
+        norm_type: normalization type
     """
     
     def __init__(
@@ -144,7 +144,7 @@ class ResidualDecoder(nn.Module):
     ):
         super().__init__()
         
-        # Decoder stages
+        # decoder stages
         self.stages = nn.ModuleList()
         
         current_channels = in_channels
@@ -152,14 +152,14 @@ class ResidualDecoder(nn.Module):
             out_ch = max(current_channels // 2, base_channels)
             
             stage = nn.ModuleList([
-                # Upsampling
+                # upsampling
                 nn.Sequential(
                     nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
                     nn.Conv2d(current_channels, out_ch, 3, padding=1),
                     nn.InstanceNorm2d(out_ch),
                     nn.ReLU(inplace=True)
                 ),
-                # Residual blocks
+                # residual blocks
                 nn.Sequential(*[
                     ResidualBlock(out_ch, norm_type=norm_type)
                     for _ in range(n_residual)
@@ -169,7 +169,7 @@ class ResidualDecoder(nn.Module):
             self.stages.append(stage)
             current_channels = out_ch
             
-        # Final output
+        # final output
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(current_channels, out_channels, 7),
@@ -181,11 +181,11 @@ class ResidualDecoder(nn.Module):
         x: torch.Tensor,
         skip_features: Optional[List[torch.Tensor]] = None
     ) -> torch.Tensor:
-        """Forward pass."""
+        """forward pass."""
         for i, (upsample, residual) in enumerate(self.stages):
             x = upsample(x)
             
-            # Optional skip connection
+            # optional skip connection
             if skip_features is not None:
                 skip_idx = len(skip_features) - i - 1
                 if skip_idx >= 0:
@@ -200,16 +200,16 @@ class ResidualDecoder(nn.Module):
 
 class UNetDecoder(nn.Module):
     """
-    U-Net style Decoder with skip connections.
+    u-net style decoder with skip connections.
     
-    Designed to work with matching encoder for U-Net architecture.
+    designed to work with matching encoder for u-net architecture.
     
-    Args:
-        in_channels: Input channels from bottleneck
-        out_channels: Output channels
-        skip_channels: List of skip connection channel counts
-        base_channels: Base channel count
-        norm_type: Normalization type
+    args:
+        in_channels: input channels from bottleneck
+        out_channels: output channels
+        skip_channels: list of skip connection channel counts
+        base_channels: base channel count
+        norm_type: normalization type
     """
     
     def __init__(
@@ -225,19 +225,19 @@ class UNetDecoder(nn.Module):
         self.skip_channels = skip_channels
         n_stages = len(skip_channels)
         
-        # Decoder blocks
+        # decoder blocks
         self.up_convs = nn.ModuleList()
         self.dec_blocks = nn.ModuleList()
         
         current_channels = in_channels
         for i in range(n_stages):
-            # Upsampling convolution
+            # upsampling convolution
             out_ch = skip_channels[i]
             self.up_convs.append(
                 nn.ConvTranspose2d(current_channels, out_ch, 2, stride=2)
             )
             
-            # Decoder block (after concatenation with skip)
+            # decoder block (after concatenation with skip)
             self.dec_blocks.append(
                 nn.Sequential(
                     nn.Conv2d(out_ch * 2, out_ch, 3, padding=1),
@@ -251,7 +251,7 @@ class UNetDecoder(nn.Module):
             
             current_channels = out_ch
             
-        # Final convolution
+        # final convolution
         self.final = nn.Conv2d(current_channels, out_channels, 1)
         
     def forward(
@@ -260,20 +260,20 @@ class UNetDecoder(nn.Module):
         skip_features: List[torch.Tensor]
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Bottleneck features
-            skip_features: List of encoder features for skip connections
+        args:
+            x: bottleneck features
+            skip_features: list of encoder features for skip connections
                           (in order from deep to shallow)
         """
-        # Reverse skip features to match decoder order
+        # reverse skip features to match decoder order
         skips = skip_features[::-1]
         
         for i, (up_conv, dec_block) in enumerate(zip(self.up_convs, self.dec_blocks)):
             x = up_conv(x)
             
-            # Handle size mismatch
+            # handle size mismatch
             skip = skips[i]
             if skip.shape[-2:] != x.shape[-2:]:
                 x = F.interpolate(x, size=skip.shape[-2:], mode='bilinear', align_corners=False)
@@ -286,15 +286,15 @@ class UNetDecoder(nn.Module):
 
 class AttentionDecoder(nn.Module):
     """
-    Attention-enhanced Decoder.
+    attention-enhanced decoder.
     
-    Uses attention gates for skip connections.
+    uses attention gates for skip connections.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        skip_channels: Skip connection channels
-        base_channels: Base channel count
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        skip_channels: skip connection channels
+        base_channels: base channel count
     """
     
     def __init__(
@@ -308,7 +308,7 @@ class AttentionDecoder(nn.Module):
         
         n_stages = len(skip_channels)
         
-        # Decoder stages with attention gates
+        # decoder stages with attention gates
         self.stages = nn.ModuleList()
         self.attention_gates = nn.ModuleList()
         
@@ -317,12 +317,12 @@ class AttentionDecoder(nn.Module):
             skip_ch = skip_channels[i]
             out_ch = skip_ch
             
-            # Attention gate
+            # attention gate
             self.attention_gates.append(
                 AttentionGate(skip_ch, current_channels, skip_ch // 2)
             )
             
-            # Decoder stage
+            # decoder stage
             self.stages.append(
                 nn.Sequential(
                     nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
@@ -344,16 +344,16 @@ class AttentionDecoder(nn.Module):
         x: torch.Tensor,
         skip_features: List[torch.Tensor]
     ) -> torch.Tensor:
-        """Forward pass with attention-gated skip connections."""
+        """forward pass with attention-gated skip connections."""
         skips = skip_features[::-1]
         
         for i, (attn_gate, stage) in enumerate(zip(self.attention_gates, self.stages)):
             skip = skips[i]
             
-            # Apply attention gate
+            # apply attention gate
             attended_skip = attn_gate(skip, x)
             
-            # Upsample and concatenate
+            # upsample and concatenate
             x = F.interpolate(x, size=skip.shape[-2:], mode='bilinear', align_corners=False)
             x = torch.cat([x, attended_skip], dim=1)
             x = stage(x)
@@ -363,9 +363,9 @@ class AttentionDecoder(nn.Module):
 
 class AttentionGate(nn.Module):
     """
-    Attention Gate for skip connections.
+    attention gate for skip connections.
     
-    Focuses on relevant spatial regions using gating signal.
+    focuses on relevant spatial regions using gating signal.
     """
     
     def __init__(
@@ -388,19 +388,19 @@ class AttentionGate(nn.Module):
         gating: torch.Tensor
     ) -> torch.Tensor:
         """
-        Apply attention gate.
+        apply attention gate.
         
-        Args:
-            skip: Skip connection features
-            gating: Gating signal from decoder
+        args:
+            skip: skip connection features
+            gating: gating signal from decoder
         """
-        # Resize gating to match skip
+        # resize gating to match skip
         gating_resized = F.interpolate(
             gating, size=skip.shape[-2:],
             mode='bilinear', align_corners=False
         )
         
-        # Compute attention coefficients
+        # compute attention coefficients
         skip_proj = self.W_skip(skip)
         gate_proj = self.W_gate(gating_resized)
         
@@ -412,15 +412,15 @@ class AttentionGate(nn.Module):
 
 class ProgressiveDecoder(nn.Module):
     """
-    Progressive Decoder for multi-scale output.
+    progressive decoder for multi-scale output.
     
-    Generates outputs at multiple resolutions.
+    generates outputs at multiple resolutions.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        base_channels: Base channel count
-        n_scales: Number of output scales
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        base_channels: base channel count
+        n_scales: number of output scales
     """
     
     def __init__(
@@ -434,7 +434,7 @@ class ProgressiveDecoder(nn.Module):
         
         self.n_scales = n_scales
         
-        # Scale-specific decoders
+        # scale-specific decoders
         self.scale_decoders = nn.ModuleList()
         self.to_rgb = nn.ModuleList()
         
@@ -465,19 +465,19 @@ class ProgressiveDecoder(nn.Module):
         return_all_scales: bool = False
     ) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input features
-            skip_features: Optional skip connections
-            return_all_scales: Whether to return outputs at all scales
+        args:
+            x: input features
+            skip_features: optional skip connections
+            return_all_scales: whether to return outputs at all scales
         """
         outputs = []
         
         for i, (decoder, to_rgb) in enumerate(zip(self.scale_decoders, self.to_rgb)):
             x = decoder(x)
             
-            # Add skip connection if available
+            # add skip connection if available
             if skip_features is not None:
                 skip_idx = len(skip_features) - i - 1
                 if 0 <= skip_idx < len(skip_features):
@@ -495,16 +495,16 @@ class ProgressiveDecoder(nn.Module):
 
 class PixelShuffleDecoder(nn.Module):
     """
-    Decoder using Pixel Shuffle for upsampling.
+    decoder using pixel shuffle for upsampling.
     
-    Sub-pixel convolution for efficient upsampling.
+    sub-pixel convolution for efficient upsampling.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        base_channels: Base channel count
-        n_upsample: Number of upsampling stages
-        upscale_factor: Factor per upsampling stage
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        base_channels: base channel count
+        n_upsample: number of upsampling stages
+        upscale_factor: factor per upsampling stage
     """
     
     def __init__(
@@ -519,7 +519,7 @@ class PixelShuffleDecoder(nn.Module):
         
         self.upscale_factor = upscale_factor
         
-        # Upsampling stages
+        # upsampling stages
         self.stages = nn.ModuleList()
         
         current_channels = in_channels
@@ -547,7 +547,7 @@ class PixelShuffleDecoder(nn.Module):
         x: torch.Tensor,
         skip_features: Optional[List[torch.Tensor]] = None
     ) -> torch.Tensor:
-        """Forward pass using pixel shuffle upsampling."""
+        """forward pass using pixel shuffle upsampling."""
         for i, stage in enumerate(self.stages):
             x = stage(x)
             

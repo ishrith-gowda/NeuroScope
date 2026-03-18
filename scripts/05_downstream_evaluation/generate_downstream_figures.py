@@ -158,7 +158,7 @@ def plot_domain_classification_comparison(
     print(f'[fig] saved domain classification comparison to {output_path}')
 
 
-# t-SNE visualization color palette
+# t-sne visualization color palette
 COLORS_TSNE = {
     'brats_raw': '#E8703C',      # vibrant orange
     'upenn_raw': '#6B5A9F',      # deep purple

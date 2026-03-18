@@ -1,6 +1,6 @@
-"""Default configurations for NeuroScope.
+"""default configurations for neuroscope.
 
-This module provides default configuration values for all NeuroScope components.
+this module provides default configuration values for all neuroscope components.
 """
 
 from .training_config import (

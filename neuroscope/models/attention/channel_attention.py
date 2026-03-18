@@ -1,7 +1,7 @@
 """
-Channel Attention mechanisms.
+channel attention mechanisms.
 
-Implements various channel attention modules for adaptive feature recalibration.
+implements various channel attention modules for adaptive feature recalibration.
 """
 
 import torch
@@ -12,14 +12,14 @@ from typing import Optional
 
 class ChannelAttention(nn.Module):
     """
-    Channel Attention Module (CAM).
+    channel attention module (cam).
     
-    Computes channel-wise attention weights using global pooling and MLPs.
-    Based on CBAM (Woo et al., 2018).
+    computes channel-wise attention weights using global pooling and mlps.
+    based on cbam (woo et al., 2018).
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Channel reduction ratio for bottleneck
+    args:
+        in_channels: number of input channels
+        reduction: channel reduction ratio for bottleneck
     """
     
     def __init__(self, in_channels: int, reduction: int = 16):
@@ -27,7 +27,7 @@ class ChannelAttention(nn.Module):
         
         reduced = max(in_channels // reduction, 8)
         
-        # Shared MLP
+        # shared mlp
         self.mlp = nn.Sequential(
             nn.Linear(in_channels, reduced, bias=False),
             nn.ReLU(inplace=True),
@@ -39,38 +39,38 @@ class ChannelAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Compute channel attention.
+        compute channel attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Channel attention weights [B, C, 1, 1]
+        returns:
+            channel attention weights [b, c, 1, 1]
         """
         B, C, _, _ = x.size()
         
-        # Global average pooling
+        # global average pooling
         avg_out = self.avg_pool(x).view(B, C)
         avg_out = self.mlp(avg_out)
         
-        # Global max pooling
+        # global max pooling
         max_out = self.max_pool(x).view(B, C)
         max_out = self.mlp(max_out)
         
-        # Combine and sigmoid
+        # combine and sigmoid
         attention = torch.sigmoid(avg_out + max_out)
         return attention.view(B, C, 1, 1)
 
 
 class SqueezeExcitation(nn.Module):
     """
-    Squeeze-and-Excitation block (Hu et al., 2018).
+    squeeze-and-excitation block (hu et al., 2018).
     
-    Adaptively recalibrates channel-wise feature responses.
+    adaptively recalibrates channel-wise feature responses.
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Reduction ratio for bottleneck
+    args:
+        in_channels: number of input channels
+        reduction: reduction ratio for bottleneck
     """
     
     def __init__(self, in_channels: int, reduction: int = 16):
@@ -88,13 +88,13 @@ class SqueezeExcitation(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply SE attention and return recalibrated features.
+        apply se attention and return recalibrated features.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Recalibrated tensor [B, C, H, W]
+        returns:
+            recalibrated tensor [b, c, h, w]
         """
         scale = self.squeeze(x)
         scale = self.excitation(scale)
@@ -103,14 +103,14 @@ class SqueezeExcitation(nn.Module):
 
 class EfficientChannelAttention(nn.Module):
     """
-    Efficient Channel Attention (ECA).
+    efficient channel attention (eca).
     
-    Uses 1D convolution instead of MLP for efficiency.
-    Based on ECA-Net (Wang et al., 2020).
+    uses 1d convolution instead of mlp for efficiency.
+    based on eca-net (wang et al., 2020).
     
-    Args:
-        in_channels: Number of input channels
-        kernel_size: 1D convolution kernel size (adaptive if None)
+    args:
+        in_channels: number of input channels
+        kernel_size: 1d convolution kernel size (adaptive if none)
     """
     
     def __init__(
@@ -120,9 +120,9 @@ class EfficientChannelAttention(nn.Module):
     ):
         super().__init__()
         
-        # Adaptive kernel size
+        # adaptive kernel size
         if kernel_size is None:
-            # k = |log2(C) / gamma + b / gamma|_odd
+            # k = |log2(c) / gamma + b / gamma|_odd
             t = int(abs((torch.log2(torch.tensor(in_channels)).item() + 1) / 2))
             kernel_size = t if t % 2 else t + 1
             kernel_size = max(3, kernel_size)
@@ -138,22 +138,22 @@ class EfficientChannelAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply ECA attention.
+        apply eca attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Recalibrated tensor [B, C, H, W]
+        returns:
+            recalibrated tensor [b, c, h, w]
         """
         B, C, H, W = x.size()
         
-        # Global average pooling
-        y = self.avg_pool(x)  # [B, C, 1, 1]
-        y = y.view(B, 1, C)   # [B, 1, C]
+        # global average pooling
+        y = self.avg_pool(x)  # [b, c, 1, 1]
+        y = y.view(B, 1, C)   # [b, 1, c]
         
-        # 1D convolution
-        y = self.conv(y)      # [B, 1, C]
+        # 1d convolution
+        y = self.conv(y)      # [b, 1, c]
         y = torch.sigmoid(y)
         y = y.view(B, C, 1, 1)
         
@@ -162,14 +162,14 @@ class EfficientChannelAttention(nn.Module):
 
 class GlobalContextBlock(nn.Module):
     """
-    Global Context Block (GCNet).
+    global context block (gcnet).
     
-    Efficient global context modeling using a simplified attention.
-    Based on GCNet (Cao et al., 2019).
+    efficient global context modeling using a simplified attention.
+    based on gcnet (cao et al., 2019).
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Reduction ratio for transform
+    args:
+        in_channels: number of input channels
+        reduction: reduction ratio for transform
     """
     
     def __init__(self, in_channels: int, reduction: int = 16):
@@ -177,12 +177,12 @@ class GlobalContextBlock(nn.Module):
         
         reduced = max(in_channels // reduction, 8)
         
-        # Context modeling (1x1 conv + softmax)
+        # context modeling (1x1 conv + softmax)
         self.context = nn.Sequential(
             nn.Conv2d(in_channels, 1, kernel_size=1),
         )
         
-        # Transform (bottleneck)
+        # transform (bottleneck)
         self.transform = nn.Sequential(
             nn.Conv2d(in_channels, reduced, kernel_size=1),
             nn.LayerNorm([reduced, 1, 1]),
@@ -192,26 +192,26 @@ class GlobalContextBlock(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Apply global context block.
+        apply global context block.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Output tensor [B, C, H, W]
+        returns:
+            output tensor [b, c, h, w]
         """
         B, C, H, W = x.size()
         
-        # Context modeling: weighted sum of all positions
-        context = self.context(x)  # [B, 1, H, W]
+        # context modeling: weighted sum of all positions
+        context = self.context(x)  # [b, 1, h, w]
         context = context.view(B, 1, H * W)
-        context = F.softmax(context, dim=-1)  # [B, 1, HW]
+        context = F.softmax(context, dim=-1)  # [b, 1, hw]
         context = context.view(B, 1, H, W)
         
-        # Aggregate global context
-        x_pooled = (x * context).sum(dim=[2, 3], keepdim=True)  # [B, C, 1, 1]
+        # aggregate global context
+        x_pooled = (x * context).sum(dim=[2, 3], keepdim=True)  # [b, c, 1, 1]
         
-        # Transform and add residual
+        # transform and add residual
         transform = self.transform(x_pooled)
         
         return x + transform

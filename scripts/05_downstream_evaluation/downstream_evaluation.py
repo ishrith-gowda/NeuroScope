@@ -508,7 +508,7 @@ def harmonize_batch(
     inputs_3slice = inputs.unsqueeze(2).repeat(1, 1, 3, 1, 1)
     inputs_3slice = inputs_3slice.view(b, c * 3, h, w)
 
-    # apply harmonization (G_A2B or G_B2A depending on direction)
+    # apply harmonization (g_a2b or g_b2a depending on direction)
     harmonized = harmonization_model.G_A2B(inputs_3slice)
 
     return harmonized

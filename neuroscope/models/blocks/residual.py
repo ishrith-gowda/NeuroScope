@@ -1,7 +1,7 @@
 """
-Residual Block implementations for neural network architectures.
+residual block implementations for neural network architectures.
 
-This module provides various residual block implementations used in
+this module provides various residual block implementations used in
 generator and discriminator architectures.
 """
 
@@ -11,7 +11,7 @@ from typing import Optional, Type
 
 
 def get_norm_layer(norm_type: str) -> Type[nn.Module]:
-    """Get normalization layer class from string."""
+    """get normalization layer class from string."""
     norm_layers = {
         'instance': nn.InstanceNorm2d,
         'batch': nn.BatchNorm2d,
@@ -24,19 +24,19 @@ def get_norm_layer(norm_type: str) -> Type[nn.Module]:
 
 class ResidualBlock(nn.Module):
     """
-    Standard Residual Block with two convolutions and skip connection.
+    standard residual block with two convolutions and skip connection.
     
-    Architecture:
-        x -> Conv -> Norm -> ReLU -> Conv -> Norm -> + -> ReLU
+    architecture:
+        x -> conv -> norm -> relu -> conv -> norm -> + -> relu
         |                                           |
         +-------------------------------------------+
     
-    Args:
-        channels: Number of input/output channels
-        norm_layer: Normalization layer class (or None to use norm_type)
-        norm_type: String specifying norm type ('instance', 'batch', etc.)
-        use_dropout: Whether to use dropout
-        dropout_prob: Dropout probability
+    args:
+        channels: number of input/output channels
+        norm_layer: normalization layer class (or none to use norm_type)
+        norm_type: string specifying norm type ('instance', 'batch', etc.)
+        use_dropout: whether to use dropout
+        dropout_prob: dropout probability
     """
     
     def __init__(
@@ -49,7 +49,7 @@ class ResidualBlock(nn.Module):
     ):
         super().__init__()
         
-        # Get norm layer - prefer explicit class over string
+        # get norm layer - prefer explicit class over string
         if norm_layer is None:
             norm_layer = get_norm_layer(norm_type)
         
@@ -72,22 +72,22 @@ class ResidualBlock(nn.Module):
         self.block = nn.Sequential(*layers)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with residual connection."""
+        """forward pass with residual connection."""
         return x + self.block(x)
 
 
 class PreActResidualBlock(nn.Module):
     """
-    Pre-activation Residual Block (He et al., 2016).
+    pre-activation residual block (he et al., 2016).
     
-    Architecture:
-        x -> Norm -> ReLU -> Conv -> Norm -> ReLU -> Conv -> +
+    architecture:
+        x -> norm -> relu -> conv -> norm -> relu -> conv -> +
         |                                                    |
         +----------------------------------------------------+
     
-    Args:
-        channels: Number of input/output channels
-        norm_layer: Normalization layer class
+    args:
+        channels: number of input/output channels
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -109,24 +109,24 @@ class PreActResidualBlock(nn.Module):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with residual connection."""
+        """forward pass with residual connection."""
         return x + self.block(x)
 
 
 class BottleneckResidualBlock(nn.Module):
     """
-    Bottleneck Residual Block for deeper networks.
+    bottleneck residual block for deeper networks.
     
-    Architecture:
-        x -> 1x1 Conv -> Norm -> ReLU -> 3x3 Conv -> Norm -> ReLU -> 1x1 Conv -> Norm -> +
+    architecture:
+        x -> 1x1 conv -> norm -> relu -> 3x3 conv -> norm -> relu -> 1x1 conv -> norm -> +
         |                                                                                |
         +--------------------------------------------------------------------------------+
     
-    Args:
-        in_channels: Input channels
-        bottleneck_channels: Bottleneck channels (typically in_channels // 4)
-        out_channels: Output channels
-        norm_layer: Normalization layer class
+    args:
+        in_channels: input channels
+        bottleneck_channels: bottleneck channels (typically in_channels // 4)
+        out_channels: output channels
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -156,7 +156,7 @@ class BottleneckResidualBlock(nn.Module):
             norm_layer(out_channels),
         )
         
-        # Skip connection with projection if dimensions change
+        # skip connection with projection if dimensions change
         self.skip = nn.Identity()
         if in_channels != out_channels:
             self.skip = nn.Sequential(
@@ -167,18 +167,18 @@ class BottleneckResidualBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with residual connection."""
+        """forward pass with residual connection."""
         return self.relu(self.skip(x) + self.block(x))
 
 
 class SEResidualBlock(nn.Module):
     """
-    Residual Block with Squeeze-and-Excitation attention.
+    residual block with squeeze-and-excitation attention.
     
-    Args:
-        channels: Number of channels
-        reduction: SE reduction ratio
-        norm_layer: Normalization layer class
+    args:
+        channels: number of channels
+        reduction: se reduction ratio
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -199,7 +199,7 @@ class SEResidualBlock(nn.Module):
             norm_layer(channels),
         )
         
-        # Squeeze-and-Excitation
+        # squeeze-and-excitation
         self.se = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(channels, channels // reduction, kernel_size=1),
@@ -209,7 +209,7 @@ class SEResidualBlock(nn.Module):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with SE attention and residual connection."""
+        """forward pass with se attention and residual connection."""
         out = self.block(x)
         out = out * self.se(out)
         return x + out
@@ -217,15 +217,15 @@ class SEResidualBlock(nn.Module):
 
 class DenseResidualBlock(nn.Module):
     """
-    Dense Residual Block with growth rate.
+    dense residual block with growth rate.
     
-    Implements a DenseNet-style block with residual connection.
+    implements a densenet-style block with residual connection.
     
-    Args:
-        channels: Number of input/output channels
-        growth_rate: Number of channels added per dense layer
-        n_layers: Number of dense layers in the block
-        norm_layer: Normalization layer class
+    args:
+        channels: number of input/output channels
+        growth_rate: number of channels added per dense layer
+        n_layers: number of dense layers in the block
+        norm_layer: normalization layer class
     """
     
     def __init__(
@@ -250,7 +250,7 @@ class DenseResidualBlock(nn.Module):
             ))
         self.layers = nn.ModuleList(layers)
         
-        # Transition layer to match output channels
+        # transition layer to match output channels
         final_channels = channels + n_layers * growth_rate
         self.transition = nn.Sequential(
             norm_layer(final_channels),
@@ -259,7 +259,7 @@ class DenseResidualBlock(nn.Module):
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with dense connections and residual."""
+        """forward pass with dense connections and residual."""
         features = [x]
         for layer in self.layers:
             out = layer(torch.cat(features, dim=1))
@@ -270,5 +270,5 @@ class DenseResidualBlock(nn.Module):
         return x + out
 
 
-# Alias for compatibility
+# alias for compatibility
 DenseBlock = DenseResidualBlock

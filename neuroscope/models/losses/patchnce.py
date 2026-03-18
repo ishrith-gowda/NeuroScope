@@ -127,11 +127,11 @@ class MultiLayerPatchNCELoss(nn.Module):
 
     usage:
         # initialize with layer channel dimensions
-        nce_loss = MultiLayerPatchNCELoss(layer_channels=[64, 128, 256, 256, 256])
+        nce_loss = multilayerpatchnceloss(layer_channels=[64, 128, 256, 256, 256])
 
         # during training, extract features from generator encoder
-        src_feats = generator.encode(real_A)       # list of feature maps
-        gen_feats = generator.encode(fake_B)       # list of feature maps
+        src_feats = generator.encode(real_a)       # list of feature maps
+        gen_feats = generator.encode(fake_b)       # list of feature maps
 
         # compute loss
         loss = nce_loss(gen_feats, src_feats)

@@ -1,6 +1,6 @@
-"""Data analysis utility scripts for NeuroScope.
+"""data analysis utility scripts for neuroscope.
 
-This module provides utility scripts for data analysis and exploration.
+this module provides utility scripts for data analysis and exploration.
 """
 
-# Data analysis utility initialization
+# data analysis utility initialization

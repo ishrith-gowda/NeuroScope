@@ -1,14 +1,14 @@
 """
-Attention Mechanisms for Neural Networks.
+attention mechanisms for neural networks.
 
-This package provides various attention mechanisms for capturing
+this package provides various attention mechanisms for capturing
 long-range dependencies and adaptive feature recalibration.
 
-Modules:
-    self_attention: Self-attention for spatial dependencies
-    channel_attention: Channel-wise attention (SE, ECA)
-    spatial_attention: Spatial attention (CBAM-style)
-    multi_head: Multi-head attention variants
+modules:
+    self_attention: self-attention for spatial dependencies
+    channel_attention: channel-wise attention (se, eca)
+    spatial_attention: spatial attention (cbam-style)
+    multi_head: multi-head attention variants
 """
 
 from .self_attention import (
@@ -40,23 +40,23 @@ from .multi_head import (
 )
 
 __all__ = [
-    # Self-attention
+    # self-attention
     "SelfAttention2d",
     "SelfAttention",
     "EfficientSelfAttention2d",
     "EfficientSelfAttention",
     "MultiScaleSelfAttention",
-    # Channel attention
+    # channel attention
     "ChannelAttention",
     "SqueezeExcitation",
     "EfficientChannelAttention",
     "GlobalContextBlock",
-    # Spatial attention
+    # spatial attention
     "SpatialAttention",
     "CBAM",
     "CoordinateAttention",
     "PolarizedSelfAttention",
-    # Multi-head
+    # multi-head
     "MultiHeadSelfAttention2d",
     "CrossAttention2d",
     "WindowedMultiHeadAttention",

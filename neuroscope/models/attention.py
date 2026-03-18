@@ -1,13 +1,13 @@
 """
-Self-Attention Module for Medical Image Translation
+self-attention module for medical image translation
 
-This module implements self-attention mechanisms for capturing long-range 
-dependencies in brain MRI, which is crucial for preserving structural 
+this module implements self-attention mechanisms for capturing long-range 
+dependencies in brain mri, which is crucial for preserving structural 
 coherence across distant brain regions during domain translation.
 
-Reference:
-- Zhang et al., "Self-Attention Generative Adversarial Networks" (ICML 2019)
-- Adapted for 4-channel medical imaging with domain-specific modifications
+reference:
+- zhang et al., "self-attention generative adversarial networks" (icml 2019)
+- adapted for 4-channel medical imaging with domain-specific modifications
 """
 
 import torch
@@ -18,15 +18,15 @@ from typing import Optional, Tuple
 
 class SelfAttention(nn.Module):
     """
-    Self-Attention layer for feature maps.
+    self-attention layer for feature maps.
     
-    Computes attention weights between all spatial positions, allowing
+    computes attention weights between all spatial positions, allowing
     the model to capture long-range dependencies that are crucial for
-    maintaining anatomical consistency in brain MRI translation.
+    maintaining anatomical consistency in brain mri translation.
     
-    Args:
-        in_channels: Number of input channels
-        reduction_ratio: Channel reduction ratio for query/key (default: 8)
+    args:
+        in_channels: number of input channels
+        reduction_ratio: channel reduction ratio for query/key (default: 8)
     """
     
     def __init__(self, in_channels: int, reduction_ratio: int = 8):
@@ -35,49 +35,49 @@ class SelfAttention(nn.Module):
         self.in_channels = in_channels
         self.reduced_channels = max(in_channels // reduction_ratio, 1)
         
-        # Query, Key, Value projections
+        # query, key, value projections
         self.query = nn.Conv2d(in_channels, self.reduced_channels, kernel_size=1)
         self.key = nn.Conv2d(in_channels, self.reduced_channels, kernel_size=1)
         self.value = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         
-        # Learnable scaling parameter (gamma)
-        # Initialized to 0 so attention is gradually introduced during training
+        # learnable scaling parameter (gamma)
+        # initialized to 0 so attention is gradually introduced during training
         self.gamma = nn.Parameter(torch.zeros(1))
         
-        # Softmax for attention weights
+        # softmax for attention weights
         self.softmax = nn.Softmax(dim=-1)
         
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Forward pass with attention.
+        forward pass with attention.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W)
+        args:
+            x: input tensor of shape (b, c, h, w)
             
-        Returns:
-            out: Attended output tensor of shape (B, C, H, W)
-            attention: Attention weights of shape (B, H*W, H*W)
+        returns:
+            out: attended output tensor of shape (b, c, h, w)
+            attention: attention weights of shape (b, h*w, h*w)
         """
         batch_size, C, H, W = x.size()
         
-        # Query: (B, C', H, W) -> (B, C', H*W) -> (B, H*W, C')
+        # query: (b, c', h, w) -> (b, c', h*w) -> (b, h*w, c')
         query = self.query(x).view(batch_size, -1, H * W).permute(0, 2, 1)
         
-        # Key: (B, C', H, W) -> (B, C', H*W)
+        # key: (b, c', h, w) -> (b, c', h*w)
         key = self.key(x).view(batch_size, -1, H * W)
         
-        # Attention: (B, H*W, C') x (B, C', H*W) -> (B, H*W, H*W)
+        # attention: (b, h*w, c') x (b, c', h*w) -> (b, h*w, h*w)
         attention = torch.bmm(query, key)
         attention = self.softmax(attention)
         
-        # Value: (B, C, H, W) -> (B, C, H*W)
+        # value: (b, c, h, w) -> (b, c, h*w)
         value = self.value(x).view(batch_size, -1, H * W)
         
-        # Attended features: (B, C, H*W) x (B, H*W, H*W) -> (B, C, H*W)
+        # attended features: (b, c, h*w) x (b, h*w, h*w) -> (b, c, h*w)
         out = torch.bmm(value, attention.permute(0, 2, 1))
         out = out.view(batch_size, C, H, W)
         
-        # Residual connection with learnable weight
+        # residual connection with learnable weight
         out = self.gamma * out + x
         
         return out, attention
@@ -85,15 +85,15 @@ class SelfAttention(nn.Module):
 
 class ChannelAttention(nn.Module):
     """
-    Channel Attention Module (Squeeze-and-Excitation style).
+    channel attention module (squeeze-and-excitation style).
     
-    Recalibrates channel-wise feature responses by explicitly modeling
-    interdependencies between channels. Useful for emphasizing 
-    modality-specific features in multi-modal MRI.
+    recalibrates channel-wise feature responses by explicitly modeling
+    interdependencies between channels. useful for emphasizing 
+    modality-specific features in multi-modal mri.
     
-    Args:
-        in_channels: Number of input channels
-        reduction_ratio: Channel reduction ratio (default: 16)
+    args:
+        in_channels: number of input channels
+        reduction_ratio: channel reduction ratio (default: 16)
     """
     
     def __init__(self, in_channels: int, reduction_ratio: int = 16):
@@ -114,25 +114,25 @@ class ChannelAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W)
+        args:
+            x: input tensor of shape (b, c, h, w)
             
-        Returns:
-            Recalibrated tensor of shape (B, C, H, W)
+        returns:
+            recalibrated tensor of shape (b, c, h, w)
         """
         batch_size, C, _, _ = x.size()
         
-        # Global average pooling
+        # global average pooling
         avg_out = self.avg_pool(x).view(batch_size, C)
         avg_out = self.fc(avg_out)
         
-        # Global max pooling
+        # global max pooling
         max_out = self.max_pool(x).view(batch_size, C)
         max_out = self.fc(max_out)
         
-        # Combine and apply sigmoid
+        # combine and apply sigmoid
         attention = self.sigmoid(avg_out + max_out)
         attention = attention.view(batch_size, C, 1, 1)
         
@@ -141,13 +141,13 @@ class ChannelAttention(nn.Module):
 
 class SpatialAttention(nn.Module):
     """
-    Spatial Attention Module.
+    spatial attention module.
     
-    Generates a spatial attention map that highlights important regions
+    generates a spatial attention map that highlights important regions
     (e.g., tumor areas, ventricles) while suppressing irrelevant background.
     
-    Args:
-        kernel_size: Size of the convolution kernel (default: 7)
+    args:
+        kernel_size: size of the convolution kernel (default: 7)
     """
     
     def __init__(self, kernel_size: int = 7):
@@ -159,19 +159,19 @@ class SpatialAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W)
+        args:
+            x: input tensor of shape (b, c, h, w)
             
-        Returns:
-            Spatially attended tensor of shape (B, C, H, W)
+        returns:
+            spatially attended tensor of shape (b, c, h, w)
         """
-        # Channel-wise statistics
+        # channel-wise statistics
         avg_out = torch.mean(x, dim=1, keepdim=True)
         max_out, _ = torch.max(x, dim=1, keepdim=True)
         
-        # Concatenate and convolve
+        # concatenate and convolve
         combined = torch.cat([avg_out, max_out], dim=1)
         attention = self.sigmoid(self.conv(combined))
         
@@ -180,19 +180,19 @@ class SpatialAttention(nn.Module):
 
 class CBAM(nn.Module):
     """
-    Convolutional Block Attention Module (CBAM).
+    convolutional block attention module (cbam).
     
-    Combines channel and spatial attention for comprehensive feature
-    refinement. Particularly effective for medical imaging where both
+    combines channel and spatial attention for comprehensive feature
+    refinement. particularly effective for medical imaging where both
     modality-specific (channel) and region-specific (spatial) features matter.
     
-    Reference:
-    - Woo et al., "CBAM: Convolutional Block Attention Module" (ECCV 2018)
+    reference:
+    - woo et al., "cbam: convolutional block attention module" (eccv 2018)
     
-    Args:
-        in_channels: Number of input channels
-        reduction_ratio: Channel reduction ratio (default: 16)
-        kernel_size: Spatial attention kernel size (default: 7)
+    args:
+        in_channels: number of input channels
+        reduction_ratio: channel reduction ratio (default: 16)
+        kernel_size: spatial attention kernel size (default: 7)
     """
     
     def __init__(self, in_channels: int, reduction_ratio: int = 16, kernel_size: int = 7):
@@ -203,13 +203,13 @@ class CBAM(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with sequential channel and spatial attention.
+        forward pass with sequential channel and spatial attention.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W)
+        args:
+            x: input tensor of shape (b, c, h, w)
             
-        Returns:
-            Attended tensor of shape (B, C, H, W)
+        returns:
+            attended tensor of shape (b, c, h, w)
         """
         x = self.channel_attention(x)
         x = self.spatial_attention(x)
@@ -218,15 +218,15 @@ class CBAM(nn.Module):
 
 class MultiHeadSelfAttention(nn.Module):
     """
-    Multi-Head Self-Attention for feature maps.
+    multi-head self-attention for feature maps.
     
-    Extends self-attention with multiple attention heads, allowing the model
+    extends self-attention with multiple attention heads, allowing the model
     to jointly attend to information from different representation subspaces.
     
-    Args:
-        in_channels: Number of input channels
-        num_heads: Number of attention heads (default: 4)
-        reduction_ratio: Channel reduction ratio (default: 8)
+    args:
+        in_channels: number of input channels
+        num_heads: number of attention heads (default: 4)
+        reduction_ratio: channel reduction ratio (default: 8)
     """
     
     def __init__(self, in_channels: int, num_heads: int = 4, reduction_ratio: int = 8):
@@ -250,35 +250,35 @@ class MultiHeadSelfAttention(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with multi-head attention.
+        forward pass with multi-head attention.
         
-        Args:
-            x: Input tensor of shape (B, C, H, W)
+        args:
+            x: input tensor of shape (b, c, h, w)
             
-        Returns:
-            Attended tensor of shape (B, C, H, W)
+        returns:
+            attended tensor of shape (b, c, h, w)
         """
         B, C, H, W = x.size()
         
-        # Project to Q, K, V
-        q = self.query(x)  # (B, reduced_C, H, W)
+        # project to q, k, v
+        q = self.query(x)  # (b, reduced_c, h, w)
         k = self.key(x)
-        v = self.value(x)  # (B, C, H, W)
+        v = self.value(x)  # (b, c, h, w)
         
-        # Reshape for multi-head attention
-        q = q.view(B, self.num_heads, self.head_dim, H * W)  # (B, heads, head_dim, N)
+        # reshape for multi-head attention
+        q = q.view(B, self.num_heads, self.head_dim, H * W)  # (b, heads, head_dim, n)
         k = k.view(B, self.num_heads, self.head_dim, H * W)
         v = v.view(B, self.num_heads, C // self.num_heads, H * W)
         
-        # Attention scores
-        attn = torch.einsum('bhdn,bhdm->bhnm', q, k) * self.scale  # (B, heads, N, N)
+        # attention scores
+        attn = torch.einsum('bhdn,bhdm->bhnm', q, k) * self.scale  # (b, heads, n, n)
         attn = F.softmax(attn, dim=-1)
         
-        # Apply attention to values
-        out = torch.einsum('bhnm,bhdm->bhdn', attn, v)  # (B, heads, C/heads, N)
+        # apply attention to values
+        out = torch.einsum('bhnm,bhdm->bhdn', attn, v)  # (b, heads, c/heads, n)
         out = out.reshape(B, C, H, W)
         
-        # Output projection and residual
+        # output projection and residual
         out = self.out_proj(out)
         out = self.gamma * out + x
         
@@ -287,17 +287,17 @@ class MultiHeadSelfAttention(nn.Module):
 
 class CrossModalAttention(nn.Module):
     """
-    Cross-Modal Attention for multi-channel MRI.
+    cross-modal attention for multi-channel mri.
     
-    Computes attention between different MRI modalities (T1, T1ce, T2, FLAIR)
+    computes attention between different mri modalities (t1, t1ce, t2, flair)
     to capture complementary information and ensure modality consistency
     during domain translation.
     
-    This is a novel contribution specific to multi-modal medical imaging.
+    this is a novel contribution specific to multi-modal medical imaging.
     
-    Args:
-        in_channels: Number of input channels (typically 4 for T1/T1ce/T2/FLAIR)
-        hidden_dim: Hidden dimension for attention computation
+    args:
+        in_channels: number of input channels (typically 4 for t1/t1ce/t2/flair)
+        hidden_dim: hidden dimension for attention computation
     """
     
     def __init__(self, in_channels: int = 4, hidden_dim: int = 64):
@@ -306,7 +306,7 @@ class CrossModalAttention(nn.Module):
         self.in_channels = in_channels
         self.hidden_dim = hidden_dim
         
-        # Per-modality feature extraction
+        # per-modality feature extraction
         self.modality_encoders = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(1, hidden_dim, kernel_size=3, padding=1),
@@ -315,62 +315,62 @@ class CrossModalAttention(nn.Module):
             ) for _ in range(in_channels)
         ])
         
-        # Cross-modal attention
+        # cross-modal attention
         self.query = nn.Conv2d(hidden_dim, hidden_dim // 4, kernel_size=1)
         self.key = nn.Conv2d(hidden_dim, hidden_dim // 4, kernel_size=1)
         self.value = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1)
         
-        # Output projection back to original channels
+        # output projection back to original channels
         self.out_proj = nn.Conv2d(hidden_dim * in_channels, in_channels, kernel_size=1)
         
         self.gamma = nn.Parameter(torch.zeros(1))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with cross-modal attention.
+        forward pass with cross-modal attention.
         
-        Args:
-            x: Input tensor of shape (B, 4, H, W) representing 4 MRI modalities
+        args:
+            x: input tensor of shape (b, 4, h, w) representing 4 mri modalities
             
-        Returns:
-            Cross-modality attended tensor of shape (B, 4, H, W)
+        returns:
+            cross-modality attended tensor of shape (b, 4, h, w)
         """
         B, C, H, W = x.size()
         assert C == self.in_channels, f"Expected {self.in_channels} channels, got {C}"
         
-        # Encode each modality separately
+        # encode each modality separately
         modality_features = []
         for i, encoder in enumerate(self.modality_encoders):
-            feat = encoder(x[:, i:i+1, :, :])  # (B, hidden_dim, H, W)
+            feat = encoder(x[:, i:i+1, :, :])  # (b, hidden_dim, h, w)
             modality_features.append(feat)
         
-        # Stack modalities: (B, num_modalities, hidden_dim, H, W)
+        # stack modalities: (b, num_modalities, hidden_dim, h, w)
         stacked = torch.stack(modality_features, dim=1)
         
-        # Compute cross-modal attention
+        # compute cross-modal attention
         attended_features = []
         for i in range(self.in_channels):
-            query_feat = self.query(modality_features[i])  # (B, hidden_dim/4, H, W)
+            query_feat = self.query(modality_features[i])  # (b, hidden_dim/4, h, w)
             
-            # Attend to all other modalities
+            # attend to all other modalities
             attended = modality_features[i].clone()
             for j in range(self.in_channels):
                 if i != j:
                     key_feat = self.key(modality_features[j])
                     value_feat = self.value(modality_features[j])
                     
-                    # Simplified attention (could be made more sophisticated)
+                    # simplified attention (could be made more sophisticated)
                     attn = torch.sum(query_feat * key_feat, dim=1, keepdim=True)
                     attn = torch.sigmoid(attn)
                     attended = attended + attn * value_feat
             
             attended_features.append(attended)
         
-        # Concatenate and project
-        out = torch.cat(attended_features, dim=1)  # (B, hidden_dim * 4, H, W)
-        out = self.out_proj(out)  # (B, 4, H, W)
+        # concatenate and project
+        out = torch.cat(attended_features, dim=1)  # (b, hidden_dim * 4, h, w)
+        out = self.out_proj(out)  # (b, 4, h, w)
         
-        # Residual connection
+        # residual connection
         out = self.gamma * out + x
         
         return out

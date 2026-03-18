@@ -1,9 +1,9 @@
-"""Validation utilities for NeuroScope.
+"""validation utilities for neuroscope.
 
-This module provides validation utilities for various data types and configurations.
+this module provides validation utilities for various data types and configurations.
 """
 
-# Placeholder for validation utilities
-# The actual implementation would be imported here
+# placeholder for validation utilities
+# the actual implementation would be imported here
 
 __all__ = []

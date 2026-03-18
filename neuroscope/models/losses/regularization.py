@@ -1,7 +1,7 @@
 """
-Regularization Losses for training stability.
+regularization losses for training stability.
 
-This module provides regularization losses to improve
+this module provides regularization losses to improve
 training stability and prevent mode collapse.
 """
 
@@ -14,13 +14,13 @@ import math
 
 class GradientPenalty(nn.Module):
     """
-    Gradient Penalty for WGAN-GP training.
+    gradient penalty for wgan-gp training.
     
-    Enforces Lipschitz constraint on discriminator.
+    enforces lipschitz constraint on discriminator.
     
-    Args:
-        weight: Weight for gradient penalty
-        target_norm: Target norm for gradients (default 1.0)
+    args:
+        weight: weight for gradient penalty
+        target_norm: target norm for gradients (default 1.0)
     """
     
     def __init__(self, weight: float = 10.0, target_norm: float = 1.0):
@@ -35,31 +35,31 @@ class GradientPenalty(nn.Module):
         fake: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute gradient penalty.
+        compute gradient penalty.
         
-        Args:
-            discriminator: Discriminator network
-            real: Real samples
-            fake: Fake samples
+        args:
+            discriminator: discriminator network
+            real: real samples
+            fake: fake samples
             
-        Returns:
-            Gradient penalty loss
+        returns:
+            gradient penalty loss
         """
         batch_size = real.size(0)
         device = real.device
         
-        # Random interpolation
+        # random interpolation
         alpha = torch.rand(batch_size, 1, 1, 1, device=device)
         interpolated = alpha * real + (1 - alpha) * fake
         interpolated.requires_grad_(True)
         
-        # Discriminator output
+        # discriminator output
         d_interpolated = discriminator(interpolated)
         
         if isinstance(d_interpolated, (list, tuple)):
             d_interpolated = d_interpolated[0]
             
-        # Compute gradients
+        # compute gradients
         gradients = torch.autograd.grad(
             outputs=d_interpolated,
             inputs=interpolated,
@@ -69,11 +69,11 @@ class GradientPenalty(nn.Module):
             only_inputs=True
         )[0]
         
-        # Compute gradient norm
+        # compute gradient norm
         gradients = gradients.view(batch_size, -1)
         gradient_norm = gradients.norm(2, dim=1)
         
-        # Gradient penalty
+        # gradient penalty
         penalty = ((gradient_norm - self.target_norm) ** 2).mean()
         
         return self.weight * penalty
@@ -81,13 +81,13 @@ class GradientPenalty(nn.Module):
 
 class SpectralRegularization(nn.Module):
     """
-    Spectral Regularization for discriminator.
+    spectral regularization for discriminator.
     
-    Applies soft spectral normalization as a loss term.
+    applies soft spectral normalization as a loss term.
     
-    Args:
-        weight: Regularization weight
-        n_power_iterations: Number of power iterations
+    args:
+        weight: regularization weight
+        n_power_iterations: number of power iterations
     """
     
     def __init__(self, weight: float = 1.0, n_power_iterations: int = 1):
@@ -96,7 +96,7 @@ class SpectralRegularization(nn.Module):
         self.n_power_iterations = n_power_iterations
         
     def forward(self, model: nn.Module) -> torch.Tensor:
-        """Compute spectral regularization loss."""
+        """compute spectral regularization loss."""
         reg_loss = 0.0
         count = 0
         
@@ -104,11 +104,11 @@ class SpectralRegularization(nn.Module):
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 weight = module.weight
                 
-                # Compute spectral norm
+                # compute spectral norm
                 with torch.no_grad():
                     weight_mat = weight.view(weight.size(0), -1)
                     
-                    # Power iteration
+                    # power iteration
                     u = torch.randn(1, weight_mat.size(0), device=weight.device)
                     u = F.normalize(u, dim=1)
                     
@@ -118,7 +118,7 @@ class SpectralRegularization(nn.Module):
                         
                     sigma = torch.mm(torch.mm(u, weight_mat), v.t())
                     
-                # Regularize towards unit spectral norm
+                # regularize towards unit spectral norm
                 reg_loss += (sigma - 1.0) ** 2
                 count += 1
                 
@@ -127,13 +127,13 @@ class SpectralRegularization(nn.Module):
 
 class R1Regularization(nn.Module):
     """
-    R1 Gradient Regularization.
+    r1 gradient regularization.
     
-    Zero-centered gradient penalty for real samples only.
-    Used in StyleGAN-style training.
+    zero-centered gradient penalty for real samples only.
+    used in stylegan-style training.
     
-    Args:
-        weight: Regularization weight
+    args:
+        weight: regularization weight
     """
     
     def __init__(self, weight: float = 10.0):
@@ -145,14 +145,14 @@ class R1Regularization(nn.Module):
         discriminator: nn.Module,
         real: torch.Tensor
     ) -> torch.Tensor:
-        """Compute R1 regularization."""
+        """compute r1 regularization."""
         real = real.requires_grad_(True)
         d_real = discriminator(real)
         
         if isinstance(d_real, (list, tuple)):
             d_real = d_real[0]
             
-        # Compute gradients
+        # compute gradients
         gradients = torch.autograd.grad(
             outputs=d_real.sum(),
             inputs=real,
@@ -161,7 +161,7 @@ class R1Regularization(nn.Module):
             only_inputs=True
         )[0]
         
-        # Squared gradient norm
+        # squared gradient norm
         r1_penalty = gradients.view(gradients.size(0), -1).pow(2).sum(dim=1).mean()
         
         return self.weight * r1_penalty
@@ -169,12 +169,12 @@ class R1Regularization(nn.Module):
 
 class R2Regularization(nn.Module):
     """
-    R2 Gradient Regularization.
+    r2 gradient regularization.
     
-    Zero-centered gradient penalty for fake samples only.
+    zero-centered gradient penalty for fake samples only.
     
-    Args:
-        weight: Regularization weight
+    args:
+        weight: regularization weight
     """
     
     def __init__(self, weight: float = 10.0):
@@ -186,14 +186,14 @@ class R2Regularization(nn.Module):
         discriminator: nn.Module,
         fake: torch.Tensor
     ) -> torch.Tensor:
-        """Compute R2 regularization."""
+        """compute r2 regularization."""
         fake = fake.requires_grad_(True)
         d_fake = discriminator(fake)
         
         if isinstance(d_fake, (list, tuple)):
             d_fake = d_fake[0]
             
-        # Compute gradients
+        # compute gradients
         gradients = torch.autograd.grad(
             outputs=d_fake.sum(),
             inputs=fake,
@@ -202,7 +202,7 @@ class R2Regularization(nn.Module):
             only_inputs=True
         )[0]
         
-        # Squared gradient norm
+        # squared gradient norm
         r2_penalty = gradients.view(gradients.size(0), -1).pow(2).sum(dim=1).mean()
         
         return self.weight * r2_penalty
@@ -210,13 +210,13 @@ class R2Regularization(nn.Module):
 
 class PathLengthRegularization(nn.Module):
     """
-    Path Length Regularization from StyleGAN2.
+    path length regularization from stylegan2.
     
-    Encourages smooth mappings from latent space to image space.
+    encourages smooth mappings from latent space to image space.
     
-    Args:
-        weight: Regularization weight
-        decay: EMA decay for path length mean
+    args:
+        weight: regularization weight
+        decay: ema decay for path length mean
     """
     
     def __init__(self, weight: float = 2.0, decay: float = 0.01):
@@ -230,15 +230,15 @@ class PathLengthRegularization(nn.Module):
         fake_images: torch.Tensor,
         latents: torch.Tensor
     ) -> torch.Tensor:
-        """Compute path length regularization."""
+        """compute path length regularization."""
         batch_size = fake_images.size(0)
         
-        # Random noise for gradient computation
+        # random noise for gradient computation
         noise = torch.randn_like(fake_images) / math.sqrt(
             fake_images.size(2) * fake_images.size(3)
         )
         
-        # Compute Jacobian
+        # compute jacobian
         gradients = torch.autograd.grad(
             outputs=(fake_images * noise).sum(),
             inputs=latents,
@@ -247,16 +247,16 @@ class PathLengthRegularization(nn.Module):
             only_inputs=True
         )[0]
         
-        # Path length
+        # path length
         path_lengths = torch.sqrt(gradients.pow(2).sum(dim=list(range(1, gradients.dim()))) + 1e-8)
         
-        # Update mean with EMA
+        # update mean with ema
         path_length_mean = self.path_length_mean + self.decay * (
             path_lengths.mean() - self.path_length_mean
         )
         self.path_length_mean.copy_(path_length_mean.detach())
         
-        # Regularization
+        # regularization
         path_penalty = (path_lengths - self.path_length_mean).pow(2).mean()
         
         return self.weight * path_penalty
@@ -264,12 +264,12 @@ class PathLengthRegularization(nn.Module):
 
 class OrthogonalRegularization(nn.Module):
     """
-    Orthogonal Regularization for convolutional kernels.
+    orthogonal regularization for convolutional kernels.
     
-    Encourages orthogonal filters for better feature diversity.
+    encourages orthogonal filters for better feature diversity.
     
-    Args:
-        weight: Regularization weight
+    args:
+        weight: regularization weight
     """
     
     def __init__(self, weight: float = 1e-4):
@@ -277,7 +277,7 @@ class OrthogonalRegularization(nn.Module):
         self.weight = weight
         
     def forward(self, model: nn.Module) -> torch.Tensor:
-        """Compute orthogonal regularization."""
+        """compute orthogonal regularization."""
         reg_loss = 0.0
         
         for name, module in model.named_modules():
@@ -285,7 +285,7 @@ class OrthogonalRegularization(nn.Module):
                 weight = module.weight
                 weight_flat = weight.view(weight.size(0), -1)
                 
-                # Orthogonality constraint: W^T W should be identity
+                # orthogonality constraint: w^t w should be identity
                 wTw = torch.mm(weight_flat, weight_flat.t())
                 identity = torch.eye(wTw.size(0), device=wTw.device)
                 
@@ -296,13 +296,13 @@ class OrthogonalRegularization(nn.Module):
 
 class LatentRegularization(nn.Module):
     """
-    Latent Space Regularization.
+    latent space regularization.
     
-    Encourages smooth and well-structured latent space.
+    encourages smooth and well-structured latent space.
     
-    Args:
-        weight: Regularization weight
-        prior: Prior distribution ('gaussian' or 'uniform')
+    args:
+        weight: regularization weight
+        prior: prior distribution ('gaussian' or 'uniform')
     """
     
     def __init__(self, weight: float = 0.01, prior: str = 'gaussian'):
@@ -316,16 +316,16 @@ class LatentRegularization(nn.Module):
         logvar: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Compute latent regularization (KL divergence).
+        compute latent regularization (kl divergence).
         
-        For VAE-style regularization towards standard normal.
+        for vae-style regularization towards standard normal.
         """
         if logvar is not None:
-            # KL divergence for VAE
+            # kl divergence for vae
             kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-            kl_loss = kl_loss / mu.size(0)  # Normalize by batch size
+            kl_loss = kl_loss / mu.size(0)  # normalize by batch size
         else:
-            # Simple L2 regularization towards zero mean
+            # simple l2 regularization towards zero mean
             kl_loss = mu.pow(2).mean()
             
         return self.weight * kl_loss
@@ -333,13 +333,13 @@ class LatentRegularization(nn.Module):
 
 class ConsistencyRegularization(nn.Module):
     """
-    Consistency Regularization for semi-supervised learning.
+    consistency regularization for semi-supervised learning.
     
-    Enforces consistent predictions under different augmentations.
+    enforces consistent predictions under different augmentations.
     
-    Args:
-        weight: Regularization weight
-        temperature: Temperature for sharpening
+    args:
+        weight: regularization weight
+        temperature: temperature for sharpening
     """
     
     def __init__(self, weight: float = 1.0, temperature: float = 0.5):
@@ -353,19 +353,19 @@ class ConsistencyRegularization(nn.Module):
         pred2: torch.Tensor
     ) -> torch.Tensor:
         """
-        Compute consistency regularization.
+        compute consistency regularization.
         
-        Args:
-            pred1: Predictions from original input
-            pred2: Predictions from augmented input
+        args:
+            pred1: predictions from original input
+            pred2: predictions from augmented input
             
-        Returns:
-            Consistency loss
+        returns:
+            consistency loss
         """
-        # Sharpen pred1 (from original)
+        # sharpen pred1 (from original)
         pred1_sharp = F.softmax(pred1 / self.temperature, dim=1).detach()
         
-        # KL divergence
+        # kl divergence
         log_pred2 = F.log_softmax(pred2, dim=1)
         consistency_loss = F.kl_div(log_pred2, pred1_sharp, reduction='batchmean')
         
@@ -374,14 +374,14 @@ class ConsistencyRegularization(nn.Module):
 
 class CutoutRegularization(nn.Module):
     """
-    Cutout Regularization.
+    cutout regularization.
     
-    Applies random cutout during training for robustness.
-    Returns augmented tensor (not a loss).
+    applies random cutout during training for robustness.
+    returns augmented tensor (not a loss).
     
-    Args:
-        n_holes: Number of cutout regions
-        length: Size of each cutout region
+    args:
+        n_holes: number of cutout regions
+        length: size of each cutout region
     """
     
     def __init__(self, n_holes: int = 1, length: int = 16):
@@ -390,7 +390,7 @@ class CutoutRegularization(nn.Module):
         self.length = length
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply cutout augmentation."""
+        """apply cutout augmentation."""
         h, w = x.size(-2), x.size(-1)
         mask = torch.ones_like(x)
         

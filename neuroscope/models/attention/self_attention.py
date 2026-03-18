@@ -1,7 +1,7 @@
 """
-Self-Attention mechanism implementations.
+self-attention mechanism implementations.
 
-This module provides self-attention layers for capturing long-range
+this module provides self-attention layers for capturing long-range
 dependencies in feature maps.
 """
 
@@ -14,15 +14,15 @@ import math
 
 class SelfAttention2d(nn.Module):
     """
-    Self-Attention layer for 2D feature maps.
+    self-attention layer for 2d feature maps.
     
-    Implements the self-attention mechanism from "Self-Attention GAN" (Zhang et al., 2019).
-    Captures long-range dependencies by computing attention between all spatial positions.
+    implements the self-attention mechanism from "self-attention gan" (zhang et al., 2019).
+    captures long-range dependencies by computing attention between all spatial positions.
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Channel reduction ratio for query/key projections
-        use_spectral_norm: Whether to apply spectral normalization
+    args:
+        in_channels: number of input channels
+        reduction: channel reduction ratio for query/key projections
+        use_spectral_norm: whether to apply spectral normalization
     """
     
     def __init__(
@@ -36,18 +36,18 @@ class SelfAttention2d(nn.Module):
         self.in_channels = in_channels
         self.reduced_channels = max(in_channels // reduction, 1)
         
-        # Query, Key, Value projections
+        # query, key, value projections
         self.query = nn.Conv2d(in_channels, self.reduced_channels, kernel_size=1)
         self.key = nn.Conv2d(in_channels, self.reduced_channels, kernel_size=1)
         self.value = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         
-        # Output projection
+        # output projection
         self.out = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         
-        # Learnable scaling parameter (gamma)
+        # learnable scaling parameter (gamma)
         self.gamma = nn.Parameter(torch.zeros(1))
         
-        # Apply spectral normalization
+        # apply spectral normalization
         if use_spectral_norm:
             self.query = nn.utils.spectral_norm(self.query)
             self.key = nn.utils.spectral_norm(self.key)
@@ -62,30 +62,30 @@ class SelfAttention2d(nn.Module):
         return_attention: bool = False
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, C, H, W]
-            return_attention: Whether to return attention maps
+        args:
+            x: input tensor [b, c, h, w]
+            return_attention: whether to return attention maps
             
-        Returns:
-            Output tensor and optionally attention maps
+        returns:
+            output tensor and optionally attention maps
         """
         batch_size, C, H, W = x.size()
         
-        # Compute Q, K, V
-        query = self.query(x).view(batch_size, -1, H * W).permute(0, 2, 1)  # [B, HW, C']
-        key = self.key(x).view(batch_size, -1, H * W)  # [B, C', HW]
-        value = self.value(x).view(batch_size, -1, H * W)  # [B, C, HW]
+        # compute q, k, v
+        query = self.query(x).view(batch_size, -1, H * W).permute(0, 2, 1)  # [b, hw, c']
+        key = self.key(x).view(batch_size, -1, H * W)  # [b, c', hw]
+        value = self.value(x).view(batch_size, -1, H * W)  # [b, c, hw]
         
-        # Attention: softmax(Q @ K^T / sqrt(d)) @ V
-        attention = self.softmax(torch.bmm(query, key) / math.sqrt(self.reduced_channels))  # [B, HW, HW]
+        # attention: softmax(q @ k^t / sqrt(d)) @ v
+        attention = self.softmax(torch.bmm(query, key) / math.sqrt(self.reduced_channels))  # [b, hw, hw]
         
-        # Apply attention to values
-        out = torch.bmm(value, attention.permute(0, 2, 1))  # [B, C, HW]
+        # apply attention to values
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # [b, c, hw]
         out = out.view(batch_size, C, H, W)
         
-        # Output projection with residual
+        # output projection with residual
         out = self.out(out)
         out = self.gamma * out + x
         
@@ -96,14 +96,14 @@ class SelfAttention2d(nn.Module):
 
 class EfficientSelfAttention2d(nn.Module):
     """
-    Efficient Self-Attention with linear complexity.
+    efficient self-attention with linear complexity.
     
-    Uses kernel approximation to reduce O(n²) complexity to O(n).
-    Based on "Efficient Attention" (Shen et al., 2021).
+    uses kernel approximation to reduce o(n²) complexity to o(n).
+    based on "efficient attention" (shen et al., 2021).
     
-    Args:
-        in_channels: Number of input channels
-        reduction: Channel reduction ratio
+    args:
+        in_channels: number of input channels
+        reduction: channel reduction ratio
     """
     
     def __init__(self, in_channels: int, reduction: int = 8):
@@ -119,30 +119,30 @@ class EfficientSelfAttention2d(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with linear complexity attention.
+        forward pass with linear complexity attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Output tensor
+        returns:
+            output tensor
         """
         batch_size, C, H, W = x.size()
         N = H * W
         
-        # Compute Q, K, V
-        q = self.query(x).view(batch_size, self.reduced_channels, N)  # [B, C', N]
-        k = self.key(x).view(batch_size, self.reduced_channels, N)    # [B, C', N]
-        v = self.value(x).view(batch_size, C, N)                       # [B, C, N]
+        # compute q, k, v
+        q = self.query(x).view(batch_size, self.reduced_channels, N)  # [b, c', n]
+        k = self.key(x).view(batch_size, self.reduced_channels, N)    # [b, c', n]
+        v = self.value(x).view(batch_size, C, N)                       # [b, c, n]
         
-        # Apply softmax to Q and K separately
-        q = F.softmax(q, dim=-1)  # Normalize over spatial
-        k = F.softmax(k, dim=1)   # Normalize over channels
+        # apply softmax to q and k separately
+        q = F.softmax(q, dim=-1)  # normalize over spatial
+        k = F.softmax(k, dim=1)   # normalize over channels
         
-        # Efficient attention: V @ (K^T @ Q)
-        # Instead of (Q @ K^T) @ V which is O(n²)
-        context = torch.bmm(k, v.permute(0, 2, 1))  # [B, C', C]
-        out = torch.bmm(q.permute(0, 2, 1), context)  # [B, N, C]
+        # efficient attention: v @ (k^t @ q)
+        # instead of (q @ k^t) @ v which is o(n²)
+        context = torch.bmm(k, v.permute(0, 2, 1))  # [b, c', c]
+        out = torch.bmm(q.permute(0, 2, 1), context)  # [b, n, c]
         out = out.permute(0, 2, 1).view(batch_size, C, H, W)
         
         return self.gamma * out + x
@@ -150,14 +150,14 @@ class EfficientSelfAttention2d(nn.Module):
 
 class MultiScaleSelfAttention(nn.Module):
     """
-    Multi-scale self-attention for hierarchical feature processing.
+    multi-scale self-attention for hierarchical feature processing.
     
-    Applies attention at multiple resolutions and fuses results.
+    applies attention at multiple resolutions and fuses results.
     
-    Args:
-        in_channels: Number of input channels
-        scales: List of downsampling scales
-        reduction: Channel reduction ratio
+    args:
+        in_channels: number of input channels
+        scales: list of downsampling scales
+        reduction: channel reduction ratio
     """
     
     def __init__(
@@ -170,49 +170,49 @@ class MultiScaleSelfAttention(nn.Module):
         
         self.scales = scales
         
-        # Attention at each scale
+        # attention at each scale
         self.attention_layers = nn.ModuleList([
             SelfAttention2d(in_channels, reduction, use_spectral_norm=True)
             for _ in scales
         ])
         
-        # Fusion
+        # fusion
         self.fusion = nn.Conv2d(in_channels * len(scales), in_channels, kernel_size=1)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass with multi-scale attention.
+        forward pass with multi-scale attention.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Output tensor
+        returns:
+            output tensor
         """
         B, C, H, W = x.size()
         outputs = []
         
         for scale, attn in zip(self.scales, self.attention_layers):
             if scale > 1:
-                # Downsample
+                # downsample
                 x_scaled = F.avg_pool2d(x, kernel_size=scale, stride=scale)
             else:
                 x_scaled = x
                 
-            # Apply attention
+            # apply attention
             out, _ = attn(x_scaled)
             
             if scale > 1:
-                # Upsample back
+                # upsample back
                 out = F.interpolate(out, size=(H, W), mode='bilinear', align_corners=False)
                 
             outputs.append(out)
             
-        # Fuse all scales
+        # fuse all scales
         fused = torch.cat(outputs, dim=1)
         return self.fusion(fused)
 
 
-# Aliases for compatibility
+# aliases for compatibility
 EfficientSelfAttention = EfficientSelfAttention2d
 SelfAttention = SelfAttention2d

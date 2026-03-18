@@ -105,7 +105,7 @@ class AblationStudy:
         state_dict = checkpoint['model_state_dict']
         new_state_dict = {}
         for k, v in state_dict.items():
-            # remove .module. from component-level wrapping (e.g., G_A2B.module.xxx -> G_A2B.xxx)
+            # remove .module. from component-level wrapping (e.g., g_a2b.module.xxx -> g_a2b.xxx)
             new_key = k.replace('.module.', '.')
             # also handle if whole model was wrapped
             if new_key.startswith('module.'):
@@ -142,7 +142,7 @@ class AblationStudy:
         state_dict = checkpoint['model_state_dict']
         new_state_dict = {}
         for k, v in state_dict.items():
-            # remove .module. from component-level wrapping (e.g., G_A2B.module.xxx -> G_A2B.xxx)
+            # remove .module. from component-level wrapping (e.g., g_a2b.module.xxx -> g_a2b.xxx)
             new_key = k.replace('.module.', '.')
             # also handle if whole model was wrapped
             if new_key.startswith('module.'):

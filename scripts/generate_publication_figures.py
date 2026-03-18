@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Publication Figure Generation Script.
+publication figure generation script.
 
-Automatically generates all figures for the paper including:
-- Architecture diagrams
-- Training curves
-- Qualitative comparisons
-- Quantitative results (bar charts, heatmaps)
-- Ablation study visualizations
-- Statistical significance plots
+automatically generates all figures for the paper including:
+- architecture diagrams
+- training curves
+- qualitative comparisons
+- quantitative results (bar charts, heatmaps)
+- ablation study visualizations
+- statistical significance plots
 
-Usage:
+usage:
     python scripts/generate_publication_figures.py \
         --results-dir ./results \
         --output-dir ./figures/publication \
@@ -35,24 +35,24 @@ from matplotlib import gridspec
 from matplotlib.colors import LinearSegmentedColormap
 from scipy import stats as scipy_stats
 
-# Add project root to path
+# add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Setup logging
+# setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Set publication-ready style
+# set publication-ready style
 plt.style.use('seaborn-v0_8-paper')
 sns.set_context("paper")
 sns.set_palette("Set2")
 
 
 class PublicationFigureGenerator:
-    """Generates publication-quality figures for research paper."""
+    """generates publication-quality figures for research paper."""
 
     def __init__(
         self,
@@ -62,13 +62,13 @@ class PublicationFigureGenerator:
         dpi: int = 300,
     ):
         """
-        Initialize figure generator.
+        initialize figure generator.
 
-        Args:
-            results_dir: Directory containing evaluation results
-            output_dir: Output directory for figures
-            formats: Output formats (e.g., ['pdf', 'png'])
-            dpi: DPI for raster formats
+        args:
+            results_dir: directory containing evaluation results
+            output_dir: output directory for figures
+            formats: output formats (e.g., ['pdf', 'png'])
+            dpi: dpi for raster formats
         """
         self.results_dir = Path(results_dir)
         self.output_dir = Path(output_dir)
@@ -77,17 +77,17 @@ class PublicationFigureGenerator:
         self.formats = formats or ['pdf', 'png']
         self.dpi = dpi
 
-        # Figure styling
+        # figure styling
         self.colors = {
-            'sa_cyclegan': '#2E86AB',  # Blue
-            'cyclegan': '#A23B72',      # Purple
-            'combat': '#F18F01',        # Orange
-            'cut': '#C73E1D',           # Red
-            'histogram': '#6A994E',     # Green
+            'sa_cyclegan': '#2E86AB',  # blue
+            'cyclegan': '#A23B72',      # purple
+            'combat': '#F18F01',        # orange
+            'cut': '#C73E1D',           # red
+            'histogram': '#6A994E',     # green
         }
 
     def save_figure(self, fig: plt.Figure, filename: str):
-        """Save figure in multiple formats."""
+        """save figure in multiple formats."""
         for fmt in self.formats:
             filepath = self.output_dir / f"{filename}.{fmt}"
             fig.savefig(
@@ -101,17 +101,17 @@ class PublicationFigureGenerator:
 
     def generate_training_curves(self, tensorboard_logs: Dict):
         """
-        Generate training curves figure.
+        generate training curves figure.
 
-        Args:
-            tensorboard_logs: Dictionary of training logs
+        args:
+            tensorboard_logs: dictionary of training logs
         """
         logger.info("Generating training curves...")
 
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
         fig.suptitle('Training Progress', fontsize=16, fontweight='bold')
 
-        # Loss curves
+        # loss curves
         ax = axes[0, 0]
         for model_name, logs in tensorboard_logs.items():
             if 'train/loss_G' in logs:
@@ -128,7 +128,7 @@ class PublicationFigureGenerator:
         ax.legend()
         ax.grid(True, alpha=0.3)
 
-        # Discriminator loss
+        # discriminator loss
         ax = axes[0, 1]
         for model_name, logs in tensorboard_logs.items():
             if 'train/loss_D' in logs:
@@ -145,7 +145,7 @@ class PublicationFigureGenerator:
         ax.legend()
         ax.grid(True, alpha=0.3)
 
-        # Cycle consistency loss
+        # cycle consistency loss
         ax = axes[1, 0]
         for model_name, logs in tensorboard_logs.items():
             if 'train/loss_cycle' in logs:
@@ -162,7 +162,7 @@ class PublicationFigureGenerator:
         ax.legend()
         ax.grid(True, alpha=0.3)
 
-        # Learning rate
+        # learning rate
         ax = axes[1, 1]
         for model_name, logs in tensorboard_logs.items():
             if 'lr/generator' in logs:
@@ -186,10 +186,10 @@ class PublicationFigureGenerator:
 
     def generate_quantitative_comparison(self, results: Dict):
         """
-        Generate bar chart comparing quantitative metrics.
+        generate bar chart comparing quantitative metrics.
 
-        Args:
-            results: Dictionary of evaluation results
+        args:
+            results: dictionary of evaluation results
         """
         logger.info("Generating quantitative comparison...")
 
@@ -202,7 +202,7 @@ class PublicationFigureGenerator:
         for idx, metric in enumerate(metrics):
             ax = axes[idx // 2, idx % 2]
 
-            # Prepare data
+            # prepare data
             means = []
             stds = []
             colors_list = []
@@ -217,7 +217,7 @@ class PublicationFigureGenerator:
                     stds.append(0)
                     colors_list.append('#808080')
 
-            # Create bar chart
+            # create bar chart
             x_pos = np.arange(len(models))
             bars = ax.bar(
                 x_pos,
@@ -230,7 +230,7 @@ class PublicationFigureGenerator:
                 alpha=0.8
             )
 
-            # Customize
+            # customize
             ax.set_xlabel('Model', fontsize=12, fontweight='bold')
             ax.set_ylabel(metric, fontsize=12, fontweight='bold')
             ax.set_title(f'{metric} Comparison', fontsize=14, fontweight='bold')
@@ -238,7 +238,7 @@ class PublicationFigureGenerator:
             ax.set_xticklabels(models, rotation=45, ha='right')
             ax.grid(True, alpha=0.3, axis='y')
 
-            # Add value labels on bars
+            # add value labels on bars
             for i, (bar, mean, std) in enumerate(zip(bars, means, stds)):
                 height = bar.get_height()
                 ax.text(
@@ -260,11 +260,11 @@ class PublicationFigureGenerator:
         slice_idx: Optional[int] = None
     ):
         """
-        Generate qualitative comparison showing example outputs.
+        generate qualitative comparison showing example outputs.
 
-        Args:
-            sample_images: Dictionary mapping model names to image arrays
-            slice_idx: Slice index for 3D volumes (if None, uses middle slice)
+        args:
+            sample_images: dictionary mapping model names to image arrays
+            slice_idx: slice index for 3d volumes (if none, uses middle slice)
         """
         logger.info("Generating qualitative comparison...")
 
@@ -275,7 +275,7 @@ class PublicationFigureGenerator:
             axes = [axes]
 
         for idx, (model_name, image) in enumerate(sample_images.items()):
-            # Extract 2D slice if 3D
+            # extract 2d slice if 3d
             if image.ndim == 3:
                 if slice_idx is None:
                     slice_idx = image.shape[2] // 2
@@ -283,7 +283,7 @@ class PublicationFigureGenerator:
             else:
                 image_2d = image
 
-            # Display
+            # display
             axes[idx].imshow(image_2d, cmap='gray', interpolation='bilinear')
             axes[idx].set_title(model_name, fontsize=14, fontweight='bold')
             axes[idx].axis('off')
@@ -294,24 +294,24 @@ class PublicationFigureGenerator:
 
     def generate_ablation_heatmap(self, ablation_results: pd.DataFrame):
         """
-        Generate heatmap for ablation study results.
+        generate heatmap for ablation study results.
 
-        Args:
-            ablation_results: DataFrame with ablation configurations and metrics
+        args:
+            ablation_results: dataframe with ablation configurations and metrics
         """
         logger.info("Generating ablation study heatmap...")
 
         fig, ax = plt.subplots(figsize=(12, 8))
 
-        # Prepare data for heatmap
-        # Assuming ablation_results has columns: config, ssim, psnr, nmi, etc.
+        # prepare data for heatmap
+        # assuming ablation_results has columns: config, ssim, psnr, nmi, etc.
         data = ablation_results.set_index('config')
         data = data.select_dtypes(include=[np.number])
 
-        # Normalize to [0, 1] for each metric
+        # normalize to [0, 1] for each metric
         data_norm = (data - data.min()) / (data.max() - data.min())
 
-        # Create heatmap
+        # create heatmap
         sns.heatmap(
             data_norm.T,
             annot=data.T,
@@ -333,17 +333,17 @@ class PublicationFigureGenerator:
 
     def generate_statistical_significance(self, pvalues: Dict):
         """
-        Generate statistical significance visualization.
+        generate statistical significance visualization.
 
-        Args:
-            pvalues: Dictionary of p-values for pairwise comparisons
+        args:
+            pvalues: dictionary of p-values for pairwise comparisons
         """
         logger.info("Generating statistical significance plot...")
 
         models = sorted(set([k[0] for k in pvalues.keys()] + [k[1] for k in pvalues.keys()]))
         n_models = len(models)
 
-        # Create matrix of p-values
+        # create matrix of p-values
         pvalue_matrix = np.ones((n_models, n_models))
 
         for (model1, model2), pval in pvalues.items():
@@ -352,12 +352,12 @@ class PublicationFigureGenerator:
             pvalue_matrix[idx1, idx2] = pval
             pvalue_matrix[idx2, idx1] = pval
 
-        # Create custom colormap
+        # create custom colormap
         colors_cmap = ['#d7191c', '#fdae61', '#ffffbf', '#a6d96a', '#1a9641']
         n_bins = 100
         cmap = LinearSegmentedColormap.from_list('pvalue', colors_cmap, N=n_bins)
 
-        # Plot
+        # plot
         fig, ax = plt.subplots(figsize=(10, 8))
 
         im = ax.imshow(
@@ -368,17 +368,17 @@ class PublicationFigureGenerator:
             aspect='auto'
         )
 
-        # Add colorbar
+        # add colorbar
         cbar = plt.colorbar(im, ax=ax)
         cbar.set_label('p-value', fontsize=12, fontweight='bold')
 
-        # Set ticks
+        # set ticks
         ax.set_xticks(np.arange(n_models))
         ax.set_yticks(np.arange(n_models))
         ax.set_xticklabels(models, rotation=45, ha='right')
         ax.set_yticklabels(models)
 
-        # Add text annotations
+        # add text annotations
         for i in range(n_models):
             for j in range(n_models):
                 if i != j:
@@ -402,23 +402,23 @@ class PublicationFigureGenerator:
         input_image: np.ndarray
     ):
         """
-        Visualize attention maps from self-attention layers.
+        visualize attention maps from self-attention layers.
 
-        Args:
-            attention_maps: Dictionary of attention maps
-            input_image: Input image
+        args:
+            attention_maps: dictionary of attention maps
+            input_image: input image
         """
         logger.info("Generating attention visualization...")
 
         n_maps = len(attention_maps)
         fig, axes = plt.subplots(1, n_maps + 1, figsize=(4 * (n_maps + 1), 4))
 
-        # Show input image
+        # show input image
         axes[0].imshow(input_image, cmap='gray')
         axes[0].set_title('Input', fontsize=12, fontweight='bold')
         axes[0].axis('off')
 
-        # Show attention maps
+        # show attention maps
         for idx, (layer_name, attn_map) in enumerate(attention_maps.items(), start=1):
             axes[idx].imshow(attn_map, cmap='hot', interpolation='bilinear')
             axes[idx].set_title(layer_name, fontsize=12, fontweight='bold')
@@ -429,23 +429,23 @@ class PublicationFigureGenerator:
         plt.close()
 
     def generate_all_figures(self):
-        """Generate all publication figures automatically."""
+        """generate all publication figures automatically."""
         logger.info("Generating all publication figures...")
 
-        # Load results
+        # load results
         results_file = self.results_dir / 'all_results.json'
         if results_file.exists():
             with open(results_file, 'r') as f:
                 results = json.load(f)
 
-            # Convert to dictionary keyed by model name
+            # convert to dictionary keyed by model name
             results_dict = {r['model_name']: r for r in results}
 
-            # Generate quantitative comparison
+            # generate quantitative comparison
             self.generate_quantitative_comparison(results_dict)
 
-        # Load training logs (if available)
-        # This is a placeholder - actual implementation depends on log format
+        # load training logs (if available)
+        # this is a placeholder - actual implementation depends on log format
         tensorboard_logs = {}
         self.generate_training_curves(tensorboard_logs)
 
@@ -453,7 +453,7 @@ class PublicationFigureGenerator:
 
 
 def main():
-    """Main execution function."""
+    """main execution function."""
     parser = argparse.ArgumentParser(
         description='Generate publication figures'
     )
@@ -489,7 +489,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize generator
+    # initialize generator
     generator = PublicationFigureGenerator(
         results_dir=Path(args.results_dir),
         output_dir=Path(args.output_dir),
@@ -497,7 +497,7 @@ def main():
         dpi=args.dpi,
     )
 
-    # Generate all figures
+    # generate all figures
     generator.generate_all_figures()
 
     logger.info(f"\nAll figures saved to: {args.output_dir}")

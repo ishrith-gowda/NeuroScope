@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate correlation heatmap figure from results JSON."""
+"""regenerate correlation heatmap figure from results json."""
 
 import json
 import importlib.util
@@ -19,4 +19,4 @@ with open(results_path) as f:
 domain_a = results['domain_a_preservation']
 output_path = Path(__file__).parent.parent.parent / 'figures' / 'radiomics' / 'fig_radiomics_correlation_heatmap.pdf'
 radiomics_figures.plot_correlation_heatmap(domain_a, output_path)
-print(f'Done: {output_path}')
+print(f'done: {output_path}')

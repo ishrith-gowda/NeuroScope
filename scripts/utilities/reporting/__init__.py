@@ -1,6 +1,6 @@
-"""Reporting utility scripts for NeuroScope.
+"""reporting utility scripts for neuroscope.
 
-This module provides utility scripts for generating reports and summaries.
+this module provides utility scripts for generating reports and summaries.
 """
 
-# Reporting utility initialization
+# reporting utility initialization

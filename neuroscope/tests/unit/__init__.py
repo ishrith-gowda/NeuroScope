@@ -1,6 +1,6 @@
-"""Unit tests for NeuroScope.
+"""unit tests for neuroscope.
 
-This module provides unit tests for individual components and functions.
+this module provides unit tests for individual components and functions.
 """
 
-# Unit test initialization
+# unit test initialization

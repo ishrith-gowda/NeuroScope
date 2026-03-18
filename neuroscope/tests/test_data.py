@@ -1,7 +1,7 @@
 """
-Data Pipeline Tests.
+data pipeline tests.
 
-Unit tests for datasets, transforms, and data loading.
+unit tests for datasets, transforms, and data loading.
 """
 
 import pytest
@@ -11,10 +11,10 @@ from pathlib import Path
 
 
 class TestTransforms:
-    """Test data transforms."""
+    """test data transforms."""
     
     def test_normalize_transform(self):
-        """Test normalization transform."""
+        """test normalization transform."""
         from ..data.transforms import NormalizeIntensity
         
         transform = NormalizeIntensity()
@@ -22,13 +22,13 @@ class TestTransforms:
         
         y = transform(x)
         
-        # Should be normalized per channel
+        # should be normalized per channel
         for c in range(4):
             assert abs(y[c].mean()) < 1.0
             assert y[c].std() < 5.0
     
     def test_random_crop_shape(self):
-        """Test random crop output shape."""
+        """test random crop output shape."""
         from ..data.transforms import RandomCrop3D
         
         transform = RandomCrop3D(size=(32, 32, 32))
@@ -39,7 +39,7 @@ class TestTransforms:
         assert y.shape == (4, 32, 32, 32)
     
     def test_random_flip(self):
-        """Test random flip is consistent across channels."""
+        """test random flip is consistent across channels."""
         from ..data.transforms import RandomFlip3D
         
         transform = RandomFlip3D(p=1.0, axis=0)
@@ -47,12 +47,12 @@ class TestTransforms:
         
         y = transform(x)
         
-        # All channels should be flipped consistently
+        # all channels should be flipped consistently
         assert np.allclose(y[0], np.flip(x[0], axis=0))
         assert np.allclose(y[1], np.flip(x[1], axis=0))
     
     def test_compose_transforms(self):
-        """Test transform composition."""
+        """test transform composition."""
         from ..data.transforms import Compose, NormalizeIntensity, ToTensor
         
         transforms = Compose([
@@ -67,7 +67,7 @@ class TestTransforms:
         assert y.shape == (4, 32, 32, 32)
     
     def test_intensity_augmentation(self):
-        """Test intensity augmentation."""
+        """test intensity augmentation."""
         from ..data.transforms import IntensityAugmentation
         
         transform = IntensityAugmentation(
@@ -78,25 +78,25 @@ class TestTransforms:
         x = np.random.randn(4, 32, 32, 32).astype(np.float32)
         y = transform(x)
         
-        # Shape should be preserved
+        # shape should be preserved
         assert y.shape == x.shape
         
-        # Values should be different (with high probability)
+        # values should be different (with high probability)
         assert not np.allclose(x, y)
 
 
 class TestDatasets:
-    """Test dataset classes."""
+    """test dataset classes."""
     
     @pytest.fixture
     def mock_data_dir(self, tmp_path):
-        """Create mock data directory."""
+        """create mock data directory."""
         import nibabel as nib
         
         data_dir = tmp_path / "mock_data"
         data_dir.mkdir()
         
-        # Create mock NIfTI files
+        # create mock nifti files
         for i in range(5):
             subject_dir = data_dir / f"subject_{i:03d}"
             subject_dir.mkdir()
@@ -109,7 +109,7 @@ class TestDatasets:
         return data_dir
     
     def test_dataset_length(self, mock_data_dir):
-        """Test dataset length."""
+        """test dataset length."""
         from ..data.datasets import MRIDataset
         
         dataset = MRIDataset(
@@ -120,7 +120,7 @@ class TestDatasets:
         assert len(dataset) == 5
     
     def test_dataset_getitem(self, mock_data_dir):
-        """Test dataset __getitem__."""
+        """test dataset __getitem__."""
         from ..data.datasets import MRIDataset
         
         dataset = MRIDataset(
@@ -134,7 +134,7 @@ class TestDatasets:
         assert sample['image'].shape[0] == 4  # 4 modalities
     
     def test_paired_dataset(self, mock_data_dir):
-        """Test paired dataset for unpaired training."""
+        """test paired dataset for unpaired training."""
         from ..data.datasets import UnpairedMRIDataset
         
         dataset = UnpairedMRIDataset(
@@ -149,18 +149,18 @@ class TestDatasets:
 
 
 class TestDataLoaders:
-    """Test data loaders."""
+    """test data loaders."""
     
     def test_dataloader_creation(self):
-        """Test dataloader creation."""
+        """test dataloader creation."""
         from ..data.loaders import create_dataloaders
         
-        # This will use mock data
-        # In real tests, would need actual data path
-        pass  # Placeholder for actual implementation
+        # this will use mock data
+        # in real tests, would need actual data path
+        pass  # placeholder for actual implementation
     
     def test_batch_collation(self):
-        """Test batch collation."""
+        """test batch collation."""
         from ..data.loaders import collate_fn
         
         batch = [
@@ -175,13 +175,13 @@ class TestDataLoaders:
 
 
 class TestSamplers:
-    """Test data samplers."""
+    """test data samplers."""
     
     def test_balanced_sampler(self):
-        """Test balanced batch sampler."""
+        """test balanced batch sampler."""
         from ..data.samplers import BalancedBatchSampler
         
-        # Create mock dataset indices
+        # create mock dataset indices
         source_indices = list(range(100))
         target_indices = list(range(100, 200))
         
@@ -193,7 +193,7 @@ class TestSamplers:
         
         batch = next(iter(sampler))
         
-        # Should have equal source and target
+        # should have equal source and target
         source_count = sum(1 for i in batch if i < 100)
         target_count = sum(1 for i in batch if i >= 100)
         
@@ -201,11 +201,11 @@ class TestSamplers:
 
 
 class TestDataPipeline:
-    """Integration tests for data pipeline."""
+    """integration tests for data pipeline."""
     
     @pytest.mark.integration
     def test_full_pipeline(self, mock_data_dir):
-        """Test complete data pipeline."""
+        """test complete data pipeline."""
         from ..data.datasets import MRIDataset
         from ..data.transforms import Compose, NormalizeIntensity, ToTensor
         from torch.utils.data import DataLoader

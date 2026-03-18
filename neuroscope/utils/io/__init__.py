@@ -1,9 +1,9 @@
-"""I/O utilities for NeuroScope.
+"""i/o utilities for neuroscope.
 
-This module provides I/O utilities for various file formats and data types.
+this module provides i/o utilities for various file formats and data types.
 """
 
-# Placeholder for I/O utilities
-# The actual implementation would be imported here
+# placeholder for i/o utilities
+# the actual implementation would be imported here
 
 __all__ = []

@@ -1,10 +1,10 @@
 """
-Figure Generator.
+figure generator.
 
-Creates publication-quality figures for training visualization
+creates publication-quality figures for training visualization
 and research papers.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, List, Tuple, Union, Any
@@ -15,16 +15,16 @@ from datetime import datetime
 
 class FigureGenerator:
     """
-    Generates publication-quality figures for training analysis.
+    generates publication-quality figures for training analysis.
     
-    Features:
-    - Loss curves with multiple components
-    - Metric progression plots
-    - Learning rate schedules
-    - Gradient norm tracking
-    - Distribution comparisons
-    - Statistical summaries
-    - LaTeX-compatible output
+    features:
+    - loss curves with multiple components
+    - metric progression plots
+    - learning rate schedules
+    - gradient norm tracking
+    - distribution comparisons
+    - statistical summaries
+    - latex-compatible output
     """
     
     def __init__(
@@ -37,15 +37,15 @@ class FigureGenerator:
         font_size: int = 12
     ):
         """
-        Initialize figure generator.
+        initialize figure generator.
         
-        Args:
-            output_dir: Directory to save figures
-            style: Figure style ('publication', 'presentation', 'notebook')
-            save_format: Output format ('pdf', 'png', 'svg', 'eps')
-            dpi: Resolution for raster formats
-            figsize: Default figure size in inches
-            font_size: Base font size
+        args:
+            output_dir: directory to save figures
+            style: figure style ('publication', 'presentation', 'notebook')
+            save_format: output format ('pdf', 'png', 'svg', 'eps')
+            dpi: resolution for raster formats
+            figsize: default figure size in inches
+            font_size: base font size
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -56,7 +56,7 @@ class FigureGenerator:
         self.figsize = figsize
         self.font_size = font_size
         
-        # Create subdirectories
+        # create subdirectories
         self.losses_dir = self.output_dir / 'losses'
         self.metrics_dir = self.output_dir / 'metrics'
         self.analysis_dir = self.output_dir / 'analysis'
@@ -69,13 +69,13 @@ class FigureGenerator:
         self._setup_style()
         
     def _setup_style(self):
-        """Configure matplotlib style."""
+        """configure matplotlib style."""
         try:
             import matplotlib.pyplot as plt
             import matplotlib as mpl
             
             if self.style == 'publication':
-                # Clean, publication-ready style
+                # clean, publication-ready style
                 plt.rcParams.update({
                     'font.size': self.font_size,
                     'font.family': 'serif',
@@ -111,7 +111,7 @@ class FigureGenerator:
             pass
             
     # =========================================================================
-    # Loss Curves
+    # loss curves
     # =========================================================================
     
     def plot_training_losses(
@@ -121,15 +121,15 @@ class FigureGenerator:
         smooth_window: int = 0
     ) -> Path:
         """
-        Plot all training loss components.
+        plot all training loss components.
         
-        Args:
-            history: Dictionary with loss histories
-            title: Figure title
-            smooth_window: Window size for smoothing (0 = no smoothing)
+        args:
+            history: dictionary with loss histories
+            title: figure title
+            smooth_window: window size for smoothing (0 = no smoothing)
             
-        Returns:
-            Path to saved figure
+        returns:
+            path to saved figure
         """
         try:
             import matplotlib.pyplot as plt
@@ -154,7 +154,7 @@ class FigureGenerator:
             
         epochs = None
         
-        # Generator loss
+        # generator loss
         if 'G_loss' in history or 'train_G_loss' in history:
             data = history.get('G_loss', history.get('train_G_loss', []))
             epochs = range(1, len(data) + 1)
@@ -172,7 +172,7 @@ class FigureGenerator:
         axes[0, 0].legend()
         axes[0, 0].set_yscale('log')
         
-        # Cycle and Identity losses
+        # cycle and identity losses
         if 'cycle_loss' in history or 'train_cycle_loss' in history:
             data = history.get('cycle_loss', history.get('train_cycle_loss', []))
             y = smooth(data, smooth_window) if smooth_window else data
@@ -188,7 +188,7 @@ class FigureGenerator:
         axes[0, 1].set_title('Cycle & Identity Losses')
         axes[0, 1].legend()
         
-        # GAN losses (if available)
+        # gan losses (if available)
         gan_keys = [k for k in history.keys() if 'gan' in k.lower()]
         for key in gan_keys:
             data = history[key]
@@ -201,7 +201,7 @@ class FigureGenerator:
         if gan_keys:
             axes[1, 0].legend()
             
-        # Learning rate
+        # learning rate
         if 'learning_rate' in history:
             data = history['learning_rate']
             axes[1, 1].plot(range(1, len(data) + 1), data, 
@@ -228,9 +228,9 @@ class FigureGenerator:
         title: str = 'GAN Training Balance'
     ) -> Path:
         """
-        Plot generator vs discriminator loss balance.
+        plot generator vs discriminator loss balance.
         
-        Shows ratio over time to monitor training stability.
+        shows ratio over time to monitor training stability.
         """
         try:
             import matplotlib.pyplot as plt
@@ -241,7 +241,7 @@ class FigureGenerator:
         
         epochs = range(1, len(g_losses) + 1)
         
-        # Absolute losses
+        # absolute losses
         axes[0].plot(epochs, g_losses, 'g-', linewidth=1.5, label='Generator', alpha=0.8)
         axes[0].plot(epochs, d_losses, 'r-', linewidth=1.5, label='Discriminator', alpha=0.8)
         axes[0].set_xlabel('Epoch')
@@ -250,7 +250,7 @@ class FigureGenerator:
         axes[0].legend()
         axes[0].set_yscale('log')
         
-        # G/D Ratio
+        # g/d ratio
         ratios = [g / (d + 1e-8) for g, d in zip(g_losses, d_losses)]
         axes[1].plot(epochs, ratios, 'b-', linewidth=1.5)
         axes[1].axhline(y=1.0, color='k', linestyle='--', alpha=0.5, label='Balance (G=D)')
@@ -272,7 +272,7 @@ class FigureGenerator:
         return filepath
         
     # =========================================================================
-    # Metric Curves
+    # metric curves
     # =========================================================================
     
     def plot_validation_metrics(
@@ -281,7 +281,7 @@ class FigureGenerator:
         title: str = 'Validation Metrics'
     ) -> Path:
         """
-        Plot validation metrics (SSIM, PSNR) over training.
+        plot validation metrics (ssim, psnr) over training.
         """
         try:
             import matplotlib.pyplot as plt
@@ -290,7 +290,7 @@ class FigureGenerator:
             
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
         
-        # SSIM
+        # ssim
         ssim_keys = [k for k in history.keys() if 'ssim' in k.lower()]
         for key in ssim_keys:
             data = history[key]
@@ -303,7 +303,7 @@ class FigureGenerator:
         axes[0].set_ylim(0.5, 1.0)
         axes[0].legend()
         
-        # PSNR
+        # psnr
         psnr_keys = [k for k in history.keys() if 'psnr' in k.lower()]
         for key in psnr_keys:
             data = history[key]
@@ -332,7 +332,7 @@ class FigureGenerator:
         title: str = 'Training Progress'
     ) -> Path:
         """
-        Create comprehensive training progress figure.
+        create comprehensive training progress figure.
         """
         try:
             import matplotlib.pyplot as plt
@@ -343,7 +343,7 @@ class FigureGenerator:
         fig = plt.figure(figsize=(16, 10))
         gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.3, wspace=0.3)
         
-        # Generator Loss
+        # generator loss
         ax1 = fig.add_subplot(gs[0, 0])
         if 'G_loss' in train_history:
             ax1.plot(train_history['G_loss'], 'g-', linewidth=1.5, alpha=0.8)
@@ -352,7 +352,7 @@ class FigureGenerator:
         ax1.set_title('Generator Loss')
         ax1.set_yscale('log')
         
-        # Discriminator Loss
+        # discriminator loss
         ax2 = fig.add_subplot(gs[0, 1])
         if 'D_loss' in train_history:
             ax2.plot(train_history['D_loss'], 'r-', linewidth=1.5, alpha=0.8)
@@ -361,7 +361,7 @@ class FigureGenerator:
         ax2.set_title('Discriminator Loss')
         ax2.set_yscale('log')
         
-        # Cycle Loss
+        # cycle loss
         ax3 = fig.add_subplot(gs[0, 2])
         if 'cycle_loss' in train_history:
             ax3.plot(train_history['cycle_loss'], 'b-', linewidth=1.5, alpha=0.8)
@@ -369,7 +369,7 @@ class FigureGenerator:
         ax3.set_ylabel('Loss')
         ax3.set_title('Cycle Consistency Loss')
         
-        # SSIM
+        # ssim
         ax4 = fig.add_subplot(gs[1, 0])
         ssim_keys = [k for k in val_history.keys() if 'ssim' in k.lower()]
         for key in ssim_keys:
@@ -381,7 +381,7 @@ class FigureGenerator:
         if ssim_keys:
             ax4.legend()
         
-        # PSNR
+        # psnr
         ax5 = fig.add_subplot(gs[1, 1])
         psnr_keys = [k for k in val_history.keys() if 'psnr' in k.lower()]
         for key in psnr_keys:
@@ -392,7 +392,7 @@ class FigureGenerator:
         if psnr_keys:
             ax5.legend()
         
-        # Learning Rate
+        # learning rate
         ax6 = fig.add_subplot(gs[1, 2])
         if 'learning_rate' in train_history:
             ax6.plot(train_history['learning_rate'], 'k-', linewidth=1.5)
@@ -411,7 +411,7 @@ class FigureGenerator:
         return filepath
         
     # =========================================================================
-    # Gradient Analysis
+    # gradient analysis
     # =========================================================================
     
     def plot_gradient_norms(
@@ -420,7 +420,7 @@ class FigureGenerator:
         title: str = 'Gradient Norms'
     ) -> Path:
         """
-        Plot gradient norm history to detect vanishing/exploding gradients.
+        plot gradient norm history to detect vanishing/exploding gradients.
         """
         try:
             import matplotlib.pyplot as plt
@@ -441,7 +441,7 @@ class FigureGenerator:
         ax.legend()
         ax.set_yscale('log')
         
-        # Add reference lines
+        # add reference lines
         ax.axhline(y=1.0, color='gray', linestyle='--', alpha=0.5, label='Reference (1.0)')
         ax.axhline(y=100.0, color='red', linestyle=':', alpha=0.5, label='Warning (100)')
         
@@ -453,7 +453,7 @@ class FigureGenerator:
         return filepath
         
     # =========================================================================
-    # Publication Figures
+    # publication figures
     # =========================================================================
     
     def create_publication_summary(
@@ -464,7 +464,7 @@ class FigureGenerator:
         experiment_name: str = 'SA-CycleGAN'
     ) -> Path:
         """
-        Create a publication-ready summary figure.
+        create a publication-ready summary figure.
         """
         try:
             import matplotlib.pyplot as plt
@@ -475,10 +475,10 @@ class FigureGenerator:
         fig = plt.figure(figsize=(14, 8))
         gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.35, wspace=0.3)
         
-        # Main title
+        # main title
         fig.suptitle(f'{experiment_name} Training Summary', fontsize=16, fontweight='bold', y=0.98)
         
-        # (a) Training Losses
+        # (a) training losses
         ax_a = fig.add_subplot(gs[0, 0])
         if 'G_loss' in history:
             ax_a.plot(history['G_loss'], 'g-', label='G', alpha=0.8)
@@ -490,7 +490,7 @@ class FigureGenerator:
         ax_a.legend(loc='upper right')
         ax_a.set_yscale('log')
         
-        # (b) Cycle Consistency
+        # (b) cycle consistency
         ax_b = fig.add_subplot(gs[0, 1])
         if 'cycle_loss' in history:
             ax_b.plot(history['cycle_loss'], 'b-', label='Cycle', alpha=0.8)
@@ -501,7 +501,7 @@ class FigureGenerator:
         ax_b.set_title('(b) Reconstruction Losses')
         ax_b.legend(loc='upper right')
         
-        # (c) Learning Rate
+        # (c) learning rate
         ax_c = fig.add_subplot(gs[0, 2])
         if 'learning_rate' in history:
             ax_c.plot(history['learning_rate'], 'k-')
@@ -510,7 +510,7 @@ class FigureGenerator:
         ax_c.set_title('(c) Learning Rate Schedule')
         ax_c.set_yscale('log')
         
-        # (d) SSIM Progression
+        # (d) ssim progression
         ax_d = fig.add_subplot(gs[1, 0])
         ssim_a2b = val_history.get('ssim_A2B', val_history.get('val_ssim_A2B', []))
         ssim_b2a = val_history.get('ssim_B2A', val_history.get('val_ssim_B2A', []))
@@ -524,7 +524,7 @@ class FigureGenerator:
         ax_d.set_ylim(0.6, 1.0)
         ax_d.legend()
         
-        # (e) PSNR Progression
+        # (e) psnr progression
         ax_e = fig.add_subplot(gs[1, 1])
         psnr_a2b = val_history.get('psnr_A2B', val_history.get('val_psnr_A2B', []))
         psnr_b2a = val_history.get('psnr_B2A', val_history.get('val_psnr_B2A', []))
@@ -537,11 +537,11 @@ class FigureGenerator:
         ax_e.set_title('(e) PSNR Progression')
         ax_e.legend()
         
-        # (f) Final Metrics Summary
+        # (f) final metrics summary
         ax_f = fig.add_subplot(gs[1, 2])
         ax_f.axis('off')
         
-        # Create text summary
+        # create text summary
         metrics_text = "Final Metrics:\n" + "-" * 25 + "\n"
         for name, value in final_metrics.items():
             if 'ssim' in name.lower():
@@ -572,18 +572,18 @@ class FigureGenerator:
         experiment_name: str = 'SA-CycleGAN'
     ) -> Dict[str, Path]:
         """
-        Generate all standard training figures.
+        generate all standard training figures.
         
-        Returns dictionary of figure name -> file path
+        returns dictionary of figure name -> file path
         """
         results = {}
         
-        # Training losses
+        # training losses
         path = self.plot_training_losses(history)
         if path:
             results['training_losses'] = path
             
-        # G/D balance
+        # g/d balance
         if 'G_loss' in history and 'D_loss' in history:
             path = self.plot_generator_discriminator_balance(
                 history['G_loss'],
@@ -592,24 +592,24 @@ class FigureGenerator:
             if path:
                 results['gd_balance'] = path
                 
-        # Validation metrics
+        # validation metrics
         if val_history:
             path = self.plot_validation_metrics(val_history)
             if path:
                 results['validation_metrics'] = path
                 
-            # Combined progress
+            # combined progress
             path = self.plot_combined_metrics(history, val_history)
             if path:
                 results['training_progress'] = path
                 
-        # Gradient norms
+        # gradient norms
         if gradient_history:
             path = self.plot_gradient_norms(gradient_history)
             if path:
                 results['gradient_norms'] = path
                 
-        # Publication summary
+        # publication summary
         if val_history and final_metrics:
             path = self.create_publication_summary(
                 history, val_history, final_metrics, experiment_name
@@ -620,5 +620,5 @@ class FigureGenerator:
         return results
         
     def close(self):
-        """Cleanup."""
+        """cleanup."""
         pass

@@ -23,7 +23,7 @@ class FedProxAggregator(FedAvgAggregator):
     fedprox aggregator with proximal regularization.
 
     extends fedavg by adding a proximal term to each client's local loss:
-        L_local = L_original + (mu / 2) * ||w - w_global||^2
+        l_local = l_original + (mu / 2) * ||w - w_global||^2
 
     this penalizes client models for deviating too far from the global
     model, which improves convergence when data is heterogeneous across

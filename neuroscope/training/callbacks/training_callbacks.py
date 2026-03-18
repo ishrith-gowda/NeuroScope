@@ -1,7 +1,7 @@
 """
-Training Callbacks.
+training callbacks.
 
-Comprehensive collection of training callbacks for monitoring,
+comprehensive collection of training callbacks for monitoring,
 checkpointing, and early stopping.
 """
 
@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class CallbackState:
-    """State passed to callbacks."""
+    """state passed to callbacks."""
     epoch: int = 0
     step: int = 0
     total_epochs: int = 0
@@ -31,43 +31,43 @@ class CallbackState:
 
 
 class Callback(ABC):
-    """Base callback class."""
+    """base callback class."""
     
     def on_train_begin(self, state: CallbackState) -> None:
-        """Called at the start of training."""
+        """called at the start of training."""
         pass
     
     def on_train_end(self, state: CallbackState) -> None:
-        """Called at the end of training."""
+        """called at the end of training."""
         pass
     
     def on_epoch_begin(self, state: CallbackState) -> None:
-        """Called at the start of each epoch."""
+        """called at the start of each epoch."""
         pass
     
     def on_epoch_end(self, state: CallbackState) -> None:
-        """Called at the end of each epoch."""
+        """called at the end of each epoch."""
         pass
     
     def on_batch_begin(self, state: CallbackState) -> None:
-        """Called at the start of each batch."""
+        """called at the start of each batch."""
         pass
     
     def on_batch_end(self, state: CallbackState) -> None:
-        """Called at the end of each batch."""
+        """called at the end of each batch."""
         pass
     
     def on_validation_begin(self, state: CallbackState) -> None:
-        """Called at the start of validation."""
+        """called at the start of validation."""
         pass
     
     def on_validation_end(self, state: CallbackState) -> None:
-        """Called at the end of validation."""
+        """called at the end of validation."""
         pass
 
 
 class CallbackList:
-    """Container for multiple callbacks."""
+    """container for multiple callbacks."""
     
     def __init__(self, callbacks: Optional[List[Callback]] = None):
         self.callbacks = callbacks or []
@@ -102,9 +102,9 @@ class CallbackList:
 
 class EarlyStopping(Callback):
     """
-    Early stopping callback.
+    early stopping callback.
     
-    Stops training when a monitored metric stops improving.
+    stops training when a monitored metric stops improving.
     """
     
     def __init__(
@@ -117,13 +117,13 @@ class EarlyStopping(Callback):
         verbose: bool = True
     ):
         """
-        Args:
-            monitor: Metric to monitor
-            patience: Epochs to wait before stopping
-            min_delta: Minimum change to qualify as improvement
+        args:
+            monitor: metric to monitor
+            patience: epochs to wait before stopping
+            min_delta: minimum change to qualify as improvement
             mode: 'min' or 'max'
-            restore_best_weights: Whether to restore best model
-            verbose: Whether to print messages
+            restore_best_weights: whether to restore best model
+            verbose: whether to print messages
         """
         self.monitor = monitor
         self.patience = patience
@@ -166,22 +166,22 @@ class EarlyStopping(Callback):
                 self.stopped = True
                 
                 if self.verbose:
-                    print(f"\nEarly stopping at epoch {state.epoch}")
-                    print(f"Best {self.monitor}: {self.best:.6f} at epoch {self.best_epoch}")
+                    print(f"\nearly stopping at epoch {state.epoch}")
+                    print(f"best {self.monitor}: {self.best:.6f} at epoch {self.best_epoch}")
     
     def on_train_end(self, state: CallbackState) -> None:
         if self.restore_best_weights and self.best_weights is not None:
             if state.model is not None:
                 state.model.load_state_dict(self.best_weights)
                 if self.verbose:
-                    print(f"Restored best weights from epoch {self.best_epoch}")
+                    print(f"restored best weights from epoch {self.best_epoch}")
 
 
 class ModelCheckpoint(Callback):
     """
-    Model checkpoint callback.
+    model checkpoint callback.
     
-    Saves model checkpoints during training.
+    saves model checkpoints during training.
     """
     
     def __init__(
@@ -195,14 +195,14 @@ class ModelCheckpoint(Callback):
         verbose: bool = True
     ):
         """
-        Args:
-            filepath: Path template for checkpoints
-            monitor: Metric to monitor
+        args:
+            filepath: path template for checkpoints
+            monitor: metric to monitor
             mode: 'min' or 'max'
-            save_best_only: Only save when improved
-            save_weights_only: Only save weights
+            save_best_only: only save when improved
+            save_weights_only: only save weights
             save_freq: 'epoch' or number of batches
-            verbose: Whether to print messages
+            verbose: whether to print messages
         """
         self.filepath = Path(filepath)
         self.monitor = monitor
@@ -247,7 +247,7 @@ class ModelCheckpoint(Callback):
         torch.save(checkpoint, filepath)
         
         if self.verbose:
-            print(f"Saved checkpoint to {filepath}")
+            print(f"saved checkpoint to {filepath}")
     
     def on_epoch_end(self, state: CallbackState) -> None:
         if state.model is None:
@@ -278,9 +278,9 @@ class ModelCheckpoint(Callback):
 
 class ProgressLogger(Callback):
     """
-    Progress logging callback.
+    progress logging callback.
     
-    Logs training progress with metrics.
+    logs training progress with metrics.
     """
     
     def __init__(
@@ -289,9 +289,9 @@ class ProgressLogger(Callback):
         metrics: Optional[List[str]] = None
     ):
         """
-        Args:
-            log_freq: Batches between logs
-            metrics: Metrics to log
+        args:
+            log_freq: batches between logs
+            metrics: metrics to log
         """
         self.log_freq = log_freq
         self.metrics = metrics
@@ -341,9 +341,9 @@ class ProgressLogger(Callback):
 
 class TensorBoardLogger(Callback):
     """
-    TensorBoard logging callback.
+    tensorboard logging callback.
     
-    Logs metrics and images to TensorBoard.
+    logs metrics and images to tensorboard.
     """
     
     def __init__(
@@ -354,11 +354,11 @@ class TensorBoardLogger(Callback):
         image_freq: int = 500
     ):
         """
-        Args:
-            log_dir: TensorBoard log directory
-            log_freq: Steps between scalar logs
-            log_images: Whether to log images
-            image_freq: Steps between image logs
+        args:
+            log_dir: tensorboard log directory
+            log_freq: steps between scalar logs
+            log_images: whether to log images
+            image_freq: steps between image logs
         """
         from torch.utils.tensorboard import SummaryWriter
         
@@ -396,9 +396,9 @@ class TensorBoardLogger(Callback):
 
 class LearningRateMonitor(Callback):
     """
-    Learning rate monitoring callback.
+    learning rate monitoring callback.
     
-    Logs learning rates during training.
+    logs learning rates during training.
     """
     
     def __init__(self, log_freq: int = 100):
@@ -420,9 +420,9 @@ class LearningRateMonitor(Callback):
 
 class GradientMonitor(Callback):
     """
-    Gradient monitoring callback.
+    gradient monitoring callback.
     
-    Monitors gradient norms and statistics.
+    monitors gradient norms and statistics.
     """
     
     def __init__(
@@ -432,10 +432,10 @@ class GradientMonitor(Callback):
         log_histogram: bool = False
     ):
         """
-        Args:
-            model: Model to monitor
-            log_freq: Steps between logs
-            log_histogram: Whether to log histograms
+        args:
+            model: model to monitor
+            log_freq: steps between logs
+            log_histogram: whether to log histograms
         """
         self.model = model
         self.log_freq = log_freq
@@ -465,15 +465,15 @@ class GradientMonitor(Callback):
 
 class MetricsHistory(Callback):
     """
-    Metrics history callback.
+    metrics history callback.
     
-    Records all metrics during training.
+    records all metrics during training.
     """
     
     def __init__(self, save_path: Optional[Union[str, Path]] = None):
         """
-        Args:
-            save_path: Path to save history
+        args:
+            save_path: path to save history
         """
         self.save_path = Path(save_path) if save_path else None
         self.history: Dict[str, List[float]] = {}
@@ -502,9 +502,9 @@ class MetricsHistory(Callback):
 
 class GANMonitor(Callback):
     """
-    GAN-specific monitoring callback.
+    gan-specific monitoring callback.
     
-    Monitors generator and discriminator losses,
+    monitors generator and discriminator losses,
     as well as training stability indicators.
     """
     
@@ -515,10 +515,10 @@ class GANMonitor(Callback):
         track_mode_collapse: bool = True
     ):
         """
-        Args:
-            log_freq: Steps between logs
-            track_d_g_ratio: Track D/G loss ratio
-            track_mode_collapse: Track mode collapse indicators
+        args:
+            log_freq: steps between logs
+            track_d_g_ratio: track d/g loss ratio
+            track_mode_collapse: track mode collapse indicators
         """
         self.log_freq = log_freq
         self.track_d_g_ratio = track_d_g_ratio
@@ -541,7 +541,7 @@ class GANMonitor(Callback):
                 self.d_g_ratios.append(ratio)
     
     def get_stability_report(self) -> Dict[str, float]:
-        """Get training stability report."""
+        """get training stability report."""
         import numpy as np
         
         report = {}
@@ -563,9 +563,9 @@ class GANMonitor(Callback):
 
 class TimingCallback(Callback):
     """
-    Training timing callback.
+    training timing callback.
     
-    Tracks time for various training phases.
+    tracks time for various training phases.
     """
     
     def __init__(self):
@@ -591,7 +591,7 @@ class TimingCallback(Callback):
         self.batch_times.append(time.time() - self._batch_start)
     
     def get_timing_report(self) -> Dict[str, float]:
-        """Get timing statistics."""
+        """get timing statistics."""
         import numpy as np
         
         return {

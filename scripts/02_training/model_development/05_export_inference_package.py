@@ -28,16 +28,16 @@ def export_full_model(ckpt_path: str, export_dir: str, name: str = 'G_A2B'):
 
 def write_inference_readme(export_dir: str):
     txt = """
-Minimal inference example (PyTorch):
+minimal inference example (pytorch):
 
 import torch
-bundle = torch.load('full_G_A2B.pt', map_location='cpu')
-G = bundle['architecture']
-G.load_state_dict(bundle['state_dict'])
-G.eval()
-# x must be a tensor [N,4,H,W] scaled to [-1,1]
+bundle = torch.load('full_g_a2b.pt', map_location='cpu')
+g = bundle['architecture']
+g.load_state_dict(bundle['state_dict'])
+g.eval()
+# x must be a tensor [n,4,h,w] scaled to [-1,1]
 with torch.no_grad():
-    y = G(x)
+    y = g(x)
     y01 = (y + 1) / 2.0
     """.strip()
     with open(os.path.join(export_dir, 'INFERENCE.md'), 'w') as f:

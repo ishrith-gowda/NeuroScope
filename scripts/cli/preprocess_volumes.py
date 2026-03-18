@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Volume preprocessing script using the VolumePreprocessor module.
+volume preprocessing script using the volumepreprocessor module.
 
-This script applies preprocessing steps to MRI volumes.
+this script applies preprocessing steps to mri volumes.
 """
 
 import argparse
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import sys
 
-# Add the project root to the Python path if not already there
+# add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -22,7 +22,7 @@ from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """parse command line arguments."""
     parser = argparse.ArgumentParser(description='Preprocess MRI volumes.')
     parser.add_argument('--input-dir', type=str, required=True,
                         help='Input directory containing MRI volumes')
@@ -57,21 +57,21 @@ def parse_args():
 
 
 def main():
-    """Main function."""
+    """main function."""
     args = parse_args()
     
-    # Set up logging
+    # set up logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     setup_logging(log_level=log_level)
     logger = get_logger(__name__)
     
-    # Create output directory
+    # create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # Initialize preprocessor
+    # initialize preprocessor
     preprocessor = VolumePreprocessor()
     
-    # Add normalization step
+    # add normalization step
     if args.normalize == 'minmax':
         preprocessor.add_step('min_max_normalization', {
             'target_range': tuple(args.target_range)
@@ -93,26 +93,26 @@ def main():
             'target_value': 1.0
         })
     
-    # Add crop step if requested
+    # add crop step if requested
     if args.crop:
         preprocessor.add_step('crop', {
             'crop_size': tuple(args.crop),
             'method': args.crop_method
         })
     
-    # Add rescale step if requested
+    # add rescale step if requested
     if args.rescale:
         preprocessor.add_step('rescale', {
             'scale_factor': args.rescale if len(args.rescale) > 1 else args.rescale[0],
-            'order': 1  # Linear interpolation
+            'order': 1  # linear interpolation
         })
     elif args.target_shape:
         preprocessor.add_step('rescale', {
             'target_shape': tuple(args.target_shape),
-            'order': 1  # Linear interpolation
+            'order': 1  # linear interpolation
         })
     
-    # Process volumes
+    # process volumes
     results = preprocessor.batch_process(
         input_dir=args.input_dir,
         output_dir=args.output_dir,
@@ -120,7 +120,7 @@ def main():
         mask_dir=args.mask_dir
     )
     
-    # Save metadata to JSON if requested
+    # save metadata to json if requested
     if args.output_json:
         with open(args.output_json, 'w') as f:
             json.dump(results, f, indent=2)

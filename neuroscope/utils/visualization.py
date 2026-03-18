@@ -1,7 +1,7 @@
 """
-Visualization Utilities.
+visualization utilities.
 
-Publication-quality visualization for medical imaging,
+publication-quality visualization for medical imaging,
 training curves, and statistical results.
 """
 
@@ -14,7 +14,7 @@ from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-# Set publication-quality defaults
+# set publication-quality defaults
 plt.rcParams.update({
     'font.size': 10,
     'font.family': 'sans-serif',
@@ -30,7 +30,7 @@ plt.rcParams.update({
 })
 
 
-# Slice Visualization
+# slice visualization
 
 def plot_slice(
     data: np.ndarray,
@@ -45,26 +45,26 @@ def plot_slice(
     figsize: Tuple[int, int] = (6, 6)
 ) -> plt.Figure:
     """
-    Plot a single slice from 3D volume.
+    plot a single slice from 3d volume.
     
-    Args:
-        data: 3D volume
-        slice_idx: Slice index (default: middle)
-        axis: Axis to slice along
-        title: Plot title
-        cmap: Colormap
-        vmin, vmax: Value range
-        colorbar: Show colorbar
-        ax: Existing axes
-        figsize: Figure size
+    args:
+        data: 3d volume
+        slice_idx: slice index (default: middle)
+        axis: axis to slice along
+        title: plot title
+        cmap: colormap
+        vmin, vmax: value range
+        colorbar: show colorbar
+        ax: existing axes
+        figsize: figure size
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     if slice_idx is None:
         slice_idx = data.shape[axis] // 2
     
-    # Extract slice
+    # extract slice
     if axis == 0:
         slice_data = data[slice_idx, :, :]
     elif axis == 1:
@@ -102,19 +102,19 @@ def plot_slice_comparison(
     suptitle: str = None
 ) -> plt.Figure:
     """
-    Compare multiple images side by side.
+    compare multiple images side by side.
     
-    Args:
-        images: List of 3D volumes
-        labels: Labels for each image
-        slice_idx: Slice index
-        axis: Slice axis
-        cmap: Colormap
-        figsize: Figure size
-        suptitle: Super title
+    args:
+        images: list of 3d volumes
+        labels: labels for each image
+        slice_idx: slice index
+        axis: slice axis
+        cmap: colormap
+        figsize: figure size
+        suptitle: super title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     n_images = len(images)
     
@@ -125,7 +125,7 @@ def plot_slice_comparison(
     if n_images == 1:
         axes = [axes]
     
-    # Compute global vmin/vmax
+    # compute global vmin/vmax
     all_data = np.concatenate([img.flatten() for img in images])
     vmin, vmax = np.percentile(all_data, [1, 99])
     
@@ -162,18 +162,18 @@ def plot_montage(
     title: str = None
 ) -> plt.Figure:
     """
-    Create montage of slices from volume.
+    create montage of slices from volume.
     
-    Args:
-        volume: 3D volume
-        n_slices: Number of slices to show
-        axis: Slice axis
-        cmap: Colormap
-        figsize: Figure size
-        title: Title
+    args:
+        volume: 3d volume
+        n_slices: number of slices to show
+        axis: slice axis
+        cmap: colormap
+        figsize: figure size
+        title: title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     n_cols = int(np.ceil(np.sqrt(n_slices)))
     n_rows = int(np.ceil(n_slices / n_cols))
@@ -197,7 +197,7 @@ def plot_montage(
         ax.set_title(f'Slice {idx}', fontsize=8)
         ax.axis('off')
     
-    # Hide unused axes
+    # hide unused axes
     for ax in axes[len(slice_indices):]:
         ax.axis('off')
     
@@ -208,7 +208,7 @@ def plot_montage(
     return fig
 
 
-# Difference Maps
+# difference maps
 
 def plot_difference_map(
     original: np.ndarray,
@@ -221,27 +221,27 @@ def plot_difference_map(
     title: str = None
 ) -> plt.Figure:
     """
-    Plot original, modified, and difference map.
+    plot original, modified, and difference map.
     
-    Args:
-        original: Original image
-        modified: Modified image
-        slice_idx: Slice index
-        axis: Slice axis
-        cmap: Colormap for difference
-        symmetric: Symmetric color range
-        figsize: Figure size
-        title: Title
+    args:
+        original: original image
+        modified: modified image
+        slice_idx: slice index
+        axis: slice axis
+        cmap: colormap for difference
+        symmetric: symmetric color range
+        figsize: figure size
+        title: title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     diff = modified - original
     
     if slice_idx is None:
         slice_idx = original.shape[axis] // 2
     
-    # Extract slices
+    # extract slices
     def get_slice(vol, idx, ax):
         if ax == 0:
             return vol[idx, :, :]
@@ -255,18 +255,18 @@ def plot_difference_map(
     
     fig, axes = plt.subplots(1, 3, figsize=figsize)
     
-    # Original
+    # original
     vmin, vmax = np.percentile(original, [1, 99])
     axes[0].imshow(orig_slice.T, cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
     axes[0].set_title('Original')
     axes[0].axis('off')
     
-    # Modified
+    # modified
     axes[1].imshow(mod_slice.T, cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
     axes[1].set_title('Modified')
     axes[1].axis('off')
     
-    # Difference
+    # difference
     if symmetric:
         max_abs = np.max(np.abs(diff_slice))
         im = axes[2].imshow(
@@ -278,7 +278,7 @@ def plot_difference_map(
     axes[2].set_title('Difference')
     axes[2].axis('off')
     
-    # Colorbar for difference
+    # colorbar for difference
     divider = make_axes_locatable(axes[2])
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
@@ -301,20 +301,20 @@ def plot_attention_overlay(
     title: str = None
 ) -> plt.Figure:
     """
-    Overlay attention map on image.
+    overlay attention map on image.
     
-    Args:
-        image: Base image
-        attention: Attention map
-        slice_idx: Slice index
-        axis: Slice axis
-        alpha: Attention transparency
-        cmap: Attention colormap
-        figsize: Figure size
-        title: Title
+    args:
+        image: base image
+        attention: attention map
+        slice_idx: slice index
+        axis: slice axis
+        alpha: attention transparency
+        cmap: attention colormap
+        figsize: figure size
+        title: title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     if slice_idx is None:
         slice_idx = image.shape[axis] // 2
@@ -329,7 +329,7 @@ def plot_attention_overlay(
     img_slice = get_slice(image, slice_idx, axis)
     att_slice = get_slice(attention, slice_idx, axis)
     
-    # Normalize
+    # normalize
     img_norm = (img_slice - img_slice.min()) / (img_slice.max() - img_slice.min() + 1e-8)
     att_norm = (att_slice - att_slice.min()) / (att_slice.max() - att_slice.min() + 1e-8)
     
@@ -350,7 +350,7 @@ def plot_attention_overlay(
     return fig
 
 
-# Training Visualization
+# training visualization
 
 def plot_training_curves(
     history: Dict[str, List[float]],
@@ -359,16 +359,16 @@ def plot_training_curves(
     title: str = 'Training Curves'
 ) -> plt.Figure:
     """
-    Plot training curves.
+    plot training curves.
     
-    Args:
-        history: Dict of metric name -> values
-        metrics: Metrics to plot (None = all)
-        figsize: Figure size
-        title: Title
+    args:
+        history: dict of metric name -> values
+        metrics: metrics to plot (none = all)
+        figsize: figure size
+        title: title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     if metrics is None:
         metrics = list(history.keys())
@@ -402,17 +402,17 @@ def plot_loss_landscape(
     title: str = 'Loss Landscape'
 ) -> plt.Figure:
     """
-    Plot 2D loss landscape visualization.
+    plot 2d loss landscape visualization.
     
-    Args:
-        losses: 2D array of loss values
-        x_range: X-axis range
-        y_range: Y-axis range
-        figsize: Figure size
-        title: Title
+    args:
+        losses: 2d array of loss values
+        x_range: x-axis range
+        y_range: y-axis range
+        figsize: figure size
+        title: title
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -420,7 +420,7 @@ def plot_loss_landscape(
     y = np.linspace(y_range[0], y_range[1], losses.shape[1])
     X, Y = np.meshgrid(x, y)
     
-    # Contour plot
+    # contour plot
     contour = ax.contourf(X, Y, losses.T, levels=50, cmap='viridis')
     ax.contour(X, Y, losses.T, levels=10, colors='white', linewidths=0.5, alpha=0.5)
     
@@ -433,7 +433,7 @@ def plot_loss_landscape(
     return fig
 
 
-# Statistical Visualization
+# statistical visualization
 
 def plot_box_comparison(
     data: Dict[str, List[float]],
@@ -444,18 +444,18 @@ def plot_box_comparison(
     colors: List[str] = None
 ) -> plt.Figure:
     """
-    Box plot comparison of methods.
+    box plot comparison of methods.
     
-    Args:
-        data: Dict of method name -> values
-        xlabel: X-axis label
-        ylabel: Y-axis label
-        title: Title
-        figsize: Figure size
-        colors: Box colors
+    args:
+        data: dict of method name -> values
+        xlabel: x-axis label
+        ylabel: y-axis label
+        title: title
+        figsize: figure size
+        colors: box colors
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -490,17 +490,17 @@ def plot_violin_comparison(
     figsize: Tuple[int, int] = (10, 6)
 ) -> plt.Figure:
     """
-    Violin plot comparison.
+    violin plot comparison.
     
-    Args:
-        data: Dict of method name -> values
-        xlabel: X-axis label
-        ylabel: Y-axis label
-        title: Title
-        figsize: Figure size
+    args:
+        data: dict of method name -> values
+        xlabel: x-axis label
+        ylabel: y-axis label
+        title: title
+        figsize: figure size
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -531,16 +531,16 @@ def plot_confidence_intervals(
     figsize: Tuple[int, int] = (10, 6)
 ) -> plt.Figure:
     """
-    Plot confidence intervals.
+    plot confidence intervals.
     
-    Args:
-        data: Dict of label -> (mean, lower, upper)
-        xlabel: X-axis label
-        title: Title
-        figsize: Figure size
+    args:
+        data: dict of label -> (mean, lower, upper)
+        xlabel: x-axis label
+        title: title
+        figsize: figure size
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -574,15 +574,15 @@ def plot_effect_size_forest(
     figsize: Tuple[int, int] = (10, 8)
 ) -> plt.Figure:
     """
-    Forest plot for effect sizes.
+    forest plot for effect sizes.
     
-    Args:
-        effects: Dict of comparison -> (effect, lower CI, upper CI)
-        title: Title
-        figsize: Figure size
+    args:
+        effects: dict of comparison -> (effect, lower ci, upper ci)
+        title: title
+        figsize: figure size
         
-    Returns:
-        Figure object
+    returns:
+        figure object
     """
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -593,7 +593,7 @@ def plot_effect_size_forest(
     for i, label in enumerate(labels):
         effect, lower, upper = effects[label]
         
-        # Effect size point and CI
+        # effect size point and ci
         ax.errorbar(
             effect, i,
             xerr=[[effect - lower], [upper - effect]],
@@ -606,7 +606,7 @@ def plot_effect_size_forest(
     ax.set_xlabel('Effect Size (Cohen\'s d)')
     ax.set_title(title)
     
-    # Reference lines
+    # reference lines
     ax.axvline(x=0, color='black', linestyle='-', linewidth=1)
     ax.axvline(x=0.2, color='gray', linestyle='--', alpha=0.5, label='Small')
     ax.axvline(x=0.5, color='gray', linestyle='-.', alpha=0.5, label='Medium')
@@ -619,7 +619,7 @@ def plot_effect_size_forest(
     return fig
 
 
-# Publication Figures
+# publication figures
 
 def create_figure_grid(
     n_rows: int,
@@ -629,17 +629,17 @@ def create_figure_grid(
     height_ratios: List[float] = None
 ) -> Tuple[plt.Figure, np.ndarray]:
     """
-    Create figure grid for publication.
+    create figure grid for publication.
     
-    Args:
-        n_rows: Number of rows
-        n_cols: Number of columns
-        figsize: Figure size
-        width_ratios: Column width ratios
-        height_ratios: Row height ratios
+    args:
+        n_rows: number of rows
+        n_cols: number of columns
+        figsize: figure size
+        width_ratios: column width ratios
+        height_ratios: row height ratios
         
-    Returns:
-        Tuple of (figure, axes array)
+    returns:
+        tuple of (figure, axes array)
     """
     if figsize is None:
         figsize = (4 * n_cols, 4 * n_rows)
@@ -669,13 +669,13 @@ def save_publication_figure(
     dpi: int = 300
 ):
     """
-    Save figure in multiple formats for publication.
+    save figure in multiple formats for publication.
     
-    Args:
-        fig: Figure to save
-        path: Base path (without extension)
-        formats: List of formats (default: ['pdf', 'png', 'svg'])
-        dpi: DPI for raster formats
+    args:
+        fig: figure to save
+        path: base path (without extension)
+        formats: list of formats (default: ['pdf', 'png', 'svg'])
+        dpi: dpi for raster formats
     """
     if formats is None:
         formats = ['pdf', 'png', 'svg']

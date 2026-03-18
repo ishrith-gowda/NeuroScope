@@ -1,13 +1,13 @@
 """
-Loss Functions for 2.5D SA-CycleGAN.
+loss functions for 2.5d sa-cyclegan.
 
-Comprehensive loss functions for medical image translation:
-- Adversarial (LSGAN)
-- Cycle consistency
-- Identity
-- Perceptual (VGG-based)
-- SSIM
-- Gradient difference
+comprehensive loss functions for medical image translation:
+- adversarial (lsgan)
+- cycle consistency
+- identity
+- perceptual (vgg-based)
+- ssim
+- gradient difference
 """
 
 import torch
@@ -18,7 +18,7 @@ import math
 
 
 class LSGANLoss(nn.Module):
-    """Least Squares GAN Loss for improved training stability."""
+    """least squares gan loss for improved training stability."""
     
     def __init__(self):
         super().__init__()
@@ -37,14 +37,14 @@ class LSGANLoss(nn.Module):
         real_pred: List[torch.Tensor],
         fake_pred: List[torch.Tensor]
     ) -> torch.Tensor:
-        """Discriminator loss for multi-scale outputs."""
+        """discriminator loss for multi-scale outputs."""
         loss = 0
         for real, fake in zip(real_pred, fake_pred):
             loss += self.forward(real, True) + self.forward(fake, False)
         return loss / len(real_pred)
     
     def generator_loss(self, fake_pred: List[torch.Tensor]) -> torch.Tensor:
-        """Generator loss for multi-scale outputs."""
+        """generator loss for multi-scale outputs."""
         loss = 0
         for fake in fake_pred:
             loss += self.forward(fake, True)
@@ -52,7 +52,7 @@ class LSGANLoss(nn.Module):
 
 
 class CycleLoss(nn.Module):
-    """Cycle consistency loss."""
+    """cycle consistency loss."""
     
     def __init__(self, lambda_cycle: float = 10.0):
         super().__init__()
@@ -67,7 +67,7 @@ class CycleLoss(nn.Module):
 
 
 class IdentityLoss(nn.Module):
-    """Identity preservation loss."""
+    """identity preservation loss."""
     
     def __init__(self, lambda_identity: float = 5.0):
         super().__init__()
@@ -83,9 +83,9 @@ class IdentityLoss(nn.Module):
 
 class SSIMLoss(nn.Module):
     """
-    Structural Similarity Index Loss.
+    structural similarity index loss.
     
-    Encourages structural preservation during translation.
+    encourages structural preservation during translation.
     """
     
     def __init__(self, window_size: int = 11, lambda_ssim: float = 1.0):
@@ -96,7 +96,7 @@ class SSIMLoss(nn.Module):
         self.C2 = 0.03 ** 2
         
     def _create_window(self, channels: int, device: torch.device) -> torch.Tensor:
-        """Create Gaussian window for SSIM computation."""
+        """create gaussian window for ssim computation."""
         sigma = 1.5
         gauss = torch.tensor([
             math.exp(-(x - self.window_size // 2) ** 2 / (2 * sigma ** 2))
@@ -110,7 +110,7 @@ class SSIMLoss(nn.Module):
         return window
     
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Compute SSIM loss (1 - SSIM)."""
+        """compute ssim loss (1 - ssim)."""
         channels = x.size(1)
         window = self._create_window(channels, x.device)
         
@@ -133,16 +133,16 @@ class SSIMLoss(nn.Module):
 
 class GradientDifferenceLoss(nn.Module):
     """
-    Gradient Difference Loss for edge preservation.
+    gradient difference loss for edge preservation.
     
-    Compares image gradients to preserve anatomical boundaries.
+    compares image gradients to preserve anatomical boundaries.
     """
     
     def __init__(self, lambda_grad: float = 1.0):
         super().__init__()
         self.lambda_grad = lambda_grad
         
-        # Sobel filters
+        # sobel filters
         sobel_x = torch.tensor([
             [-1, 0, 1],
             [-2, 0, 2],
@@ -159,7 +159,7 @@ class GradientDifferenceLoss(nn.Module):
         self.register_buffer('sobel_y', sobel_y)
         
     def _compute_gradients(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute image gradients using Sobel filters."""
+        """compute image gradients using sobel filters."""
         grads = []
         for c in range(x.size(1)):
             gx = F.conv2d(x[:, c:c+1], self.sobel_x, padding=1)
@@ -176,10 +176,10 @@ class GradientDifferenceLoss(nn.Module):
 
 class PerceptualLoss(nn.Module):
     """
-    VGG-based perceptual loss.
+    vgg-based perceptual loss.
     
-    Uses pretrained VGG features for high-level similarity.
-    Note: VGG expects 3-channel input, so we use first 3 modalities.
+    uses pretrained vgg features for high-level similarity.
+    note: vgg expects 3-channel input, so we use first 3 modalities.
     """
     
     def __init__(self, lambda_perceptual: float = 1.0, layers: List[int] = [3, 8, 15]):
@@ -200,17 +200,17 @@ class PerceptualLoss(nn.Module):
             self.blocks.append(nn.Sequential(*list(vgg.children())[prev:layer]))
             prev = layer
         
-        # Freeze VGG
+        # freeze vgg
         for param in self.parameters():
             param.requires_grad = False
             
-        # Normalization for VGG
+        # normalization for vgg
         self.register_buffer('mean', torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
         self.register_buffer('std', torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
         
     def _normalize(self, x: torch.Tensor) -> torch.Tensor:
-        """Normalize input for VGG (expects 3 channels)."""
-        # Use first 3 channels (T1, T1ce, T2) or repeat if single channel
+        """normalize input for vgg (expects 3 channels)."""
+        # use first 3 channels (t1, t1ce, t2) or repeat if single channel
         if x.size(1) == 1:
             x = x.repeat(1, 3, 1, 1)
         elif x.size(1) > 3:
@@ -232,9 +232,9 @@ class PerceptualLoss(nn.Module):
 
 class CombinedLoss(nn.Module):
     """
-    Combined loss for SA-CycleGAN training.
+    combined loss for sa-cyclegan training.
     
-    Aggregates all loss components with configurable weights.
+    aggregates all loss components with configurable weights.
     """
     
     def __init__(
@@ -243,7 +243,7 @@ class CombinedLoss(nn.Module):
         lambda_identity: float = 5.0,
         lambda_ssim: float = 1.0,
         lambda_gradient: float = 1.0,
-        lambda_perceptual: float = 0.0,  # Set to 0 by default (expensive)
+        lambda_perceptual: float = 0.0,  # set to 0 by default (expensive)
         device: str = 'cpu'
     ):
         super().__init__()
@@ -259,22 +259,22 @@ class CombinedLoss(nn.Module):
             self.perceptual_loss = PerceptualLoss(lambda_perceptual=lambda_perceptual)
             
     def to(self, device):
-        """Move all losses to device."""
+        """move all losses to device."""
         super().to(device)
         return self
 
 
 if __name__ == '__main__':
-    # Test losses
-    print("Testing loss functions...")
+    # test losses
+    print("testing loss functions...")
     
     x = torch.randn(2, 4, 128, 128)
     y = torch.randn(2, 4, 128, 128)
     
     losses = CombinedLoss()
     
-    print(f"Cycle loss: {losses.cycle_loss(x, y).item():.4f}")
-    print(f"SSIM loss: {losses.ssim_loss(x, y).item():.4f}")
-    print(f"Gradient loss: {losses.gradient_loss(x, y).item():.4f}")
+    print(f"cycle loss: {losses.cycle_loss(x, y).item():.4f}")
+    print(f"ssim loss: {losses.ssim_loss(x, y).item():.4f}")
+    print(f"gradient loss: {losses.gradient_loss(x, y).item():.4f}")
     
     print("\nloss functions test passed")

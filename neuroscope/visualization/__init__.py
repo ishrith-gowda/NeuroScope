@@ -1,6 +1,6 @@
-"""Visualization module for NeuroScope.
+"""visualization module for neuroscope.
 
-This module provides comprehensive visualization tools for medical imaging data,
+this module provides comprehensive visualization tools for medical imaging data,
 including plotting utilities, montages, and interactive dashboards.
 """
 

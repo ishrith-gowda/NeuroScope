@@ -1,15 +1,15 @@
 """
-Comprehensive Medical Imaging Dataset Implementations.
+comprehensive medical imaging dataset implementations.
 
-Provides dataset classes for major neuroimaging datasets:
-- IXI (Information eXtraction from Images)
-- OASIS (Open Access Series of Imaging Studies)
-- ADNI (Alzheimer's Disease Neuroimaging Initiative)
-- ABIDE (Autism Brain Imaging Data Exchange)
-- HCP (Human Connectome Project)
-- TCGA-GBM (The Cancer Genome Atlas Glioblastoma)
+provides dataset classes for major neuroimaging datasets:
+- ixi (information extraction from images)
+- oasis (open access series of imaging studies)
+- adni (alzheimer's disease neuroimaging initiative)
+- abide (autism brain imaging data exchange)
+- hcp (human connectome project)
+- tcga-gbm (the cancer genome atlas glioblastoma)
 
-All datasets support both 2D slice-wise and 3D volumetric loading.
+all datasets support both 2d slice-wise and 3d volumetric loading.
 """
 
 from typing import List, Optional, Dict, Tuple, Union, Callable, Any
@@ -37,7 +37,7 @@ except ImportError:
 
 @dataclass
 class DatasetStats:
-    """Statistics for a dataset."""
+    """statistics for a dataset."""
     n_subjects: int
     n_slices: int
     modalities: List[str]
@@ -48,9 +48,9 @@ class DatasetStats:
 
 class BaseMedicalDataset(Dataset):
     """
-    Base class for medical imaging datasets.
+    base class for medical imaging datasets.
     
-    Provides common functionality for loading, preprocessing,
+    provides common functionality for loading, preprocessing,
     and augmentation of neuroimaging data.
     """
     
@@ -81,22 +81,22 @@ class BaseMedicalDataset(Dataset):
     
     @abstractmethod
     def _default_modalities(self) -> List[str]:
-        """Return default modalities for dataset."""
+        """return default modalities for dataset."""
         pass
     
     @abstractmethod
     def _default_slice_range(self) -> Tuple[int, int]:
-        """Return default slice range."""
+        """return default slice range."""
         pass
     
     @abstractmethod
     def _discover_samples(self) -> List[Dict[str, Any]]:
-        """Discover and return list of sample metadata."""
+        """discover and return list of sample metadata."""
         pass
     
     @abstractmethod
     def _load_volume(self, sample: Dict[str, Any], modality: str) -> np.ndarray:
-        """Load a single modality volume."""
+        """load a single modality volume."""
         pass
     
     def __len__(self) -> int:
@@ -105,7 +105,7 @@ class BaseMedicalDataset(Dataset):
     def __getitem__(self, index: int) -> Dict[str, torch.Tensor]:
         sample = self.samples[index]
         
-        # Check cache
+        # check cache
         cache_key = f"{sample['subject_id']}_{sample.get('slice_idx', 'vol')}"
         if self.cache_data and cache_key in self._cache:
             item = self._cache[cache_key].copy()
@@ -114,14 +114,14 @@ class BaseMedicalDataset(Dataset):
             if self.cache_data:
                 self._cache[cache_key] = item.copy()
         
-        # Apply transforms
+        # apply transforms
         if self.transform is not None:
             item = self.transform(item)
         
         return item
     
     def _load_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Load a sample (slice or volume)."""
+        """load a sample (slice or volume)."""
         modality_data = []
         
         for modality in self.modalities:
@@ -139,7 +139,7 @@ class BaseMedicalDataset(Dataset):
             else:
                 modality_data.append(volume)
         
-        # Stack modalities
+        # stack modalities
         if self.mode == '2d':
             image = np.stack(modality_data, axis=0).astype(np.float32)
         else:
@@ -161,12 +161,12 @@ class BaseMedicalDataset(Dataset):
 
 class IXIDataset(BaseMedicalDataset):
     """
-    IXI Dataset - Information eXtraction from Images.
+    ixi dataset - information extraction from images.
     
-    Multi-site brain MRI dataset with T1, T2, PD, MRA, and DTI.
-    Sites: Guys, HH (Hammersmith Hospital), IOP (Institute of Psychiatry)
+    multi-site brain mri dataset with t1, t2, pd, mra, and dti.
+    sites: guys, hh (hammersmith hospital), iop (institute of psychiatry)
     
-    Reference: https://brain-development.org/ixi-dataset/
+    reference: https://brain-development.org/ixi-dataset/
     """
     
     SITES = ['Guys', 'HH', 'IOP']
@@ -191,7 +191,7 @@ class IXIDataset(BaseMedicalDataset):
     def _discover_samples(self) -> List[Dict[str, Any]]:
         samples = []
         
-        # IXI naming convention: IXI{ID}-{Site}-{Session}_{Modality}.nii.gz
+        # ixi naming convention: ixi{id}-{site}-{session}_{modality}.nii.gz
         for nifti_file in sorted(self.root_dir.glob('*.nii.gz')):
             parts = nifti_file.stem.replace('.nii', '').split('-')
             if len(parts) >= 2:
@@ -199,7 +199,7 @@ class IXIDataset(BaseMedicalDataset):
                 site = parts[1] if len(parts) > 1 else 'unknown'
                 
                 if site in self.sites:
-                    # Check if we have all required modalities
+                    # check if we have all required modalities
                     has_all = True
                     modality_paths = {}
                     
@@ -239,12 +239,12 @@ class IXIDataset(BaseMedicalDataset):
 
 class OASISDataset(BaseMedicalDataset):
     """
-    OASIS Dataset - Open Access Series of Imaging Studies.
+    oasis dataset - open access series of imaging studies.
     
-    Longitudinal brain MRI dataset with cross-sectional and 
-    longitudinal collections. Includes subjects with dementia.
+    longitudinal brain mri dataset with cross-sectional and 
+    longitudinal collections. includes subjects with dementia.
     
-    Reference: https://www.oasis-brains.org/
+    reference: https://www.oasis-brains.org/
     """
     
     COLLECTIONS = ['OASIS-1', 'OASIS-2', 'OASIS-3']
@@ -269,14 +269,14 @@ class OASISDataset(BaseMedicalDataset):
     def _discover_samples(self) -> List[Dict[str, Any]]:
         samples = []
         
-        # OASIS directory structure varies by collection
+        # oasis directory structure varies by collection
         for subject_dir in sorted(self.root_dir.iterdir()):
             if not subject_dir.is_dir():
                 continue
             
             subject_id = subject_dir.name
             
-            # Find T1 volume
+            # find t1 volume
             t1_patterns = [
                 '*T1w*.nii.gz',
                 '*mpr*.nii.gz',
@@ -317,12 +317,12 @@ class OASISDataset(BaseMedicalDataset):
 
 class ADNIDataset(BaseMedicalDataset):
     """
-    ADNI Dataset - Alzheimer's Disease Neuroimaging Initiative.
+    adni dataset - alzheimer's disease neuroimaging initiative.
     
-    Longitudinal study with multiple MRI protocols across sites.
-    Includes cognitively normal, MCI, and AD subjects.
+    longitudinal study with multiple mri protocols across sites.
+    includes cognitively normal, mci, and ad subjects.
     
-    Reference: https://adni.loni.usc.edu/
+    reference: https://adni.loni.usc.edu/
     """
     
     PROTOCOLS = ['ADNI1', 'ADNI2', 'ADNI3', 'ADNIGO']
@@ -350,11 +350,11 @@ class ADNIDataset(BaseMedicalDataset):
     def _discover_samples(self) -> List[Dict[str, Any]]:
         samples = []
         
-        # ADNI uses BIDS-like structure
+        # adni uses bids-like structure
         for subject_dir in sorted(self.root_dir.glob('sub-*')):
             subject_id = subject_dir.name
             
-            # Find sessions
+            # find sessions
             session_dirs = list(subject_dir.glob('ses-*'))
             if self.baseline_only and session_dirs:
                 session_dirs = [sorted(session_dirs)[0]]
@@ -396,20 +396,20 @@ class ADNIDataset(BaseMedicalDataset):
 
 class ABIDEDataset(BaseMedicalDataset):
     """
-    ABIDE Dataset - Autism Brain Imaging Data Exchange.
+    abide dataset - autism brain imaging data exchange.
     
-    Large-scale multi-site dataset for autism research.
-    Includes resting-state fMRI and structural MRI.
+    large-scale multi-site dataset for autism research.
+    includes resting-state fmri and structural mri.
     
-    Reference: http://fcon_1000.projects.nitrc.org/indi/abide/
+    reference: http://fcon_1000.projects.nitrc.org/indi/abide/
     """
     
     def __init__(
         self,
         root_dir: Union[str, Path],
-        collection: str = 'ABIDE_I',  # or 'ABIDE_II'
+        collection: str = 'ABIDE_I',  # or 'abide_ii'
         sites: Optional[List[str]] = None,
-        diagnosis: Optional[str] = None,  # 'ASD' or 'TC'
+        diagnosis: Optional[str] = None,  # 'asd' or 'tc'
         **kwargs
     ):
         self.collection = collection
@@ -432,7 +432,7 @@ class ABIDEDataset(BaseMedicalDataset):
             
             subject_id = subject_dir.name
             
-            # Find anatomical scan
+            # find anatomical scan
             anat_patterns = ['*mprage*.nii.gz', '*T1*.nii.gz', '*anat*.nii.gz']
             
             t1_path = None
@@ -469,12 +469,12 @@ class ABIDEDataset(BaseMedicalDataset):
 
 class HCPDataset(BaseMedicalDataset):
     """
-    HCP Dataset - Human Connectome Project.
+    hcp dataset - human connectome project.
     
-    High-quality, high-resolution brain imaging data
+    high-quality, high-resolution brain imaging data
     with extensive multi-modal acquisitions.
     
-    Reference: https://www.humanconnectome.org/
+    reference: https://www.humanconnectome.org/
     """
     
     AVAILABLE_MODALITIES = ['t1', 't2', 'dwi', 'bold']
@@ -493,7 +493,7 @@ class HCPDataset(BaseMedicalDataset):
         return ['t1', 't2']
     
     def _default_slice_range(self) -> Tuple[int, int]:
-        return (50, 200)  # HCP has higher resolution
+        return (50, 200)  # hcp has higher resolution
     
     def _discover_samples(self) -> List[Dict[str, Any]]:
         samples = []
@@ -504,7 +504,7 @@ class HCPDataset(BaseMedicalDataset):
             
             subject_id = subject_dir.name
             
-            # HCP structure
+            # hcp structure
             t1_dir = subject_dir / 'T1w'
             if not t1_dir.exists():
                 t1_dir = subject_dir
@@ -552,12 +552,12 @@ class HCPDataset(BaseMedicalDataset):
 
 class TCGAGBMDataset(BaseMedicalDataset):
     """
-    TCGA-GBM Dataset - The Cancer Genome Atlas Glioblastoma.
+    tcga-gbm dataset - the cancer genome atlas glioblastoma.
     
-    Multi-institutional glioblastoma imaging data with
+    multi-institutional glioblastoma imaging data with
     genomic annotations.
     
-    Reference: https://wiki.cancerimagingarchive.net/
+    reference: https://wiki.cancerimagingarchive.net/
     """
     
     def __init__(
@@ -609,7 +609,7 @@ class TCGAGBMDataset(BaseMedicalDataset):
                     break
             
             if has_all:
-                # Look for segmentation
+                # look for segmentation
                 seg_matches = list(subject_dir.rglob('*seg*.nii.gz'))
                 seg_path = seg_matches[0] if seg_matches else None
                 
@@ -639,9 +639,9 @@ class TCGAGBMDataset(BaseMedicalDataset):
 
 class VolumetricDataset(Dataset):
     """
-    Generic 3D Volumetric Dataset.
+    generic 3d volumetric dataset.
     
-    Loads full 3D volumes with optional patching for
+    loads full 3d volumes with optional patching for
     memory-efficient training.
     """
     
@@ -702,7 +702,7 @@ class VolumetricDataset(Dataset):
         
         volume = np.stack(volumes, axis=0).astype(np.float32)
         
-        # Extract patch if specified
+        # extract patch if specified
         if self.patch_size is not None:
             volume = self._random_patch(volume)
         
@@ -717,7 +717,7 @@ class VolumetricDataset(Dataset):
         return item
     
     def _random_patch(self, volume: np.ndarray) -> np.ndarray:
-        """Extract random patch from volume."""
+        """extract random patch from volume."""
         _, D, H, W = volume.shape
         pd, ph, pw = self.patch_size
         
@@ -728,7 +728,7 @@ class VolumetricDataset(Dataset):
         return volume[:, d_start:d_start+pd, h_start:h_start+ph, w_start:w_start+pw]
 
 
-# Dataset Registry
+# dataset registry
 DATASET_REGISTRY = {
     'ixi': IXIDataset,
     'oasis': OASISDataset,
@@ -746,15 +746,15 @@ def create_medical_dataset(
     **kwargs
 ) -> Dataset:
     """
-    Factory function to create datasets.
+    factory function to create datasets.
     
-    Args:
-        dataset_name: Name of dataset ('ixi', 'oasis', etc.)
-        root_dir: Root directory of dataset
-        **kwargs: Dataset-specific arguments
+    args:
+        dataset_name: name of dataset ('ixi', 'oasis', etc.)
+        root_dir: root directory of dataset
+        **kwargs: dataset-specific arguments
         
-    Returns:
-        Dataset instance
+    returns:
+        dataset instance
     """
     if dataset_name.lower() not in DATASET_REGISTRY:
         raise ValueError(f"Unknown dataset: {dataset_name}")

@@ -1,7 +1,7 @@
 """
-Training Pipeline Tests.
+training pipeline tests.
 
-Unit tests for trainer, optimizers, and schedulers.
+unit tests for trainer, optimizers, and schedulers.
 """
 
 import pytest
@@ -10,10 +10,10 @@ import torch.nn as nn
 
 
 class TestOptimizers:
-    """Test optimizer configurations."""
+    """test optimizer configurations."""
     
     def test_adam_optimizer_creation(self):
-        """Test Adam optimizer creation."""
+        """test adam optimizer creation."""
         from ..training.optimizers import create_optimizer
         
         model = nn.Linear(10, 10)
@@ -28,7 +28,7 @@ class TestOptimizers:
         assert optimizer.defaults['lr'] == 0.0002
     
     def test_adamw_optimizer(self):
-        """Test AdamW optimizer."""
+        """test adamw optimizer."""
         from ..training.optimizers import create_optimizer
         
         model = nn.Linear(10, 10)
@@ -43,10 +43,10 @@ class TestOptimizers:
 
 
 class TestSchedulers:
-    """Test learning rate schedulers."""
+    """test learning rate schedulers."""
     
     def test_cosine_scheduler(self):
-        """Test cosine annealing scheduler."""
+        """test cosine annealing scheduler."""
         from ..training.schedulers import create_scheduler
         
         model = nn.Linear(10, 10)
@@ -60,17 +60,17 @@ class TestSchedulers:
         
         initial_lr = optimizer.param_groups[0]['lr']
         
-        # Step through some epochs
+        # step through some epochs
         for _ in range(50):
             scheduler.step()
         
         current_lr = optimizer.param_groups[0]['lr']
         
-        # LR should decrease
+        # lr should decrease
         assert current_lr < initial_lr
     
     def test_linear_warmup(self):
-        """Test linear warmup scheduler."""
+        """test linear warmup scheduler."""
         from ..training.schedulers import LinearWarmupScheduler
         
         model = nn.Linear(10, 10)
@@ -87,11 +87,11 @@ class TestSchedulers:
             lrs.append(optimizer.param_groups[0]['lr'])
             scheduler.step()
         
-        # LR should increase during warmup
+        # lr should increase during warmup
         assert lrs[4] > lrs[0]
     
     def test_warmup_cosine_scheduler(self):
-        """Test warmup + cosine decay."""
+        """test warmup + cosine decay."""
         from ..training.schedulers import create_scheduler
         
         model = nn.Linear(10, 10)
@@ -104,13 +104,13 @@ class TestSchedulers:
             total_epochs=100
         )
         
-        # Warmup phase
+        # warmup phase
         for _ in range(5):
             scheduler.step()
         
         peak_lr = optimizer.param_groups[0]['lr']
         
-        # Decay phase
+        # decay phase
         for _ in range(50):
             scheduler.step()
         
@@ -120,27 +120,27 @@ class TestSchedulers:
 
 
 class TestCallbacks:
-    """Test training callbacks."""
+    """test training callbacks."""
     
     def test_early_stopping(self):
-        """Test early stopping callback."""
+        """test early stopping callback."""
         from ..training.callbacks import EarlyStopping
         
         callback = EarlyStopping(patience=3, min_delta=0.01)
         
-        # Improving metrics
+        # improving metrics
         assert not callback(0.90)
         assert not callback(0.91)
         assert not callback(0.92)
         
-        # Stagnating metrics
+        # stagnating metrics
         assert not callback(0.92)
         assert not callback(0.92)
         assert not callback(0.92)
-        assert callback(0.92)  # Should trigger after patience
+        assert callback(0.92)  # should trigger after patience
     
     def test_model_checkpoint(self, tmp_path):
-        """Test model checkpointing."""
+        """test model checkpointing."""
         from ..training.callbacks import ModelCheckpoint
         
         callback = ModelCheckpoint(
@@ -152,19 +152,19 @@ class TestCallbacks:
         
         model = nn.Linear(10, 10)
         
-        # Save first checkpoint
+        # save first checkpoint
         callback.on_epoch_end(0, {'val_ssim': 0.90}, {'model': model})
         
-        # Better metric - should save
+        # better metric - should save
         callback.on_epoch_end(1, {'val_ssim': 0.92}, {'model': model})
         
-        # Worse metric - should not save
+        # worse metric - should not save
         callback.on_epoch_end(2, {'val_ssim': 0.88}, {'model': model})
         
         assert callback.best_value == 0.92
     
     def test_lr_logger(self):
-        """Test learning rate logging callback."""
+        """test learning rate logging callback."""
         from ..training.callbacks import LearningRateLogger
         
         model = nn.Linear(10, 10)
@@ -178,11 +178,11 @@ class TestCallbacks:
 
 
 class TestTrainer:
-    """Test training loop."""
+    """test training loop."""
     
     @pytest.fixture
     def mock_trainer(self):
-        """Create mock trainer."""
+        """create mock trainer."""
         from ..models.generators import SAGenerator
         from ..models.discriminators import MultiScaleDiscriminator
         from ..training.trainer import HarmonizationTrainer
@@ -202,7 +202,7 @@ class TestTrainer:
         return trainer
     
     def test_train_step(self, mock_trainer):
-        """Test single training step."""
+        """test single training step."""
         batch = {
             'source': torch.randn(1, 4, 16, 16, 16),
             'target': torch.randn(1, 4, 16, 16, 16)
@@ -215,7 +215,7 @@ class TestTrainer:
         assert not torch.isnan(torch.tensor(losses['g_loss']))
     
     def test_validation_step(self, mock_trainer):
-        """Test validation step."""
+        """test validation step."""
         batch = {
             'source': torch.randn(1, 4, 16, 16, 16),
             'target': torch.randn(1, 4, 16, 16, 16)
@@ -227,10 +227,10 @@ class TestTrainer:
 
 
 class TestGradientHandling:
-    """Test gradient handling utilities."""
+    """test gradient handling utilities."""
     
     def test_gradient_clipping(self):
-        """Test gradient clipping."""
+        """test gradient clipping."""
         from ..training.trainer import clip_gradients
         
         model = nn.Linear(100, 100)
@@ -239,7 +239,7 @@ class TestGradientHandling:
         loss = (y ** 2).sum()
         loss.backward()
         
-        # Before clipping
+        # before clipping
         grad_norm_before = sum(
             p.grad.norm() ** 2 for p in model.parameters()
         ) ** 0.5
@@ -253,7 +253,7 @@ class TestGradientHandling:
         assert grad_norm_after <= 1.0 + 1e-6
     
     def test_gradient_accumulation(self):
-        """Test gradient accumulation."""
+        """test gradient accumulation."""
         model = nn.Linear(10, 10)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
         
@@ -265,7 +265,7 @@ class TestGradientHandling:
             loss = y.sum() / accumulation_steps
             loss.backward()
         
-        # Gradients should be accumulated
+        # gradients should be accumulated
         assert model.weight.grad is not None
         
         optimizer.step()
@@ -275,11 +275,11 @@ class TestGradientHandling:
 
 
 class TestMixedPrecision:
-    """Test mixed precision training."""
+    """test mixed precision training."""
     
     @pytest.mark.gpu
     def test_amp_forward(self):
-        """Test AMP forward pass."""
+        """test amp forward pass."""
         if not torch.cuda.is_available():
             pytest.skip("GPU required")
         
@@ -295,7 +295,7 @@ class TestMixedPrecision:
     
     @pytest.mark.gpu
     def test_amp_backward(self):
-        """Test AMP backward pass with scaler."""
+        """test amp backward pass with scaler."""
         if not torch.cuda.is_available():
             pytest.skip("GPU required")
         
@@ -313,35 +313,35 @@ class TestMixedPrecision:
         scaler.step(optimizer)
         scaler.update()
         
-        # Training should complete without errors
+        # training should complete without errors
         assert True
 
 
 class TestEMA:
-    """Test Exponential Moving Average."""
+    """test exponential moving average."""
     
     def test_ema_update(self):
-        """Test EMA weight update."""
+        """test ema weight update."""
         from ..training.trainer import ExponentialMovingAverage
         
         model = nn.Linear(10, 10)
         ema = ExponentialMovingAverage(model, decay=0.9)
         
-        # Get initial EMA weights
+        # get initial ema weights
         initial_weight = ema.shadow['weight'].clone()
         
-        # Update model weights
+        # update model weights
         model.weight.data = model.weight.data + 1.0
         
-        # Update EMA
+        # update ema
         ema.update()
         
-        # EMA should move towards new weights
+        # ema should move towards new weights
         assert not torch.equal(ema.shadow['weight'], initial_weight)
         assert not torch.equal(ema.shadow['weight'], model.weight)
     
     def test_ema_apply_restore(self):
-        """Test applying and restoring EMA weights."""
+        """test applying and restoring ema weights."""
         from ..training.trainer import ExponentialMovingAverage
         
         model = nn.Linear(10, 10)
@@ -349,15 +349,15 @@ class TestEMA:
         
         ema = ExponentialMovingAverage(model, decay=0.9)
         
-        # Modify model
+        # modify model
         model.weight.data = model.weight.data + 1.0
         ema.update()
         
-        # Apply EMA
+        # apply ema
         ema.apply_shadow()
         ema_weight = model.weight.data.clone()
         
-        # Restore original
+        # restore original
         ema.restore()
         
         assert not torch.equal(ema_weight, model.weight.data)

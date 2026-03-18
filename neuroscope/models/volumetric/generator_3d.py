@@ -1,11 +1,11 @@
 """
-3D Generator Architectures.
+3d generator architectures.
 
-Volumetric generators for 3D medical image translation including:
-- Standard 3D ResNet Generator
-- Self-Attention 3D Generator
-- Memory-efficient variants with gradient checkpointing
-- U-Net style 3D generators with skip connections
+volumetric generators for 3d medical image translation including:
+- standard 3d resnet generator
+- self-attention 3d generator
+- memory-efficient variants with gradient checkpointing
+- u-net style 3d generators with skip connections
 """
 
 from typing import Optional, List, Tuple, Dict, Any
@@ -27,17 +27,17 @@ from .blocks_3d import (
 
 class Generator3D(nn.Module):
     """
-    Standard 3D Generator with ResNet architecture.
+    standard 3d generator with resnet architecture.
     
-    Architecture: Encoder -> Bottleneck (ResBlocks) -> Decoder
-    Suitable for volumetric brain MRI translation.
+    architecture: encoder -> bottleneck (resblocks) -> decoder
+    suitable for volumetric brain mri translation.
     """
     
     def __init__(
         self,
         in_channels: int = 1,
         out_channels: int = 1,
-        ngf: int = 32,  # Reduced for 3D memory constraints
+        ngf: int = 32,  # reduced for 3d memory constraints
         n_downsampling: int = 2,
         n_residual: int = 6,
         norm_type: str = 'instance',
@@ -49,7 +49,7 @@ class Generator3D(nn.Module):
         
         self.use_checkpoint = use_checkpoint
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.ReflectionPad3d(3) if padding_mode == 'reflect' else nn.ConstantPad3d(3, 0),
             nn.Conv3d(in_channels, ngf, 7, 1, 0, bias=False),
@@ -57,7 +57,7 @@ class Generator3D(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder (downsampling)
+        # encoder (downsampling)
         self.encoder = nn.ModuleList()
         mult = 1
         for i in range(n_downsampling):
@@ -68,7 +68,7 @@ class Generator3D(nn.Module):
             )
             mult *= 2
         
-        # Bottleneck (residual blocks)
+        # bottleneck (residual blocks)
         self.bottleneck = nn.ModuleList()
         for i in range(n_residual):
             self.bottleneck.append(
@@ -80,7 +80,7 @@ class Generator3D(nn.Module):
                 )
             )
         
-        # Decoder (upsampling)
+        # decoder (upsampling)
         self.decoder = nn.ModuleList()
         for i in range(n_downsampling):
             in_ch = ngf * mult
@@ -90,7 +90,7 @@ class Generator3D(nn.Module):
             )
             mult //= 2
         
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReflectionPad3d(3) if padding_mode == 'reflect' else nn.ConstantPad3d(3, 0),
             nn.Conv3d(ngf, out_channels, 7, 1, 0),
@@ -98,22 +98,22 @@ class Generator3D(nn.Module):
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Initial
+        # initial
         x = self.initial(x)
         
-        # Encoder
+        # encoder
         for enc in self.encoder:
             x = enc(x)
         
-        # Bottleneck
+        # bottleneck
         for res in self.bottleneck:
             x = res(x)
         
-        # Decoder
+        # decoder
         for dec in self.decoder:
             x = dec(x)
         
-        # Final
+        # final
         x = self.final(x)
         
         return x
@@ -121,9 +121,9 @@ class Generator3D(nn.Module):
 
 class SAGenerator3D(nn.Module):
     """
-    Self-Attention Enhanced 3D Generator.
+    self-attention enhanced 3d generator.
     
-    Integrates self-attention mechanisms at multiple scales for
+    integrates self-attention mechanisms at multiple scales for
     capturing long-range dependencies in volumetric medical images.
     """
     
@@ -143,9 +143,9 @@ class SAGenerator3D(nn.Module):
         super().__init__()
         
         self.use_checkpoint = use_checkpoint
-        attention_positions = attention_positions or [2, 4]  # Default attention positions
+        attention_positions = attention_positions or [2, 4]  # default attention positions
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.ReplicationPad3d(3),
             nn.Conv3d(in_channels, ngf, 7, 1, 0, bias=False),
@@ -153,7 +153,7 @@ class SAGenerator3D(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder with attention
+        # encoder with attention
         self.encoder = nn.ModuleList()
         self.encoder_attention = nn.ModuleDict()
         
@@ -164,13 +164,13 @@ class SAGenerator3D(nn.Module):
             self.encoder.append(
                 DownsampleBlock3D(in_ch, out_ch, norm_type=norm_type)
             )
-            # Add attention after encoder
+            # add attention after encoder
             self.encoder_attention[f'enc_{i}'] = self._build_attention(
                 out_ch, attention_type, use_checkpoint
             )
             mult *= 2
         
-        # Bottleneck with attention at specified positions
+        # bottleneck with attention at specified positions
         self.bottleneck = nn.ModuleList()
         self.bottleneck_attention = nn.ModuleDict()
         
@@ -189,7 +189,7 @@ class SAGenerator3D(nn.Module):
                     bottleneck_channels, attention_type, use_checkpoint
                 )
         
-        # Decoder with attention
+        # decoder with attention
         self.decoder = nn.ModuleList()
         self.decoder_attention = nn.ModuleDict()
         
@@ -204,7 +204,7 @@ class SAGenerator3D(nn.Module):
             )
             mult //= 2
         
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.ReplicationPad3d(3),
             nn.Conv3d(ngf, out_channels, 7, 1, 0),
@@ -217,7 +217,7 @@ class SAGenerator3D(nn.Module):
         attention_type: str,
         use_checkpoint: bool
     ) -> nn.Module:
-        """Build attention module based on type."""
+        """build attention module based on type."""
         if attention_type == 'self':
             return SelfAttention3D(channels, use_checkpoint=use_checkpoint)
         elif attention_type == 'multi_head':
@@ -232,28 +232,28 @@ class SAGenerator3D(nn.Module):
             return nn.Identity()
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Initial
+        # initial
         x = self.initial(x)
         
-        # Encoder with attention
+        # encoder with attention
         encoder_features = []
         for i, enc in enumerate(self.encoder):
             x = enc(x)
             x = self.encoder_attention[f'enc_{i}'](x)
             encoder_features.append(x)
         
-        # Bottleneck with attention
+        # bottleneck with attention
         for i, res in enumerate(self.bottleneck):
             x = res(x)
             if f'res_{i}' in self.bottleneck_attention:
                 x = self.bottleneck_attention[f'res_{i}'](x)
         
-        # Decoder with attention
+        # decoder with attention
         for i, dec in enumerate(self.decoder):
             x = dec(x)
             x = self.decoder_attention[f'dec_{i}'](x)
         
-        # Final
+        # final
         x = self.final(x)
         
         return x
@@ -261,9 +261,9 @@ class SAGenerator3D(nn.Module):
 
 class UNetGenerator3D(nn.Module):
     """
-    3D U-Net Generator with Skip Connections.
+    3d u-net generator with skip connections.
     
-    Provides better preservation of fine anatomical details
+    provides better preservation of fine anatomical details
     through skip connections between encoder and decoder.
     """
     
@@ -284,7 +284,7 @@ class UNetGenerator3D(nn.Module):
         self.use_attention = use_attention
         self.use_checkpoint = use_checkpoint
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.Conv3d(in_channels, ngf, 3, 1, 1, bias=False),
             nn.InstanceNorm3d(ngf, affine=True),
@@ -294,7 +294,7 @@ class UNetGenerator3D(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder path
+        # encoder path
         self.down_convs = nn.ModuleList()
         self.down_pools = nn.ModuleList()
         self.down_attns = nn.ModuleList() if use_attention else None
@@ -321,7 +321,7 @@ class UNetGenerator3D(nn.Module):
             
             mult *= 2
         
-        # Bottleneck
+        # bottleneck
         bottleneck_ch = ngf * mult
         self.bottleneck = nn.Sequential(
             ResidualBlock3D(bottleneck_ch, use_checkpoint=use_checkpoint),
@@ -329,13 +329,13 @@ class UNetGenerator3D(nn.Module):
             ResidualBlock3D(bottleneck_ch, use_checkpoint=use_checkpoint),
         )
         
-        # Decoder path
+        # decoder path
         self.up_convs = nn.ModuleList()
         self.up_samples = nn.ModuleList()
         self.up_attns = nn.ModuleList() if use_attention else None
         
         for i in range(n_levels):
-            in_ch = ngf * mult + ngf * mult // 2  # Skip connection
+            in_ch = ngf * mult + ngf * mult // 2  # skip connection
             out_ch = ngf * mult // 2
             
             self.up_samples.append(
@@ -357,7 +357,7 @@ class UNetGenerator3D(nn.Module):
             
             mult //= 2
         
-        # Final convolution
+        # final convolution
         self.final = nn.Sequential(
             nn.Conv3d(ngf, ngf, 3, 1, 1, bias=False),
             nn.InstanceNorm3d(ngf, affine=True),
@@ -367,10 +367,10 @@ class UNetGenerator3D(nn.Module):
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Initial
+        # initial
         x = self.initial(x)
         
-        # Encoder - save features for skip connections
+        # encoder - save features for skip connections
         skip_features = [x]
         for i in range(self.n_levels):
             x = self.down_pools[i](x)
@@ -379,14 +379,14 @@ class UNetGenerator3D(nn.Module):
                 x = self.down_attns[i](x)
             skip_features.append(x)
         
-        # Bottleneck
+        # bottleneck
         x = self.bottleneck(x)
         
-        # Decoder with skip connections
+        # decoder with skip connections
         for i in range(self.n_levels):
             x = self.up_samples[i](x)
             
-            # Handle size mismatch
+            # handle size mismatch
             skip = skip_features[-(i + 2)]
             if x.shape != skip.shape:
                 x = F.interpolate(x, size=skip.shape[2:], mode='trilinear', align_corners=False)
@@ -397,7 +397,7 @@ class UNetGenerator3D(nn.Module):
             if self.use_attention:
                 x = self.up_attns[i](x)
         
-        # Final
+        # final
         x = self.final(x)
         
         return x
@@ -405,11 +405,11 @@ class UNetGenerator3D(nn.Module):
 
 class HybridGenerator2_5D(nn.Module):
     """
-    2.5D Hybrid Generator.
+    2.5d hybrid generator.
     
-    Processes volumetric data by combining 2D slices with
+    processes volumetric data by combining 2d slices with
     inter-slice context, offering a memory-efficient alternative
-    to full 3D processing.
+    to full 3d processing.
     """
     
     def __init__(
@@ -417,7 +417,7 @@ class HybridGenerator2_5D(nn.Module):
         in_channels: int = 1,
         out_channels: int = 1,
         ngf: int = 64,
-        context_slices: int = 3,  # Number of adjacent slices to consider
+        context_slices: int = 3,  # number of adjacent slices to consider
         n_residual: int = 9,
         use_attention: bool = True
     ):
@@ -426,7 +426,7 @@ class HybridGenerator2_5D(nn.Module):
         self.context_slices = context_slices
         total_in_channels = in_channels * context_slices
         
-        # 2D processing with context
+        # 2d processing with context
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(total_in_channels, ngf, 7, 1, 0, bias=False),
@@ -434,33 +434,33 @@ class HybridGenerator2_5D(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder
+        # encoder
         self.enc1 = self._make_encoder_block(ngf, ngf * 2)
         self.enc2 = self._make_encoder_block(ngf * 2, ngf * 4)
         
-        # Bottleneck with 3D context
+        # bottleneck with 3d context
         self.bottleneck_3d = nn.Conv3d(
             ngf * 4, ngf * 4, (3, 3, 3), padding=1, bias=False
         )
         self.bottleneck_norm = nn.InstanceNorm2d(ngf * 4, affine=True)
         
-        # Residual blocks
+        # residual blocks
         self.residual = nn.Sequential(*[
             self._make_residual_block(ngf * 4) for _ in range(n_residual)
         ])
         
-        # Self-attention
+        # self-attention
         if use_attention:
             from ..attention.self_attention import SelfAttention
             self.attention = SelfAttention(ngf * 4)
         else:
             self.attention = nn.Identity()
         
-        # Decoder
+        # decoder
         self.dec1 = self._make_decoder_block(ngf * 4, ngf * 2)
         self.dec2 = self._make_decoder_block(ngf * 2, ngf)
         
-        # Final
+        # final
         self.final = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, out_channels, 7, 1, 0),
@@ -494,15 +494,15 @@ class HybridGenerator2_5D(nn.Module):
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass for 2.5D generator.
+        forward pass for 2.5d generator.
         
-        Args:
-            x: Input tensor [B, C, D, H, W] or [B, context*C, H, W]
+        args:
+            x: input tensor [b, c, d, h, w] or [b, context*c, h, w]
         
-        Returns:
-            Output tensor [B, C, H, W]
+        returns:
+            output tensor [b, c, h, w]
         """
-        # Handle 3D input by extracting context slices
+        # handle 3d input by extracting context slices
         if x.dim() == 5:
             B, C, D, H, W = x.shape
             center_idx = D // 2
@@ -512,16 +512,16 @@ class HybridGenerator2_5D(nn.Module):
             context = x[:, :, start_idx:end_idx, :, :]
             x = context.view(B, -1, H, W)
         
-        # Encoding
+        # encoding
         x = self.initial(x)
         x = self.enc1(x)
         x = self.enc2(x)
         
-        # Bottleneck
+        # bottleneck
         x = self.residual(x)
         x = self.attention(x)
         
-        # Decoding
+        # decoding
         x = self.dec1(x)
         x = self.dec2(x)
         x = self.final(x)

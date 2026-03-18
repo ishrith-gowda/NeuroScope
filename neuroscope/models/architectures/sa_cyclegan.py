@@ -1,16 +1,16 @@
 """
-Self-Attention CycleGAN (SA-CycleGAN) Architecture
+self-attention cyclegan (sa-cyclegan) architecture
 
-Novel architecture combining CycleGAN with multi-scale self-attention for
-brain MRI domain translation between BraTS and UPenn-GBM datasets.
+novel architecture combining cyclegan with multi-scale self-attention for
+brain mri domain translation between brats and upenn-gbm datasets.
 
-Key innovations:
-1. Multi-scale self-attention in generator bottleneck
-2. CBAM attention in encoder/decoder paths
-3. Spectral-normalized discriminator with attention
-4. Modality-aware feature extraction
+key innovations:
+1. multi-scale self-attention in generator bottleneck
+2. cbam attention in encoder/decoder paths
+3. spectral-normalized discriminator with attention
+4. modality-aware feature extraction
 
-Reference: This is a novel contribution for NeurIPS-level publication.
+reference: this is a novel contribution for neurips-level publication.
 """
 
 import torch
@@ -21,7 +21,7 @@ import math
 
 
 class SpectralNorm(nn.Module):
-    """Spectral normalization for stabilized training."""
+    """spectral normalization for stabilized training."""
     
     def __init__(self, module: nn.Module, name: str = 'weight', n_power_iterations: int = 1):
         super().__init__()
@@ -65,9 +65,9 @@ class SpectralNorm(nn.Module):
 
 class SelfAttention2D(nn.Module):
     """
-    Self-attention mechanism for 2D feature maps.
+    self-attention mechanism for 2d feature maps.
     
-    Computes attention between all spatial positions, allowing the model
+    computes attention between all spatial positions, allowing the model
     to capture long-range dependencies crucial for anatomical consistency.
     """
     
@@ -76,47 +76,47 @@ class SelfAttention2D(nn.Module):
         self.in_channels = in_channels
         self.reduction = reduction
         
-        # Reduced channel dimension for efficiency
+        # reduced channel dimension for efficiency
         self.query_conv = nn.Conv2d(in_channels, in_channels // reduction, 1)
         self.key_conv = nn.Conv2d(in_channels, in_channels // reduction, 1)
         self.value_conv = nn.Conv2d(in_channels, in_channels, 1)
         
-        # Learnable attention scaling
+        # learnable attention scaling
         self.gamma = nn.Parameter(torch.zeros(1))
         
-        # Layer norm for stability
+        # layer norm for stability
         self.norm = nn.InstanceNorm2d(in_channels)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: Input tensor [B, C, H, W]
-        Returns:
-            Attention-weighted output [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
+        returns:
+            attention-weighted output [b, c, h, w]
         """
         B, C, H, W = x.shape
         
-        # Compute query, key, value projections
-        query = self.query_conv(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, HW, C']
-        key = self.key_conv(x).view(B, -1, H * W)  # [B, C', HW]
-        value = self.value_conv(x).view(B, -1, H * W)  # [B, C, HW]
+        # compute query, key, value projections
+        query = self.query_conv(x).view(B, -1, H * W).permute(0, 2, 1)  # [b, hw, c']
+        key = self.key_conv(x).view(B, -1, H * W)  # [b, c', hw]
+        value = self.value_conv(x).view(B, -1, H * W)  # [b, c, hw]
         
-        # Scaled dot-product attention
-        attention = torch.bmm(query, key)  # [B, HW, HW]
+        # scaled dot-product attention
+        attention = torch.bmm(query, key)  # [b, hw, hw]
         attention = F.softmax(attention / math.sqrt(C // self.reduction), dim=-1)
         
-        # Apply attention to values
-        out = torch.bmm(value, attention.permute(0, 2, 1))  # [B, C, HW]
+        # apply attention to values
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # [b, c, hw]
         out = out.view(B, C, H, W)
         
-        # Residual connection with learnable scale
+        # residual connection with learnable scale
         out = self.gamma * self.norm(out) + x
         
         return out
 
 
 class ChannelAttention(nn.Module):
-    """Channel attention module (squeeze-and-excitation style)."""
+    """channel attention module (squeeze-and-excitation style)."""
     
     def __init__(self, in_channels: int, reduction: int = 16):
         super().__init__()
@@ -136,7 +136,7 @@ class ChannelAttention(nn.Module):
 
 
 class SpatialAttention(nn.Module):
-    """Spatial attention module."""
+    """spatial attention module."""
     
     def __init__(self, kernel_size: int = 7):
         super().__init__()
@@ -151,7 +151,7 @@ class SpatialAttention(nn.Module):
 
 
 class CBAM(nn.Module):
-    """Convolutional Block Attention Module combining channel and spatial attention."""
+    """convolutional block attention module combining channel and spatial attention."""
     
     def __init__(self, in_channels: int, reduction: int = 16, kernel_size: int = 7):
         super().__init__()
@@ -165,7 +165,7 @@ class CBAM(nn.Module):
 
 
 class ResidualBlockWithAttention(nn.Module):
-    """Residual block with optional attention mechanism."""
+    """residual block with optional attention mechanism."""
     
     def __init__(
         self,
@@ -203,24 +203,24 @@ class ResidualBlockWithAttention(nn.Module):
 
 class ModalityEncoder(nn.Module):
     """
-    Modality-specific encoder that processes each MRI modality separately
+    modality-specific encoder that processes each mri modality separately
     before combining them, preserving modality-specific features.
     """
     
     def __init__(self, out_channels: int = 16):
         super().__init__()
         
-        # Separate encoder for each modality
+        # separate encoder for each modality
         self.encoders = nn.ModuleList([
             nn.Sequential(
                 nn.ReflectionPad2d(1),
                 nn.Conv2d(1, out_channels, 3, bias=False),
                 nn.InstanceNorm2d(out_channels),
                 nn.ReLU(inplace=True)
-            ) for _ in range(4)  # T1, T1ce, T2, FLAIR
+            ) for _ in range(4)  # t1, t1ce, t2, flair
         ])
         
-        # Fusion layer with attention
+        # fusion layer with attention
         self.fusion = nn.Sequential(
             nn.Conv2d(out_channels * 4, out_channels * 4, 1, bias=False),
             nn.InstanceNorm2d(out_channels * 4),
@@ -230,17 +230,17 @@ class ModalityEncoder(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: Input tensor [B, 4, H, W] (4 MRI modalities)
-        Returns:
-            Fused features [B, out_channels*4, H, W]
+        args:
+            x: input tensor [b, 4, h, w] (4 mri modalities)
+        returns:
+            fused features [b, out_channels*4, h, w]
         """
-        # Process each modality separately
+        # process each modality separately
         modality_features = []
         for i, encoder in enumerate(self.encoders):
             modality_features.append(encoder(x[:, i:i+1, :, :]))
         
-        # Concatenate and fuse with attention
+        # concatenate and fuse with attention
         fused = torch.cat(modality_features, dim=1)
         fused = self.fusion(fused)
         fused = self.fusion_attention(fused)
@@ -250,15 +250,15 @@ class ModalityEncoder(nn.Module):
 
 class SAGenerator(nn.Module):
     """
-    Self-Attention Generator (SA-Generator) for MRI domain translation.
+    self-attention generator (sa-generator) for mri domain translation.
     
-    Architecture:
-    1. Modality-aware encoder with separate processing per modality
-    2. Multi-scale encoder with CBAM attention
-    3. Self-attention bottleneck for long-range dependencies
-    4. Decoder with skip connections and CBAM attention
+    architecture:
+    1. modality-aware encoder with separate processing per modality
+    2. multi-scale encoder with cbam attention
+    3. self-attention bottleneck for long-range dependencies
+    4. decoder with skip connections and cbam attention
     
-    This architecture is specifically designed for multi-modal MRI translation,
+    this architecture is specifically designed for multi-modal mri translation,
     preserving anatomical structures and modality-specific information.
     """
     
@@ -269,20 +269,20 @@ class SAGenerator(nn.Module):
         ngf: int = 64,
         n_residual_blocks: int = 9,
         use_modality_encoder: bool = True,
-        attention_layers: List[int] = [3, 4, 5]  # Which residual blocks get self-attention
+        attention_layers: List[int] = [3, 4, 5]  # which residual blocks get self-attention
     ):
         super().__init__()
         
         self.use_modality_encoder = use_modality_encoder
         
-        # Initial modality-aware encoding (optional)
+        # initial modality-aware encoding (optional)
         if use_modality_encoder:
             self.modality_encoder = ModalityEncoder(out_channels=16)
             first_layer_in = 64  # 16 * 4 modalities
         else:
             first_layer_in = input_channels
         
-        # Initial convolution
+        # initial convolution
         self.initial = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(first_layer_in, ngf, 7, bias=False),
@@ -290,7 +290,7 @@ class SAGenerator(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # Encoder (downsampling with attention)
+        # encoder (downsampling with attention)
         self.encoder = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
@@ -306,7 +306,7 @@ class SAGenerator(nn.Module):
             )
         ])
         
-        # Bottleneck with self-attention at specified layers
+        # bottleneck with self-attention at specified layers
         self.bottleneck = nn.ModuleList()
         for i in range(n_residual_blocks):
             use_self_attention = i in attention_layers
@@ -318,10 +318,10 @@ class SAGenerator(nn.Module):
                 )
             )
         
-        # Global self-attention in bottleneck
+        # global self-attention in bottleneck
         self.global_attention = SelfAttention2D(ngf * 4, reduction=4)
         
-        # Decoder (upsampling with attention)
+        # decoder (upsampling with attention)
         self.decoder = nn.ModuleList([
             nn.Sequential(
                 nn.ConvTranspose2d(ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False),
@@ -337,49 +337,49 @@ class SAGenerator(nn.Module):
             )
         ])
         
-        # Output layer
+        # output layer
         self.output = nn.Sequential(
             nn.ReflectionPad2d(3),
             nn.Conv2d(ngf, output_channels, 7),
             nn.Tanh()
         )
         
-        # Skip connections fusion
+        # skip connections fusion
         self.skip_fuse1 = nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False)
         self.skip_fuse2 = nn.Conv2d(ngf * 2, ngf, 1, bias=False)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass through SA-Generator.
+        forward pass through sa-generator.
         
-        Args:
-            x: Input MRI [B, 4, H, W]
-        Returns:
-            Translated MRI [B, 4, H, W]
+        args:
+            x: input mri [b, 4, h, w]
+        returns:
+            translated mri [b, 4, h, w]
         """
-        # Modality-aware encoding
+        # modality-aware encoding
         if self.use_modality_encoder:
             x = self.modality_encoder(x)
         
-        # Initial convolution
+        # initial convolution
         x = self.initial(x)
         
-        # Encoder with skip connections
+        # encoder with skip connections
         skips = [x]
         for enc in self.encoder:
             x = enc(x)
             skips.append(x)
         
-        # Bottleneck with self-attention
+        # bottleneck with self-attention
         for block in self.bottleneck:
             x = block(x)
         
-        # Global attention
+        # global attention
         x = self.global_attention(x)
         
-        # Decoder with skip connections
+        # decoder with skip connections
         x = self.decoder[0](x)
-        # Add skip connection from encoder
+        # add skip connection from encoder
         skip = self.skip_fuse1(skips[-1])
         x = x + F.interpolate(skip, size=x.shape[2:], mode='bilinear', align_corners=False)
         
@@ -387,7 +387,7 @@ class SAGenerator(nn.Module):
         skip = self.skip_fuse2(skips[-2])
         x = x + F.interpolate(skip, size=x.shape[2:], mode='bilinear', align_corners=False)
         
-        # Output
+        # output
         x = self.output(x)
         
         return x
@@ -395,9 +395,9 @@ class SAGenerator(nn.Module):
 
 class SADiscriminator(nn.Module):
     """
-    Self-Attention PatchGAN Discriminator.
+    self-attention patchgan discriminator.
     
-    Multi-scale discriminator with spectral normalization and self-attention
+    multi-scale discriminator with spectral normalization and self-attention
     for improved training stability and realistic outputs.
     """
     
@@ -415,13 +415,13 @@ class SADiscriminator(nn.Module):
                 return SpectralNorm(layer)
             return layer
         
-        # Initial layer (no normalization)
+        # initial layer (no normalization)
         sequence = [
             get_norm(nn.Conv2d(input_channels, ndf, 4, stride=2, padding=1)),
             nn.LeakyReLU(0.2, inplace=True)
         ]
         
-        # Hidden layers
+        # hidden layers
         nf_mult = 1
         for n in range(1, n_layers):
             nf_mult_prev = nf_mult
@@ -433,10 +433,10 @@ class SADiscriminator(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True)
             ])
         
-        # Self-attention layer
+        # self-attention layer
         sequence.append(SelfAttention2D(ndf * nf_mult))
         
-        # Final layers
+        # final layers
         nf_mult_prev = nf_mult
         nf_mult = min(2 ** n_layers, 8)
         
@@ -446,7 +446,7 @@ class SADiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         ])
         
-        # Output layer (PatchGAN)
+        # output layer (patchgan)
         sequence.append(
             get_norm(nn.Conv2d(ndf * nf_mult, 1, 4, stride=1, padding=1))
         )
@@ -455,19 +455,19 @@ class SADiscriminator(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Args:
-            x: Input image [B, C, H, W]
-        Returns:
-            Patch-wise discrimination scores [B, 1, H', W']
+        args:
+            x: input image [b, c, h, w]
+        returns:
+            patch-wise discrimination scores [b, 1, h', w']
         """
         return self.model(x)
 
 
 class MultiScaleDiscriminator(nn.Module):
     """
-    Multi-scale discriminator for better handling of different frequency content.
+    multi-scale discriminator for better handling of different frequency content.
     
-    Processes images at multiple scales to capture both fine details and
+    processes images at multiple scales to capture both fine details and
     global structure.
     """
     
@@ -490,10 +490,10 @@ class MultiScaleDiscriminator(nn.Module):
         
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
         """
-        Args:
-            x: Input image [B, C, H, W]
-        Returns:
-            List of discrimination scores at each scale
+        args:
+            x: input image [b, c, h, w]
+        returns:
+            list of discrimination scores at each scale
         """
         outputs = []
         for i, disc in enumerate(self.discriminators):
@@ -505,11 +505,11 @@ class MultiScaleDiscriminator(nn.Module):
 
 class SACycleGAN(nn.Module):
     """
-    Complete SA-CycleGAN model for bidirectional domain translation.
+    complete sa-cyclegan model for bidirectional domain translation.
     
-    Combines:
-    - Two SA-Generators (A->B and B->A)
-    - Two Multi-scale Discriminators (for domain A and B)
+    combines:
+    - two sa-generators (a->b and b->a)
+    - two multi-scale discriminators (for domain a and b)
     """
     
     def __init__(
@@ -524,7 +524,7 @@ class SACycleGAN(nn.Module):
     ):
         super().__init__()
         
-        # Generators
+        # generators
         self.G_A2B = SAGenerator(
             input_channels=input_channels,
             output_channels=input_channels,
@@ -541,7 +541,7 @@ class SACycleGAN(nn.Module):
             use_modality_encoder=use_modality_encoder
         )
         
-        # Discriminators
+        # discriminators
         self.D_A = MultiScaleDiscriminator(
             input_channels=input_channels,
             ndf=ndf,
@@ -562,23 +562,23 @@ class SACycleGAN(nn.Module):
         real_B: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Forward pass for training.
+        forward pass for training.
         
-        Args:
-            real_A: Real images from domain A [B, C, H, W]
-            real_B: Real images from domain B [B, C, H, W]
+        args:
+            real_a: real images from domain a [b, c, h, w]
+            real_b: real images from domain b [b, c, h, w]
             
-        Returns:
-            fake_B: Generated images in domain B
-            fake_A: Generated images in domain A
-            rec_A: Reconstructed images in domain A
-            rec_B: Reconstructed images in domain B
+        returns:
+            fake_b: generated images in domain b
+            fake_a: generated images in domain a
+            rec_a: reconstructed images in domain a
+            rec_b: reconstructed images in domain b
         """
-        # Forward cycle: A -> B -> A
+        # forward cycle: a -> b -> a
         fake_B = self.G_A2B(real_A)
         rec_A = self.G_B2A(fake_B)
         
-        # Backward cycle: B -> A -> B
+        # backward cycle: b -> a -> b
         fake_A = self.G_B2A(real_B)
         rec_B = self.G_A2B(fake_A)
         
@@ -586,17 +586,17 @@ class SACycleGAN(nn.Module):
     
     @torch.no_grad()
     def translate_A2B(self, x: torch.Tensor) -> torch.Tensor:
-        """Translate from domain A to domain B."""
+        """translate from domain a to domain b."""
         return self.G_A2B(x)
     
     @torch.no_grad()
     def translate_B2A(self, x: torch.Tensor) -> torch.Tensor:
-        """Translate from domain B to domain A."""
+        """translate from domain b to domain a."""
         return self.G_B2A(x)
 
 
 def count_parameters(model: nn.Module) -> int:
-    """Count trainable parameters."""
+    """count trainable parameters."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -607,16 +607,16 @@ def create_sa_cyclegan(
     n_residual_blocks: int = 9
 ) -> SACycleGAN:
     """
-    Factory function to create SA-CycleGAN model.
+    factory function to create sa-cyclegan model.
     
-    Args:
-        input_channels: Number of input channels (4 for multi-modal MRI)
-        ngf: Number of generator filters
-        ndf: Number of discriminator filters
-        n_residual_blocks: Number of residual blocks in generator
+    args:
+        input_channels: number of input channels (4 for multi-modal mri)
+        ngf: number of generator filters
+        ndf: number of discriminator filters
+        n_residual_blocks: number of residual blocks in generator
         
-    Returns:
-        SACycleGAN model instance
+    returns:
+        sacyclegan model instance
     """
     model = SACycleGAN(
         input_channels=input_channels,
@@ -625,38 +625,38 @@ def create_sa_cyclegan(
         n_residual_blocks=n_residual_blocks
     )
     
-    # Print parameter counts
+    # print parameter counts
     g_params = count_parameters(model.G_A2B)
     d_params = count_parameters(model.D_A)
     total = count_parameters(model)
     
-    print(f"SA-CycleGAN Architecture Summary:")
-    print(f"  Generator parameters: {g_params:,}")
-    print(f"  Discriminator parameters: {d_params:,}")
-    print(f"  Total parameters: {total:,}")
+    print(f"sa-cyclegan architecture summary:")
+    print(f"  generator parameters: {g_params:,}")
+    print(f"  discriminator parameters: {d_params:,}")
+    print(f"  total parameters: {total:,}")
     
     return model
 
 
 if __name__ == '__main__':
-    # Test the architecture
+    # test the architecture
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Create model
+    # create model
     model = create_sa_cyclegan()
     model = model.to(device)
     
-    # Test forward pass
+    # test forward pass
     batch_size = 2
     x_a = torch.randn(batch_size, 4, 256, 256).to(device)
     x_b = torch.randn(batch_size, 4, 256, 256).to(device)
     
     fake_b, fake_a, rec_a, rec_b = model(x_a, x_b)
     
-    print(f"\nInput shape: {x_a.shape}")
-    print(f"Output shape: {fake_b.shape}")
-    print(f"Reconstruction shape: {rec_a.shape}")
+    print(f"\ninput shape: {x_a.shape}")
+    print(f"output shape: {fake_b.shape}")
+    print(f"reconstruction shape: {rec_a.shape}")
     
-    # Test discriminator
+    # test discriminator
     d_out = model.D_A(x_a)
-    print(f"Discriminator outputs: {[o.shape for o in d_out]}")
+    print(f"discriminator outputs: {[o.shape for o in d_out]}")

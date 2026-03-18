@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-CycleGAN v2 Training Entry Point
+cyclegan v2 training entry point
 
-This script launches the improved CycleGAN training with:
-- Anti-mode-collapse techniques (replay buffer, spectral norm)
-- Two-timescale update rule (TTUR)
-- Gradient penalty regularization
-- Feature matching loss
-- Label smoothing
-- Instance noise injection with decay
+this script launches the improved cyclegan training with:
+- anti-mode-collapse techniques (replay buffer, spectral norm)
+- two-timescale update rule (ttur)
+- gradient penalty regularization
+- feature matching loss
+- label smoothing
+- instance noise injection with decay
 """
 
 import argparse
@@ -17,7 +17,7 @@ import os
 import sys
 from pathlib import Path
 
-# Add paths
+# add paths
 HERE = Path(__file__).resolve().parent
 PREP_DIR = HERE.parent / '01_data_preparation_pipeline'
 if str(PREP_DIR) not in sys.path:
@@ -41,9 +41,9 @@ def parse_args():
     ap = argparse.ArgumentParser(description='CycleGAN v2 Training (Enhanced)')
     ap.add_argument('--data_root', type=str, default=str(PATHS['preprocessed_dir']))
     ap.add_argument('--meta_json', type=str, default=str(PATHS['metadata_splits']))
-    ap.add_argument('--n_epochs', type=int, default=150)  # More epochs for better convergence
+    ap.add_argument('--n_epochs', type=int, default=150)  # more epochs for better convergence
     ap.add_argument('--batch_size', type=int, default=4)
-    ap.add_argument('--lr', type=float, default=1e-4)  # Lower LR for stability
+    ap.add_argument('--lr', type=float, default=1e-4)  # lower lr for stability
     ap.add_argument('--decay_epoch', type=int, default=75)
     ap.add_argument('--lambda_cycle', type=float, default=10.0)
     ap.add_argument('--lambda_identity', type=float, default=5.0)
@@ -64,28 +64,28 @@ def main():
     args = parse_args()
     
     print("\n" + "=" * 80)
-    print("CYCLEGAN V2 TRAINING ENTRY POINT")
+    print("cyclegan v2 training entry point")
     print("=" * 80)
-    print(f"Python: {sys.executable}")
-    print(f"Working directory: {os.getcwd()}")
+    print(f"python: {sys.executable}")
+    print(f"working directory: {os.getcwd()}")
     
-    print("\nConfiguration:")
+    print("\nconfiguration:")
     for arg, value in vars(args).items():
         print(f"  {arg}: {value}")
     print()
     
     try:
         import torch
-        print(f"PyTorch version: {torch.__version__}")
+        print(f"pytorch version: {torch.__version__}")
         
         device = torch.device(
             'cuda' if torch.cuda.is_available() 
             else 'mps' if torch.backends.mps.is_available() 
             else 'cpu'
         )
-        print(f"Using device: {device}")
+        print(f"using device: {device}")
         
-        # Import and run training
+        # import and run training
         from train_cyclegan_v2 import train
         
         class ArgsHolder:
@@ -95,7 +95,7 @@ def main():
         for key, value in vars(args).items():
             setattr(args_obj, key, value)
         
-        print("\nStarting v2 training...\n")
+        print("\nstarting v2 training...\n")
         train(args_obj, device)
         print("\ntraining completed successfully\n")
         

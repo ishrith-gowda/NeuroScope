@@ -348,15 +348,15 @@ class HybridNCETrainer:
 
             # === patchnce contrastive loss ===
             # extract encoder features from source and generated images
-            # for a2b direction: query = enc(fake_B via G_A2B), key = enc(real_A via G_A2B)
-            # we pass both through the SAME encoder to get corresponding features
+            # for a2b direction: query = enc(fake_b via g_a2b), key = enc(real_a via g_a2b)
+            # we pass both through the same encoder to get corresponding features
             G_A2B_raw = self._get_generator("G_A2B")
             G_B2A_raw = self._get_generator("G_B2A")
 
             src_feats_A = G_A2B_raw(real_A, encode_only=True)
             gen_feats_B = G_A2B_raw(
                 # for the generated image, we need to re-encode it
-                # create 3-slice pseudo-input from fake_B for the encoder
+                # create 3-slice pseudo-input from fake_b for the encoder
                 fake_B.unsqueeze(2)
                 .repeat(1, 1, 3, 1, 1)
                 .view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3)),

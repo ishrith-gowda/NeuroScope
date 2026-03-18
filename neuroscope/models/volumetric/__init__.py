@@ -1,8 +1,8 @@
 """
-Volumetric (3D) Architecture Components.
+volumetric (3d) architecture components.
 
-This module provides 3D convolutional architectures for volumetric
-medical image processing, enabling full 3D context for brain MRI
+this module provides 3d convolutional architectures for volumetric
+medical image processing, enabling full 3d context for brain mri
 harmonization with superior inter-slice consistency.
 """
 

@@ -1,9 +1,9 @@
-"""Constants for NeuroScope.
+"""constants for neuroscope.
 
-This module provides constants and enums used throughout the NeuroScope package.
+this module provides constants and enums used throughout the neuroscope package.
 """
 
-# Placeholder for constants
-# The actual implementation would be imported here
+# placeholder for constants
+# the actual implementation would be imported here
 
 __all__ = []

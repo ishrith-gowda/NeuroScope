@@ -49,8 +49,8 @@ def extract_center_slice_modalities(volume: np.ndarray) -> np.ndarray:
     """
     extract 4 modalities from center slice
 
-    input: [12, H, W] (3 slices × 4 modalities)
-    output: [4, H, W] (center slice, 4 modalities)
+    input: [12, h, w] (3 slices × 4 modalities)
+    output: [4, h, w] (center slice, 4 modalities)
     """
     # 2.5d format: [slice0_mod0-3, slice1_mod0-3, slice2_mod0-3]
     # center slice is indices 4-7
@@ -84,9 +84,9 @@ def generate_comparison_grid(
     cols: input (a) | generated (b) | reconstructed (a)
 
     args:
-        inputs_a: [N, 12, H, W] input volumes
-        generated_b: [N, 4, H, W] generated translations
-        reconstructed_a: [N, 4, H, W] cycle reconstructions
+        inputs_a: [n, 12, h, w] input volumes
+        generated_b: [n, 4, h, w] generated translations
+        reconstructed_a: [n, 4, h, w] cycle reconstructions
         ssim_scores: list of ssim values for each sample
         output_path: where to save figure
         n_samples: number of samples to show
@@ -154,11 +154,11 @@ def generate_multimodality_grid(
     figure: show all 4 modalities for a single case
 
     layout:
-             Input    Generated
-    T1        img       img
-    T1ce      img       img
-    T2        img       img
-    FLAIR     img       img
+             input    generated
+    t1        img       img
+    t1ce      img       img
+    t2        img       img
+    flair     img       img
     """
     modality_names = ['T1', 'T1ce', 'T2', 'FLAIR']
 
@@ -208,9 +208,9 @@ def generate_attention_overlay(
     input_norm = normalize_for_display(input_img)
 
     # normalize attention (remove batch and channel dims if present)
-    if attention_map.ndim == 4:  # [B, C, H, W]
+    if attention_map.ndim == 4:  # [b, c, h, w]
         attention_map = attention_map[0, 0]
-    elif attention_map.ndim == 3:  # [B, H, W]
+    elif attention_map.ndim == 3:  # [b, h, w]
         attention_map = attention_map[0]
 
     # resize attention to match input if needed

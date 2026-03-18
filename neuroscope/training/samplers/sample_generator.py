@@ -1,10 +1,10 @@
 """
-Sample Generator.
+sample generator.
 
-Generates and saves visual samples during training for
+generates and saves visual samples during training for
 monitoring and publication purposes.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from typing import Optional, Dict, List, Tuple, Union
@@ -17,15 +17,15 @@ from datetime import datetime
 
 class SampleGenerator:
     """
-    Generates and saves visual samples during training.
+    generates and saves visual samples during training.
     
-    Features:
-    - Side-by-side comparison images
-    - Multi-modality visualization
-    - Image grids with labels
-    - Difference maps
-    - Histogram comparisons
-    - Training progress tracking
+    features:
+    - side-by-side comparison images
+    - multi-modality visualization
+    - image grids with labels
+    - difference maps
+    - histogram comparisons
+    - training progress tracking
     """
     
     def __init__(
@@ -38,15 +38,15 @@ class SampleGenerator:
         modality_names: Optional[List[str]] = None
     ):
         """
-        Initialize sample generator.
+        initialize sample generator.
         
-        Args:
-            output_dir: Directory to save samples
-            save_format: Image format ('png', 'jpg', 'pdf')
-            dpi: DPI for saved images
-            figsize: Figure size in inches
-            max_samples: Maximum number of samples per batch to visualize
-            modality_names: Names of MRI modalities
+        args:
+            output_dir: directory to save samples
+            save_format: image format ('png', 'jpg', 'pdf')
+            dpi: dpi for saved images
+            figsize: figure size in inches
+            max_samples: maximum number of samples per batch to visualize
+            modality_names: names of mri modalities
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -57,7 +57,7 @@ class SampleGenerator:
         self.max_samples = max_samples
         self.modality_names = modality_names or ['T1', 'T1Gd', 'T2', 'FLAIR']
         
-        # Create subdirectories
+        # create subdirectories
         self.comparisons_dir = self.output_dir / 'comparisons'
         self.modalities_dir = self.output_dir / 'modalities'
         self.difference_dir = self.output_dir / 'difference_maps'
@@ -67,17 +67,17 @@ class SampleGenerator:
                   self.difference_dir, self.grids_dir]:
             d.mkdir(parents=True, exist_ok=True)
             
-        # Track saved samples for animation
+        # track saved samples for animation
         self.sample_history: List[Dict] = []
         
     def _to_numpy(self, tensor: torch.Tensor) -> np.ndarray:
-        """Convert tensor to numpy array."""
+        """convert tensor to numpy array."""
         if isinstance(tensor, torch.Tensor):
             return tensor.detach().cpu().numpy()
         return tensor
         
     def _normalize_for_display(self, img: np.ndarray) -> np.ndarray:
-        """Normalize image to [0, 1] range for display."""
+        """normalize image to [0, 1] range for display."""
         img_min = img.min()
         img_max = img.max()
         if img_max - img_min > 1e-8:
@@ -98,39 +98,39 @@ class SampleGenerator:
         sample_idx: int = 0
     ) -> Path:
         """
-        Save side-by-side comparison of A→B→A and B→A→B cycles.
+        save side-by-side comparison of a→b→a and b→a→b cycles.
         
-        Args:
-            real_A: Real domain A images [B, C, H, W]
-            fake_B: Generated B images [B, C, H, W]
-            rec_A: Reconstructed A images [B, C, H, W]
-            real_B: Real domain B images [B, C, H, W]
-            fake_A: Generated A images [B, C, H, W]
-            rec_B: Reconstructed B images [B, C, H, W]
-            epoch: Current epoch
-            batch_idx: Batch index
-            modality_idx: Which modality to visualize
-            sample_idx: Which sample from batch
+        args:
+            real_a: real domain a images [b, c, h, w]
+            fake_b: generated b images [b, c, h, w]
+            rec_a: reconstructed a images [b, c, h, w]
+            real_b: real domain b images [b, c, h, w]
+            fake_a: generated a images [b, c, h, w]
+            rec_b: reconstructed b images [b, c, h, w]
+            epoch: current epoch
+            batch_idx: batch index
+            modality_idx: which modality to visualize
+            sample_idx: which sample from batch
             
-        Returns:
-            Path to saved figure
+        returns:
+            path to saved figure
         """
         try:
             import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
         except ImportError:
-            print("Warning: matplotlib not available for sample generation")
+            print("warning: matplotlib not available for sample generation")
             return None
             
-        # Extract single sample and modality
+        # extract single sample and modality
         def get_img(tensor, mod_idx=modality_idx, samp_idx=sample_idx):
             t = self._to_numpy(tensor)
-            if t.ndim == 4:  # [B, C, H, W]
+            if t.ndim == 4:  # [b, c, h, w]
                 if samp_idx < t.shape[0] and mod_idx < t.shape[1]:
                     return self._normalize_for_display(t[samp_idx, mod_idx])
             return np.zeros((64, 64))
             
-        # Get images
+        # get images
         img_real_A = get_img(real_A)
         img_fake_B = get_img(fake_B)
         img_rec_A = get_img(rec_A)
@@ -138,17 +138,17 @@ class SampleGenerator:
         img_fake_A = get_img(fake_A)
         img_rec_B = get_img(rec_B)
         
-        # Compute difference maps
+        # compute difference maps
         diff_A = np.abs(img_real_A - img_rec_A)
         diff_B = np.abs(img_real_B - img_rec_B)
         
-        # Create figure
+        # create figure
         fig = plt.figure(figsize=self.figsize)
         gs = gridspec.GridSpec(2, 4, figure=fig, hspace=0.1, wspace=0.1)
         
         modality_name = self.modality_names[modality_idx] if modality_idx < len(self.modality_names) else f'Mod{modality_idx}'
         
-        # Row 1: A → B → A cycle
+        # row 1: a → b → a cycle
         ax1 = fig.add_subplot(gs[0, 0])
         ax1.imshow(img_real_A, cmap='gray', vmin=0, vmax=1)
         ax1.set_title(f'Real A ({modality_name})', fontsize=10)
@@ -169,7 +169,7 @@ class SampleGenerator:
         ax4.set_title('|Real A - Rec A|', fontsize=10)
         ax4.axis('off')
         
-        # Row 2: B → A → B cycle
+        # row 2: b → a → b cycle
         ax5 = fig.add_subplot(gs[1, 0])
         ax5.imshow(img_real_B, cmap='gray', vmin=0, vmax=1)
         ax5.set_title(f'Real B ({modality_name})', fontsize=10)
@@ -190,11 +190,11 @@ class SampleGenerator:
         ax8.set_title('|Real B - Rec B|', fontsize=10)
         ax8.axis('off')
         
-        # Add epoch info
+        # add epoch info
         fig.suptitle(f'Epoch {epoch} - Batch {batch_idx} - {modality_name}', 
                     fontsize=12, fontweight='bold')
         
-        # Save
+        # save
         filename = f'comparison_epoch{epoch:04d}_batch{batch_idx:04d}_{modality_name}.{self.save_format}'
         filepath = self.comparisons_dir / filename
         plt.savefig(filepath, dpi=self.dpi, bbox_inches='tight', 
@@ -213,18 +213,18 @@ class SampleGenerator:
         sample_idx: int = 0
     ) -> Path:
         """
-        Save comparison across all modalities.
+        save comparison across all modalities.
         
-        Args:
-            real_A: Real domain A images [B, C, H, W]
-            fake_B: Generated B images [B, C, H, W]
-            real_B: Real domain B images [B, C, H, W]
-            fake_A: Generated A images [B, C, H, W]
-            epoch: Current epoch
-            sample_idx: Which sample from batch
+        args:
+            real_a: real domain a images [b, c, h, w]
+            fake_b: generated b images [b, c, h, w]
+            real_b: real domain b images [b, c, h, w]
+            fake_a: generated a images [b, c, h, w]
+            epoch: current epoch
+            sample_idx: which sample from batch
             
-        Returns:
-            Path to saved figure
+        returns:
+            path to saved figure
         """
         try:
             import matplotlib.pyplot as plt
@@ -236,7 +236,7 @@ class SampleGenerator:
         fig, axes = plt.subplots(4, n_modalities, figsize=(4*n_modalities, 12))
         
         for i in range(n_modalities):
-            # Get images for this modality
+            # get images for this modality
             img_real_A = self._normalize_for_display(
                 self._to_numpy(real_A[sample_idx, i])
             )
@@ -250,7 +250,7 @@ class SampleGenerator:
                 self._to_numpy(fake_A[sample_idx, i])
             )
             
-            # Plot
+            # plot
             axes[0, i].imshow(img_real_A, cmap='gray', vmin=0, vmax=1)
             axes[0, i].set_title(f'{self.modality_names[i]}', fontsize=10)
             axes[0, i].axis('off')
@@ -294,18 +294,18 @@ class SampleGenerator:
         modality_idx: int = 0
     ) -> Path:
         """
-        Save a grid of sample images.
+        save a grid of sample images.
         
-        Args:
-            images: Batch of images [B, C, H, W]
-            epoch: Current epoch
-            name: Name for the grid
-            nrow: Number of images per row
-            normalize: Whether to normalize images
-            modality_idx: Which modality channel to visualize
+        args:
+            images: batch of images [b, c, h, w]
+            epoch: current epoch
+            name: name for the grid
+            nrow: number of images per row
+            normalize: whether to normalize images
+            modality_idx: which modality channel to visualize
             
-        Returns:
-            Path to saved figure
+        returns:
+            path to saved figure
         """
         try:
             import matplotlib.pyplot as plt
@@ -331,7 +331,7 @@ class SampleGenerator:
             axes[row, col].imshow(img, cmap='gray', vmin=0, vmax=1)
             axes[row, col].axis('off')
             
-        # Hide unused subplots
+        # hide unused subplots
         for idx in range(n_samples, nrow_grid * ncol):
             row = idx // ncol
             col = idx % ncol
@@ -359,18 +359,18 @@ class SampleGenerator:
         modality_idx: int = 0
     ) -> Path:
         """
-        Save a difference/error map between original and reconstructed.
+        save a difference/error map between original and reconstructed.
         
-        Args:
-            original: Original images [B, C, H, W]
-            reconstructed: Reconstructed images [B, C, H, W]
-            epoch: Current epoch
-            name: Name for the difference map
-            sample_idx: Which sample from batch
-            modality_idx: Which modality
+        args:
+            original: original images [b, c, h, w]
+            reconstructed: reconstructed images [b, c, h, w]
+            epoch: current epoch
+            name: name for the difference map
+            sample_idx: which sample from batch
+            modality_idx: which modality
             
-        Returns:
-            Path to saved figure
+        returns:
+            path to saved figure
         """
         try:
             import matplotlib.pyplot as plt
@@ -388,25 +388,25 @@ class SampleGenerator:
         
         fig, axes = plt.subplots(1, 4, figsize=(16, 4))
         
-        # Original
+        # original
         im0 = axes[0].imshow(orig, cmap='gray', vmin=0, vmax=1)
         axes[0].set_title('Original')
         axes[0].axis('off')
         plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
         
-        # Reconstructed
+        # reconstructed
         im1 = axes[1].imshow(recon, cmap='gray', vmin=0, vmax=1)
         axes[1].set_title('Reconstructed')
         axes[1].axis('off')
         plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
         
-        # Difference (heat map)
+        # difference (heat map)
         im2 = axes[2].imshow(diff, cmap='hot', vmin=0, vmax=0.5)
         axes[2].set_title(f'Absolute Difference\nMean: {diff.mean():.4f}')
         axes[2].axis('off')
         plt.colorbar(im2, ax=axes[2], fraction=0.046, pad=0.04)
         
-        # Histogram of differences
+        # histogram of differences
         axes[3].hist(diff.flatten(), bins=50, color='steelblue', alpha=0.7, edgecolor='black')
         axes[3].set_xlabel('Difference Value')
         axes[3].set_ylabel('Frequency')
@@ -438,13 +438,13 @@ class SampleGenerator:
         batch_idx: int = 0
     ) -> Dict[str, Path]:
         """
-        Generate all sample types for a batch.
+        generate all sample types for a batch.
         
-        Returns dictionary of sample type -> file path
+        returns dictionary of sample type -> file path
         """
         results = {}
         
-        # Per-modality comparisons
+        # per-modality comparisons
         n_modalities = min(real_A.shape[1], len(self.modality_names))
         for mod_idx in range(n_modalities):
             path = self.save_comparison(
@@ -455,15 +455,15 @@ class SampleGenerator:
             if path:
                 results[f'comparison_{self.modality_names[mod_idx]}'] = path
                 
-        # Multi-modality view
+        # multi-modality view
         path = self.save_multi_modality_comparison(
             real_A, fake_B, real_B, fake_A, epoch
         )
         if path:
             results['multi_modality'] = path
             
-        # Difference maps
-        for mod_idx in range(min(2, n_modalities)):  # Just first 2 modalities
+        # difference maps
+        for mod_idx in range(min(2, n_modalities)):  # just first 2 modalities
             path = self.save_difference_map(
                 real_A, rec_A, epoch,
                 name='diff_A2B2A',
@@ -472,7 +472,7 @@ class SampleGenerator:
             if path:
                 results[f'diff_A_{self.modality_names[mod_idx]}'] = path
                 
-        # Sample grids
+        # sample grids
         path = self.save_sample_grid(fake_B, epoch, name='fake_B')
         if path:
             results['grid_fake_B'] = path
@@ -484,5 +484,5 @@ class SampleGenerator:
         return results
         
     def close(self):
-        """Cleanup."""
+        """cleanup."""
         pass

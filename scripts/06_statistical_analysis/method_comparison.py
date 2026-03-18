@@ -372,7 +372,7 @@ def plot_radar_comparison(
     if raw is None:
         return
 
-    # metrics and their directions (True = higher is better, False = lower is better)
+    # metrics and their directions (true = higher is better, false = lower is better)
     metrics = {
         'Domain\nSeparation\nReduction': ('domain_accuracy', False),
         'MMD\nReduction': ('mmd', False),
@@ -416,7 +416,7 @@ def plot_radar_comparison(
     ax.set_xticks(angles[:-1])
     labels = ax.set_xticklabels(list(metrics.keys()), fontsize=11)
     ax.tick_params(axis='x', pad=15)
-    # extra padding for "Domain Separation Reduction" label (first label)
+    # extra padding for "domain separation reduction" label (first label)
     labels[0].set_y(labels[0].get_position()[1] - 0.04)
     ax.set_ylim(0, 1)
     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
@@ -500,10 +500,10 @@ def plot_statistical_summary(
 
     fig = plt.figure(figsize=(16, 9))
 
-    # Top row: 3 plots spanning full width
+    # top row: 3 plots spanning full width
     gs_top = gridspec.GridSpec(2, 3, figure=fig, hspace=0.4, wspace=0.35,
                                 top=0.88, bottom=0.06)
-    # Bottom row: 7-col grid for centering 2 plots
+    # bottom row: 7-col grid for centering 2 plots
     gs_bot = gridspec.GridSpec(2, 7, figure=fig, hspace=0.4, wspace=0.35,
                                 top=0.88, bottom=0.06)
 

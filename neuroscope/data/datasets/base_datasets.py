@@ -1,8 +1,8 @@
 """
-Dataset Classes for Medical Image Analysis.
+dataset classes for medical image analysis.
 
-Provides comprehensive dataset implementations for multi-modal
-MRI data from BraTS, UPenn-GBM, and custom sources.
+provides comprehensive dataset implementations for multi-modal
+mri data from brats, upenn-gbm, and custom sources.
 """
 
 from typing import List, Optional, Dict, Tuple, Union, Callable, Any
@@ -24,7 +24,7 @@ except ImportError:
 
 @dataclass
 class DatasetConfig:
-    """Configuration for dataset creation."""
+    """configuration for dataset creation."""
     root_dir: str
     modalities: List[str] = field(default_factory=lambda: ['t1', 't1ce', 't2', 'flair'])
     include_segmentation: bool = False
@@ -39,9 +39,9 @@ class DatasetConfig:
 
 class BaseDataset(Dataset, ABC):
     """
-    Abstract base class for all datasets.
+    abstract base class for all datasets.
     
-    Provides common functionality for medical image datasets.
+    provides common functionality for medical image datasets.
     """
     
     def __init__(
@@ -57,21 +57,21 @@ class BaseDataset(Dataset, ABC):
         self.target_transform = target_transform
         self.return_metadata = return_metadata
         
-        # Validate root directory
+        # validate root directory
         if not self.root_dir.exists():
             raise ValueError(f"Root directory does not exist: {self.root_dir}")
         
-        # Initialize sample list
+        # initialize sample list
         self.samples = self._load_samples()
     
     @abstractmethod
     def _load_samples(self) -> List[Dict[str, Any]]:
-        """Load list of samples. Must be implemented by subclasses."""
+        """load list of samples. must be implemented by subclasses."""
         pass
     
     @abstractmethod
     def _load_item(self, index: int) -> Dict[str, Any]:
-        """Load a single item. Must be implemented by subclasses."""
+        """load a single item. must be implemented by subclasses."""
         pass
     
     def __len__(self) -> int:
@@ -86,15 +86,15 @@ class BaseDataset(Dataset, ABC):
         return item
     
     def get_sample_info(self, index: int) -> Dict[str, Any]:
-        """Get metadata for a sample without loading the full data."""
+        """get metadata for a sample without loading the full data."""
         return self.samples[index]
 
 
 class PairedDataset(BaseDataset):
     """
-    Dataset for paired image-to-image translation.
+    dataset for paired image-to-image translation.
     
-    Each sample contains corresponding source and target images.
+    each sample contains corresponding source and target images.
     """
     
     def __init__(
@@ -119,7 +119,7 @@ class PairedDataset(BaseDataset):
         if source_dir.exists():
             for source_path in sorted(source_dir.iterdir()):
                 if any(source_path.name.endswith(ext) for ext in self.extensions):
-                    # Find corresponding target
+                    # find corresponding target
                     target_path = target_dir / source_path.name
                     if target_path.exists():
                         samples.append({
@@ -143,7 +143,7 @@ class PairedDataset(BaseDataset):
         }
     
     def _load_image(self, path: Path) -> np.ndarray:
-        """Load image from various formats."""
+        """load image from various formats."""
         path = Path(path)
         
         if path.suffix in ['.npy']:
@@ -158,9 +158,9 @@ class PairedDataset(BaseDataset):
 
 class UnpairedDataset(BaseDataset):
     """
-    Dataset for unpaired image-to-image translation.
+    dataset for unpaired image-to-image translation.
     
-    Source and target domains are loaded independently.
+    source and target domains are loaded independently.
     """
     
     def __init__(
@@ -178,10 +178,10 @@ class UnpairedDataset(BaseDataset):
         self.target_transform = target_transform
         self.extensions = extensions or ['.nii', '.nii.gz', '.npy', '.npz']
         
-        # Use source_dir as root for base class
+        # use source_dir as root for base class
         super().__init__(source_dir, transform)
         
-        # Load target samples separately
+        # load target samples separately
         self.target_samples = self._load_domain_samples(self.target_dir)
     
     def _load_samples(self) -> List[Dict[str, Any]]:
@@ -203,7 +203,7 @@ class UnpairedDataset(BaseDataset):
     def _load_item(self, index: int) -> Dict[str, Any]:
         source_sample = self.samples[index]
         
-        # Random target selection for unpaired training
+        # random target selection for unpaired training
         target_idx = random.randint(0, len(self.target_samples) - 1)
         target_sample = self.target_samples[target_idx]
         
@@ -237,9 +237,9 @@ class UnpairedDataset(BaseDataset):
 
 class BraTSDataset(BaseDataset):
     """
-    BraTS (Brain Tumor Segmentation) Challenge Dataset.
+    brats (brain tumor segmentation) challenge dataset.
     
-    Supports BraTS 2020/2021 format with T1, T1ce, T2, FLAIR modalities.
+    supports brats 2020/2021 format with t1, t1ce, t2, flair modalities.
     """
     
     MODALITY_SUFFIXES = {
@@ -264,7 +264,7 @@ class BraTSDataset(BaseDataset):
         self.modalities = modalities or ['t1', 't1ce', 't2', 'flair']
         self.include_segmentation = include_segmentation
         self.slice_axis = slice_axis
-        self.slice_range = slice_range or (30, 130)  # Default to central slices
+        self.slice_range = slice_range or (30, 130)  # default to central slices
         self.preload = preload
         self.cache_slices = cache_slices
         
@@ -278,12 +278,12 @@ class BraTSDataset(BaseDataset):
     def _load_samples(self) -> List[Dict[str, Any]]:
         samples = []
         
-        # Find all subject directories
+        # find all subject directories
         for subject_dir in sorted(self.root_dir.iterdir()):
             if subject_dir.is_dir() and subject_dir.name.startswith('BraTS'):
                 subject_id = subject_dir.name
                 
-                # Verify all modalities exist
+                # verify all modalities exist
                 modality_paths = {}
                 valid = True
                 
@@ -298,13 +298,13 @@ class BraTSDataset(BaseDataset):
                         break
                 
                 if valid:
-                    # Add segmentation if requested
+                    # add segmentation if requested
                     if self.include_segmentation:
                         seg_path = subject_dir / f"{subject_id}_seg.nii.gz"
                         if seg_path.exists():
                             modality_paths['seg'] = seg_path
                     
-                    # Create sample entries for each slice
+                    # create sample entries for each slice
                     for slice_idx in range(self.slice_range[0], self.slice_range[1]):
                         samples.append({
                             'subject_id': subject_id,
@@ -319,12 +319,12 @@ class BraTSDataset(BaseDataset):
         subject_id = sample['subject_id']
         slice_idx = sample['slice_idx']
         
-        # Check cache
+        # check cache
         cache_key = f"{subject_id}_{slice_idx}"
         if self.cache_slices and cache_key in self._cache:
             return self._cache[cache_key]
         
-        # Load modalities
+        # load modalities
         modality_data = []
         for modality in self.modalities:
             path = sample['modality_paths'][modality]
@@ -334,7 +334,7 @@ class BraTSDataset(BaseDataset):
             else:
                 raise RuntimeError("nibabel is required for loading NIfTI files")
             
-            # Extract slice
+            # extract slice
             if self.slice_axis == 0:
                 slice_data = volume[slice_idx, :, :]
             elif self.slice_axis == 1:
@@ -344,7 +344,7 @@ class BraTSDataset(BaseDataset):
             
             modality_data.append(slice_data)
         
-        # Stack modalities: [C, H, W]
+        # stack modalities: [c, h, w]
         image = np.stack(modality_data, axis=0).astype(np.float32)
         
         item = {
@@ -353,7 +353,7 @@ class BraTSDataset(BaseDataset):
             'slice_idx': slice_idx
         }
         
-        # Load segmentation if requested
+        # load segmentation if requested
         if self.include_segmentation and 'seg' in sample['modality_paths']:
             seg_path = sample['modality_paths']['seg']
             seg_volume = nib.load(str(seg_path)).get_fdata()
@@ -373,21 +373,21 @@ class BraTSDataset(BaseDataset):
         return item
     
     def _preload_data(self):
-        """Preload all data into memory."""
-        print(f"Preloading {len(self)} samples...")
+        """preload all data into memory."""
+        print(f"preloading {len(self)} samples...")
         for i in range(len(self)):
             _ = self._load_item(i)
     
     def get_subject_ids(self) -> List[str]:
-        """Get list of unique subject IDs."""
+        """get list of unique subject ids."""
         return list(set(s['subject_id'] for s in self.samples))
 
 
 class UPennGBMDataset(BaseDataset):
     """
-    University of Pennsylvania GBM Dataset.
+    university of pennsylvania gbm dataset.
     
-    Large-scale glioblastoma imaging dataset with multiple modalities.
+    large-scale glioblastoma imaging dataset with multiple modalities.
     """
     
     def __init__(
@@ -416,7 +416,7 @@ class UPennGBMDataset(BaseDataset):
                 valid = True
                 
                 for modality in self.modalities:
-                    # Try different naming conventions
+                    # try different naming conventions
                     possible_names = [
                         f"{subject_id}_{modality}.nii.gz",
                         f"{modality}.nii.gz",
@@ -479,9 +479,9 @@ class UPennGBMDataset(BaseDataset):
 
 class MultiModalMRIDataset(BaseDataset):
     """
-    Generic multi-modal MRI dataset.
+    generic multi-modal mri dataset.
     
-    Supports flexible directory structures and modality configurations.
+    supports flexible directory structures and modality configurations.
     """
     
     def __init__(
@@ -506,7 +506,7 @@ class MultiModalMRIDataset(BaseDataset):
     def _load_samples(self) -> List[Dict[str, Any]]:
         samples = []
         
-        # Get files from first modality
+        # get files from first modality
         first_modality = list(self.modality_dirs.keys())[0]
         first_dir = self.root_dir / self.modality_dirs[first_modality]
         
@@ -515,7 +515,7 @@ class MultiModalMRIDataset(BaseDataset):
                 sample_id = path.stem
                 modality_paths = {first_modality: path}
                 
-                # Find other modalities
+                # find other modalities
                 valid = True
                 for modality, subdir in self.modality_dirs.items():
                     if modality != first_modality:
@@ -558,9 +558,9 @@ class MultiModalMRIDataset(BaseDataset):
 
 class DomainAdaptationDataset(Dataset):
     """
-    Dataset for domain adaptation between two image domains.
+    dataset for domain adaptation between two image domains.
     
-    Wraps source and target datasets for training.
+    wraps source and target datasets for training.
     """
     
     def __init__(
@@ -598,9 +598,9 @@ class DomainAdaptationDataset(Dataset):
 
 class CycleGANDataset(Dataset):
     """
-    Dataset specifically designed for CycleGAN training.
+    dataset specifically designed for cyclegan training.
     
-    Handles unpaired domain translation with proper sampling.
+    handles unpaired domain translation with proper sampling.
     """
     
     def __init__(
@@ -628,7 +628,7 @@ class CycleGANDataset(Dataset):
         item_a = self.domain_a[idx_a]
         item_b = self.domain_b[idx_b]
         
-        # Extract image tensors
+        # extract image tensors
         if isinstance(item_a, dict):
             real_a = item_a.get('image', item_a.get('source'))
         else:
@@ -639,7 +639,7 @@ class CycleGANDataset(Dataset):
         else:
             real_b = item_b
         
-        # Apply transforms
+        # apply transforms
         if self.transform_a:
             real_a = self.transform_a(real_a)
         if self.transform_b:
@@ -659,15 +659,15 @@ def create_dataset(
     **kwargs
 ) -> Dataset:
     """
-    Factory function to create dataset by type.
+    factory function to create dataset by type.
     
-    Args:
-        dataset_type: Type of dataset ('brats', 'upenn', 'paired', 'unpaired')
-        root_dir: Root directory for data
-        **kwargs: Additional arguments for dataset
+    args:
+        dataset_type: type of dataset ('brats', 'upenn', 'paired', 'unpaired')
+        root_dir: root directory for data
+        **kwargs: additional arguments for dataset
         
-    Returns:
-        Dataset instance
+    returns:
+        dataset instance
     """
     datasets = {
         'brats': BraTSDataset,
@@ -685,14 +685,14 @@ def create_dataset(
 
 def get_dataset_stats(dataset: Dataset, num_samples: int = 100) -> Dict[str, float]:
     """
-    Compute dataset statistics (mean, std) from samples.
+    compute dataset statistics (mean, std) from samples.
     
-    Args:
-        dataset: Dataset to analyze
-        num_samples: Number of samples to use
+    args:
+        dataset: dataset to analyze
+        num_samples: number of samples to use
         
-    Returns:
-        Dictionary with mean and std per channel
+    returns:
+        dictionary with mean and std per channel
     """
     num_samples = min(num_samples, len(dataset))
     indices = random.sample(range(len(dataset)), num_samples)
@@ -710,7 +710,7 @@ def get_dataset_stats(dataset: Dataset, num_samples: int = 100) -> Dict[str, flo
         
         all_data.append(data)
     
-    stacked = np.stack(all_data, axis=0)  # [N, C, H, W]
+    stacked = np.stack(all_data, axis=0)  # [n, c, h, w]
     
     mean = stacked.mean(axis=(0, 2, 3))
     std = stacked.std(axis=(0, 2, 3))

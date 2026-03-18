@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Generate Dataset and Preprocessing Figures for Publication
+generate dataset and preprocessing figures for publication
 
-Creates comprehensive visualizations of:
-- Dataset statistics and distributions
-- Train/val/test splits
-- Domain characteristics
-- Preprocessing pipeline
-- Data flow diagrams
+creates comprehensive visualizations of:
+- dataset statistics and distributions
+- train/val/test splits
+- domain characteristics
+- preprocessing pipeline
+- data flow diagrams
 
-Author: NeuroScope Research Team
-Date: January 2026
+author: neuroscope research team
+date: january 2026
 """
 
 import sys
@@ -32,16 +32,16 @@ OUTPUT_DIR = PROJECT_ROOT / 'figures/main'
 
 def generate_dataset_statistics_figure():
     """
-    Figure: Dataset Statistics and Splits
+    figure: dataset statistics and splits
 
-    Shows sample counts, domain distributions, and train/val/test splits.
+    shows sample counts, domain distributions, and train/val/test splits.
     """
-    print("Generating: Dataset Statistics...")
+    print("generating: dataset statistics...")
 
     fig, axes = plt.subplots(1, 3, figsize=(16, 6))
     plt.subplots_adjust(wspace=0.3, top=0.88)
 
-    # Dataset sizes - sapphire and coral
+    # dataset sizes - sapphire and coral
     ax = axes[0]
     datasets = ['BraTS\n(Domain A)', 'UPenn-GBM\n(Domain B)']
     samples = [8184, 52638]
@@ -54,21 +54,21 @@ def generate_dataset_statistics_figure():
     ax.grid(True, alpha=0.3, axis='y')
     ax.set_axisbelow(True)
 
-    # Add value labels on bars
+    # add value labels on bars
     for bar, val in zip(bars, samples):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
                 f'{val:,}',
                 ha='center', va='bottom', fontsize=11)
 
-    # Add imbalance ratio annotation
+    # add imbalance ratio annotation
     ratio = samples[1] / samples[0]
     ax.text(0.5, 0.95, f'Imbalance ratio: {ratio:.1f}:1',
             transform=ax.transAxes, ha='center', va='top',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3),
             fontsize=10)
 
-    # Train/Val/Test splits - marigold, sage, slate
+    # train/val/test splits - marigold, sage, slate
     ax = axes[1]
     splits = ['Train', 'Val', 'Test']
     split_samples = [42110, 5263, 5265]
@@ -81,7 +81,7 @@ def generate_dataset_statistics_figure():
     ax.grid(True, alpha=0.3, axis='y')
     ax.set_axisbelow(True)
 
-    # Add value labels and percentages
+    # add value labels and percentages
     total = sum(split_samples)
     for bar, val in zip(bars, split_samples):
         height = bar.get_height()
@@ -90,7 +90,7 @@ def generate_dataset_statistics_figure():
                 f'{val:,}\n({pct:.1f}\%)',
                 ha='center', va='bottom', fontsize=10)
 
-    # Epoch length comparison
+    # epoch length comparison
     ax = axes[2]
     components = ['Smaller\nDomain', 'Larger\nDomain\n(Epoch Length)', 'Training\nBatches']
     values = [8184, 52638, 5264]
@@ -104,7 +104,7 @@ def generate_dataset_statistics_figure():
     ax.set_yscale('log')
     ax.set_axisbelow(True)
 
-    # Add value labels
+    # add value labels
     for bar, val in zip(bars, values):
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
@@ -119,22 +119,22 @@ def generate_dataset_statistics_figure():
 
 def generate_preprocessing_pipeline_figure():
     """
-    Figure: Preprocessing Pipeline Diagram
+    figure: preprocessing pipeline diagram
 
-    Shows the data flow from raw NIfTI to 2.5D slice triplets.
+    shows the data flow from raw nifti to 2.5d slice triplets.
     """
-    print("Generating: Preprocessing Pipeline...")
+    print("generating: preprocessing pipeline...")
 
     fig, ax = plt.subplots(figsize=(14, 7))
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 8)
     ax.axis('off')
 
-    # Title
+    # title
     fig.suptitle(r'\textbf{Preprocessing Pipeline: Raw MRI to 2.5D Slice Triplets}',
                  fontsize=16, y=0.98)
 
-    # Define pipeline stages - unique colors: plum, tawny, pine, mulberry, cadet, brick, pewter
+    # define pipeline stages - unique colors: plum, tawny, pine, mulberry, cadet, brick, pewter
     stages = [
         {'name': 'Raw NIfTI\nVolumes', 'y': 7, 'color': '#8E4585'},       # plum
         {'name': 'Skull\nStripping', 'y': 6, 'color': '#CF6A4C'},         # tawny
@@ -145,9 +145,9 @@ def generate_preprocessing_pipeline_figure():
         {'name': 'Output:\n[B, 12, H, W]', 'y': 1, 'color': '#8F8F8F'},  # pewter
     ]
 
-    # Draw pipeline boxes and arrows
+    # draw pipeline boxes and arrows
     for i, stage in enumerate(stages):
-        # Box
+        # box
         rect = mpatches.FancyBboxPatch((1, stage['y']-0.3), 3, 0.6,
                                        boxstyle="round,pad=0.1",
                                        facecolor=stage['color'],
@@ -156,17 +156,17 @@ def generate_preprocessing_pipeline_figure():
                                        linewidth=1.5)
         ax.add_patch(rect)
 
-        # Text
+        # text
         ax.text(2.5, stage['y'], stage['name'],
                 ha='center', va='center',
                 fontsize=10, fontweight='bold')
 
-        # Arrow to next stage
+        # arrow to next stage
         if i < len(stages) - 1:
             ax.annotate('', xy=(2.5, stage['y']-0.4), xytext=(2.5, stage['y']-0.7),
                        arrowprops=dict(arrowstyle='->', lw=2, color='black'))
 
-    # Add details on the right
+    # add details on the right
     details = [
         (7, r'4 modalities: T1, T1ce, T2, FLAIR'),
         (6, r'HD-BET for robust skull stripping'),
@@ -181,7 +181,7 @@ def generate_preprocessing_pipeline_figure():
         ax.text(5.5, y, text, ha='left', va='center', fontsize=10,
                bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.3))
 
-    # Add data shape evolution
+    # add data shape evolution
     ax.text(8.5, 7, r'$[H, W, D, 4]$', ha='center', fontsize=11,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='black'))
     ax.text(8.5, 3, r'$[D-2, 4, 3, H, W]$', ha='center', fontsize=11,
@@ -196,11 +196,11 @@ def generate_preprocessing_pipeline_figure():
 
 def generate_25d_processing_figure():
     """
-    Figure: 2.5D Processing Illustration
+    figure: 2.5d processing illustration
 
-    Shows how 3 adjacent slices are processed to generate center slice.
+    shows how 3 adjacent slices are processed to generate center slice.
     """
-    print("Generating: 2.5D Processing Illustration...")
+    print("generating: 2.5d processing illustration...")
 
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.set_xlim(0, 12)
@@ -210,7 +210,7 @@ def generate_25d_processing_figure():
     fig.suptitle(r'\textbf{2.5D Processing: Context-Aware Slice Translation}',
                  fontsize=16, y=0.98)
 
-    # Input: 3 slices - indigo
+    # input: 3 slices - indigo
     input_y = 4
     slice_positions = [1, 2, 3]
     slice_labels = [r'Slice $i-1$', r'Slice $i$', r'Slice $i+1$']
@@ -225,16 +225,16 @@ def generate_25d_processing_figure():
         ax.add_patch(rect)
         ax.text(pos+0.4, input_y-0.7, label, ha='center', fontsize=10)
 
-    # Stack annotation
+    # stack annotation
     ax.text(2, input_y+1.8, r'Input: 3 slices $\times$ 4 modalities = 12 channels',
            ha='center', fontsize=11,
            bbox=dict(boxstyle='round,pad=0.3', facecolor='#D6C4E0', alpha=0.4))
 
-    # Arrow to generator
+    # arrow to generator
     ax.annotate('', xy=(5, input_y+0.5), xytext=(4, input_y+0.5),
                arrowprops=dict(arrowstyle='->', lw=3, color='black'))
 
-    # Generator box - teal green
+    # generator box - teal green
     gen_rect = mpatches.FancyBboxPatch((5, input_y-0.2), 2, 1.4,
                                        boxstyle="round,pad=0.1",
                                        facecolor='#008080',
@@ -247,11 +247,11 @@ def generate_25d_processing_figure():
     ax.text(6, input_y+0.1, r'(with attention)', ha='center', va='center',
            fontsize=10)
 
-    # Arrow to output
+    # arrow to output
     ax.annotate('', xy=(8, input_y+0.5), xytext=(7.2, input_y+0.5),
                arrowprops=dict(arrowstyle='->', lw=3, color='black'))
 
-    # Output: center slice - terracotta
+    # output: center slice - terracotta
     output_x = 8.5
     out_rect = mpatches.Rectangle((output_x, input_y-0.1), 1, 1.2,
                                   facecolor='#CC6644',
@@ -261,12 +261,12 @@ def generate_25d_processing_figure():
     ax.add_patch(out_rect)
     ax.text(output_x+0.5, input_y-0.5, r'Translated Slice $i$', ha='center', fontsize=10)
 
-    # Output annotation
+    # output annotation
     ax.text(9, input_y+1.3, r'Output: 1 slice $\times$ 4 modalities',
            ha='center', fontsize=11,
            bbox=dict(boxstyle='round,pad=0.3', facecolor='#C1E1C1', alpha=0.4))
 
-    # Add advantage boxes at bottom
+    # add advantage boxes at bottom
     advantages = [
         r'\textbf{Advantages:}',
         r'$\bullet$ 3D context from adjacent slices',
@@ -280,7 +280,7 @@ def generate_25d_processing_figure():
         ax.text(2, y_pos, adv, ha='left', fontsize=10)
         y_pos -= 0.4
 
-    # Add dimensions
+    # add dimensions
     ax.text(10.5, input_y+0.5, r'Input: $[B, 12, H, W]$', ha='left', fontsize=10,
            bbox=dict(boxstyle='round', facecolor='white', edgecolor='gray'))
     ax.text(10.5, input_y-0.2, r'Output: $[B, 4, H, W]$', ha='left', fontsize=10,
@@ -293,11 +293,11 @@ def generate_25d_processing_figure():
 
 def generate_training_overview_figure():
     """
-    Figure: Training Overview and Configuration
+    figure: training overview and configuration
 
-    Shows complete training setup: data flow, model, losses, optimization.
+    shows complete training setup: data flow, model, losses, optimization.
     """
-    print("Generating: Training Overview...")
+    print("generating: training overview...")
 
     fig = plt.figure(figsize=(14, 7))
     ax = fig.add_subplot(111)
@@ -308,7 +308,7 @@ def generate_training_overview_figure():
     fig.suptitle(r'\textbf{SA-CycleGAN-2.5D Training Configuration}',
                  fontsize=16, y=0.98)
 
-    # Hyperparameters box
+    # hyperparameters box
     hp_text = [
         r'\textbf{Hyperparameters:}',
         r'Epochs: 100',
@@ -324,7 +324,7 @@ def generate_training_overview_figure():
         ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
-    # Loss weights box
+    # loss weights box
     loss_text = [
         r'\textbf{Loss Weights:}',
         r'$\lambda_{\text{cycle}} = 10.0$',
@@ -337,7 +337,7 @@ def generate_training_overview_figure():
         ax.text(5.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.5
 
-    # Architecture specs
+    # architecture specs
     arch_text = [
         r'\textbf{Model Architecture:}',
         r'Generator: ResNet-based (9 blocks)',
@@ -352,7 +352,7 @@ def generate_training_overview_figure():
         ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
-    # Training stats
+    # training stats
     stats_text = [
         r'\textbf{Training Statistics:}',
         r'Training samples: 42,110',
@@ -368,7 +368,7 @@ def generate_training_overview_figure():
         ax.text(5.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
-    # Data augmentation
+    # data augmentation
     aug_text = [
         r'\textbf{Data Augmentation:}',
         r'Random horizontal flip',
@@ -381,7 +381,7 @@ def generate_training_overview_figure():
         ax.text(0.5, y_pos, text, ha='left', fontsize=9)
         y_pos -= 0.4
 
-    # Regularization
+    # regularization
     reg_text = [
         r'\textbf{Regularization:}',
         r'Gradient clipping: L2 norm $\leq 1.0$',
@@ -400,9 +400,9 @@ def generate_training_overview_figure():
 
 
 def main():
-    """Generate all dataset and preprocessing figures."""
+    """generate all dataset and preprocessing figures."""
     print("="*60)
-    print("Generating Dataset and Preprocessing Figures")
+    print("generating dataset and preprocessing figures")
     print("="*60)
 
     generate_dataset_statistics_figure()
@@ -411,8 +411,8 @@ def main():
     generate_training_overview_figure()
 
     print("\n" + "="*60)
-    print("Dataset figures generation complete!")
-    print(f"Figures saved to: {OUTPUT_DIR}/")
+    print("dataset figures generation complete!")
+    print(f"figures saved to: {OUTPUT_DIR}/")
     print("="*60)
 
 

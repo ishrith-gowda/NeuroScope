@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Bias field correction script using the N4BiasFieldCorrection module.
+bias field correction script using the n4biasfieldcorrection module.
 
-This script applies N4 bias field correction to MRI volumes.
+this script applies n4 bias field correction to mri volumes.
 """
 
 import argparse
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import sys
 
-# Add the project root to the Python path if not already there
+# add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -22,7 +22,7 @@ from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """parse command line arguments."""
     parser = argparse.ArgumentParser(description='Apply N4 bias field correction to MRI volumes.')
     parser.add_argument('--input-dir', type=str, required=True,
                         help='Input directory containing MRI volumes')
@@ -53,18 +53,18 @@ def parse_args():
 
 
 def main():
-    """Main function."""
+    """main function."""
     args = parse_args()
     
-    # Set up logging
+    # set up logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     setup_logging(log_level=log_level)
     logger = get_logger(__name__)
     
-    # Create output directory
+    # create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # Initialize N4 correction
+    # initialize n4 correction
     n4_correction = N4BiasFieldCorrection(
         shrink_factor=args.shrink_factor,
         iterations=args.iterations,
@@ -74,7 +74,7 @@ def main():
         save_bias_field=args.save_bias
     )
     
-    # Process volumes
+    # process volumes
     results = n4_correction.batch_process(
         input_dir=args.input_dir,
         output_dir=args.output_dir,
@@ -83,7 +83,7 @@ def main():
         save_bias=args.save_bias
     )
     
-    # Save metrics to JSON if requested
+    # save metrics to json if requested
     if args.output_json:
         with open(args.output_json, 'w') as f:
             json.dump(results, f, indent=2)
@@ -91,7 +91,7 @@ def main():
     
     logger.info("N4 bias field correction complete")
     
-    # Compute summary statistics
+    # compute summary statistics
     if results:
         cv_improvements = [res['cv_improvement_percent'] for res in results.values()]
         avg_improvement = sum(cv_improvements) / len(cv_improvements)

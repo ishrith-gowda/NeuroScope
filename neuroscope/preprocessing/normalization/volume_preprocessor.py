@@ -1,6 +1,6 @@
-"""Volume preprocessing pipeline for medical imaging data.
+"""volume preprocessing pipeline for medical imaging data.
 
-This module provides a flexible pipeline for preprocessing 3D medical volumes
+this module provides a flexible pipeline for preprocessing 3d medical volumes
 with various normalization and augmentation steps.
 """
 
@@ -18,26 +18,26 @@ logger = get_logger(__name__)
 
 
 class VolumePreprocessor:
-    """Pipeline for preprocessing 3D medical volumes."""
+    """pipeline for preprocessing 3d medical volumes."""
     
     def __init__(
         self,
         preprocessing_steps: List[Tuple[str, Dict[str, Any]]] = None,
     ):
-        """Initialize VolumePreprocessor.
+        """initialize volumepreprocessor.
         
-        Args:
-            preprocessing_steps: List of preprocessing steps and their parameters.
-                Each step is a tuple of (step_name, parameters).
+        args:
+            preprocessing_steps: list of preprocessing steps and their parameters.
+                each step is a tuple of (step_name, parameters).
         """
         self.preprocessing_steps = preprocessing_steps or []
     
     def add_step(self, step_name: str, parameters: Dict[str, Any] = None):
-        """Add a preprocessing step.
+        """add a preprocessing step.
         
-        Args:
-            step_name: Name of the preprocessing step.
-            parameters: Parameters for the step.
+        args:
+            step_name: name of the preprocessing step.
+            parameters: parameters for the step.
         """
         if parameters is None:
             parameters = {}
@@ -48,22 +48,22 @@ class VolumePreprocessor:
         volume: np.ndarray,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Apply preprocessing pipeline to a volume.
+        """apply preprocessing pipeline to a volume.
         
-        Args:
-            volume: Input volume.
-            mask: Optional mask for foreground voxels.
+        args:
+            volume: input volume.
+            mask: optional mask for foreground voxels.
             
-        Returns:
-            Preprocessed volume.
+        returns:
+            preprocessed volume.
         """
         if isinstance(volume, torch.Tensor):
             volume = volume.numpy()
         
-        # Create a copy to avoid modifying the original
+        # create a copy to avoid modifying the original
         result = volume.copy()
         
-        # Apply each preprocessing step
+        # apply each preprocessing step
         for step_name, params in self.preprocessing_steps:
             logger.debug(f"Applying preprocessing step: {step_name}")
             
@@ -86,13 +86,13 @@ class VolumePreprocessor:
                 result = VolumeNormalization.white_stripe_normalization(result, mask=mask, **params)
                 
             elif step_name == "crop":
-                # Handle crop parameters
+                # handle crop parameters
                 if "crop_size" in params:
                     crop_size = params["crop_size"]
                     if "method" in params and params["method"] == "random":
                         result = DataAugmentation.random_crop(result, crop_size, mask=mask)
                     else:
-                        # Center crop
+                        # center crop
                         starts = [(result.shape[i] - crop_size[i]) // 2 for i in range(len(crop_size))]
                         slices = tuple(slice(starts[i], starts[i] + crop_size[i]) for i in range(len(crop_size)))
                         result = result[slices]
@@ -104,15 +104,15 @@ class VolumePreprocessor:
                     logger.warning("scipy.ndimage not available, skipping rescaling")
                     continue
                 
-                # Handle rescale parameters
+                # handle rescale parameters
                 if "scale_factor" in params:
                     scale_factor = params["scale_factor"]
-                    order = params.get("order", 1)  # Default to linear interpolation
+                    order = params.get("order", 1)  # default to linear interpolation
                     result = zoom(result, scale_factor, order=order)
                 elif "target_shape" in params:
                     target_shape = params["target_shape"]
                     scale_factor = [target_shape[i] / result.shape[i] for i in range(len(target_shape))]
-                    order = params.get("order", 1)  # Default to linear interpolation
+                    order = params.get("order", 1)  # default to linear interpolation
                     result = zoom(result, scale_factor, order=order)
             
             else:
@@ -127,16 +127,16 @@ class VolumePreprocessor:
         file_pattern: str = "*.nii.gz",
         mask_dir: Optional[Union[str, Path]] = None,
     ) -> Dict[str, Dict[str, Any]]:
-        """Batch process multiple volumes.
+        """batch process multiple volumes.
         
-        Args:
-            input_dir: Input directory with volumes.
-            output_dir: Output directory for preprocessed volumes.
-            file_pattern: Glob pattern for input files.
-            mask_dir: Optional directory with masks.
+        args:
+            input_dir: input directory with volumes.
+            output_dir: output directory for preprocessed volumes.
+            file_pattern: glob pattern for input files.
+            mask_dir: optional directory with masks.
             
-        Returns:
-            Dictionary with preprocessing metadata.
+        returns:
+            dictionary with preprocessing metadata.
         """
         import glob
         
@@ -144,14 +144,14 @@ class VolumePreprocessor:
         output_dir = Path(output_dir)
         os.makedirs(output_dir, exist_ok=True)
         
-        # List input files
+        # list input files
         input_files = sorted(glob.glob(str(input_dir / file_pattern)))
         
         if not input_files:
             logger.warning(f"No files found matching pattern: {file_pattern}")
             return {}
         
-        # Process each file
+        # process each file
         results = {}
         for input_file in input_files:
             try:
@@ -161,23 +161,23 @@ class VolumePreprocessor:
                 
                 logger.info(f"Processing {file_name}")
                 
-                # Load volume
+                # load volume
                 volume = self._load_volume(input_file)
                 
-                # Load mask if available
+                # load mask if available
                 mask = None
                 if mask_dir:
                     mask_file = Path(mask_dir) / file_name
                     if os.path.exists(mask_file):
                         mask = self._load_volume(mask_file)
                 
-                # Apply preprocessing
+                # apply preprocessing
                 processed_volume = self.preprocess(volume, mask)
                 
-                # Save preprocessed volume
+                # save preprocessed volume
                 self._save_volume(processed_volume, output_file, reference_file=input_file)
                 
-                # Record metadata
+                # record metadata
                 metadata = {
                     "input_shape": volume.shape,
                     "output_shape": processed_volume.shape,
@@ -197,13 +197,13 @@ class VolumePreprocessor:
         return results
     
     def _load_volume(self, file_path: Union[str, Path]) -> np.ndarray:
-        """Load a volume from file.
+        """load a volume from file.
         
-        Args:
-            file_path: Path to volume file.
+        args:
+            file_path: path to volume file.
             
-        Returns:
-            Volume as numpy array.
+        returns:
+            volume as numpy array.
         """
         if str(file_path).endswith(".nii") or str(file_path).endswith(".nii.gz"):
             try:
@@ -223,34 +223,34 @@ class VolumePreprocessor:
         output_file: Union[str, Path],
         reference_file: Optional[Union[str, Path]] = None,
     ):
-        """Save a volume to file.
+        """save a volume to file.
         
-        Args:
-            volume: Volume as numpy array.
-            output_file: Output file path.
-            reference_file: Optional reference file for header information.
+        args:
+            volume: volume as numpy array.
+            output_file: output file path.
+            reference_file: optional reference file for header information.
         """
         if str(output_file).endswith(".nii") or str(output_file).endswith(".nii.gz"):
             try:
                 import nibabel as nib
                 
-                # Copy header information from reference file if available
+                # copy header information from reference file if available
                 if reference_file:
-                    # Load reference file
+                    # load reference file
                     ref_img = nib.load(str(reference_file))
-                    # Create new image with reference header and affine
+                    # create new image with reference header and affine
                     affine = ref_img.affine if hasattr(ref_img, 'affine') else np.eye(4)
                     new_img = nib.Nifti1Image(volume, affine)
-                    # Copy header if possible
+                    # copy header if possible
                     if hasattr(ref_img, 'header') and hasattr(new_img, 'header'):
                         for field in ref_img.header:
-                            if field != 'dim':  # Don't copy dimensions
+                            if field != 'dim':  # don't copy dimensions
                                 new_img.header[field] = ref_img.header[field]
                 else:
-                    # Create new NIfTI image
+                    # create new nifti image
                     new_img = nib.Nifti1Image(volume, np.eye(4))
                 
-                # Save to file
+                # save to file
                 nib.save(new_img, str(output_file))
                 
             except ImportError:
@@ -261,7 +261,7 @@ class VolumePreprocessor:
             raise ValueError(f"Unsupported file format: {output_file}")
 
 
-# Available preprocessing functions
+# available preprocessing functions
 PREPROCESSING_FUNCTIONS = {
     "min_max_normalization": VolumeNormalization.min_max_normalization,
     "z_score_normalization": VolumeNormalization.z_score_normalization,

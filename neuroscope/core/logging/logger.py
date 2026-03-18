@@ -1,4 +1,4 @@
-"""Setup logging for neuroscope."""
+"""setup logging for neuroscope."""
 
 import logging
 import sys
@@ -13,28 +13,28 @@ def setup_logging(
     log_level: int = logging.INFO,
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ):
-    """Set up logging for neuroscope.
+    """set up logging for neuroscope.
     
-    Args:
-        log_file: Path to log file. If None, logs will only be printed to console.
-        log_level: Logging level.
-        log_format: Logging format.
+    args:
+        log_file: path to log file. if none, logs will only be printed to console.
+        log_level: logging level.
+        log_format: logging format.
     """
-    # Create logger
+    # create logger
     logger = logging.getLogger("neuroscope")
     logger.setLevel(log_level)
     
-    # Create formatter
+    # create formatter
     formatter = logging.Formatter(log_format)
     
-    # Create console handler
+    # create console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
-    # Create file handler if log_file is provided
+    # create file handler if log_file is provided
     if log_file is not None:
-        # Create directory if it doesn't exist
+        # create directory if it doesn't exist
         log_file.parent.mkdir(parents=True, exist_ok=True)
         
         file_handler = logging.FileHandler(log_file)
@@ -45,18 +45,18 @@ def setup_logging(
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get logger with specified name.
+    """get logger with specified name.
     
-    Args:
-        name: Logger name.
+    args:
+        name: logger name.
     
-    Returns:
-        Logger instance.
+    returns:
+        logger instance.
     """
     return logging.getLogger(f"neuroscope.{name}")
 
 
-# Setup default logger
+# setup default logger
 default_log_file = config.paths.get("logs_dir") / "neuroscope.log"
 logger = setup_logging(default_log_file)
 

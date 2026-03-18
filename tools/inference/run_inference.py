@@ -79,7 +79,7 @@ def load_test_dataset(config, case_indices: List[int] = None) -> DataLoader:
     # if case indices provided, filter dataset
     if case_indices is not None:
         print(f"filtering to {len(case_indices)} selected cases")
-        # create subset using torch.utils.data.Subset
+        # create subset using torch.utils.data.subset
         from torch.utils.data import Subset
         test_dataset = Subset(test_dataset, case_indices)
 
@@ -150,14 +150,14 @@ def run_inference_on_cases(
             rec_b = model.G_A2B(fake_a)
 
             # move to cpu and convert to numpy
-            # note: for 2.5d, input is [B, 12, H, W], output is [B, 4, H, W]
+            # note: for 2.5d, input is [b, 12, h, w], output is [b, 4, h, w]
             # we'll save the center slice (4 modalities) for visualization
-            results['inputs_a'].append(real_a[0].cpu().numpy())  # [12, H, W]
-            results['inputs_b'].append(real_b[0].cpu().numpy())  # [12, H, W]
-            results['generated_b'].append(fake_b[0].cpu().numpy())  # [4, H, W]
-            results['generated_a'].append(fake_a[0].cpu().numpy())  # [4, H, W]
-            results['reconstructed_a'].append(rec_a[0].cpu().numpy())  # [4, H, W]
-            results['reconstructed_b'].append(rec_b[0].cpu().numpy())  # [4, H, W]
+            results['inputs_a'].append(real_a[0].cpu().numpy())  # [12, h, w]
+            results['inputs_b'].append(real_b[0].cpu().numpy())  # [12, h, w]
+            results['generated_b'].append(fake_b[0].cpu().numpy())  # [4, h, w]
+            results['generated_a'].append(fake_a[0].cpu().numpy())  # [4, h, w]
+            results['reconstructed_a'].append(rec_a[0].cpu().numpy())  # [4, h, w]
+            results['reconstructed_b'].append(rec_b[0].cpu().numpy())  # [4, h, w]
 
             if (batch_idx + 1) % 5 == 0:
                 print(f"  processed {batch_idx + 1}/{len(dataloader)} cases")

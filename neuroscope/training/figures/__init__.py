@@ -1,9 +1,9 @@
 """
-Training Figures Package.
+training figures package.
 
-Publication-quality figure generation for training analysis.
+publication-quality figure generation for training analysis.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from .figure_generator import FigureGenerator

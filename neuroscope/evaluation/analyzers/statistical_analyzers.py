@@ -1,7 +1,7 @@
 """
-Result Analyzers.
+result analyzers.
 
-Analysis frameworks for comprehensive evaluation
+analysis frameworks for comprehensive evaluation
 of harmonization results across modalities and regions.
 """
 
@@ -14,14 +14,14 @@ import json
 
 @dataclass
 class AnalysisResult:
-    """Result from analysis."""
+    """result from analysis."""
     name: str
     metrics: Dict[str, float]
     per_sample: Optional[Dict[str, List[float]]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict:
-        """Convert to dictionary."""
+        """convert to dictionary."""
         return {
             'name': self.name,
             'metrics': self.metrics,
@@ -30,24 +30,24 @@ class AnalysisResult:
         }
     
     def save(self, path: Path):
-        """Save to JSON file."""
+        """save to json file."""
         with open(path, 'w') as f:
             json.dump(self.to_dict(), f, indent=2)
 
 
 class ModalityAnalyzer:
     """
-    Analyze results per MRI modality.
+    analyze results per mri modality.
     
-    Breaks down performance across T1, T1ce, T2, FLAIR.
+    breaks down performance across t1, t1ce, t2, flair.
     """
     
     MODALITIES = ['T1', 'T1ce', 'T2', 'FLAIR']
     
     def __init__(self, metrics_fn: callable = None):
         """
-        Args:
-            metrics_fn: Function to compute metrics
+        args:
+            metrics_fn: function to compute metrics
         """
         self.metrics_fn = metrics_fn
         self.results_per_modality: Dict[str, List[Dict]] = {
@@ -62,13 +62,13 @@ class ModalityAnalyzer:
         reference: np.ndarray = None
     ):
         """
-        Add a result for a specific modality.
+        add a result for a specific modality.
         
-        Args:
-            modality: Modality name (T1, T1ce, T2, FLAIR)
-            original: Original image
-            harmonized: Harmonized image
-            reference: Reference image (if available)
+        args:
+            modality: modality name (t1, t1ce, t2, flair)
+            original: original image
+            harmonized: harmonized image
+            reference: reference image (if available)
         """
         if modality not in self.MODALITIES:
             raise ValueError(f"Unknown modality: {modality}")
@@ -79,7 +79,7 @@ class ModalityAnalyzer:
             else:
                 metrics = self.metrics_fn(original, harmonized)
         else:
-            # Default metrics
+            # default metrics
             metrics = {
                 'mse': float(np.mean((original - harmonized) ** 2)),
                 'mae': float(np.mean(np.abs(original - harmonized))),
@@ -92,10 +92,10 @@ class ModalityAnalyzer:
     
     def analyze(self) -> Dict[str, AnalysisResult]:
         """
-        Analyze results across all modalities.
+        analyze results across all modalities.
         
-        Returns:
-            Dict of modality -> AnalysisResult
+        returns:
+            dict of modality -> analysisresult
         """
         results = {}
         
@@ -103,7 +103,7 @@ class ModalityAnalyzer:
             if not metric_list:
                 continue
             
-            # Aggregate metrics
+            # aggregate metrics
             aggregated = {}
             per_sample = {}
             
@@ -125,7 +125,7 @@ class ModalityAnalyzer:
         return results
     
     def get_summary(self) -> Dict[str, Dict[str, float]]:
-        """Get summary statistics per modality."""
+        """get summary statistics per modality."""
         results = self.analyze()
         
         summary = {}
@@ -140,17 +140,17 @@ class ModalityAnalyzer:
 
 class RegionAnalyzer:
     """
-    Analyze results per tumor region.
+    analyze results per tumor region.
     
-    Evaluates performance in enhancing tumor, necrotic core, and edema.
+    evaluates performance in enhancing tumor, necrotic core, and edema.
     """
     
     REGIONS = ['enhancing', 'necrotic', 'edema', 'whole_tumor', 'background']
     
     def __init__(self, metrics_fn: callable = None):
         """
-        Args:
-            metrics_fn: Function to compute metrics
+        args:
+            metrics_fn: function to compute metrics
         """
         self.metrics_fn = metrics_fn
         self.results_per_region: Dict[str, List[Dict]] = {
@@ -165,13 +165,13 @@ class RegionAnalyzer:
         label_mapping: Dict[str, int] = None
     ):
         """
-        Add a result with segmentation mask.
+        add a result with segmentation mask.
         
-        Args:
-            original: Original image
-            harmonized: Harmonized image
-            segmentation: Segmentation mask
-            label_mapping: Mapping from region name to label value
+        args:
+            original: original image
+            harmonized: harmonized image
+            segmentation: segmentation mask
+            label_mapping: mapping from region name to label value
         """
         if label_mapping is None:
             label_mapping = {
@@ -206,7 +206,7 @@ class RegionAnalyzer:
             self.results_per_region[region].append(metrics)
     
     def analyze(self) -> Dict[str, AnalysisResult]:
-        """Analyze results across all regions."""
+        """analyze results across all regions."""
         results = {}
         
         for region, metric_list in self.results_per_region.items():
@@ -236,15 +236,15 @@ class RegionAnalyzer:
 
 class AblationAnalyzer:
     """
-    Ablation study analysis framework.
+    ablation study analysis framework.
     
-    Systematically evaluates component contributions.
+    systematically evaluates component contributions.
     """
     
     def __init__(self, baseline_name: str = 'full_model'):
         """
-        Args:
-            baseline_name: Name of the full model configuration
+        args:
+            baseline_name: name of the full model configuration
         """
         self.baseline_name = baseline_name
         self.configurations: Dict[str, Dict[str, List[float]]] = {}
@@ -256,12 +256,12 @@ class AblationAnalyzer:
         metrics: Dict[str, float]
     ):
         """
-        Add a configuration result.
+        add a configuration result.
         
-        Args:
-            name: Configuration name
-            removed_components: List of removed component names
-            metrics: Evaluation metrics
+        args:
+            name: configuration name
+            removed_components: list of removed component names
+            metrics: evaluation metrics
         """
         if name not in self.configurations:
             self.configurations[name] = {
@@ -273,10 +273,10 @@ class AblationAnalyzer:
     
     def analyze(self) -> AnalysisResult:
         """
-        Analyze ablation study results.
+        analyze ablation study results.
         
-        Returns:
-            AnalysisResult with component contributions
+        returns:
+            analysisresult with component contributions
         """
         if self.baseline_name not in self.configurations:
             raise ValueError(f"Baseline {self.baseline_name} not found")
@@ -288,7 +288,7 @@ class AblationAnalyzer:
             values = [m[metric_name] for m in baseline_metrics]
             baseline_means[metric_name] = np.mean(values)
         
-        # Compute contributions
+        # compute contributions
         contributions = {}
         
         for config_name, config_data in self.configurations.items():
@@ -302,7 +302,7 @@ class AblationAnalyzer:
                 values = [m[metric_name] for m in config_metrics]
                 config_means[metric_name] = np.mean(values)
             
-            # Contribution = baseline - ablated
+            # contribution = baseline - ablated
             contrib = {}
             for metric_name in baseline_means.keys():
                 diff = baseline_means[metric_name] - config_means[metric_name]
@@ -327,13 +327,13 @@ class AblationAnalyzer:
         metric_name: str = 'ssim'
     ) -> List[Tuple[str, float]]:
         """
-        Rank components by contribution to specific metric.
+        rank components by contribution to specific metric.
         
-        Args:
-            metric_name: Metric to use for ranking
+        args:
+            metric_name: metric to use for ranking
             
-        Returns:
-            List of (component, contribution) sorted by contribution
+        returns:
+            list of (component, contribution) sorted by contribution
         """
         analysis = self.analyze()
         
@@ -347,17 +347,17 @@ class AblationAnalyzer:
 
 class CrossDatasetAnalyzer:
     """
-    Cross-dataset generalization analysis.
+    cross-dataset generalization analysis.
     
-    Evaluates how well models trained on one dataset
+    evaluates how well models trained on one dataset
     perform on another.
     """
     
     def __init__(self, source_dataset: str, target_datasets: List[str]):
         """
-        Args:
-            source_dataset: Training dataset name
-            target_datasets: List of evaluation dataset names
+        args:
+            source_dataset: training dataset name
+            target_datasets: list of evaluation dataset names
         """
         self.source_dataset = source_dataset
         self.target_datasets = target_datasets
@@ -372,11 +372,11 @@ class CrossDatasetAnalyzer:
         metrics: Dict[str, float]
     ):
         """
-        Add evaluation result on target dataset.
+        add evaluation result on target dataset.
         
-        Args:
-            target_dataset: Target dataset name
-            metrics: Evaluation metrics
+        args:
+            target_dataset: target dataset name
+            metrics: evaluation metrics
         """
         if target_dataset not in self.target_datasets:
             raise ValueError(f"Unknown target dataset: {target_dataset}")
@@ -388,10 +388,10 @@ class CrossDatasetAnalyzer:
     
     def analyze(self) -> AnalysisResult:
         """
-        Analyze cross-dataset performance.
+        analyze cross-dataset performance.
         
-        Returns:
-            AnalysisResult with generalization metrics
+        returns:
+            analysisresult with generalization metrics
         """
         aggregated = {}
         per_dataset = {}
@@ -407,7 +407,7 @@ class CrossDatasetAnalyzer:
                 aggregated[f'{dataset}_{metric_name}_std'] = std_val
                 per_dataset[dataset][metric_name] = values
         
-        # Compute generalization gap
+        # compute generalization gap
         if len(self.target_datasets) >= 2:
             source_idx = self.target_datasets.index(self.source_dataset) \
                 if self.source_dataset in self.target_datasets else 0
@@ -439,15 +439,15 @@ class CrossDatasetAnalyzer:
         metric_name: str = 'ssim'
     ) -> float:
         """
-        Compute overall generalization score.
+        compute overall generalization score.
         
-        Higher score = better generalization.
+        higher score = better generalization.
         
-        Args:
-            metric_name: Metric to use
+        args:
+            metric_name: metric to use
             
-        Returns:
-            Generalization score (0-1)
+        returns:
+            generalization score (0-1)
         """
         values = []
         
@@ -458,12 +458,12 @@ class CrossDatasetAnalyzer:
         if len(values) < 2:
             return 1.0
         
-        # Score based on consistency across datasets
+        # score based on consistency across datasets
         mean_perf = np.mean(values)
         std_perf = np.std(values)
         
-        # Higher mean, lower std = better generalization
-        cv = std_perf / (mean_perf + 1e-8)  # Coefficient of variation
+        # higher mean, lower std = better generalization
+        cv = std_perf / (mean_perf + 1e-8)  # coefficient of variation
         score = mean_perf * (1 - cv)
         
         return float(np.clip(score, 0, 1))

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Dataset preparation script for paired MRI data.
+dataset preparation script for paired mri data.
 
-This script creates train/val/test splits for paired MRI data.
+this script creates train/val/test splits for paired mri data.
 """
 
 import argparse
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import sys
 
-# Add the project root to the Python path if not already there
+# add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -22,7 +22,7 @@ from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """parse command line arguments."""
     parser = argparse.ArgumentParser(description='Create dataset splits for paired MRI data.')
     parser.add_argument('--domain-a-dir', type=str, required=True,
                         help='Directory with domain A volumes')
@@ -51,18 +51,18 @@ def parse_args():
 
 
 def main():
-    """Main function."""
+    """main function."""
     args = parse_args()
     
-    # Set up logging
+    # set up logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     setup_logging(log_level=log_level)
     logger = get_logger(__name__)
     
-    # Create output directory
+    # create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # Create dataset splits
+    # create dataset splits
     splits = create_paired_dataset_splits(
         domain_a_dir=args.domain_a_dir,
         domain_b_dir=args.domain_b_dir,

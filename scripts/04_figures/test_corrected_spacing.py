@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Test script to verify the corrected rendering approach for single-modality figures.
+test script to verify the corrected rendering approach for single-modality figures.
 
-Creates sample test PDFs to confirm spacing matches all_modalities rendering.
+creates sample test pdfs to confirm spacing matches all_modalities rendering.
 """
 
 import sys
@@ -15,7 +15,7 @@ from pathlib import Path
 
 # publication-quality settings (matching paper standards)
 plt.rcParams.update({
-    'text.usetex': False,  # Disable for test
+    'text.usetex': False,  # disable for test
     'font.family': 'serif',
     'font.size': 12,
     'axes.titlesize': 14,
@@ -32,11 +32,11 @@ plt.rcParams.update({
 
 
 def create_test_all_modalities():
-    """Create test version matching all_modalities approach."""
+    """create test version matching all_modalities approach."""
     fig, axes = plt.subplots(4, 6, figsize=(16, 11))
     plt.subplots_adjust(hspace=0.12, wspace=0.05)
     
-    # Fill with dummy checkerboard patterns
+    # fill with dummy checkerboard patterns
     for i in range(4):
         for j in range(6):
             pattern = np.tile(np.array([[1, 0], [0, 1]]), (128, 128))
@@ -51,16 +51,16 @@ def create_test_all_modalities():
     output_path = Path(__file__).parent.parent.parent / 'figures' / 'visual_examples' / 'TEST_all_modalities_approach.pdf'
     fig.savefig(str(output_path), format='pdf')
     plt.close(fig)
-    print(f"✓ Created: {output_path.name}")
+    print(f"✓ created: {output_path.name}")
     return output_path
 
 
 def create_test_single_modality():
-    """Create test version matching the NEW corrected approach."""
+    """create test version matching the new corrected approach."""
     fig, axes = plt.subplots(4, 6, figsize=(16, 11))
     plt.subplots_adjust(hspace=0.12, wspace=0.05)
     
-    # Fill with dummy checkerboard patterns
+    # fill with dummy checkerboard patterns
     for i in range(4):
         for j in range(6):
             pattern = np.tile(np.array([[1, 0], [0, 1]]), (128, 128))
@@ -75,14 +75,14 @@ def create_test_single_modality():
     output_path = Path(__file__).parent.parent.parent / 'figures' / 'visual_examples' / 'TEST_single_modality_corrected.pdf'
     fig.savefig(str(output_path), format='pdf')
     plt.close(fig)
-    print(f"✓ Created: {output_path.name}")
+    print(f"✓ created: {output_path.name}")
     return output_path
 
 
 def main():
-    """Create test PDFs to verify spacing is now identical."""
+    """create test pdfs to verify spacing is now identical."""
     print("\n" + "="*70)
-    print("Creating test PDFs with corrected rendering approach")
+    print("creating test pdfs with corrected rendering approach")
     print("="*70 + "\n")
     
     figures_dir = Path(__file__).parent.parent.parent / 'figures' / 'visual_examples'
@@ -92,16 +92,16 @@ def main():
     path2 = create_test_single_modality()
     
     print("\n" + "="*70)
-    print("Test PDFs created - both should have identical spacing")
+    print("test pdfs created - both should have identical spacing")
     print("="*70)
-    print(f"\nCompare these files:")
+    print(f"\ncompare these files:")
     print(f"  1. {path1.name}")
     print(f"  2. {path2.name}")
-    print(f"\nBoth now use:")
+    print(f"\nboth now use:")
     print(f"  - fig, axes = plt.subplots(4, 6, figsize=(16, 11))")
     print(f"  - plt.subplots_adjust(hspace=0.12, wspace=0.05)")
     print(f"  - plt.tight_layout(rect=[0, 0, 1, 0.96])")
-    print("\n✓ Rendering approach is now identical!\n")
+    print("\n✓ rendering approach is now identical!\n")
     
     return 0
 

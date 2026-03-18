@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 """
-Publication-Quality Figures Generator for CycleGAN MRI Domain Adaptation
+publication-quality figures generator for cyclegan mri domain adaptation
 
-Generates comprehensive visualizations including:
-1. Model architecture diagrams
-2. Training loss curves with confidence intervals
-3. Sample translations with difference maps
-4. Quantitative metrics tables and charts
-5. Dataset distribution visualizations
-6. Ablation study comparisons
-7. Feature space visualizations (t-SNE/UMAP)
+generates comprehensive visualizations including:
+1. model architecture diagrams
+2. training loss curves with confidence intervals
+3. sample translations with difference maps
+4. quantitative metrics tables and charts
+5. dataset distribution visualizations
+6. ablation study comparisons
+7. feature space visualizations (t-sne/umap)
 
-All figures use Times New Roman, Seaborn styling, and publication standards.
+all figures use times new roman, seaborn styling, and publication standards.
 """
 
 import os
@@ -34,7 +34,7 @@ from scipy import stats
 from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import peak_signal_noise_ratio as psnr
 
-# Configure matplotlib for publication quality
+# configure matplotlib for publication quality
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
@@ -59,7 +59,7 @@ plt.rcParams.update({
 
 sns.set_theme(style="whitegrid", palette="muted")
 
-# Add paths
+# add paths
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
@@ -67,7 +67,7 @@ from train_cyclegan_v2 import ResNetGenerator, PatchDiscriminator
 
 
 class PublicationFigureGenerator:
-    """Generate publication-quality figures for CycleGAN results"""
+    """generate publication-quality figures for cyclegan results"""
     
     def __init__(self, output_dir: str, checkpoint_dir: str = None, samples_dir: str = None):
         self.output_dir = Path(output_dir)
@@ -76,36 +76,36 @@ class PublicationFigureGenerator:
         self.samples_dir = Path(samples_dir) if samples_dir else None
         
         self.colors = {
-            'brats': '#2ecc71',      # Green for BraTS
-            'upenn': '#3498db',       # Blue for UPenn
-            'generator': '#e74c3c',   # Red for Generator
-            'discriminator': '#9b59b6', # Purple for Discriminator
-            'cycle': '#f39c12',       # Orange for Cycle
-            'identity': '#1abc9c',    # Teal for Identity
+            'brats': '#2ecc71',      # green for brats
+            'upenn': '#3498db',       # blue for upenn
+            'generator': '#e74c3c',   # red for generator
+            'discriminator': '#9b59b6', # purple for discriminator
+            'cycle': '#f39c12',       # orange for cycle
+            'identity': '#1abc9c',    # teal for identity
         }
         
         self.device = torch.device('mps' if torch.backends.mps.is_available() else 
                                    'cuda' if torch.cuda.is_available() else 'cpu')
     
     # =========================================================================
-    # Figure 1: Model Architecture Diagram
+    # figure 1: model architecture diagram
     # =========================================================================
     def generate_architecture_diagram(self):
-        """Create a visual representation of the CycleGAN architecture"""
+        """create a visual representation of the cyclegan architecture"""
         fig = plt.figure(figsize=(14, 8))
         gs = GridSpec(2, 4, figure=fig, hspace=0.3, wspace=0.4)
         
-        # Generator architecture
+        # generator architecture
         ax1 = fig.add_subplot(gs[0, :])
         self._draw_generator_architecture(ax1)
         ax1.set_title('(a) ResNet Generator Architecture', fontweight='bold', pad=10)
         
-        # Discriminator architecture
+        # discriminator architecture
         ax2 = fig.add_subplot(gs[1, :2])
         self._draw_discriminator_architecture(ax2)
         ax2.set_title('(b) PatchGAN Discriminator', fontweight='bold', pad=10)
         
-        # CycleGAN flow
+        # cyclegan flow
         ax3 = fig.add_subplot(gs[1, 2:])
         self._draw_cyclegan_flow(ax3)
         ax3.set_title('(c) CycleGAN Training Flow', fontweight='bold', pad=10)
@@ -116,7 +116,7 @@ class PublicationFigureGenerator:
         print(f"saved: fig1_architecture.pdf")
     
     def _draw_generator_architecture(self, ax):
-        """Draw generator block diagram"""
+        """draw generator block diagram"""
         ax.set_xlim(0, 14)
         ax.set_ylim(0, 2)
         ax.axis('off')
@@ -140,14 +140,14 @@ class PublicationFigureGenerator:
                 ax.annotate('', xy=(x + 2.1, 1), xytext=(x + 1.9, 1),
                            arrowprops=dict(arrowstyle='->', color='black', lw=1.5))
         
-        # Add skip connection indicator
+        # add skip connection indicator
         ax.annotate('', xy=(5.9, 1.6), xytext=(2.5, 1.6),
                    arrowprops=dict(arrowstyle='->', color='gray', lw=1, ls='--',
                                   connectionstyle='arc3,rad=-0.3'))
         ax.text(4.2, 1.85, 'Skip connections in ResBlocks', fontsize=8, color='gray')
     
     def _draw_discriminator_architecture(self, ax):
-        """Draw discriminator block diagram"""
+        """draw discriminator block diagram"""
         ax.set_xlim(0, 8)
         ax.set_ylim(0, 2)
         ax.axis('off')
@@ -177,12 +177,12 @@ class PublicationFigureGenerator:
                 ha='center', style='italic')
     
     def _draw_cyclegan_flow(self, ax):
-        """Draw CycleGAN bidirectional flow"""
+        """draw cyclegan bidirectional flow"""
         ax.set_xlim(0, 6)
         ax.set_ylim(0, 3)
         ax.axis('off')
         
-        # Domain A (BraTS)
+        # domain a (brats)
         rect_a = mpatches.FancyBboxPatch((0.2, 1.8), 1.5, 0.8,
                                          boxstyle="round,pad=0.05",
                                          facecolor=self.colors['brats'], 
@@ -191,7 +191,7 @@ class PublicationFigureGenerator:
         ax.text(0.95, 2.2, 'Domain A\n(BraTS)', ha='center', va='center', 
                 fontsize=9, fontweight='bold', color='white')
         
-        # Domain B (UPenn)
+        # domain b (upenn)
         rect_b = mpatches.FancyBboxPatch((4.3, 1.8), 1.5, 0.8,
                                          boxstyle="round,pad=0.05",
                                          facecolor=self.colors['upenn'], 
@@ -200,7 +200,7 @@ class PublicationFigureGenerator:
         ax.text(5.05, 2.2, 'Domain B\n(UPenn)', ha='center', va='center', 
                 fontsize=9, fontweight='bold', color='white')
         
-        # Generators
+        # generators
         ax.annotate('', xy=(4.1, 2.4), xytext=(1.9, 2.4),
                    arrowprops=dict(arrowstyle='->', color=self.colors['generator'], lw=2))
         ax.text(3, 2.6, '$G_{A→B}$', ha='center', fontsize=10, color=self.colors['generator'])
@@ -209,7 +209,7 @@ class PublicationFigureGenerator:
                    arrowprops=dict(arrowstyle='->', color=self.colors['generator'], lw=2))
         ax.text(3, 1.75, '$G_{B→A}$', ha='center', fontsize=10, color=self.colors['generator'])
         
-        # Cycle consistency
+        # cycle consistency
         ax.annotate('', xy=(0.95, 1.7), xytext=(0.95, 0.8),
                    arrowprops=dict(arrowstyle='<->', color=self.colors['cycle'], lw=1.5,
                                   connectionstyle='arc3,rad=0.5'))
@@ -220,17 +220,17 @@ class PublicationFigureGenerator:
                                   connectionstyle='arc3,rad=-0.5'))
         ax.text(5.7, 1.2, 'Cycle\nLoss', ha='center', fontsize=8, color=self.colors['cycle'])
         
-        # Discriminators
+        # discriminators
         ax.text(0.95, 0.5, '$D_A$', ha='center', fontsize=10, color=self.colors['discriminator'],
                 bbox=dict(boxstyle='round', facecolor='white', edgecolor=self.colors['discriminator']))
         ax.text(5.05, 0.5, '$D_B$', ha='center', fontsize=10, color=self.colors['discriminator'],
                 bbox=dict(boxstyle='round', facecolor='white', edgecolor=self.colors['discriminator']))
     
     # =========================================================================
-    # Figure 2: Training Loss Curves
+    # figure 2: training loss curves
     # =========================================================================
     def generate_loss_curves(self, loss_history: dict = None, loss_file: str = None):
-        """Generate comprehensive training loss visualization"""
+        """generate comprehensive training loss visualization"""
         if loss_history is None and loss_file:
             with open(loss_file, 'r') as f:
                 loss_history = json.load(f)
@@ -241,13 +241,13 @@ class PublicationFigureGenerator:
         
         fig, axes = plt.subplots(2, 3, figsize=(14, 8))
         
-        # Smooth function
+        # smooth function
         def smooth(y, window=50):
             if len(y) < window:
                 return y
             return np.convolve(y, np.ones(window)/window, mode='valid')
         
-        # Generator Loss
+        # generator loss
         ax = axes[0, 0]
         g_loss = loss_history.get('G', [])
         if g_loss:
@@ -259,7 +259,7 @@ class PublicationFigureGenerator:
             ax.set_ylabel('Loss')
             ax.legend()
         
-        # Discriminator Losses
+        # discriminator losses
         ax = axes[0, 1]
         d_a = loss_history.get('D_A', [])
         d_b = loss_history.get('D_B', [])
@@ -272,7 +272,7 @@ class PublicationFigureGenerator:
             ax.set_ylabel('Loss')
             ax.legend()
         
-        # Cycle Consistency Loss
+        # cycle consistency loss
         ax = axes[0, 2]
         cycle = loss_history.get('Cycle', [])
         if cycle:
@@ -282,7 +282,7 @@ class PublicationFigureGenerator:
             ax.set_xlabel('Iteration')
             ax.set_ylabel('Loss')
         
-        # Identity Loss
+        # identity loss
         ax = axes[1, 0]
         identity = loss_history.get('Id', [])
         if identity:
@@ -292,7 +292,7 @@ class PublicationFigureGenerator:
             ax.set_xlabel('Iteration')
             ax.set_ylabel('Loss')
         
-        # Gradient Penalty
+        # gradient penalty
         ax = axes[1, 1]
         gp = loss_history.get('GP', [])
         if gp:
@@ -301,7 +301,7 @@ class PublicationFigureGenerator:
             ax.set_xlabel('Iteration')
             ax.set_ylabel('Loss')
         
-        # D/G Ratio (Health Indicator)
+        # d/g ratio (health indicator)
         ax = axes[1, 2]
         if d_a and d_b and g_loss:
             d_avg = [(a + b) / 2 for a, b in zip(d_a, d_b)]
@@ -322,17 +322,17 @@ class PublicationFigureGenerator:
         print(f"saved: fig2_training_losses.pdf")
     
     # =========================================================================
-    # Figure 3: Sample Translations with Metrics
+    # figure 3: sample translations with metrics
     # =========================================================================
     def generate_sample_grid(self, G_A2B, G_B2A, dataloader_A, dataloader_B, n_samples=4):
-        """Generate sample translation grid with difference maps and metrics"""
+        """generate sample translation grid with difference maps and metrics"""
         G_A2B.eval()
         G_B2A.eval()
         
         fig = plt.figure(figsize=(16, 10))
         gs = GridSpec(n_samples + 1, 8, figure=fig, hspace=0.3, wspace=0.05)
         
-        # Headers
+        # headers
         headers = ['Real A', 'Fake B', '|Diff|', 'Recon A', 'Real B', 'Fake A', '|Diff|', 'Recon B']
         for i, h in enumerate(headers):
             ax = fig.add_subplot(gs[0, i])
@@ -358,7 +358,7 @@ class PublicationFigureGenerator:
                 fake_A = G_B2A(real_B)
                 recon_B = G_A2B(fake_A)
                 
-                # Calculate metrics for cycle consistency
+                # calculate metrics for cycle consistency
                 real_A_np = ((real_A[0, 0].cpu().numpy() + 1) / 2 * 255).astype(np.uint8)
                 recon_A_np = ((recon_A[0, 0].cpu().numpy() + 1) / 2 * 255).astype(np.uint8)
                 real_B_np = ((real_B[0, 0].cpu().numpy() + 1) / 2 * 255).astype(np.uint8)
@@ -372,7 +372,7 @@ class PublicationFigureGenerator:
                 except:
                     pass
                 
-                # Plot images
+                # plot images
                 images = [
                     real_A[0, 0], fake_B[0, 0], 
                     torch.abs(real_A[0, 0] - fake_B[0, 0]),
@@ -385,13 +385,13 @@ class PublicationFigureGenerator:
                 for col, img in enumerate(images):
                     ax = fig.add_subplot(gs[row + 1, col])
                     img_np = img.cpu().numpy()
-                    if col in [2, 6]:  # Difference maps
+                    if col in [2, 6]:  # difference maps
                         ax.imshow(img_np, cmap='hot', vmin=0, vmax=1)
                     else:
                         ax.imshow((img_np + 1) / 2, cmap='gray', vmin=0, vmax=1)
                     ax.axis('off')
         
-        # Add metrics summary
+        # add metrics summary
         fig.text(0.02, 0.02, 
                 f"Cycle A→B→A: SSIM={np.mean(metrics_A2B['ssim']):.3f}±{np.std(metrics_A2B['ssim']):.3f}, "
                 f"PSNR={np.mean(metrics_A2B['psnr']):.1f}±{np.std(metrics_A2B['psnr']):.1f} dB\n"
@@ -407,13 +407,13 @@ class PublicationFigureGenerator:
         return metrics_A2B, metrics_B2A
     
     # =========================================================================
-    # Figure 4: Quantitative Metrics Bar Chart
+    # figure 4: quantitative metrics bar chart
     # =========================================================================
     def generate_metrics_chart(self, metrics: dict):
-        """Generate bar chart comparing different model versions/configurations"""
+        """generate bar chart comparing different model versions/configurations"""
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         
-        # SSIM comparison
+        # ssim comparison
         ax = axes[0]
         models = list(metrics.keys())
         ssim_vals = [metrics[m].get('ssim', 0) for m in models]
@@ -427,7 +427,7 @@ class PublicationFigureGenerator:
         ax.axhline(y=0.8, color='green', ls='--', alpha=0.5, label='Target (0.8)')
         ax.legend()
         
-        # PSNR comparison
+        # psnr comparison
         ax = axes[1]
         psnr_vals = [metrics[m].get('psnr', 0) for m in models]
         psnr_stds = [metrics[m].get('psnr_std', 0) for m in models]
@@ -446,13 +446,13 @@ class PublicationFigureGenerator:
         print(f"saved: fig4_metrics_comparison.pdf")
     
     # =========================================================================
-    # Figure 5: Dataset Distribution
+    # figure 5: dataset distribution
     # =========================================================================
     def generate_dataset_distribution(self, metadata: dict):
-        """Visualize dataset split and characteristics"""
+        """visualize dataset split and characteristics"""
         fig, axes = plt.subplots(1, 3, figsize=(14, 4))
         
-        # Dataset split pie chart
+        # dataset split pie chart
         ax = axes[0]
         datasets = ['BraTS-TCGA', 'UPenn-GBM']
         sizes = [metadata.get('brats_total', 86), metadata.get('upenn_total', 476)]
@@ -464,7 +464,7 @@ class PublicationFigureGenerator:
                                           textprops={'fontsize': 10})
         ax.set_title('Dataset Composition', fontweight='bold')
         
-        # Train/Val/Test split
+        # train/val/test split
         ax = axes[1]
         splits = ['Train', 'Validation', 'Test']
         brats_splits = [metadata.get('brats_train', 62), 
@@ -488,7 +488,7 @@ class PublicationFigureGenerator:
         ax.set_xticklabels(splits)
         ax.legend()
         
-        # Add value labels
+        # add value labels
         for bar in bars1 + bars2:
             height = bar.get_height()
             ax.annotate(f'{int(height)}',
@@ -496,7 +496,7 @@ class PublicationFigureGenerator:
                        xytext=(0, 3), textcoords="offset points",
                        ha='center', va='bottom', fontsize=8)
         
-        # MRI modalities
+        # mri modalities
         ax = axes[2]
         modalities = ['T1', 'T1ce', 'T2', 'FLAIR']
         y_pos = np.arange(len(modalities))
@@ -519,10 +519,10 @@ class PublicationFigureGenerator:
         print(f"saved: fig5_dataset_distribution.pdf")
     
     # =========================================================================
-    # Table 1: Model Configuration
+    # table 1: model configuration
     # =========================================================================
     def generate_config_table(self, config: dict):
-        """Generate a LaTeX-style configuration table"""
+        """generate a latex-style configuration table"""
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.axis('off')
         
@@ -548,12 +548,12 @@ class PublicationFigureGenerator:
         table.set_fontsize(10)
         table.scale(1.2, 1.5)
         
-        # Style header
+        # style header
         for i in range(3):
             table[(0, i)].set_facecolor('#34495e')
             table[(0, i)].set_text_props(color='white', fontweight='bold')
         
-        # Alternate row colors
+        # alternate row colors
         for i in range(1, len(table_data)):
             for j in range(3):
                 if i % 2 == 0:
@@ -566,10 +566,10 @@ class PublicationFigureGenerator:
         print(f"saved: table1_configuration.pdf")
     
     # =========================================================================
-    # Figure 6: Epoch-wise Metrics Evolution
+    # figure 6: epoch-wise metrics evolution
     # =========================================================================
     def generate_epoch_metrics(self, epoch_metrics: dict):
-        """Show how SSIM/PSNR evolve across training epochs"""
+        """show how ssim/psnr evolve across training epochs"""
         if not epoch_metrics:
             return
         
@@ -611,22 +611,22 @@ class PublicationFigureGenerator:
         print(f"saved: fig6_epoch_metrics.pdf")
     
     # =========================================================================
-    # Generate All Figures
+    # generate all figures
     # =========================================================================
     def generate_all(self, loss_file: str = None, config: dict = None, metadata: dict = None):
-        """Generate all publication figures"""
+        """generate all publication figures"""
         print("\n" + "=" * 60)
-        print("GENERATING PUBLICATION-QUALITY FIGURES")
+        print("generating publication-quality figures")
         print("=" * 60 + "\n")
         
-        # 1. Architecture diagram
+        # 1. architecture diagram
         self.generate_architecture_diagram()
         
-        # 2. Loss curves (if available)
+        # 2. loss curves (if available)
         if loss_file and Path(loss_file).exists():
             self.generate_loss_curves(loss_file=loss_file)
         
-        # 3. Configuration table
+        # 3. configuration table
         if config is None:
             config = {
                 'lr_g': '1e-4', 'lr_d': '5e-5', 'batch_size': 4,
@@ -635,7 +635,7 @@ class PublicationFigureGenerator:
             }
         self.generate_config_table(config)
         
-        # 4. Dataset distribution
+        # 4. dataset distribution
         if metadata is None:
             metadata = {
                 'brats_total': 86, 'upenn_total': 566,

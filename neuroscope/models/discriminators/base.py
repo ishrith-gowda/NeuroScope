@@ -1,7 +1,7 @@
 """
-Base Discriminator Classes.
+base discriminator classes.
 
-This module provides abstract base classes and common functionality
+this module provides abstract base classes and common functionality
 for discriminator architectures.
 """
 
@@ -13,9 +13,9 @@ from typing import Optional, List, Tuple, Union
 
 class BaseDiscriminator(nn.Module, ABC):
     """
-    Abstract base class for all discriminators.
+    abstract base class for all discriminators.
     
-    Provides common interface and utilities for discriminator networks.
+    provides common interface and utilities for discriminator networks.
     """
     
     def __init__(
@@ -25,11 +25,11 @@ class BaseDiscriminator(nn.Module, ABC):
         **kwargs
     ):
         """
-        Initialize base discriminator.
+        initialize base discriminator.
         
-        Args:
-            in_channels: Number of input channels
-            ndf: Base number of discriminator filters
+        args:
+            in_channels: number of input channels
+            ndf: base number of discriminator filters
         """
         super().__init__()
         
@@ -42,23 +42,23 @@ class BaseDiscriminator(nn.Module, ABC):
         x: torch.Tensor
     ) -> Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor, List[torch.Tensor]]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor [B, C, H, W]
+        args:
+            x: input tensor [b, c, h, w]
             
-        Returns:
-            Discriminator output(s) - can be single tensor, list of tensors,
+        returns:
+            discriminator output(s) - can be single tensor, list of tensors,
             or tuple of (output, intermediate features)
         """
         pass
         
     def count_parameters(self) -> int:
-        """Count trainable parameters."""
+        """count trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
         
     def init_weights(self, init_type: str = 'normal', gain: float = 0.02):
-        """Initialize network weights."""
+        """initialize network weights."""
         def init_func(m):
             classname = m.__class__.__name__
             
@@ -84,9 +84,9 @@ class BaseDiscriminator(nn.Module, ABC):
 
 class PatchDiscriminator(BaseDiscriminator):
     """
-    Base class for PatchGAN-style discriminators.
+    base class for patchgan-style discriminators.
     
-    Classifies NxN patches of the input as real or fake.
+    classifies nxn patches of the input as real or fake.
     """
     
     def __init__(
@@ -102,22 +102,22 @@ class PatchDiscriminator(BaseDiscriminator):
         self.n_layers = n_layers
         self.norm_type = norm_type
         
-        # Build the network
+        # build the network
         self.model = self._build_network()
         
     def _build_network(self) -> nn.Sequential:
-        """Build the discriminator network. Override in subclass."""
+        """build the discriminator network. override in subclass."""
         raise NotImplementedError
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
+        """forward pass."""
         return self.model(x)
         
     def get_all_activations(
         self,
         x: torch.Tensor
     ) -> List[torch.Tensor]:
-        """Get activations from all intermediate layers."""
+        """get activations from all intermediate layers."""
         activations = []
         
         for layer in self.model:
@@ -129,9 +129,9 @@ class PatchDiscriminator(BaseDiscriminator):
 
 class MultiScaleDiscriminatorBase(BaseDiscriminator):
     """
-    Base class for multi-scale discriminators.
+    base class for multi-scale discriminators.
     
-    Uses multiple discriminators at different scales.
+    uses multiple discriminators at different scales.
     """
     
     def __init__(
@@ -151,9 +151,9 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
         x: torch.Tensor
     ) -> List[torch.Tensor]:
         """
-        Forward pass at multiple scales.
+        forward pass at multiple scales.
         
-        Returns list of outputs from each scale.
+        returns list of outputs from each scale.
         """
         outputs = []
         current_input = x
@@ -162,7 +162,7 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
             outputs.append(disc(current_input))
             
             if i < len(self.discriminators) - 1:
-                # Downsample for next scale
+                # downsample for next scale
                 current_input = nn.functional.avg_pool2d(current_input, 2)
                 
         return outputs
@@ -171,7 +171,7 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
         self,
         x: torch.Tensor
     ) -> List[List[torch.Tensor]]:
-        """Get features from all scales and layers."""
+        """get features from all scales and layers."""
         all_features = []
         current_input = x
         
@@ -190,9 +190,9 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
 
 class ConditionalDiscriminator(BaseDiscriminator):
     """
-    Base class for conditional discriminators.
+    base class for conditional discriminators.
     
-    Conditions discrimination on additional inputs.
+    conditions discrimination on additional inputs.
     """
     
     def __init__(
@@ -213,14 +213,14 @@ class ConditionalDiscriminator(BaseDiscriminator):
         condition: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass with optional condition.
+        forward pass with optional condition.
         
-        Args:
-            x: Input tensor
-            condition: Optional condition tensor (same spatial size as x)
+        args:
+            x: input tensor
+            condition: optional condition tensor (same spatial size as x)
             
-        Returns:
-            Discriminator output
+        returns:
+            discriminator output
         """
         if condition is not None:
             x = torch.cat([x, condition], dim=1)
@@ -229,15 +229,15 @@ class ConditionalDiscriminator(BaseDiscriminator):
         
     @abstractmethod
     def discriminate(self, x: torch.Tensor) -> torch.Tensor:
-        """Discriminate the (possibly conditioned) input."""
+        """discriminate the (possibly conditioned) input."""
         pass
 
 
 class ProjectionDiscriminator(BaseDiscriminator):
     """
-    Base class for projection discriminators.
+    base class for projection discriminators.
     
-    Uses projection for conditional discrimination (cGAN with projection).
+    uses projection for conditional discrimination (cgan with projection).
     """
     
     def __init__(
@@ -251,9 +251,9 @@ class ProjectionDiscriminator(BaseDiscriminator):
         
         self.n_classes = n_classes
         
-        # Class embedding for projection
+        # class embedding for projection
         if n_classes > 0:
-            self.embed = nn.Embedding(n_classes, ndf * 8)  # Adjust based on architecture
+            self.embed = nn.Embedding(n_classes, ndf * 8)  # adjust based on architecture
             
     def forward(
         self,
@@ -261,19 +261,19 @@ class ProjectionDiscriminator(BaseDiscriminator):
         labels: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward pass with optional class labels.
+        forward pass with optional class labels.
         
-        Uses projection discriminator formulation if labels provided.
+        uses projection discriminator formulation if labels provided.
         """
         features = self.extract_features(x)
         output = self.output_layer(features)
         
         if labels is not None and self.n_classes > 0:
-            # Project class embedding
+            # project class embedding
             embed = self.embed(labels)
-            # Global sum pooled features
+            # global sum pooled features
             h = features.sum(dim=[2, 3])
-            # Inner product
+            # inner product
             projection = (embed * h).sum(dim=1, keepdim=True)
             output = output + projection.view(-1, 1, 1, 1)
             
@@ -281,20 +281,20 @@ class ProjectionDiscriminator(BaseDiscriminator):
         
     @abstractmethod
     def extract_features(self, x: torch.Tensor) -> torch.Tensor:
-        """Extract features from input."""
+        """extract features from input."""
         pass
         
     @abstractmethod
     def output_layer(self, features: torch.Tensor) -> torch.Tensor:
-        """Final output layer."""
+        """final output layer."""
         pass
 
 
 class FeatureMatchingDiscriminator(BaseDiscriminator):
     """
-    Base class for discriminators with feature matching.
+    base class for discriminators with feature matching.
     
-    Returns both output and intermediate features for feature matching loss.
+    returns both output and intermediate features for feature matching loss.
     """
     
     def __init__(
@@ -315,14 +315,14 @@ class FeatureMatchingDiscriminator(BaseDiscriminator):
         return_features: bool = True
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[torch.Tensor]]]:
         """
-        Forward pass.
+        forward pass.
         
-        Args:
-            x: Input tensor
-            return_features: Whether to return intermediate features
+        args:
+            x: input tensor
+            return_features: whether to return intermediate features
             
-        Returns:
-            Output tensor, and optionally list of intermediate features
+        returns:
+            output tensor, and optionally list of intermediate features
         """
         features = []
         

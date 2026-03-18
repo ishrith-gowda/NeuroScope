@@ -1,12 +1,12 @@
 """
-3D Convolutional Building Blocks.
+3d convolutional building blocks.
 
-Advanced 3D blocks for volumetric medical image processing including:
-- 3D Residual blocks with various normalization options
-- 3D Downsampling/Upsampling blocks
-- 3D Self-Attention mechanisms
-- 3D Channel and Spatial Attention (CBAM)
-- Memory-efficient implementations for large volumes
+advanced 3d blocks for volumetric medical image processing including:
+- 3d residual blocks with various normalization options
+- 3d downsampling/upsampling blocks
+- 3d self-attention mechanisms
+- 3d channel and spatial attention (cbam)
+- memory-efficient implementations for large volumes
 """
 
 from typing import Optional, Tuple, List, Union
@@ -18,7 +18,7 @@ from torch.utils.checkpoint import checkpoint
 
 
 class SpectralNorm3d(nn.Module):
-    """Spectral normalization for 3D convolutions."""
+    """spectral normalization for 3d convolutions."""
     
     def __init__(self, module: nn.Module, name: str = 'weight', n_power_iterations: int = 1):
         super().__init__()
@@ -74,10 +74,10 @@ class SpectralNorm3d(nn.Module):
 
 
 class GroupNorm3D(nn.GroupNorm):
-    """Group Normalization for 3D tensors with automatic group calculation."""
+    """group normalization for 3d tensors with automatic group calculation."""
     
     def __init__(self, num_channels: int, num_groups: int = 32, eps: float = 1e-5):
-        # Adjust num_groups if channels are too few
+        # adjust num_groups if channels are too few
         num_groups = min(num_groups, num_channels)
         while num_channels % num_groups != 0:
             num_groups -= 1
@@ -86,14 +86,14 @@ class GroupNorm3D(nn.GroupNorm):
 
 class ResidualBlock3D(nn.Module):
     """
-    3D Residual Block with flexible normalization.
+    3d residual block with flexible normalization.
     
-    Supports:
-    - Instance normalization
-    - Group normalization  
-    - Layer normalization
-    - Spectral normalization
-    - Gradient checkpointing for memory efficiency
+    supports:
+    - instance normalization
+    - group normalization  
+    - layer normalization
+    - spectral normalization
+    - gradient checkpointing for memory efficiency
     """
     
     def __init__(
@@ -110,17 +110,17 @@ class ResidualBlock3D(nn.Module):
         super().__init__()
         self.use_checkpoint = use_checkpoint
         
-        # First conv block
+        # first conv block
         conv1 = nn.Conv3d(channels, channels, kernel_size, padding=padding, bias=False)
         if use_spectral_norm:
             conv1 = SpectralNorm3d(conv1)
         
-        # Second conv block  
+        # second conv block  
         conv2 = nn.Conv3d(channels, channels, kernel_size, padding=padding, bias=False)
         if use_spectral_norm:
             conv2 = SpectralNorm3d(conv2)
         
-        # Normalization layers
+        # normalization layers
         norm1 = self._get_norm_layer(norm_type, channels)
         norm2 = self._get_norm_layer(norm_type, channels)
         
@@ -148,7 +148,7 @@ class ResidualBlock3D(nn.Module):
         elif norm_type == 'group':
             return GroupNorm3D(channels)
         elif norm_type == 'layer':
-            return nn.Identity()  # Layer norm handled differently for 3D
+            return nn.Identity()  # layer norm handled differently for 3d
         else:
             return nn.Identity()
     
@@ -163,9 +163,9 @@ class ResidualBlock3D(nn.Module):
 
 class DownsampleBlock3D(nn.Module):
     """
-    3D Downsampling block with strided convolution.
+    3d downsampling block with strided convolution.
     
-    Reduces spatial dimensions by factor of 2 in all dimensions.
+    reduces spatial dimensions by factor of 2 in all dimensions.
     """
     
     def __init__(
@@ -209,9 +209,9 @@ class DownsampleBlock3D(nn.Module):
 
 class UpsampleBlock3D(nn.Module):
     """
-    3D Upsampling block.
+    3d upsampling block.
     
-    Supports transposed convolution or interpolation + conv.
+    supports transposed convolution or interpolation + conv.
     """
     
     def __init__(
@@ -266,13 +266,13 @@ class UpsampleBlock3D(nn.Module):
 
 class SelfAttention3D(nn.Module):
     """
-    3D Self-Attention Module.
+    3d self-attention module.
     
-    Implements self-attention for volumetric data with:
-    - Query, Key, Value projections
-    - Multi-head attention support
-    - Learnable scaling parameter
-    - Memory-efficient chunked computation
+    implements self-attention for volumetric data with:
+    - query, key, value projections
+    - multi-head attention support
+    - learnable scaling parameter
+    - memory-efficient chunked computation
     """
     
     def __init__(
@@ -289,40 +289,40 @@ class SelfAttention3D(nn.Module):
         self.head_dim = channels // (reduction * num_heads)
         self.use_checkpoint = use_checkpoint
         
-        # Projections
+        # projections
         self.query = nn.Conv3d(channels, channels // reduction, 1, bias=False)
         self.key = nn.Conv3d(channels, channels // reduction, 1, bias=False)
         self.value = nn.Conv3d(channels, channels, 1, bias=False)
         
-        # Output projection
+        # output projection
         self.output = nn.Conv3d(channels, channels, 1, bias=False)
         
-        # Learnable scale parameter (initialized to 0 for stable training)
+        # learnable scale parameter (initialized to 0 for stable training)
         self.gamma = nn.Parameter(torch.zeros(1))
         
-        # Scale factor
+        # scale factor
         self.scale = (channels // reduction) ** -0.5
     
     def _attention(self, x: torch.Tensor) -> torch.Tensor:
         B, C, D, H, W = x.shape
         
-        # Compute Q, K, V
-        q = self.query(x).view(B, -1, D * H * W)  # [B, C', N]
-        k = self.key(x).view(B, -1, D * H * W)    # [B, C', N]
-        v = self.value(x).view(B, -1, D * H * W)  # [B, C, N]
+        # compute q, k, v
+        q = self.query(x).view(B, -1, D * H * W)  # [b, c', n]
+        k = self.key(x).view(B, -1, D * H * W)    # [b, c', n]
+        v = self.value(x).view(B, -1, D * H * W)  # [b, c, n]
         
-        # Attention weights
-        attn = torch.bmm(q.transpose(1, 2), k) * self.scale  # [B, N, N]
+        # attention weights
+        attn = torch.bmm(q.transpose(1, 2), k) * self.scale  # [b, n, n]
         attn = F.softmax(attn, dim=-1)
         
-        # Apply attention to values
-        out = torch.bmm(v, attn.transpose(1, 2))  # [B, C, N]
+        # apply attention to values
+        out = torch.bmm(v, attn.transpose(1, 2))  # [b, c, n]
         out = out.view(B, C, D, H, W)
         
-        # Output projection
+        # output projection
         out = self.output(out)
         
-        # Residual with learned scale
+        # residual with learned scale
         return self.gamma * out + x
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -333,9 +333,9 @@ class SelfAttention3D(nn.Module):
 
 class ChannelAttention3D(nn.Module):
     """
-    3D Channel Attention Module (SE-Net style).
+    3d channel attention module (se-net style).
     
-    Learns channel-wise attention weights.
+    learns channel-wise attention weights.
     """
     
     def __init__(self, channels: int, reduction: int = 16):
@@ -361,9 +361,9 @@ class ChannelAttention3D(nn.Module):
 
 class SpatialAttention3D(nn.Module):
     """
-    3D Spatial Attention Module.
+    3d spatial attention module.
     
-    Learns spatial attention weights across D, H, W dimensions.
+    learns spatial attention weights across d, h, w dimensions.
     """
     
     def __init__(self, kernel_size: int = 7):
@@ -384,9 +384,9 @@ class SpatialAttention3D(nn.Module):
 
 class CBAM3D(nn.Module):
     """
-    3D Convolutional Block Attention Module.
+    3d convolutional block attention module.
     
-    Combines channel and spatial attention for volumetric data.
+    combines channel and spatial attention for volumetric data.
     """
     
     def __init__(
@@ -408,9 +408,9 @@ class CBAM3D(nn.Module):
 
 class MultiHeadSelfAttention3D(nn.Module):
     """
-    Multi-Head 3D Self-Attention.
+    multi-head 3d self-attention.
     
-    Provides enhanced attention with multiple heads for
+    provides enhanced attention with multiple heads for
     capturing different types of spatial relationships.
     """
     
@@ -441,17 +441,17 @@ class MultiHeadSelfAttention3D(nn.Module):
         B, C, D, H, W = x.shape
         N = D * H * W
         
-        # QKV projection
+        # qkv projection
         qkv = self.qkv(x).reshape(B, 3, self.num_heads, self.head_dim, N)
-        qkv = qkv.permute(1, 0, 2, 4, 3)  # [3, B, heads, N, head_dim]
+        qkv = qkv.permute(1, 0, 2, 4, 3)  # [3, b, heads, n, head_dim]
         q, k, v = qkv[0], qkv[1], qkv[2]
         
-        # Attention
+        # attention
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
         
-        # Apply to values
+        # apply to values
         out = (attn @ v).transpose(2, 3).reshape(B, C, D, H, W)
         out = self.proj(out)
         out = self.proj_drop(out)
@@ -466,9 +466,9 @@ class MultiHeadSelfAttention3D(nn.Module):
 
 class AxialAttention3D(nn.Module):
     """
-    Axial Attention for 3D volumes.
+    axial attention for 3d volumes.
     
-    Applies attention along each axis separately for
+    applies attention along each axis separately for
     memory-efficient processing of large volumes.
     """
     
@@ -493,21 +493,21 @@ class AxialAttention3D(nn.Module):
     def _forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, D, H, W = x.shape
         
-        # Depth attention
+        # depth attention
         x_d = x.permute(0, 3, 4, 2, 1).reshape(B * H * W, D, C)
         x_d = self.norm_d(x_d)
         x_d, _ = self.depth_attn(x_d, x_d, x_d)
         x_d = x_d.reshape(B, H, W, D, C).permute(0, 4, 3, 1, 2)
         x = x + x_d
         
-        # Height attention
+        # height attention
         x_h = x.permute(0, 2, 4, 3, 1).reshape(B * D * W, H, C)
         x_h = self.norm_h(x_h)
         x_h, _ = self.height_attn(x_h, x_h, x_h)
         x_h = x_h.reshape(B, D, W, H, C).permute(0, 4, 1, 3, 2)
         x = x + x_h
         
-        # Width attention
+        # width attention
         x_w = x.permute(0, 2, 3, 4, 1).reshape(B * D * H, W, C)
         x_w = self.norm_w(x_w)
         x_w, _ = self.width_attn(x_w, x_w, x_w)
@@ -524,9 +524,9 @@ class AxialAttention3D(nn.Module):
 
 class PatchEmbed3D(nn.Module):
     """
-    3D Patch Embedding for Vision Transformer style processing.
+    3d patch embedding for vision transformer style processing.
     
-    Divides volume into non-overlapping patches and projects them.
+    divides volume into non-overlapping patches and projects them.
     """
     
     def __init__(
@@ -556,7 +556,7 @@ class PatchEmbed3D(nn.Module):
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, D, H, W = x.shape
-        x = self.proj(x)  # [B, embed_dim, D', H', W']
-        x = x.flatten(2).transpose(1, 2)  # [B, N, embed_dim]
+        x = self.proj(x)  # [b, embed_dim, d', h', w']
+        x = x.flatten(2).transpose(1, 2)  # [b, n, embed_dim]
         x = self.norm(x)
         return x

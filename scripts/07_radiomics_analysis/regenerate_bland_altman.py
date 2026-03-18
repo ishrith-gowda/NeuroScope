@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate Bland-Altman figure using per-feature statistics from results JSON."""
+"""regenerate bland-altman figure using per-feature statistics from results json."""
 
 import json
 import importlib.util
@@ -33,10 +33,10 @@ for i, fn in enumerate(feature_names):
     feat_stats = per_feature[fn]
     mean_diff = feat_stats.get('mean_diff', 0)
     std_diff = feat_stats.get('std_diff', 0.07)
-    # generate harmonized = original + noise matching the Bland-Altman statistics
+    # generate harmonized = original + noise matching the bland-altman statistics
     noise = np.random.normal(mean_diff, std_diff, n_samples)
     harmonized[:, i] = original[:, i] + noise
 
 output_path = Path(__file__).parent.parent.parent / 'figures' / 'radiomics' / 'fig_radiomics_bland_altman.pdf'
 radiomics_figures.plot_bland_altman(original, harmonized, feature_names, output_path)
-print(f'Done: {output_path}')
+print(f'done: {output_path}')

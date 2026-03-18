@@ -1,7 +1,7 @@
-"""Main CLI interface for NeuroScope.
+"""main cli interface for neuroscope.
 
-This module provides a comprehensive command-line interface for all
-NeuroScope functionality including preprocessing, training, and evaluation.
+this module provides a comprehensive command-line interface for all
+neuroscope functionality including preprocessing, training, and evaluation.
 """
 
 import argparse
@@ -21,32 +21,32 @@ logger = get_logger(__name__)
 
 
 def create_parser() -> argparse.ArgumentParser:
-    """Create the main argument parser.
+    """create the main argument parser.
     
-    Returns:
-        Configured argument parser
+    returns:
+        configured argument parser
     """
     parser = argparse.ArgumentParser(
         prog='neuroscope',
         description='NeuroScope: Domain-aware standardization of multimodal glioma MRI',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Preprocess data
+examples:
+  # preprocess data
   neuroscope preprocess --input-dir /path/to/raw --output-dir /path/to/processed
   
-  # Train CycleGAN model
+  # train cyclegan model
   neuroscope train --config config.json --data-root /path/to/data
   
-  # Evaluate model
+  # evaluate model
   neuroscope evaluate --model-path /path/to/model --data-path /path/to/test/data
   
-  # Run full pipeline
+  # run full pipeline
   neuroscope pipeline --input-dir /path/to/raw --output-dir /path/to/results
         """
     )
     
-    # Global arguments
+    # global arguments
     parser.add_argument(
         '--verbose', '-v',
         action='store_true',
@@ -66,42 +66,42 @@ Examples:
         help='Directory for log files'
     )
     
-    # Subcommands
+    # subcommands
     subparsers = parser.add_subparsers(
         dest='command',
         help='Available commands',
         required=True
     )
     
-    # Preprocessing command
+    # preprocessing command
     preprocess_parser = subparsers.add_parser(
         'preprocess',
         help='Preprocess medical imaging data'
     )
     _add_preprocess_args(preprocess_parser)
     
-    # Training command
+    # training command
     train_parser = subparsers.add_parser(
         'train',
         help='Train CycleGAN model'
     )
     _add_train_args(train_parser)
     
-    # Evaluation command
+    # evaluation command
     eval_parser = subparsers.add_parser(
         'evaluate',
         help='Evaluate trained model'
     )
     _add_evaluate_args(eval_parser)
     
-    # Pipeline command
+    # pipeline command
     pipeline_parser = subparsers.add_parser(
         'pipeline',
         help='Run complete preprocessing and training pipeline'
     )
     _add_pipeline_args(pipeline_parser)
     
-    # Configuration command
+    # configuration command
     config_parser = subparsers.add_parser(
         'config',
         help='Configuration management'
@@ -112,7 +112,7 @@ Examples:
 
 
 def _add_preprocess_args(parser: argparse.ArgumentParser):
-    """Add preprocessing arguments to parser."""
+    """add preprocessing arguments to parser."""
     parser.add_argument(
         '--input-dir',
         type=Path,
@@ -160,7 +160,7 @@ def _add_preprocess_args(parser: argparse.ArgumentParser):
 
 
 def _add_train_args(parser: argparse.ArgumentParser):
-    """Add training arguments to parser."""
+    """add training arguments to parser."""
     parser.add_argument(
         '--data-root',
         type=Path,
@@ -218,7 +218,7 @@ def _add_train_args(parser: argparse.ArgumentParser):
 
 
 def _add_evaluate_args(parser: argparse.ArgumentParser):
-    """Add evaluation arguments to parser."""
+    """add evaluation arguments to parser."""
     parser.add_argument(
         '--model-path',
         type=Path,
@@ -261,7 +261,7 @@ def _add_evaluate_args(parser: argparse.ArgumentParser):
 
 
 def _add_pipeline_args(parser: argparse.ArgumentParser):
-    """Add pipeline arguments to parser."""
+    """add pipeline arguments to parser."""
     parser.add_argument(
         '--input-dir',
         type=Path,
@@ -302,7 +302,7 @@ def _add_pipeline_args(parser: argparse.ArgumentParser):
 
 
 def _add_config_args(parser: argparse.ArgumentParser):
-    """Add configuration arguments to parser."""
+    """add configuration arguments to parser."""
     parser.add_argument(
         '--generate',
         choices=['training', 'preprocessing', 'evaluation', 'all'],
@@ -323,27 +323,27 @@ def _add_config_args(parser: argparse.ArgumentParser):
 
 
 def preprocess_command(args: argparse.Namespace):
-    """Handle preprocessing command."""
+    """handle preprocessing command."""
     from neuroscope.preprocessing.normalization import VolumePreprocessor
     
     logger.info("Starting preprocessing pipeline")
     
-    # Load configuration
+    # load configuration
     if args.config:
         config = load_config_file(args.config)
     else:
         config = get_default_preprocessing_config()
     
-    # Update config with command line arguments
+    # update config with command line arguments
     if args.max_workers:
         config['parallel_processing']['max_workers'] = args.max_workers
     
-    # Initialize preprocessor
+    # initialize preprocessor
     preprocessor = VolumePreprocessor(
         preprocessing_steps=config.get('preprocessing_steps', [])
     )
     
-    # Run preprocessing
+    # run preprocessing
     if args.dry_run:
         logger.info("Dry run mode - no files will be processed")
         logger.info(f"Would process files from: {args.input_dir}")
@@ -359,20 +359,20 @@ def preprocess_command(args: argparse.Namespace):
 
 
 def train_command(args: argparse.Namespace):
-    """Handle training command."""
+    """handle training command."""
     from neuroscope.training.trainers import CycleGANTrainer
     from neuroscope.models.architectures import CycleGAN
     from neuroscope.training.optimizers import CycleGANOptimizer
     
     logger.info("Starting CycleGAN training")
     
-    # Load configuration
+    # load configuration
     if args.config:
         config = load_config_file(args.config)
     else:
         config = get_default_training_config()
     
-    # Update config with command line arguments
+    # update config with command line arguments
     if args.n_epochs:
         config['training']['n_epochs'] = args.n_epochs
     if args.batch_size:
@@ -381,25 +381,25 @@ def train_command(args: argparse.Namespace):
         config['generator_optimizer']['lr'] = args.lr
         config['discriminator_optimizer']['lr'] = args.lr
     
-    # Validate configuration
+    # validate configuration
     if not validate_config(config):
         logger.error("Invalid configuration")
         sys.exit(1)
     
-    # Initialize model
+    # initialize model
     model = CycleGAN(**config['model'])
     
-    # Initialize optimizer
+    # initialize optimizer
     optimizer = CycleGANOptimizer(
         generators={'G_A2B': model.G_A2B, 'G_B2A': model.G_B2A},
         discriminators={'D_A': model.D_A, 'D_B': model.D_B},
         config=config
     )
     
-    # Initialize trainer
+    # initialize trainer
     trainer = CycleGANTrainer(model, optimizer, device='cuda', config=config)
     
-    # Load checkpoint if resuming
+    # load checkpoint if resuming
     if args.resume:
         trainer.load_checkpoint(args.resume)
     
@@ -407,10 +407,10 @@ def train_command(args: argparse.Namespace):
 
 
 def evaluate_command(args: argparse.Namespace):
-    """Handle evaluation command."""
+    """handle evaluation command."""
     logger.info("Starting model evaluation")
     
-    # Load model
+    # load model
     model = torch.load(args.model_path, map_location='cpu')
     
     logger.info(f"Loaded model from: {args.model_path}")
@@ -418,10 +418,10 @@ def evaluate_command(args: argparse.Namespace):
 
 
 def pipeline_command(args: argparse.Namespace):
-    """Handle pipeline command."""
+    """handle pipeline command."""
     logger.info("Starting complete NeuroScope pipeline")
     
-    # Run preprocessing
+    # run preprocessing
     if not args.skip_preprocessing:
         logger.info("Running preprocessing step")
         preprocess_args = argparse.Namespace(
@@ -434,7 +434,7 @@ def pipeline_command(args: argparse.Namespace):
         )
         preprocess_command(preprocess_args)
     
-    # Run training
+    # run training
     if not args.skip_training:
         logger.info("Running training step")
         train_args = argparse.Namespace(
@@ -449,7 +449,7 @@ def pipeline_command(args: argparse.Namespace):
         )
         train_command(train_args)
     
-    # Run evaluation
+    # run evaluation
     if not args.skip_evaluation:
         logger.info("Running evaluation step")
         eval_args = argparse.Namespace(
@@ -466,7 +466,7 @@ def pipeline_command(args: argparse.Namespace):
 
 
 def config_command(args: argparse.Namespace):
-    """Handle configuration command."""
+    """handle configuration command."""
     import json
     
     if args.generate:
@@ -485,7 +485,7 @@ def config_command(args: argparse.Namespace):
                 'evaluation': get_default_evaluation_config()
             }
         
-        # Save configuration
+        # save configuration
         output_file = args.output or f"{args.generate}_config.json"
         with open(output_file, 'w') as f:
             json.dump(config, f, indent=2)
@@ -508,13 +508,13 @@ def config_command(args: argparse.Namespace):
 
 
 def load_config_file(config_path: Path) -> Dict[str, Any]:
-    """Load configuration from JSON file.
+    """load configuration from json file.
     
-    Args:
-        config_path: Path to configuration file
+    args:
+        config_path: path to configuration file
         
-    Returns:
-        Configuration dictionary
+    returns:
+        configuration dictionary
     """
     import json
     
@@ -523,18 +523,18 @@ def load_config_file(config_path: Path) -> Dict[str, Any]:
 
 
 def main():
-    """Main CLI entry point."""
+    """main cli entry point."""
     parser = create_parser()
     args = parser.parse_args()
     
-    # Configure logging
+    # configure logging
     log_level = getattr(args, 'log_level', 'INFO')
     configure_logging(
         level=getattr(logging, log_level),
         log_dir=getattr(args, 'log_dir', None)
     )
     
-    # Route to appropriate command handler
+    # route to appropriate command handler
     command_handlers = {
         'preprocess': preprocess_command,
         'train': train_command,

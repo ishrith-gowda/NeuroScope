@@ -1,8 +1,8 @@
 """
-Publication Figure Generator.
+publication figure generator.
 
-Generate all publication-quality figures for
-CVPR/NeurIPS/MICCAI submission.
+generate all publication-quality figures for
+cvpr/neurips/miccai submission.
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -11,7 +11,7 @@ import json
 import numpy as np
 
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
+matplotlib.use('Agg')  # non-interactive backend
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
@@ -19,7 +19,7 @@ from matplotlib.gridspec import GridSpec
 import seaborn as sns
 
 
-# Publication settings
+# publication settings
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
@@ -41,14 +41,14 @@ plt.rcParams.update({
 })
 
 
-# Color palette
+# color palette
 COLORS = {
-    'primary': '#2E86AB',     # Blue
-    'secondary': '#A23B72',   # Magenta
-    'tertiary': '#F18F01',    # Orange
-    'success': '#C73E1D',     # Red
-    'neutral': '#6B7280',     # Gray
-    'background': '#F9FAFB',  # Light gray
+    'primary': '#2E86AB',     # blue
+    'secondary': '#A23B72',   # magenta
+    'tertiary': '#F18F01',    # orange
+    'success': '#C73E1D',     # red
+    'neutral': '#6B7280',     # gray
+    'background': '#F9FAFB',  # light gray
 }
 
 METHOD_COLORS = {
@@ -63,24 +63,24 @@ METHOD_COLORS = {
 
 def create_architecture_diagram(output_path: str):
     """
-    Create SA-CycleGAN architecture diagram.
+    create sa-cyclegan architecture diagram.
     
-    Args:
-        output_path: Output path for figure
+    args:
+        output_path: output path for figure
     """
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.set_xlim(0, 14)
     ax.set_ylim(0, 8)
     ax.axis('off')
     
-    # Colors
+    # colors
     encoder_color = '#E3F2FD'
     attention_color = '#FFF3E0'
     decoder_color = '#E8F5E9'
     disc_color = '#FCE4EC'
     
-    # Generator A2B
-    # Encoder blocks
+    # generator a2b
+    # encoder blocks
     encoder_x = [1, 2.5, 4]
     for i, x in enumerate(encoder_x):
         height = 2 - i * 0.3
@@ -92,7 +92,7 @@ def create_architecture_diagram(output_path: str):
         ax.add_patch(rect)
         ax.text(x + 0.4, 3 - height/2 - 0.25, f'E{i+1}', ha='center', fontsize=8)
     
-    # Attention block
+    # attention block
     rect = FancyBboxPatch(
         (5.5, 2.2), 1.2, 1.6,
         boxstyle="round,pad=0.05",
@@ -101,7 +101,7 @@ def create_architecture_diagram(output_path: str):
     ax.add_patch(rect)
     ax.text(6.1, 2.5, 'Self-\nAttention', ha='center', va='center', fontsize=8, fontweight='bold')
     
-    # Residual blocks
+    # residual blocks
     for i in range(3):
         rect = FancyBboxPatch(
             (7.2 + i*0.6, 2.5), 0.4, 1,
@@ -111,7 +111,7 @@ def create_architecture_diagram(output_path: str):
         ax.add_patch(rect)
     ax.text(7.8, 2.1, 'ResBlocks', ha='center', fontsize=8)
     
-    # Decoder blocks
+    # decoder blocks
     decoder_x = [9.5, 11, 12.5]
     for i, x in enumerate(decoder_x):
         height = 1.4 + i * 0.3
@@ -123,18 +123,18 @@ def create_architecture_diagram(output_path: str):
         ax.add_patch(rect)
         ax.text(x + 0.4, 3 - height/2 - 0.25, f'D{i+1}', ha='center', fontsize=8)
     
-    # Arrows
+    # arrows
     arrow_y = 3
     arrows = [(1.8, 2.5), (3.3, 4), (4.8, 5.5), (6.7, 7.2), (9.1, 9.5), (10.5, 11), (12, 12.5)]
     for x1, x2 in arrows:
         ax.annotate('', xy=(x2, arrow_y), xytext=(x1, arrow_y),
                    arrowprops=dict(arrowstyle='->', color='gray', lw=1.2))
     
-    # Labels
+    # labels
     ax.text(0.5, 3, 'Source\n(BraTS)', ha='center', va='center', fontsize=10, fontweight='bold')
     ax.text(13.5, 3, 'Harmonized\n(UPenn-style)', ha='center', va='center', fontsize=10, fontweight='bold')
     
-    # Discriminator
+    # discriminator
     rect = FancyBboxPatch(
         (10, 0.5), 2, 1,
         boxstyle="round,pad=0.05",
@@ -143,14 +143,14 @@ def create_architecture_diagram(output_path: str):
     ax.add_patch(rect)
     ax.text(11, 1, 'Multi-Scale\nDiscriminator', ha='center', va='center', fontsize=9, fontweight='bold')
     
-    # Arrow to discriminator
+    # arrow to discriminator
     ax.annotate('', xy=(11, 1.5), xytext=(11, 2.3),
                arrowprops=dict(arrowstyle='->', color='#C2185B', lw=1.5))
     
-    # Title
+    # title
     ax.text(7, 7.5, 'SA-CycleGAN Generator Architecture', ha='center', fontsize=14, fontweight='bold')
     
-    # Legend
+    # legend
     legend_items = [
         (encoder_color, '#1976D2', 'Encoder'),
         (attention_color, '#F57C00', 'Self-Attention'),
@@ -170,7 +170,7 @@ def create_architecture_diagram(output_path: str):
     
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_training_curves(
@@ -178,17 +178,17 @@ def create_training_curves(
     output_path: str
 ):
     """
-    Create training curve visualization.
+    create training curve visualization.
     
-    Args:
-        training_log: Training history
-        output_path: Output path
+    args:
+        training_log: training history
+        output_path: output path
     """
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
     
     epochs = range(1, len(training_log.get('g_loss', [])) + 1)
     
-    # Generator loss
+    # generator loss
     ax = axes[0, 0]
     ax.plot(epochs, training_log.get('g_loss', []), color=COLORS['primary'], label='Generator')
     ax.plot(epochs, training_log.get('d_loss', []), color=COLORS['secondary'], label='Discriminator')
@@ -198,7 +198,7 @@ def create_training_curves(
     ax.legend()
     ax.grid(True, alpha=0.3)
     
-    # Cycle consistency
+    # cycle consistency
     ax = axes[0, 1]
     ax.plot(epochs, training_log.get('cycle_loss', []), color=COLORS['tertiary'])
     ax.set_xlabel('Epoch')
@@ -206,7 +206,7 @@ def create_training_curves(
     ax.set_title('Cycle Consistency Loss')
     ax.grid(True, alpha=0.3)
     
-    # Validation SSIM
+    # validation ssim
     ax = axes[1, 0]
     val_epochs = range(5, len(training_log.get('val_ssim', [])) * 5 + 1, 5)
     ax.plot(val_epochs, training_log.get('val_ssim', []), 
@@ -217,7 +217,7 @@ def create_training_curves(
     ax.set_ylim(0.7, 1.0)
     ax.grid(True, alpha=0.3)
     
-    # Learning rate
+    # learning rate
     ax = axes[1, 1]
     ax.plot(epochs, training_log.get('lr', []), color=COLORS['neutral'])
     ax.set_xlabel('Epoch')
@@ -229,7 +229,7 @@ def create_training_curves(
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_method_comparison_bar(
@@ -237,11 +237,11 @@ def create_method_comparison_bar(
     output_path: str
 ):
     """
-    Create bar chart comparing methods.
+    create bar chart comparing methods.
     
-    Args:
-        results: Dict of method -> metrics
-        output_path: Output path
+    args:
+        results: dict of method -> metrics
+        output_path: output path
     """
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     
@@ -249,7 +249,7 @@ def create_method_comparison_bar(
     x = np.arange(len(methods))
     width = 0.6
     
-    # SSIM comparison
+    # ssim comparison
     ax = axes[0]
     ssim_values = [results[m].get('ssim', 0) for m in methods]
     ssim_stds = [results[m].get('ssim_std', 0) for m in methods]
@@ -264,12 +264,12 @@ def create_method_comparison_bar(
     ax.axhline(y=0.9, color='gray', linestyle='--', alpha=0.5, label='Target')
     ax.grid(True, alpha=0.3, axis='y')
     
-    # Highlight best
+    # highlight best
     best_idx = np.argmax(ssim_values)
     bars[best_idx].set_edgecolor('gold')
     bars[best_idx].set_linewidth(2)
     
-    # PSNR comparison
+    # psnr comparison
     ax = axes[1]
     psnr_values = [results[m].get('psnr', 0) for m in methods]
     psnr_stds = [results[m].get('psnr_std', 0) for m in methods]
@@ -282,7 +282,7 @@ def create_method_comparison_bar(
     ax.set_ylim(20, 35)
     ax.grid(True, alpha=0.3, axis='y')
     
-    # Highlight best
+    # highlight best
     best_idx = np.argmax(psnr_values)
     bars[best_idx].set_edgecolor('gold')
     bars[best_idx].set_linewidth(2)
@@ -290,7 +290,7 @@ def create_method_comparison_bar(
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_ablation_heatmap(
@@ -298,16 +298,16 @@ def create_ablation_heatmap(
     output_path: str
 ):
     """
-    Create ablation study heatmap.
+    create ablation study heatmap.
     
-    Args:
-        ablation_results: Ablation study results
-        output_path: Output path
+    args:
+        ablation_results: ablation study results
+        output_path: output path
     """
     components = list(ablation_results.keys())
     metrics = ['SSIM', 'PSNR', 'FID', 'LPIPS']
     
-    # Create delta matrix
+    # create delta matrix
     data = np.zeros((len(components), len(metrics)))
     
     for i, comp in enumerate(components):
@@ -317,7 +317,7 @@ def create_ablation_heatmap(
     
     fig, ax = plt.subplots(figsize=(8, 6))
     
-    # Custom colormap (red for negative, green for positive)
+    # custom colormap (red for negative, green for positive)
     cmap = sns.diverging_palette(10, 130, as_cmap=True)
     
     sns.heatmap(
@@ -339,7 +339,7 @@ def create_ablation_heatmap(
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_statistical_significance_plot(
@@ -347,18 +347,18 @@ def create_statistical_significance_plot(
     output_path: str
 ):
     """
-    Create statistical significance visualization.
+    create statistical significance visualization.
     
-    Args:
-        pairwise_tests: Pairwise test results
-        output_path: Output path
+    args:
+        pairwise_tests: pairwise test results
+        output_path: output path
     """
     methods = sorted(set(
         m for pair in pairwise_tests.keys() for m in pair.split('_vs_')
     ))
     n = len(methods)
     
-    # Create p-value matrix
+    # create p-value matrix
     p_matrix = np.ones((n, n))
     
     for pair, result in pairwise_tests.items():
@@ -369,7 +369,7 @@ def create_statistical_significance_plot(
     
     fig, ax = plt.subplots(figsize=(8, 7))
     
-    # Custom annotation
+    # custom annotation
     annot = np.empty_like(p_matrix, dtype=object)
     for i in range(n):
         for j in range(n):
@@ -384,7 +384,7 @@ def create_statistical_significance_plot(
             else:
                 annot[i, j] = 'ns'
     
-    # Heatmap
+    # heatmap
     mask = np.triu(np.ones_like(p_matrix, dtype=bool), k=1)
     
     cmap = sns.color_palette("YlOrRd_r", as_cmap=True)
@@ -405,7 +405,7 @@ def create_statistical_significance_plot(
     
     ax.set_title('Statistical Significance (Pairwise Comparisons)', fontweight='bold')
     
-    # Legend
+    # legend
     ax.text(1.15, 0.5, '*** p < 0.001\n** p < 0.01\n* p < 0.05\nns: not significant',
             transform=ax.transAxes, fontsize=9, verticalalignment='center',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
@@ -413,7 +413,7 @@ def create_statistical_significance_plot(
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_modality_analysis(
@@ -421,11 +421,11 @@ def create_modality_analysis(
     output_path: str
 ):
     """
-    Create modality-wise analysis plot.
+    create modality-wise analysis plot.
     
-    Args:
-        modality_results: Per-modality results
-        output_path: Output path
+    args:
+        modality_results: per-modality results
+        output_path: output path
     """
     modalities = ['T1', 'T1ce', 'T2', 'FLAIR']
     methods = list(modality_results.keys())
@@ -435,7 +435,7 @@ def create_modality_analysis(
     x = np.arange(len(modalities))
     width = 0.15
     
-    # SSIM by modality
+    # ssim by modality
     ax = axes[0]
     for i, method in enumerate(methods):
         values = [modality_results[method].get(m, {}).get('ssim', 0) for m in modalities]
@@ -452,7 +452,7 @@ def create_modality_analysis(
     ax.legend(loc='lower right', fontsize=8)
     ax.grid(True, alpha=0.3, axis='y')
     
-    # PSNR by modality
+    # psnr by modality
     ax = axes[1]
     for i, method in enumerate(methods):
         values = [modality_results[method].get(m, {}).get('psnr', 0) for m in modalities]
@@ -472,27 +472,27 @@ def create_modality_analysis(
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
-    print(f"Saved: {output_path}")
+    print(f"saved: {output_path}")
 
 
 def create_all_figures(output_dir: str = 'figures/generated'):
     """
-    Generate all publication figures.
+    generate all publication figures.
     
-    Args:
-        output_dir: Output directory
+    args:
+        output_dir: output directory
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    print("Generating publication figures...")
+    print("generating publication figures...")
     print("=" * 50)
     
-    # 1. Architecture diagram
+    # 1. architecture diagram
     create_architecture_diagram(output_dir / 'architecture_diagram.pdf')
     create_architecture_diagram(output_dir / 'architecture_diagram.png')
     
-    # 2. Training curves (with mock data)
+    # 2. training curves (with mock data)
     training_log = {
         'g_loss': [4.0 - 0.03*i + 0.1*np.sin(i*0.1) for i in range(200)],
         'd_loss': [2.0 - 0.01*i + 0.05*np.sin(i*0.15) for i in range(200)],
@@ -503,7 +503,7 @@ def create_all_figures(output_dir: str = 'figures/generated'):
     create_training_curves(training_log, output_dir / 'training_curves.pdf')
     create_training_curves(training_log, output_dir / 'training_curves.png')
     
-    # 3. Method comparison
+    # 3. method comparison
     results = {
         'SA-CycleGAN (Ours)': {'ssim': 0.923, 'ssim_std': 0.015, 'psnr': 29.8, 'psnr_std': 1.2},
         'CycleGAN': {'ssim': 0.876, 'ssim_std': 0.022, 'psnr': 26.4, 'psnr_std': 1.5},
@@ -515,7 +515,7 @@ def create_all_figures(output_dir: str = 'figures/generated'):
     create_method_comparison_bar(results, output_dir / 'method_comparison.pdf')
     create_method_comparison_bar(results, output_dir / 'method_comparison.png')
     
-    # 4. Ablation heatmap
+    # 4. ablation heatmap
     ablation_results = {
         'no_attention': {'ssim_delta': -0.031, 'psnr_delta': -1.8, 'fid_delta': 12.5, 'lpips_delta': 0.025},
         'no_perceptual': {'ssim_delta': -0.018, 'psnr_delta': -0.9, 'fid_delta': 8.2, 'lpips_delta': 0.035},
@@ -526,7 +526,7 @@ def create_all_figures(output_dir: str = 'figures/generated'):
     create_ablation_heatmap(ablation_results, output_dir / 'ablation_heatmap.pdf')
     create_ablation_heatmap(ablation_results, output_dir / 'ablation_heatmap.png')
     
-    # 5. Statistical significance
+    # 5. statistical significance
     pairwise_tests = {
         'SA-CycleGAN_vs_CycleGAN': {'p_value': 0.0003},
         'SA-CycleGAN_vs_CUT': {'p_value': 0.0021},
@@ -539,7 +539,7 @@ def create_all_figures(output_dir: str = 'figures/generated'):
     create_statistical_significance_plot(pairwise_tests, output_dir / 'statistical_significance.pdf')
     create_statistical_significance_plot(pairwise_tests, output_dir / 'statistical_significance.png')
     
-    # 6. Modality analysis
+    # 6. modality analysis
     modality_results = {
         'SA-CycleGAN (Ours)': {
             'T1': {'ssim': 0.931, 'psnr': 30.2},
@@ -564,7 +564,7 @@ def create_all_figures(output_dir: str = 'figures/generated'):
     create_modality_analysis(modality_results, output_dir / 'modality_analysis.png')
     
     print("=" * 50)
-    print(f"All figures saved to: {output_dir}")
+    print(f"all figures saved to: {output_dir}")
 
 
 if __name__ == '__main__':

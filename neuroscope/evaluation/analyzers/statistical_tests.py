@@ -1,7 +1,7 @@
 """
-Statistical Analysis Module.
+statistical analysis module.
 
-Comprehensive statistical testing and analysis
+comprehensive statistical testing and analysis
 for medical image harmonization evaluation.
 """
 
@@ -17,7 +17,7 @@ from scipy.stats import (
 
 @dataclass
 class TestResult:
-    """Result from statistical test."""
+    """result from statistical test."""
     statistic: float
     p_value: float
     effect_size: Optional[float] = None
@@ -32,7 +32,7 @@ class TestResult:
 
 @dataclass
 class ConfidenceInterval:
-    """Confidence interval result."""
+    """confidence interval result."""
     lower: float
     upper: float
     point_estimate: float
@@ -47,24 +47,24 @@ def paired_t_test(
     alternative: str = 'two-sided'
 ) -> TestResult:
     """
-    Paired t-test for related samples.
+    paired t-test for related samples.
     
-    Args:
-        x: First sample
-        y: Second sample (paired with x)
-        alpha: Significance level
+    args:
+        x: first sample
+        y: second sample (paired with x)
+        alpha: significance level
         alternative: 'two-sided', 'less', or 'greater'
         
-    Returns:
-        TestResult with statistics
+    returns:
+        testresult with statistics
     """
     statistic, p_value = ttest_rel(x, y, alternative=alternative)
     
-    # Effect size (Cohen's d for paired samples)
+    # effect size (cohen's d for paired samples)
     diff = x - y
     effect_size = np.mean(diff) / np.std(diff, ddof=1)
     
-    # Confidence interval for mean difference
+    # confidence interval for mean difference
     se = np.std(diff, ddof=1) / np.sqrt(len(diff))
     t_crit = stats.t.ppf(1 - alpha / 2, len(diff) - 1)
     ci = (np.mean(diff) - t_crit * se, np.mean(diff) + t_crit * se)
@@ -87,23 +87,23 @@ def independent_t_test(
     alternative: str = 'two-sided'
 ) -> TestResult:
     """
-    Independent samples t-test.
+    independent samples t-test.
     
-    Args:
-        x: First sample
-        y: Second sample
-        alpha: Significance level
-        equal_var: Assume equal variances
+    args:
+        x: first sample
+        y: second sample
+        alpha: significance level
+        equal_var: assume equal variances
         alternative: 'two-sided', 'less', or 'greater'
         
-    Returns:
-        TestResult with statistics
+    returns:
+        testresult with statistics
     """
     statistic, p_value = ttest_ind(
         x, y, equal_var=equal_var, alternative=alternative
     )
     
-    # Cohen's d for independent samples
+    # cohen's d for independent samples
     pooled_std = np.sqrt(
         ((len(x) - 1) * np.var(x, ddof=1) + (len(y) - 1) * np.var(y, ddof=1)) /
         (len(x) + len(y) - 2)
@@ -126,22 +126,22 @@ def wilcoxon_test(
     alternative: str = 'two-sided'
 ) -> TestResult:
     """
-    Wilcoxon signed-rank test for paired samples.
+    wilcoxon signed-rank test for paired samples.
     
-    Non-parametric alternative to paired t-test.
+    non-parametric alternative to paired t-test.
     
-    Args:
-        x: First sample
-        y: Second sample (paired)
-        alpha: Significance level
+    args:
+        x: first sample
+        y: second sample (paired)
+        alpha: significance level
         alternative: 'two-sided', 'less', or 'greater'
         
-    Returns:
-        TestResult with statistics
+    returns:
+        testresult with statistics
     """
     statistic, p_value = wilcoxon(x, y, alternative=alternative)
     
-    # Effect size: r = Z / sqrt(N)
+    # effect size: r = z / sqrt(n)
     n = len(x)
     z = stats.norm.ppf(p_value / 2)
     effect_size = abs(z) / np.sqrt(n)
@@ -162,22 +162,22 @@ def mann_whitney_test(
     alternative: str = 'two-sided'
 ) -> TestResult:
     """
-    Mann-Whitney U test for independent samples.
+    mann-whitney u test for independent samples.
     
-    Non-parametric alternative to independent t-test.
+    non-parametric alternative to independent t-test.
     
-    Args:
-        x: First sample
-        y: Second sample
-        alpha: Significance level
+    args:
+        x: first sample
+        y: second sample
+        alpha: significance level
         alternative: 'two-sided', 'less', or 'greater'
         
-    Returns:
-        TestResult with statistics
+    returns:
+        testresult with statistics
     """
     statistic, p_value = mannwhitneyu(x, y, alternative=alternative)
     
-    # Effect size: rank-biserial correlation
+    # effect size: rank-biserial correlation
     n1, n2 = len(x), len(y)
     effect_size = 1 - (2 * statistic) / (n1 * n2)
     
@@ -195,18 +195,18 @@ def anova_test(
     alpha: float = 0.05
 ) -> TestResult:
     """
-    One-way ANOVA for multiple group comparison.
+    one-way anova for multiple group comparison.
     
-    Args:
-        *groups: Variable number of sample groups
-        alpha: Significance level
+    args:
+        *groups: variable number of sample groups
+        alpha: significance level
         
-    Returns:
-        TestResult with F-statistic
+    returns:
+        testresult with f-statistic
     """
     statistic, p_value = f_oneway(*groups)
     
-    # Effect size: eta-squared
+    # effect size: eta-squared
     all_data = np.concatenate(groups)
     grand_mean = np.mean(all_data)
     
@@ -232,20 +232,20 @@ def kruskal_wallis_test(
     alpha: float = 0.05
 ) -> TestResult:
     """
-    Kruskal-Wallis H test for multiple group comparison.
+    kruskal-wallis h test for multiple group comparison.
     
-    Non-parametric alternative to ANOVA.
+    non-parametric alternative to anova.
     
-    Args:
-        *groups: Variable number of sample groups
-        alpha: Significance level
+    args:
+        *groups: variable number of sample groups
+        alpha: significance level
         
-    Returns:
-        TestResult with H-statistic
+    returns:
+        testresult with h-statistic
     """
     statistic, p_value = kruskal(*groups)
     
-    # Effect size: epsilon-squared
+    # effect size: epsilon-squared
     n = sum(len(g) for g in groups)
     effect_size = (statistic - len(groups) + 1) / (n - len(groups))
     
@@ -266,22 +266,22 @@ def bootstrap_ci(
     method: str = 'percentile'
 ) -> ConfidenceInterval:
     """
-    Bootstrap confidence interval.
+    bootstrap confidence interval.
     
-    Args:
-        data: Input data
-        statistic_fn: Function to compute statistic
-        n_bootstrap: Number of bootstrap samples
-        confidence_level: Confidence level (e.g., 0.95)
+    args:
+        data: input data
+        statistic_fn: function to compute statistic
+        n_bootstrap: number of bootstrap samples
+        confidence_level: confidence level (e.g., 0.95)
         method: 'percentile', 'bca', or 'basic'
         
-    Returns:
-        ConfidenceInterval result
+    returns:
+        confidenceinterval result
     """
     n = len(data)
     point_estimate = statistic_fn(data)
     
-    # Generate bootstrap samples
+    # generate bootstrap samples
     bootstrap_stats = np.zeros(n_bootstrap)
     for i in range(n_bootstrap):
         sample = np.random.choice(data, size=n, replace=True)
@@ -302,10 +302,10 @@ def bootstrap_ci(
         )
     
     elif method == 'bca':
-        # Bias-corrected and accelerated
+        # bias-corrected and accelerated
         z0 = stats.norm.ppf(np.mean(bootstrap_stats < point_estimate))
         
-        # Jackknife for acceleration
+        # jackknife for acceleration
         jackknife_stats = np.zeros(n)
         for i in range(n):
             jackknife_sample = np.delete(data, i)
@@ -347,20 +347,20 @@ def compute_effect_size(
     method: str = 'cohens_d'
 ) -> float:
     """
-    Compute effect size between two samples.
+    compute effect size between two samples.
     
-    Args:
-        x: First sample
-        y: Second sample
+    args:
+        x: first sample
+        y: second sample
         method: 'cohens_d', 'hedges_g', or 'glass_delta'
         
-    Returns:
-        Effect size value
+    returns:
+        effect size value
     """
     mean_diff = np.mean(x) - np.mean(y)
     
     if method == 'cohens_d':
-        # Pooled standard deviation
+        # pooled standard deviation
         pooled_std = np.sqrt(
             ((len(x) - 1) * np.var(x, ddof=1) + 
              (len(y) - 1) * np.var(y, ddof=1)) /
@@ -369,14 +369,14 @@ def compute_effect_size(
         return mean_diff / pooled_std
     
     elif method == 'hedges_g':
-        # Small sample correction to Cohen's d
+        # small sample correction to cohen's d
         cohens_d = compute_effect_size(x, y, 'cohens_d')
         n = len(x) + len(y)
         correction = 1 - 3 / (4 * n - 9)
         return cohens_d * correction
     
     elif method == 'glass_delta':
-        # Use control group SD only
+        # use control group sd only
         return mean_diff / np.std(y, ddof=1)
     
     else:
@@ -388,14 +388,14 @@ def interpret_effect_size(
     method: str = 'cohens_d'
 ) -> str:
     """
-    Interpret effect size using standard thresholds.
+    interpret effect size using standard thresholds.
     
-    Args:
-        d: Effect size value
-        method: Effect size type
+    args:
+        d: effect size value
+        method: effect size type
         
-    Returns:
-        Interpretation string
+    returns:
+        interpretation string
     """
     d = abs(d)
     
@@ -417,14 +417,14 @@ def bonferroni_correction(
     alpha: float = 0.05
 ) -> Tuple[List[float], List[bool]]:
     """
-    Bonferroni correction for multiple comparisons.
+    bonferroni correction for multiple comparisons.
     
-    Args:
-        p_values: List of p-values
-        alpha: Significance level
+    args:
+        p_values: list of p-values
+        alpha: significance level
         
-    Returns:
-        Tuple of (adjusted p-values, significance flags)
+    returns:
+        tuple of (adjusted p-values, significance flags)
     """
     n = len(p_values)
     adjusted = [min(p * n, 1.0) for p in p_values]
@@ -438,28 +438,28 @@ def benjamini_hochberg(
     alpha: float = 0.05
 ) -> Tuple[List[float], List[bool]]:
     """
-    Benjamini-Hochberg procedure for FDR control.
+    benjamini-hochberg procedure for fdr control.
     
-    Args:
-        p_values: List of p-values
-        alpha: Significance level
+    args:
+        p_values: list of p-values
+        alpha: significance level
         
-    Returns:
-        Tuple of (adjusted p-values, significance flags)
+    returns:
+        tuple of (adjusted p-values, significance flags)
     """
     n = len(p_values)
     
-    # Sort p-values
+    # sort p-values
     sorted_indices = np.argsort(p_values)
     sorted_p = np.array(p_values)[sorted_indices]
     
-    # Compute adjusted p-values
+    # compute adjusted p-values
     adjusted = np.zeros(n)
     for i, (idx, p) in enumerate(zip(sorted_indices, sorted_p)):
         rank = i + 1
         adjusted[idx] = p * n / rank
     
-    # Ensure monotonicity
+    # ensure monotonicity
     for i in range(n - 2, -1, -1):
         adjusted[i] = min(adjusted[i], adjusted[i + 1])
     
@@ -474,14 +474,14 @@ def check_normality(
     alpha: float = 0.05
 ) -> TestResult:
     """
-    Shapiro-Wilk test for normality.
+    shapiro-wilk test for normality.
     
-    Args:
-        data: Input data
-        alpha: Significance level
+    args:
+        data: input data
+        alpha: significance level
         
-    Returns:
-        TestResult (significant = not normal)
+    returns:
+        testresult (significant = not normal)
     """
     statistic, p_value = shapiro(data)
     
@@ -498,14 +498,14 @@ def check_homogeneity(
     alpha: float = 0.05
 ) -> TestResult:
     """
-    Levene's test for homogeneity of variances.
+    levene's test for homogeneity of variances.
     
-    Args:
-        *groups: Variable number of sample groups
-        alpha: Significance level
+    args:
+        *groups: variable number of sample groups
+        alpha: significance level
         
-    Returns:
-        TestResult (significant = not homogeneous)
+    returns:
+        testresult (significant = not homogeneous)
     """
     statistic, p_value = levene(*groups)
     
@@ -519,16 +519,16 @@ def check_homogeneity(
 
 class StatisticalAnalysis:
     """
-    Comprehensive statistical analysis framework.
+    comprehensive statistical analysis framework.
     
-    Provides methods for complete statistical analysis
+    provides methods for complete statistical analysis
     of experimental results.
     """
     
     def __init__(self, alpha: float = 0.05):
         """
-        Args:
-            alpha: Significance level for all tests
+        args:
+            alpha: significance level for all tests
         """
         self.alpha = alpha
         self.results: Dict[str, TestResult] = {}
@@ -540,15 +540,15 @@ class StatisticalAnalysis:
         paired: bool = True
     ) -> Dict[str, TestResult]:
         """
-        Compare multiple methods against baseline.
+        compare multiple methods against baseline.
         
-        Args:
-            method_results: Dict of method name -> scores
-            baseline: Baseline method name
-            paired: Whether samples are paired
+        args:
+            method_results: dict of method name -> scores
+            baseline: baseline method name
+            paired: whether samples are paired
             
-        Returns:
-            Dict of comparison name -> TestResult
+        returns:
+            dict of comparison name -> testresult
         """
         comparisons = {}
         methods = list(method_results.keys())
@@ -564,13 +564,13 @@ class StatisticalAnalysis:
             
             method_data = method_results[method]
             
-            # Check normality
+            # check normality
             norm_baseline = check_normality(baseline_data, self.alpha)
             norm_method = check_normality(method_data, self.alpha)
             
-            # Use parametric or non-parametric test
+            # use parametric or non-parametric test
             if norm_baseline.significant or norm_method.significant:
-                # Non-normal: use non-parametric
+                # non-normal: use non-parametric
                 if paired:
                     result = wilcoxon_test(
                         baseline_data, method_data, self.alpha
@@ -580,7 +580,7 @@ class StatisticalAnalysis:
                         baseline_data, method_data, self.alpha
                     )
             else:
-                # Normal: use t-test
+                # normal: use t-test
                 if paired:
                     result = paired_t_test(
                         baseline_data, method_data, self.alpha
@@ -592,7 +592,7 @@ class StatisticalAnalysis:
             
             comparisons[f"{baseline}_vs_{method}"] = result
         
-        # Apply multiple comparison correction
+        # apply multiple comparison correction
         p_values = [r.p_value for r in comparisons.values()]
         adjusted_p, significant = bonferroni_correction(p_values, self.alpha)
         
@@ -608,13 +608,13 @@ class StatisticalAnalysis:
         data: np.ndarray
     ) -> Dict[str, float]:
         """
-        Compute summary statistics.
+        compute summary statistics.
         
-        Args:
-            data: Input data
+        args:
+            data: input data
             
-        Returns:
-            Dict of statistic name -> value
+        returns:
+            dict of statistic name -> value
         """
         return {
             'mean': float(np.mean(data)),
@@ -629,7 +629,7 @@ class StatisticalAnalysis:
         }
     
     def generate_report(self) -> Dict:
-        """Generate comprehensive statistical report."""
+        """generate comprehensive statistical report."""
         report = {
             'alpha': self.alpha,
             'tests': {}

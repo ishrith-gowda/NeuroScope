@@ -10,7 +10,7 @@ from neuroscope_preprocessing_config import PATHS
 
 def configure_logging() -> None:
     """
-    Configure logging for the enrichment script.
+    configure logging for the enrichment script.
     """
     logging.basicConfig(
         level=logging.INFO,
@@ -20,17 +20,17 @@ def configure_logging() -> None:
 
 def load_metadata(metadata_path: Path) -> Dict[str, Any]:
     """
-    Load the existing neuroscope dataset metadata JSON with validation.
+    load the existing neuroscope dataset metadata json with validation.
     
-    Args:
-        metadata_path: Path to the metadata JSON file
+    args:
+        metadata_path: path to the metadata json file
         
-    Returns:
-        Dict containing the loaded metadata
+    returns:
+        dict containing the loaded metadata
         
-    Raises:
-        FileNotFoundError: If metadata file doesn't exist
-        json.JSONDecodeError: If JSON is invalid
+    raises:
+        filenotfounderror: if metadata file doesn't exist
+        json.jsondecodeerror: if json is invalid
     """
     if not metadata_path.exists():
         logging.error("metadata file not found: %s", metadata_path)
@@ -41,7 +41,7 @@ def load_metadata(metadata_path: Path) -> Dict[str, Any]:
             metadata = json.load(f)
         logging.info("loaded metadata from: %s", metadata_path)
         
-        # Validate basic structure
+        # validate basic structure
         required_sections = ['brats', 'upenn']
         for section in required_sections:
             if section not in metadata:
@@ -62,17 +62,17 @@ def load_metadata(metadata_path: Path) -> Dict[str, Any]:
 
 def load_and_validate_acquisition_data(csv_path: Path) -> pd.DataFrame:
     """
-    Load and validate UPenn acquisition parameters CSV.
+    load and validate upenn acquisition parameters csv.
     
-    Args:
-        csv_path: Path to the acquisition CSV file
+    args:
+        csv_path: path to the acquisition csv file
         
-    Returns:
-        Validated pandas DataFrame
+    returns:
+        validated pandas dataframe
         
-    Raises:
-        FileNotFoundError: If CSV file doesn't exist
-        ValueError: If required columns are missing
+    raises:
+        filenotfounderror: if csv file doesn't exist
+        valueerror: if required columns are missing
     """
     if not csv_path.exists():
         logging.error("acquisition csv not found: %s", csv_path)
@@ -82,8 +82,8 @@ def load_and_validate_acquisition_data(csv_path: Path) -> pd.DataFrame:
         df = pd.read_csv(csv_path)
         logging.info("loaded acquisition csv: %s (%d rows)", csv_path, len(df))
         
-        # Check required columns
-        required_cols = ['ID']  # Only ID is truly required
+        # check required columns
+        required_cols = ['ID']  # only id is truly required
         optional_cols = ['Manufacturer', 'Model', 'Magnetic Field Strength']
         
         missing_required = [col for col in required_cols if col not in df.columns]
@@ -94,16 +94,16 @@ def load_and_validate_acquisition_data(csv_path: Path) -> pd.DataFrame:
         if missing_optional:
             logging.warning("missing optional columns: %s", missing_optional)
         
-        # Log available columns
+        # log available columns
         logging.info("available columns: %s", list(df.columns))
         
-        # Validate ID column
+        # validate id column
         if df['ID'].isna().any():
             na_count = df['ID'].isna().sum()
             logging.warning("found %d rows with missing ids, removing them", na_count)
             df = df.dropna(subset=['ID'])
         
-        # Check for duplicate IDs
+        # check for duplicate ids
         duplicates = df['ID'].duplicated().sum()
         if duplicates > 0:
             logging.warning("found %d duplicate ids in csv", duplicates)
@@ -119,28 +119,28 @@ def load_and_validate_acquisition_data(csv_path: Path) -> pd.DataFrame:
 
 def clean_and_validate_field_strength(value: Any) -> Optional[float]:
     """
-    Clean and validate magnetic field strength values.
+    clean and validate magnetic field strength values.
     
-    Args:
-        value: Raw field strength value from CSV
+    args:
+        value: raw field strength value from csv
         
-    Returns:
-        Cleaned float value or None if invalid
+    returns:
+        cleaned float value or none if invalid
     """
     if pd.isna(value):
         return None
     
     try:
-        # Convert to string and clean
+        # convert to string and clean
         str_val = str(value).strip().lower()
         
-        # Handle common formats like "3.0T", "1.5 tesla", etc.
+        # handle common formats like "3.0t", "1.5 tesla", etc.
         str_val = str_val.replace('t', '').replace('tesla', '').strip()
         
         float_val = float(str_val)
         
-        # Validate reasonable range for MRI field strengths
-        if 0.1 <= float_val <= 20.0:  # Reasonable range for MRI scanners
+        # validate reasonable range for mri field strengths
+        if 0.1 <= float_val <= 20.0:  # reasonable range for mri scanners
             return float_val
         else:
             logging.debug("field strength outside reasonable range: %s", float_val)
@@ -153,13 +153,13 @@ def clean_and_validate_field_strength(value: Any) -> Optional[float]:
 
 def enrich_brats_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Enrich BraTS metadata with known/inferred acquisition parameters.
+    enrich brats metadata with known/inferred acquisition parameters.
     
-    Args:
-        metadata: The metadata dictionary to enrich
+    args:
+        metadata: the metadata dictionary to enrich
         
-    Returns:
-        Updated metadata dictionary
+    returns:
+        updated metadata dictionary
     """
     brats_section = metadata.get('brats', {})
     valid_subjects = brats_section.get('valid_subjects', {})
@@ -167,12 +167,12 @@ def enrich_brats_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     enriched_count = 0
     
     for subject_id, subj_info in valid_subjects.items():
-        # BraTS-TCGA data is from TCGA, typically acquired on various scanners
-        # We can add some general information based on TCGA dataset characteristics
+        # brats-tcga data is from tcga, typically acquired on various scanners
+        # we can add some general information based on tcga dataset characteristics
         subj_info['dataset_source'] = 'TCGA-GBM'
-        subj_info['vendor'] = 'Mixed'  # TCGA includes multiple vendors
-        subj_info['scanner_model'] = 'Mixed'  # Multiple models
-        subj_info['field_strength'] = None  # Unknown, mixed field strengths
+        subj_info['vendor'] = 'Mixed'  # tcga includes multiple vendors
+        subj_info['scanner_model'] = 'Mixed'  # multiple models
+        subj_info['field_strength'] = None  # unknown, mixed field strengths
         subj_info['acquisition_site'] = 'Multiple TCGA Sites'
         subj_info['notes'] = 'Multi-institutional TCGA dataset with heterogeneous acquisition parameters'
         
@@ -189,14 +189,14 @@ def enrich_upenn_metadata(
     acquisition_df: pd.DataFrame
 ) -> Dict[str, Any]:
     """
-    Enrich UPenn metadata with acquisition parameters from CSV.
+    enrich upenn metadata with acquisition parameters from csv.
     
-    Args:
-        metadata: The metadata dictionary to enrich
-        acquisition_df: DataFrame with acquisition parameters
+    args:
+        metadata: the metadata dictionary to enrich
+        acquisition_df: dataframe with acquisition parameters
         
-    Returns:
-        Updated metadata dictionary
+    returns:
+        updated metadata dictionary
     """
     upenn_section = metadata.get('upenn', {})
     valid_subjects = upenn_section.get('valid_subjects', {})
@@ -204,15 +204,15 @@ def enrich_upenn_metadata(
     enriched_count = 0
     missing_count = 0
     
-    # Get set of available IDs in CSV for efficient lookup
+    # get set of available ids in csv for efficient lookup
     csv_ids: Set[str] = set(acquisition_df['ID'].astype(str))
     
     for subject_id, subj_info in valid_subjects.items():
-        # Add dataset source information
+        # add dataset source information
         subj_info['dataset_source'] = 'UPenn-GBM'
         subj_info['acquisition_site'] = 'University of Pennsylvania'
         
-        # Try to find matching acquisition data
+        # try to find matching acquisition data
         matching_rows = acquisition_df[acquisition_df['ID'].astype(str) == str(subject_id)]
         
         if matching_rows.empty:
@@ -224,18 +224,18 @@ def enrich_upenn_metadata(
             missing_count += 1
             continue
         
-        # Use first matching row if multiple found
+        # use first matching row if multiple found
         if len(matching_rows) > 1:
             logging.warning("multiple acquisition rows found for %s, using first", subject_id)
         
         row = matching_rows.iloc[0]
         
-        # Extract and clean acquisition parameters
+        # extract and clean acquisition parameters
         vendor = row.get('Manufacturer', None)
         model = row.get('Model', None)
         field_strength_raw = row.get('Magnetic Field Strength', None)
         
-        # Clean vendor
+        # clean vendor
         if pd.notna(vendor):
             vendor = str(vendor).strip()
             if vendor.lower() in ['', 'unknown', 'n/a', 'na']:
@@ -243,7 +243,7 @@ def enrich_upenn_metadata(
         else:
             vendor = None
         
-        # Clean model
+        # clean model
         if pd.notna(model):
             model = str(model).strip()
             if model.lower() in ['', 'unknown', 'n/a', 'na']:
@@ -251,10 +251,10 @@ def enrich_upenn_metadata(
         else:
             model = None
         
-        # Clean field strength
+        # clean field strength
         field_strength = clean_and_validate_field_strength(field_strength_raw)
         
-        # Update subject info
+        # update subject info
         subj_info['vendor'] = vendor
         subj_info['scanner_model'] = model
         subj_info['field_strength'] = field_strength
@@ -278,13 +278,13 @@ def enrich_upenn_metadata(
 
 def add_enrichment_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Add metadata about the enrichment process.
+    add metadata about the enrichment process.
     
-    Args:
-        metadata: The metadata dictionary to update
+    args:
+        metadata: the metadata dictionary to update
         
-    Returns:
-        Updated metadata with enrichment information
+    returns:
+        updated metadata with enrichment information
     """
     if 'generation_info' not in metadata:
         metadata['generation_info'] = {}
@@ -304,16 +304,16 @@ def add_enrichment_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
 
 def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
     """
-    Validate the enriched metadata structure and content.
+    validate the enriched metadata structure and content.
     
-    Args:
-        metadata: The enriched metadata to validate
+    args:
+        metadata: the enriched metadata to validate
         
-    Returns:
-        bool: True if validation passes, False otherwise
+    returns:
+        bool: true if validation passes, false otherwise
     """
     try:
-        # Check basic structure
+        # check basic structure
         for section in ['brats', 'upenn']:
             if section not in metadata:
                 logging.error("missing section: %s", section)
@@ -324,7 +324,7 @@ def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
                 logging.error("no valid subjects in section: %s", section)
                 return False
             
-            # Check that enrichment fields were added
+            # check that enrichment fields were added
             sample_subject = next(iter(valid_subjects.values()))
             required_fields = ['dataset_source', 'vendor', 'scanner_model', 'field_strength']
             
@@ -343,23 +343,23 @@ def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
 
 def save_metadata(metadata: Dict[str, Any], output_path: Path) -> None:
     """
-    Save enriched metadata dictionary to a JSON file with validation.
+    save enriched metadata dictionary to a json file with validation.
     
-    Args:
-        metadata: The metadata dictionary to save
-        output_path: Path where to save the JSON file
+    args:
+        metadata: the metadata dictionary to save
+        output_path: path where to save the json file
     """
     try:
-        # Ensure output directory exists
+        # ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Save with proper formatting
+        # save with proper formatting
         with open(output_path, 'w') as f:
             json.dump(metadata, f, indent=2, sort_keys=True)
         
         logging.info("enriched metadata successfully written to: %s", output_path)
         
-        # Verify file was written correctly
+        # verify file was written correctly
         file_size = output_path.stat().st_size
         logging.info("output file size: %.2f KB", file_size / 1024)
         
@@ -370,20 +370,20 @@ def save_metadata(metadata: Dict[str, Any], output_path: Path) -> None:
 
 def print_enrichment_summary(metadata: Dict[str, Any]) -> None:
     """
-    Print a comprehensive summary of the enrichment results.
+    print a comprehensive summary of the enrichment results.
     
-    Args:
-        metadata: The enriched metadata dictionary
+    args:
+        metadata: the enriched metadata dictionary
     """
     print("\n" + "="*60)
-    print("NEUROSCOPE METADATA ENRICHMENT SUMMARY")
+    print("neuroscope metadata enrichment summary")
     print("="*60)
     
     for dataset_name, section_key in [("BraTS-TCGA-GBM", "brats"), ("UPenn-GBM", "upenn")]:
         valid_subjects = metadata[section_key]['valid_subjects']
         total_subjects = len(valid_subjects)
         
-        # Count subjects with acquisition data
+        # count subjects with acquisition data
         with_vendor = sum(1 for s in valid_subjects.values() if s.get('vendor'))
         with_model = sum(1 for s in valid_subjects.values() if s.get('scanner_model'))
         with_field = sum(1 for s in valid_subjects.values() if s.get('field_strength'))
@@ -405,14 +405,14 @@ def print_enrichment_summary(metadata: Dict[str, Any]) -> None:
 
 def main() -> None:
     """
-    Main function to enrich neuroscope metadata with acquisition parameters.
+    main function to enrich neuroscope metadata with acquisition parameters.
     """
     configure_logging()
     
     logging.info("=== NEUROSCOPE METADATA ENRICHMENT ===")
     logging.info("using neuroscope_preprocessing_config.py for path management")
     
-    # Get paths from config
+    # get paths from config
     metadata_path = PATHS['metadata_base']
     acquisition_csv_path = PATHS['upenn_acquisition_csv']
     enriched_output_path = PATHS['metadata_enriched']
@@ -422,26 +422,26 @@ def main() -> None:
     logging.info("output metadata: %s", enriched_output_path)
     
     try:
-        # Load and validate inputs
+        # load and validate inputs
         metadata = load_metadata(metadata_path)
         acquisition_df = load_and_validate_acquisition_data(acquisition_csv_path)
         
-        # Enrich both datasets
+        # enrich both datasets
         metadata = enrich_brats_metadata(metadata)
         metadata = enrich_upenn_metadata(metadata, acquisition_df)
         
-        # Add enrichment metadata
+        # add enrichment metadata
         metadata = add_enrichment_metadata(metadata)
         
-        # Validate enriched metadata
+        # validate enriched metadata
         if not validate_enriched_metadata(metadata):
             logging.error("enrichment validation failed; aborting.")
             return
         
-        # Save enriched metadata
+        # save enriched metadata
         save_metadata(metadata, enriched_output_path)
         
-        # Print summary
+        # print summary
         print_enrichment_summary(metadata)
         
         logging.info("metadata enrichment completed successfully")

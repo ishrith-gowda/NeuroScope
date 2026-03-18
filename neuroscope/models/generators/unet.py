@@ -1,7 +1,7 @@
 """
-U-Net Generator Architecture.
+u-net generator architecture.
 
-U-Net style generators with skip connections for
+u-net style generators with skip connections for
 image-to-image translation.
 """
 
@@ -18,17 +18,17 @@ from .base import BaseGenerator
 
 class UNetGenerator(BaseGenerator):
     """
-    U-Net Generator for image-to-image translation.
+    u-net generator for image-to-image translation.
     
-    Classic U-Net architecture with encoder-decoder and skip connections.
+    classic u-net architecture with encoder-decoder and skip connections.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_downsampling: Number of downsampling layers
-        norm_type: Normalization type
-        use_dropout: Whether to use dropout
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_downsampling: number of downsampling layers
+        norm_type: normalization type
+        use_dropout: whether to use dropout
     """
     
     def __init__(
@@ -44,7 +44,7 @@ class UNetGenerator(BaseGenerator):
         
         self.n_downsampling = n_downsampling
         
-        # Normalization
+        # normalization
         if norm_type == 'batch':
             norm_layer = nn.BatchNorm2d
         elif norm_type == 'instance':
@@ -52,11 +52,11 @@ class UNetGenerator(BaseGenerator):
         else:
             norm_layer = nn.Identity
             
-        # Build U-Net
+        # build u-net
         self.encoder = nn.ModuleList()
         self.decoder = nn.ModuleList()
         
-        # Encoder path
+        # encoder path
         in_ch = in_channels
         encoder_channels = []
         
@@ -69,29 +69,29 @@ class UNetGenerator(BaseGenerator):
             )
             in_ch = out_ch
             
-        # Bottleneck
+        # bottleneck
         bottleneck_ch = min(ngf * (2 ** n_downsampling), 512)
         self.bottleneck = UNetEncoderBlock(in_ch, bottleneck_ch, norm_layer, use_dropout)
         
-        # Decoder path
+        # decoder path
         in_ch = bottleneck_ch
         for i in range(n_downsampling - 1, -1, -1):
             out_ch = encoder_channels[i]
-            # Input includes skip connection
+            # input includes skip connection
             self.decoder.append(
                 UNetDecoderBlock(in_ch + out_ch, out_ch, norm_layer, use_dropout if i > 0 else False)
             )
             in_ch = out_ch
             
-        # Final layer
+        # final layer
         self.final = nn.Sequential(
             nn.ConvTranspose2d(in_ch, out_channels, 4, 2, 1),
             nn.Tanh()
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with skip connections."""
-        # Encode
+        """forward pass with skip connections."""
+        # encode
         encoder_features = []
         out = x
         
@@ -99,28 +99,28 @@ class UNetGenerator(BaseGenerator):
             out = encoder_block(out)
             encoder_features.append(out)
             
-        # Bottleneck
+        # bottleneck
         out = self.bottleneck(out)
         
-        # Decode with skip connections
+        # decode with skip connections
         for i, decoder_block in enumerate(self.decoder):
             skip = encoder_features[-(i + 1)]
             
-            # Handle size mismatch
+            # handle size mismatch
             if skip.shape[-2:] != out.shape[-2:]:
                 out = F.interpolate(out, size=skip.shape[-2:], mode='bilinear', align_corners=False)
                 
             out = torch.cat([out, skip], dim=1)
             out = decoder_block(out)
             
-        # Final
+        # final
         out = self.final(out)
         
         return out
 
 
 class UNetEncoderBlock(nn.Module):
-    """U-Net encoder block (conv + norm + activation + pool)."""
+    """u-net encoder block (conv + norm + activation + pool)."""
     
     def __init__(
         self,
@@ -147,7 +147,7 @@ class UNetEncoderBlock(nn.Module):
 
 
 class UNetDecoderBlock(nn.Module):
-    """U-Net decoder block (upsample + conv + norm + activation)."""
+    """u-net decoder block (upsample + conv + norm + activation)."""
     
     def __init__(
         self,
@@ -175,15 +175,15 @@ class UNetDecoderBlock(nn.Module):
 
 class AttentionUNetGenerator(BaseGenerator):
     """
-    Attention U-Net Generator.
+    attention u-net generator.
     
-    U-Net with attention gates for skip connections.
+    u-net with attention gates for skip connections.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_downsampling: Number of downsampling layers
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_downsampling: number of downsampling layers
     """
     
     def __init__(
@@ -197,7 +197,7 @@ class AttentionUNetGenerator(BaseGenerator):
         
         self.n_downsampling = n_downsampling
         
-        # Encoder
+        # encoder
         self.encoder = nn.ModuleList()
         in_ch = in_channels
         encoder_channels = []
@@ -219,7 +219,7 @@ class AttentionUNetGenerator(BaseGenerator):
             )
             in_ch = out_ch
             
-        # Bottleneck
+        # bottleneck
         bottleneck_ch = min(ngf * (2 ** n_downsampling), 512)
         self.bottleneck = nn.Sequential(
             nn.Conv2d(in_ch, bottleneck_ch, 3, padding=1),
@@ -230,7 +230,7 @@ class AttentionUNetGenerator(BaseGenerator):
             nn.ReLU(inplace=True)
         )
         
-        # Decoder with attention gates
+        # decoder with attention gates
         self.decoder = nn.ModuleList()
         self.attention_gates = nn.ModuleList()
         self.upsample = nn.ModuleList()
@@ -239,17 +239,17 @@ class AttentionUNetGenerator(BaseGenerator):
         for i in range(n_downsampling - 1, -1, -1):
             out_ch = encoder_channels[i]
             
-            # Attention gate
+            # attention gate
             self.attention_gates.append(
                 AttentionGate(out_ch, in_ch, out_ch // 2)
             )
             
-            # Upsample
+            # upsample
             self.upsample.append(
                 nn.ConvTranspose2d(in_ch, out_ch, 2, 2)
             )
             
-            # Decoder block
+            # decoder block
             self.decoder.append(
                 nn.Sequential(
                     nn.Conv2d(out_ch * 2, out_ch, 3, padding=1),
@@ -263,12 +263,12 @@ class AttentionUNetGenerator(BaseGenerator):
             
             in_ch = out_ch
             
-        # Final
+        # final
         self.final = nn.Conv2d(in_ch, out_channels, 1)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with attention gates."""
-        # Encode
+        """forward pass with attention gates."""
+        # encode
         encoder_features = []
         out = x
         
@@ -276,26 +276,26 @@ class AttentionUNetGenerator(BaseGenerator):
             out = enc_block(out)
             encoder_features.append(out)
             
-        # Bottleneck
+        # bottleneck
         out = self.bottleneck(out)
         
-        # Decode with attention
+        # decode with attention
         for i, (attn_gate, up, dec_block) in enumerate(
             zip(self.attention_gates, self.upsample, self.decoder)
         ):
             skip = encoder_features[-(i + 1)]
             
-            # Apply attention gate
+            # apply attention gate
             attended_skip = attn_gate(skip, out)
             
-            # Upsample
+            # upsample
             out = up(out)
             
-            # Handle size mismatch
+            # handle size mismatch
             if out.shape[-2:] != attended_skip.shape[-2:]:
                 out = F.interpolate(out, size=attended_skip.shape[-2:], mode='bilinear', align_corners=False)
                 
-            # Concatenate and decode
+            # concatenate and decode
             out = torch.cat([out, attended_skip], dim=1)
             out = dec_block(out)
             
@@ -303,7 +303,7 @@ class AttentionUNetGenerator(BaseGenerator):
 
 
 class AttentionGate(nn.Module):
-    """Attention gate for skip connections."""
+    """attention gate for skip connections."""
     
     def __init__(
         self,
@@ -336,8 +336,8 @@ class AttentionGate(nn.Module):
         skip: torch.Tensor,
         gating: torch.Tensor
     ) -> torch.Tensor:
-        """Apply attention to skip connection."""
-        # Resize gating signal
+        """apply attention to skip connection."""
+        # resize gating signal
         gating_resized = F.interpolate(
             gating, size=skip.shape[-2:],
             mode='bilinear', align_corners=False
@@ -354,15 +354,15 @@ class AttentionGate(nn.Module):
 
 class ResUNetGenerator(BaseGenerator):
     """
-    Residual U-Net Generator.
+    residual u-net generator.
     
-    U-Net with residual blocks for improved gradient flow.
+    u-net with residual blocks for improved gradient flow.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        n_downsampling: Number of downsampling layers
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        n_downsampling: number of downsampling layers
     """
     
     def __init__(
@@ -374,14 +374,14 @@ class ResUNetGenerator(BaseGenerator):
     ):
         super().__init__(in_channels, out_channels, ngf)
         
-        # Initial conv
+        # initial conv
         self.initial = nn.Sequential(
             nn.Conv2d(in_channels, ngf, 3, padding=1),
             nn.BatchNorm2d(ngf),
             nn.ReLU(inplace=True)
         )
         
-        # Encoder
+        # encoder
         self.encoder = nn.ModuleList()
         self.pool = nn.MaxPool2d(2)
         
@@ -394,13 +394,13 @@ class ResUNetGenerator(BaseGenerator):
             encoder_channels.append(out_ch)
             in_ch = out_ch
             
-        # Bottleneck
+        # bottleneck
         self.bottleneck = nn.Sequential(
             ResidualBlock(in_ch),
             ResidualBlock(in_ch)
         )
         
-        # Decoder
+        # decoder
         self.decoder = nn.ModuleList()
         
         for i in range(n_downsampling):
@@ -409,38 +409,38 @@ class ResUNetGenerator(BaseGenerator):
             self.decoder.append(ResidualDecoderBlock(in_ch, skip_ch, out_ch))
             in_ch = out_ch
             
-        # Final
+        # final
         self.final = nn.Sequential(
             nn.Conv2d(in_ch, out_channels, 1),
             nn.Tanh()
         )
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
-        # Initial
+        """forward pass."""
+        # initial
         out = self.initial(x)
         
-        # Encode
+        # encode
         encoder_features = [out]
         for enc_block in self.encoder:
             out = self.pool(out)
             out = enc_block(out)
             encoder_features.append(out)
             
-        # Bottleneck
+        # bottleneck
         out = self.bottleneck(out)
         
-        # Decode
+        # decode
         for i, dec_block in enumerate(self.decoder):
             skip = encoder_features[-(i + 2)]
             out = dec_block(out, skip)
             
-        # Final
+        # final
         return self.final(out)
 
 
 class ResidualEncoderBlock(nn.Module):
-    """Residual encoder block."""
+    """residual encoder block."""
     
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
@@ -461,7 +461,7 @@ class ResidualEncoderBlock(nn.Module):
 
 
 class ResidualDecoderBlock(nn.Module):
-    """Residual decoder block with skip connection."""
+    """residual decoder block with skip connection."""
     
     def __init__(
         self,
@@ -489,31 +489,31 @@ class ResidualDecoderBlock(nn.Module):
         x: torch.Tensor,
         skip: torch.Tensor
     ) -> torch.Tensor:
-        # Upsample
+        # upsample
         x = self.upsample(x)
         
-        # Handle size mismatch
+        # handle size mismatch
         if x.shape[-2:] != skip.shape[-2:]:
             x = F.interpolate(x, size=skip.shape[-2:], mode='bilinear', align_corners=False)
             
-        # Concatenate
+        # concatenate
         combined = torch.cat([x, skip], dim=1)
         
-        # Residual connection
+        # residual connection
         return self.relu(self.conv(combined) + self.shortcut(combined))
 
 
 class UNetPlusPlusGenerator(BaseGenerator):
     """
-    U-Net++ (Nested U-Net) Generator.
+    u-net++ (nested u-net) generator.
     
-    Dense skip connections for multi-scale feature fusion.
+    dense skip connections for multi-scale feature fusion.
     
-    Args:
-        in_channels: Input channels
-        out_channels: Output channels
-        ngf: Base number of filters
-        depth: Network depth
+    args:
+        in_channels: input channels
+        out_channels: output channels
+        ngf: base number of filters
+        depth: network depth
     """
     
     def __init__(
@@ -527,55 +527,55 @@ class UNetPlusPlusGenerator(BaseGenerator):
         
         self.depth = depth
         
-        # Create all conv blocks
+        # create all conv blocks
         self.conv = nn.ModuleDict()
         
         for i in range(depth + 1):
             for j in range(depth + 1 - i):
-                # Input channels
+                # input channels
                 if i == 0:
                     in_ch = in_channels if j == 0 else ngf * (2 ** j)
                 else:
-                    # Sum of all previous columns in same row + decoder from below
+                    # sum of all previous columns in same row + decoder from below
                     in_ch = ngf * (2 ** j) * (i + 1) + ngf * (2 ** (j + 1)) if j < depth - i else ngf * (2 ** j) * i
                     
                 out_ch = ngf * (2 ** j)
                 
                 self.conv[f'x_{i}_{j}'] = ConvBlock(in_ch if i > 0 or j > 0 else in_channels, out_ch)
                 
-        # Final output
+        # final output
         self.final = nn.Conv2d(ngf * depth, out_channels, 1)
         self.pool = nn.MaxPool2d(2)
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through nested U-Net."""
-        # Store all intermediate outputs
+        """forward pass through nested u-net."""
+        # store all intermediate outputs
         outputs = {}
         
-        # First column (encoder path)
+        # first column (encoder path)
         for j in range(self.depth + 1):
             if j == 0:
                 outputs[f'x_0_{j}'] = self.conv[f'x_0_{j}'](x)
             else:
                 outputs[f'x_0_{j}'] = self.conv[f'x_0_{j}'](self.pool(outputs[f'x_0_{j-1}']))
                 
-        # Remaining columns (nested paths)
+        # remaining columns (nested paths)
         for i in range(1, self.depth + 1):
             for j in range(self.depth + 1 - i):
-                # Collect all previous outputs from same row
+                # collect all previous outputs from same row
                 prev_outputs = [outputs[f'x_{k}_{j}'] for k in range(i)]
                 
-                # Add upsampled output from below
+                # add upsampled output from below
                 up_output = self.up(outputs[f'x_{i-1}_{j+1}'])
                 if up_output.shape[-2:] != prev_outputs[0].shape[-2:]:
                     up_output = F.interpolate(up_output, size=prev_outputs[0].shape[-2:], mode='bilinear', align_corners=False)
                     
-                # Concatenate all
+                # concatenate all
                 combined = torch.cat(prev_outputs + [up_output], dim=1)
                 outputs[f'x_{i}_{j}'] = self.conv[f'x_{i}_{j}'](combined)
                 
-        # Collect final outputs from top row
+        # collect final outputs from top row
         final_outputs = [outputs[f'x_{i}_0'] for i in range(1, self.depth + 1)]
         final = torch.cat(final_outputs, dim=1)
         
@@ -583,7 +583,7 @@ class UNetPlusPlusGenerator(BaseGenerator):
 
 
 class ConvBlock(nn.Module):
-    """Double convolution block."""
+    """double convolution block."""
     
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()

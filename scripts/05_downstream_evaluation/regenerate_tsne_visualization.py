@@ -25,7 +25,7 @@ def main():
     output_dir = root_dir / 'figures' / 'downstream'
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # load t-SNE embeddings
+    # load t-sne embeddings
     tsne_raw_file = root_dir / 'experiments' / 'downstream_evaluation' / 'domain_classification' / 'raw_tsne_embedding.npy'
     tsne_labels_file = root_dir / 'experiments' / 'downstream_evaluation' / 'domain_classification' / 'raw_tsne_labels.npy'
     tsne_harm_file = root_dir / 'experiments' / 'downstream_evaluation' / 'domain_classification' / 'harmonized_tsne_embedding.npy'

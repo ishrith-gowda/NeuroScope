@@ -1,8 +1,8 @@
 """
-Medical Imaging-Specific Losses.
+medical imaging-specific losses.
 
-This module provides loss functions designed specifically for
-medical image analysis, particularly MRI domain adaptation.
+this module provides loss functions designed specifically for
+medical image analysis, particularly mri domain adaptation.
 """
 
 import torch
@@ -14,15 +14,15 @@ import math
 
 class TumorPreservationLoss(nn.Module):
     """
-    Tumor Preservation Loss.
+    tumor preservation loss.
     
-    Ensures that tumor regions are preserved during domain translation.
-    Critical for maintaining diagnostic integrity.
+    ensures that tumor regions are preserved during domain translation.
+    critical for maintaining diagnostic integrity.
     
-    Args:
-        intensity_weight: Weight for intensity preservation
-        boundary_weight: Weight for boundary preservation
-        feature_weight: Weight for feature preservation
+    args:
+        intensity_weight: weight for intensity preservation
+        boundary_weight: weight for boundary preservation
+        feature_weight: weight for feature preservation
     """
     
     def __init__(
@@ -37,7 +37,7 @@ class TumorPreservationLoss(nn.Module):
         self.boundary_weight = boundary_weight
         self.feature_weight = feature_weight
         
-        # Sobel filters for boundary detection
+        # sobel filters for boundary detection
         sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32)
         sobel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32)
         
@@ -45,7 +45,7 @@ class TumorPreservationLoss(nn.Module):
         self.register_buffer('sobel_y', sobel_y.view(1, 1, 3, 3))
         
     def _compute_edges(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute edge map using Sobel operator."""
+        """compute edge map using sobel operator."""
         B, C, H, W = x.size()
         
         sobel_x = self.sobel_x.expand(C, 1, 3, 3).to(x.device, x.dtype)
@@ -63,28 +63,28 @@ class TumorPreservationLoss(nn.Module):
         tumor_mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Compute tumor preservation loss.
+        compute tumor preservation loss.
         
-        Args:
-            input_img: Original image
-            output_img: Translated image
-            tumor_mask: Binary tumor segmentation mask (optional)
+        args:
+            input_img: original image
+            output_img: translated image
+            tumor_mask: binary tumor segmentation mask (optional)
             
-        Returns:
-            Total tumor preservation loss
+        returns:
+            total tumor preservation loss
         """
         if tumor_mask is None:
-            # Auto-detect high-intensity regions as potential tumor
-            # This is a simplification; real implementation would use segmentation
+            # auto-detect high-intensity regions as potential tumor
+            # this is a simplification; real implementation would use segmentation
             tumor_mask = (input_img > input_img.mean() + 2 * input_img.std()).float()
             
-        # Intensity preservation in tumor regions
+        # intensity preservation in tumor regions
         intensity_loss = F.l1_loss(
             output_img * tumor_mask,
             input_img * tumor_mask
         )
         
-        # Boundary preservation
+        # boundary preservation
         input_edges = self._compute_edges(input_img)
         output_edges = self._compute_edges(output_img)
         boundary_loss = F.l1_loss(
@@ -92,7 +92,7 @@ class TumorPreservationLoss(nn.Module):
             input_edges * tumor_mask
         )
         
-        # Feature preservation (local statistics)
+        # feature preservation (local statistics)
         feature_loss = self._compute_feature_loss(input_img, output_img, tumor_mask)
         
         total_loss = (
@@ -109,8 +109,8 @@ class TumorPreservationLoss(nn.Module):
         output_img: torch.Tensor,
         mask: torch.Tensor
     ) -> torch.Tensor:
-        """Compute local feature statistics loss."""
-        # Local mean and variance preservation
+        """compute local feature statistics loss."""
+        # local mean and variance preservation
         mask_sum = mask.sum() + 1e-8
         
         input_mean = (input_img * mask).sum() / mask_sum
@@ -127,15 +127,15 @@ class TumorPreservationLoss(nn.Module):
 
 class RadiomicsPreservationLoss(nn.Module):
     """
-    Radiomics Feature Preservation Loss.
+    radiomics feature preservation loss.
     
-    Preserves radiomic features important for clinical analysis.
-    Includes texture features, shape features, and intensity statistics.
+    preserves radiomic features important for clinical analysis.
+    includes texture features, shape features, and intensity statistics.
     
-    Args:
-        texture_weight: Weight for texture features
-        shape_weight: Weight for shape features
-        intensity_weight: Weight for intensity statistics
+    args:
+        texture_weight: weight for texture features
+        shape_weight: weight for shape features
+        intensity_weight: weight for intensity statistics
     """
     
     def __init__(
@@ -157,25 +157,25 @@ class RadiomicsPreservationLoss(nn.Module):
         roi_mask: Optional[torch.Tensor] = None
     ) -> Dict[str, torch.Tensor]:
         """
-        Compute radiomics preservation loss.
+        compute radiomics preservation loss.
         
-        Returns dict with individual loss components.
+        returns dict with individual loss components.
         """
         if roi_mask is None:
             roi_mask = torch.ones_like(input_img)
             
         losses = {}
         
-        # Intensity statistics
+        # intensity statistics
         losses['intensity'] = self._intensity_statistics_loss(input_img, output_img, roi_mask)
         
-        # Texture features (GLCM-inspired)
+        # texture features (glcm-inspired)
         losses['texture'] = self._texture_loss(input_img, output_img, roi_mask)
         
-        # Shape preservation
+        # shape preservation
         losses['shape'] = self._shape_loss(input_img, output_img, roi_mask)
         
-        # Combined loss
+        # combined loss
         total = (
             self.intensity_weight * losses['intensity'] +
             self.texture_weight * losses['texture'] +
@@ -192,22 +192,22 @@ class RadiomicsPreservationLoss(nn.Module):
         output_img: torch.Tensor,
         mask: torch.Tensor
     ) -> torch.Tensor:
-        """Preserve first-order intensity statistics."""
+        """preserve first-order intensity statistics."""
         mask_sum = mask.sum() + 1e-8
         
-        # Mean
+        # mean
         in_mean = (input_img * mask).sum() / mask_sum
         out_mean = (output_img * mask).sum() / mask_sum
         
-        # Variance
+        # variance
         in_var = ((input_img - in_mean) ** 2 * mask).sum() / mask_sum
         out_var = ((output_img - out_mean) ** 2 * mask).sum() / mask_sum
         
-        # Skewness
+        # skewness
         in_skew = ((input_img - in_mean) ** 3 * mask).sum() / (mask_sum * (in_var ** 1.5 + 1e-8))
         out_skew = ((output_img - out_mean) ** 3 * mask).sum() / (mask_sum * (out_var ** 1.5 + 1e-8))
         
-        # Kurtosis
+        # kurtosis
         in_kurt = ((input_img - in_mean) ** 4 * mask).sum() / (mask_sum * (in_var ** 2 + 1e-8))
         out_kurt = ((output_img - out_mean) ** 4 * mask).sum() / (mask_sum * (out_var ** 2 + 1e-8))
         
@@ -226,11 +226,11 @@ class RadiomicsPreservationLoss(nn.Module):
         output_img: torch.Tensor,
         mask: torch.Tensor
     ) -> torch.Tensor:
-        """Preserve texture features using local gradient statistics."""
-        # Local gradient patterns
+        """preserve texture features using local gradient statistics."""
+        # local gradient patterns
         kernel_size = 3
         
-        # Compute local variance (approximates texture)
+        # compute local variance (approximates texture)
         def local_variance(x):
             x_unfold = F.unfold(x, kernel_size, padding=kernel_size // 2)
             local_mean = x_unfold.mean(dim=1, keepdim=True)
@@ -242,7 +242,7 @@ class RadiomicsPreservationLoss(nn.Module):
         in_texture = local_variance(input_img)
         out_texture = local_variance(output_img)
         
-        # Resize mask if needed
+        # resize mask if needed
         if mask.shape[-2:] != in_texture.shape[-2:]:
             mask = F.interpolate(mask, size=in_texture.shape[-2:], mode='nearest')
             
@@ -254,8 +254,8 @@ class RadiomicsPreservationLoss(nn.Module):
         output_img: torch.Tensor,
         mask: torch.Tensor
     ) -> torch.Tensor:
-        """Preserve shape boundaries."""
-        # Use Laplacian for shape
+        """preserve shape boundaries."""
+        # use laplacian for shape
         laplacian_kernel = torch.tensor(
             [[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=input_img.dtype, device=input_img.device
         ).view(1, 1, 3, 3)
@@ -271,23 +271,23 @@ class RadiomicsPreservationLoss(nn.Module):
 
 class ModalityConsistencyLoss(nn.Module):
     """
-    Multi-Modal Consistency Loss.
+    multi-modal consistency loss.
     
-    Ensures consistency across different MRI modalities during translation.
+    ensures consistency across different mri modalities during translation.
     
-    Args:
-        modality_weights: Dictionary mapping modality names to weights
+    args:
+        modality_weights: dictionary mapping modality names to weights
     """
     
     def __init__(self, modality_weights: Optional[Dict[str, float]] = None):
         super().__init__()
         
-        # Default weights for standard MRI modalities
+        # default weights for standard mri modalities
         self.modality_weights = modality_weights or {
             't1': 1.0,
-            't1ce': 1.5,  # Higher weight for contrast-enhanced
+            't1ce': 1.5,  # higher weight for contrast-enhanced
             't2': 1.0,
-            'flair': 1.2  # Higher weight for FLAIR (tumor visibility)
+            'flair': 1.2  # higher weight for flair (tumor visibility)
         }
         
     def forward(
@@ -296,14 +296,14 @@ class ModalityConsistencyLoss(nn.Module):
         output_modalities: Dict[str, torch.Tensor]
     ) -> torch.Tensor:
         """
-        Compute modality consistency loss.
+        compute modality consistency loss.
         
-        Args:
-            input_modalities: Dict of input modality tensors
-            output_modalities: Dict of output modality tensors
+        args:
+            input_modalities: dict of input modality tensors
+            output_modalities: dict of output modality tensors
             
-        Returns:
-            Weighted modality consistency loss
+        returns:
+            weighted modality consistency loss
         """
         total_loss = 0.0
         total_weight = 0.0
@@ -319,12 +319,12 @@ class ModalityConsistencyLoss(nn.Module):
 
 class AnatomicalConsistencyLoss(nn.Module):
     """
-    Anatomical Structure Preservation Loss.
+    anatomical structure preservation loss.
     
-    Preserves anatomical structures using learned or handcrafted features.
+    preserves anatomical structures using learned or handcrafted features.
     
-    Args:
-        structure_encoder: Optional pretrained anatomy encoder
+    args:
+        structure_encoder: optional pretrained anatomy encoder
     """
     
     def __init__(self, structure_encoder: Optional[nn.Module] = None):
@@ -342,16 +342,16 @@ class AnatomicalConsistencyLoss(nn.Module):
         output_img: torch.Tensor,
         anatomical_mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        """Compute anatomical consistency loss."""
+        """compute anatomical consistency loss."""
         if self.structure_encoder is not None:
-            # Use learned features
+            # use learned features
             with torch.no_grad():
                 input_features = self.structure_encoder(input_img)
             output_features = self.structure_encoder(output_img)
             
             loss = F.l1_loss(output_features, input_features)
         else:
-            # Use gradient-based structure preservation
+            # use gradient-based structure preservation
             loss = self._gradient_structure_loss(input_img, output_img, anatomical_mask)
             
         return loss
@@ -362,8 +362,8 @@ class AnatomicalConsistencyLoss(nn.Module):
         output_img: torch.Tensor,
         mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        """Preserve gradient structures."""
-        # Second-order gradients for structure
+        """preserve gradient structures."""
+        # second-order gradients for structure
         def second_order_gradient(x):
             dx = x[:, :, :, 1:] - x[:, :, :, :-1]
             dy = x[:, :, 1:, :] - x[:, :, :-1, :]
@@ -383,12 +383,12 @@ class AnatomicalConsistencyLoss(nn.Module):
 
 class ContrastEnhancementLoss(nn.Module):
     """
-    Contrast Enhancement Preservation Loss.
+    contrast enhancement preservation loss.
     
-    Specifically for T1ce modality - preserves contrast agent effects.
+    specifically for t1ce modality - preserves contrast agent effects.
     
-    Args:
-        enhancement_threshold: Threshold for detecting enhanced regions
+    args:
+        enhancement_threshold: threshold for detecting enhanced regions
     """
     
     def __init__(self, enhancement_threshold: float = 0.7):
@@ -403,18 +403,18 @@ class ContrastEnhancementLoss(nn.Module):
         output_t1ce: torch.Tensor
     ) -> torch.Tensor:
         """
-        Preserve contrast enhancement patterns.
+        preserve contrast enhancement patterns.
         
-        Computes enhancement map as T1ce - T1 and ensures consistency.
+        computes enhancement map as t1ce - t1 and ensures consistency.
         """
-        # Enhancement maps
+        # enhancement maps
         input_enhancement = input_t1ce - input_t1
         output_enhancement = output_t1ce - output_t1
         
-        # Detect enhanced regions
+        # detect enhanced regions
         enhancement_mask = (input_enhancement > self.enhancement_threshold * input_enhancement.max()).float()
         
-        # Preserve enhancement in detected regions
+        # preserve enhancement in detected regions
         loss = F.l1_loss(
             output_enhancement * enhancement_mask,
             input_enhancement * enhancement_mask
@@ -425,12 +425,12 @@ class ContrastEnhancementLoss(nn.Module):
 
 class NormalizedCrossCorrelationLoss(nn.Module):
     """
-    Normalized Cross-Correlation (NCC) Loss.
+    normalized cross-correlation (ncc) loss.
     
-    Common in medical image registration, useful for intensity-invariant matching.
+    common in medical image registration, useful for intensity-invariant matching.
     
-    Args:
-        window_size: Size of local window for NCC computation
+    args:
+        window_size: size of local window for ncc computation
     """
     
     def __init__(self, window_size: int = 9):
@@ -442,8 +442,8 @@ class NormalizedCrossCorrelationLoss(nn.Module):
         pred: torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        """Compute NCC loss (1 - NCC for minimization)."""
-        # Local means
+        """compute ncc loss (1 - ncc for minimization)."""
+        # local means
         ndims = len(pred.shape) - 2
         
         if ndims == 2:
@@ -462,7 +462,7 @@ class NormalizedCrossCorrelationLoss(nn.Module):
             
         conv_fn = F.conv2d if ndims == 2 else F.conv3d
         
-        # Cross correlation
+        # cross correlation
         pred_flat = pred.view(pred.shape[0], 1, *pred.shape[2:])
         target_flat = target.view(target.shape[0], 1, *target.shape[2:])
         

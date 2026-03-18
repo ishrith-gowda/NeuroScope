@@ -1,17 +1,17 @@
 """
-Training Loggers Package.
+training loggers package.
 
-Comprehensive logging infrastructure for 2.5D SA-CycleGAN training.
+comprehensive logging infrastructure for 2.5d sa-cyclegan training.
 
-Includes:
-- TensorBoardLogger: TensorBoard logging
-- CSVLogger: Tabular metrics export
-- JSONLogger: Structured JSON logs
-- ConsoleLogger: Rich console output
-- LoggerManager: Unified logging interface
-- MetricsAggregator: Batch-level metrics aggregation
+includes:
+- tensorboardlogger: tensorboard logging
+- csvlogger: tabular metrics export
+- jsonlogger: structured json logs
+- consolelogger: rich console output
+- loggermanager: unified logging interface
+- metricsaggregator: batch-level metrics aggregation
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from .tensorboard_logger import TensorBoardLogger

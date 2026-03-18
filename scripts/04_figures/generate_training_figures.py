@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Generate Training Progression Figures for Publication
+generate training progression figures for publication
 
-Creates publication-grade LaTeX-rendered figures showing:
-- Loss curves (Generator, Discriminator, Cycle, Identity)
-- Validation metrics progression (SSIM, PSNR)
-- Learning rate schedule
-- Gradient norms
+creates publication-grade latex-rendered figures showing:
+- loss curves (generator, discriminator, cycle, identity)
+- validation metrics progression (ssim, psnr)
+- learning rate schedule
+- gradient norms
 
-Author: NeuroScope Research Team
-Date: January 2026
+author: neuroscope research team
+date: january 2026
 """
 
 import sys
@@ -23,25 +23,25 @@ from latex_figure_config import (
     FIGURE_SIZES, COLORS, save_figure
 )
 
-# Load training history
+# load training history
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 HISTORY_PATH = PROJECT_ROOT / 'results/training/training_history.json'
 OUTPUT_DIR = PROJECT_ROOT / 'figures/main'
 
 
 def load_training_history():
-    """Load training history from JSON."""
+    """load training history from json."""
     with open(HISTORY_PATH) as f:
         history = json.load(f)
     return history
 
 
 def smooth_curve(values, window=5):
-    """Apply moving average smoothing."""
+    """apply moving average smoothing."""
     if len(values) < window:
         return values
     smoothed = np.convolve(values, np.ones(window)/window, mode='valid')
-    # Pad to original length
+    # pad to original length
     pad_left = (len(values) - len(smoothed)) // 2
     pad_right = len(values) - len(smoothed) - pad_left
     return np.pad(smoothed, (pad_left, pad_right), mode='edge')
@@ -49,28 +49,28 @@ def smooth_curve(values, window=5):
 
 def generate_loss_curves_figure(history):
     """
-    Figure 1: Training Loss Curves
+    figure 1: training loss curves
 
-    Four subplots showing loss progression over training epochs:
-    - Generator loss
-    - Discriminator loss
-    - Cycle consistency loss
-    - Identity loss
+    four subplots showing loss progression over training epochs:
+    - generator loss
+    - discriminator loss
+    - cycle consistency loss
+    - identity loss
     """
-    print("Generating Figure 1: Training Loss Curves...")
+    print("generating figure 1: training loss curves...")
 
     fig, axes = plt.subplots(2, 2, figsize=(16, 11))
     plt.subplots_adjust(hspace=0.35, wspace=0.3, top=0.93)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
 
-    # Distinct color palette: garnet, navy, emerald, amber
+    # distinct color palette: garnet, navy, emerald, amber
     color_gen = '#9B2335'      # garnet
     color_disc = '#1B3A5C'     # navy
     color_cycle = '#2E8B57'    # sea green
     color_identity = '#D4A017' # goldenrod
 
-    # Generator Loss
+    # generator loss
     ax = axes[0, 0]
     g_loss = history['G_loss']
     g_loss_smooth = smooth_curve(g_loss)
@@ -83,7 +83,7 @@ def generate_loss_curves_figure(history):
     ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
     ax.set_axisbelow(True)
 
-    # Discriminator Loss
+    # discriminator loss
     ax = axes[0, 1]
     d_loss = history['D_loss']
     d_loss_smooth = smooth_curve(d_loss)
@@ -96,7 +96,7 @@ def generate_loss_curves_figure(history):
     ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
     ax.set_axisbelow(True)
 
-    # Cycle Consistency Loss
+    # cycle consistency loss
     ax = axes[1, 0]
     cycle_loss = history['cycle_loss']
     cycle_loss_smooth = smooth_curve(cycle_loss)
@@ -109,7 +109,7 @@ def generate_loss_curves_figure(history):
     ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
     ax.set_axisbelow(True)
 
-    # Identity Loss
+    # identity loss
     ax = axes[1, 1]
     identity_loss = history['identity_loss']
     identity_loss_smooth = smooth_curve(identity_loss)
@@ -129,25 +129,25 @@ def generate_loss_curves_figure(history):
 
 def generate_validation_metrics_figure(history):
     """
-    Figure 2: Validation Metrics Progression
+    figure 2: validation metrics progression
 
-    Two subplots showing validation metrics:
-    - SSIM for A→B and B→A
-    - PSNR for A→B and B→A
+    two subplots showing validation metrics:
+    - ssim for a→b and b→a
+    - psnr for a→b and b→a
     """
-    print("Generating Figure 2: Validation Metrics...")
+    print("generating figure 2: validation metrics...")
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     plt.subplots_adjust(wspace=0.25, top=0.85)
 
-    # Plot all epochs
+    # plot all epochs
     val_epochs = np.arange(1, len(history['val_ssim_A2B']) + 1)
 
-    # Unique colors: raspberry, steel blue
+    # unique colors: raspberry, steel blue
     color_a2b = '#8B2252'      # raspberry
     color_b2a = '#4682B4'      # steel blue
 
-    # SSIM
+    # ssim
     ax = axes[0]
     ssim_a2b = history['val_ssim_A2B']
     ssim_b2a = history['val_ssim_B2A']
@@ -165,7 +165,7 @@ def generate_validation_metrics_figure(history):
     ax.legend(fontsize=11, frameon=True, fancybox=False, edgecolor='black')
     ax.set_axisbelow(True)
 
-    # PSNR
+    # psnr
     ax = axes[1]
     psnr_a2b = history['val_psnr_A2B']
     psnr_b2a = history['val_psnr_B2A']
@@ -189,28 +189,28 @@ def generate_validation_metrics_figure(history):
 
 def generate_combined_losses_figure(history):
     """
-    Figure 3: Combined Loss Components
+    figure 3: combined loss components
 
-    Single plot showing all loss components stacked:
-    - GAN loss
-    - Cycle loss (weighted)
-    - Identity loss (weighted)
-    - SSIM loss (weighted)
+    single plot showing all loss components stacked:
+    - gan loss
+    - cycle loss (weighted)
+    - identity loss (weighted)
+    - ssim loss (weighted)
     """
-    print("Generating Figure 3: Combined Loss Components...")
+    print("generating figure 3: combined loss components...")
 
     fig, ax = plt.subplots(figsize=(16, 6))
     plt.subplots_adjust(top=0.85)
 
     epochs = np.arange(1, len(history['G_loss']) + 1)
 
-    # Unique colors: vermillion, jade, tangerine, cobalt
+    # unique colors: vermillion, jade, tangerine, cobalt
     color_gan = '#CC3311'       # vermillion
     color_cycle = '#228B22'     # forest green
     color_identity = '#E68A00'  # tangerine
     color_ssim = '#0047AB'      # cobalt
 
-    # Plot each component
+    # plot each component
     gan_loss = smooth_curve(history['gan_loss'])
     cycle_loss = smooth_curve(history['cycle_loss'])
     identity_loss = smooth_curve(history['identity_loss'])
@@ -235,11 +235,11 @@ def generate_combined_losses_figure(history):
 
 def generate_learning_rate_figure(history):
     """
-    Figure 4: Learning Rate Schedule
+    figure 4: learning rate schedule
 
-    Shows how learning rate changed during training.
+    shows how learning rate changed during training.
     """
-    print("Generating Figure 4: Learning Rate Schedule...")
+    print("generating figure 4: learning rate schedule...")
 
     fig, ax = plt.subplots(figsize=(16, 6))
     plt.subplots_adjust(top=0.85)
@@ -265,11 +265,11 @@ def generate_learning_rate_figure(history):
 
 def generate_gradient_norms_figure(history):
     """
-    Figure 5: Gradient Norms
+    figure 5: gradient norms
 
-    Shows gradient magnitudes for monitoring training stability.
+    shows gradient magnitudes for monitoring training stability.
     """
-    print("Generating Figure 5: Gradient Norms...")
+    print("generating figure 5: gradient norms...")
 
     fig, ax = plt.subplots(figsize=(16, 6))
     plt.subplots_adjust(top=0.85)
@@ -296,35 +296,35 @@ def generate_gradient_norms_figure(history):
 
 
 def main():
-    """Generate all training figures."""
+    """generate all training figures."""
     print("="*60)
-    print("Generating Training Progression Figures")
+    print("generating training progression figures")
     print("="*60)
 
-    # Load history
+    # load history
     history = load_training_history()
-    print(f"Loaded training history: {len(history['G_loss'])} epochs")
+    print(f"loaded training history: {len(history['G_loss'])} epochs")
 
-    # Generate all figures (only those with available data)
+    # generate all figures (only those with available data)
     generate_loss_curves_figure(history)
     generate_validation_metrics_figure(history)
 
-    # Skip figures requiring missing data fields
+    # skip figures requiring missing data fields
     if len(history.get('gan_loss', [])) > 0:
         generate_combined_losses_figure(history)
     else:
-        print("Skipping Figure 3: Combined Loss Components (gan_loss not available)")
+        print("skipping figure 3: combined loss components (gan_loss not available)")
 
     generate_learning_rate_figure(history)
 
     if len(history.get('gradient_norm_G', [])) > 0:
         generate_gradient_norms_figure(history)
     else:
-        print("Skipping Figure 5: Gradient Norms (gradient data not available)")
+        print("skipping figure 5: gradient norms (gradient data not available)")
 
     print("\n" + "="*60)
-    print("Training figures generation complete!")
-    print(f"Figures saved to: {OUTPUT_DIR}/")
+    print("training figures generation complete!")
+    print(f"figures saved to: {OUTPUT_DIR}/")
     print("="*60)
 
 

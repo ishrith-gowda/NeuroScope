@@ -1,9 +1,9 @@
-"""Dataset implementations for NeuroScope.
+"""dataset implementations for neuroscope.
 
-This module provides dataset implementations for various data types and configurations.
+this module provides dataset implementations for various data types and configurations.
 """
 
-# Placeholder for dataset implementations
-# The actual implementation would be imported here
+# placeholder for dataset implementations
+# the actual implementation would be imported here
 
 __all__ = []

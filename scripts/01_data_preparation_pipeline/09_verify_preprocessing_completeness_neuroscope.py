@@ -14,7 +14,7 @@ from preprocessing_utils import write_json_with_schema
 
 
 def configure_logging() -> None:
-    """Configure logging for pipeline verification."""
+    """configure logging for pipeline verification."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
@@ -22,7 +22,7 @@ def configure_logging() -> None:
 
 
 def verify_image_file(file_path: Path) -> bool:
-    """Verify that an image file exists and is readable."""
+    """verify that an image file exists and is readable."""
     if not file_path.exists():
         return False
     
@@ -36,23 +36,23 @@ def verify_image_file(file_path: Path) -> bool:
 
 def sanitize_for_json(obj: Any) -> Any:
     """
-    Recursively sanitize objects to be JSON serializable.
-    Converts numpy types and other non-serializable types.
+    recursively sanitize objects to be json serializable.
+    converts numpy types and other non-serializable types.
     """
     if isinstance(obj, dict):
         return {key: sanitize_for_json(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [sanitize_for_json(item) for item in obj]
     elif isinstance(obj, tuple):
-        return [sanitize_for_json(item) for item in obj]  # Convert tuple to list
+        return [sanitize_for_json(item) for item in obj]  # convert tuple to list
     elif isinstance(obj, np.ndarray):
-        return obj.tolist()  # Convert numpy array to list
+        return obj.tolist()  # convert numpy array to list
     elif isinstance(obj, (np.integer, np.int64, np.int32)):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64, np.float32)):
         return float(obj)
     elif isinstance(obj, (np.bool_, bool)):
-        return bool(obj)  # Ensure it's Python bool
+        return bool(obj)  # ensure it's python bool
     elif isinstance(obj, np.str_):
         return str(obj)
     elif obj is None:
@@ -60,7 +60,7 @@ def sanitize_for_json(obj: Any) -> Any:
     elif isinstance(obj, (str, int, float)):
         return obj
     else:
-        # For any other type, try to convert to string as fallback
+        # for any other type, try to convert to string as fallback
         try:
             return str(obj)
         except:
@@ -68,20 +68,20 @@ def sanitize_for_json(obj: Any) -> Any:
 
 
 def analyze_image_quality(file_path: Path) -> Dict[str, Any]:
-    """Analyze basic image quality metrics."""
+    """analyze basic image quality metrics."""
     try:
         img = sitk.ReadImage(str(file_path))
         arr = sitk.GetArrayFromImage(img)
         
-        # Basic quality metrics
+        # basic quality metrics
         nonzero_values = arr[arr > 0]
         if len(nonzero_values) < 100:
             return {'error': 'insufficient_nonzero_voxels'}
         
-        # Ensure all values are JSON serializable
+        # ensure all values are json serializable
         return {
-            'spacing': [float(s) for s in img.GetSpacing()],  # Convert to regular float
-            'size': [int(s) for s in img.GetSize()],  # Convert to regular int
+            'spacing': [float(s) for s in img.GetSpacing()],  # convert to regular float
+            'size': [int(s) for s in img.GetSize()],  # convert to regular int
             'mean_intensity': float(nonzero_values.mean()),
             'std_intensity': float(nonzero_values.std()),
             'cv': float(nonzero_values.std() / (nonzero_values.mean() + 1e-8)),
@@ -96,7 +96,7 @@ def analyze_image_quality(file_path: Path) -> Dict[str, Any]:
 
 
 def verify_subject_completeness(section: str, subject_id: str, modalities: List[str]) -> Dict[str, Any]:
-    """Verify completeness and quality of a single subject's preprocessed data."""
+    """verify completeness and quality of a single subject's preprocessed data."""
     preprocessed_dir = PATHS['preprocessed_dir'] / section / subject_id
     
     subject_status = {
@@ -114,7 +114,7 @@ def verify_subject_completeness(section: str, subject_id: str, modalities: List[
         file_path = preprocessed_dir / f"{modality}.nii.gz"
         
         modality_status = {
-            'file_exists': bool(verify_image_file(file_path)),  # Ensure Python bool
+            'file_exists': bool(verify_image_file(file_path)),  # ensure python bool
             'quality_metrics': {}
         }
         
@@ -125,14 +125,14 @@ def verify_subject_completeness(section: str, subject_id: str, modalities: List[
             if 'error' not in quality_metrics:
                 complete_modalities += 1
                 
-                # Check for quality issues
-                if quality_metrics['cv'] > 0.5:  # Very high variation
+                # check for quality issues
+                if quality_metrics['cv'] > 0.5:  # very high variation
                     quality_issues.append(f"{modality}: high CV ({quality_metrics['cv']:.3f})")
                 
-                if quality_metrics['intensity_range'] < 0.1:  # Very low range
+                if quality_metrics['intensity_range'] < 0.1:  # very low range
                     quality_issues.append(f"{modality}: low intensity range ({quality_metrics['intensity_range']:.3f})")
                 
-                # Check spacing (should be 1mm isotropic)
+                # check spacing (should be 1mm isotropic)
                 spacing = quality_metrics['spacing']
                 if not all(abs(s - 1.0) < 0.1 for s in spacing):
                     quality_issues.append(f"{modality}: non-isotropic spacing {spacing}")
@@ -143,10 +143,10 @@ def verify_subject_completeness(section: str, subject_id: str, modalities: List[
         
         subject_status['modality_status'][modality] = modality_status
     
-    # Overall assessment - ensure all values are JSON serializable
+    # overall assessment - ensure all values are json serializable
     subject_status['complete_modalities'] = int(complete_modalities)
     subject_status['total_modalities'] = int(len(modalities))
-    subject_status['overall_complete'] = bool(complete_modalities >= 3)  # At least 3/4 modalities
+    subject_status['overall_complete'] = bool(complete_modalities >= 3)  # at least 3/4 modalities
     subject_status['ready_for_training'] = bool(complete_modalities == len(modalities) and not quality_issues)
     subject_status['quality_issues'] = quality_issues
     
@@ -154,7 +154,7 @@ def verify_subject_completeness(section: str, subject_id: str, modalities: List[
 
 
 def calculate_dataset_statistics(detailed_results: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    """Calculate comprehensive statistics from detailed results."""
+    """calculate comprehensive statistics from detailed results."""
     stats = {
         'total_subjects': 0,
         'complete_subjects': 0,
@@ -188,7 +188,7 @@ def calculate_dataset_statistics(detailed_results: Dict[str, Dict[str, Any]]) ->
             if subject_data.get('quality_issues', []):
                 stats['subjects_with_issues'] += 1
             
-            # Analyze modalities
+            # analyze modalities
             for modality, mod_status in subject_data.get('modality_status', {}).items():
                 if modality not in stats['modality_breakdown']:
                     continue
@@ -200,7 +200,7 @@ def calculate_dataset_statistics(detailed_results: Dict[str, Dict[str, Any]]) ->
                     if 'error' not in quality_metrics:
                         stats['modality_breakdown'][modality]['quality_ok'] += 1
                         
-                        # Collect quality statistics
+                        # collect quality statistics
                         cv = quality_metrics.get('cv')
                         if cv is not None and np.isfinite(cv):
                             stats['quality_metrics']['cv_values'].append(float(cv))
@@ -209,7 +209,7 @@ def calculate_dataset_statistics(detailed_results: Dict[str, Dict[str, Any]]) ->
                         if intensity_range is not None and np.isfinite(intensity_range):
                             stats['quality_metrics']['intensity_ranges'].append(float(intensity_range))
                         
-                        # Check spacing compliance
+                        # check spacing compliance
                         spacing = quality_metrics.get('spacing', [])
                         if spacing and all(abs(s - 1.0) < 0.1 for s in spacing):
                             stats['quality_metrics']['spacing_compliant'] += 1
@@ -223,7 +223,7 @@ def calculate_dataset_statistics(detailed_results: Dict[str, Dict[str, Any]]) ->
 
 
 def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[str] = None) -> Dict[str, Any]:
-    """Run comprehensive pipeline verification."""
+    """run comprehensive pipeline verification."""
     if splits_to_verify is None:
         splits_to_verify = ['train', 'val']
     
@@ -246,7 +246,7 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
     
     modalities = ['t1', 't1gd', 't2', 'flair']
     
-    # Process each dataset
+    # process each dataset
     for section in ['brats', 'upenn']:
         logging.info("Verifying %s dataset...", section)
         
@@ -262,14 +262,14 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
         section_processed = 0
         
         for subject_id, subject_info in valid_subjects.items():
-            # Check if subject is in the splits we want to verify
+            # check if subject is in the splits we want to verify
             subject_split = subject_info.get('split')
             if subject_split not in splits_to_verify:
                 continue
             
             section_processed += 1
             
-            # Verify subject completeness and quality
+            # verify subject completeness and quality
             subject_status = verify_subject_completeness(section, subject_id, modalities)
             results['detailed_results'][section][subject_id] = subject_status
             
@@ -282,10 +282,10 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
         logging.info("%s verification complete: %d total, %d complete, %d training-ready", 
                     section, section_processed, section_complete, section_training_ready)
     
-    # Calculate comprehensive statistics
+    # calculate comprehensive statistics
     stats = calculate_dataset_statistics(results['detailed_results'])
     
-    # Add summary statistics to results
+    # add summary statistics to results
     results['summary_statistics'] = {
         'total_subjects_verified': int(stats['total_subjects']),
         'complete_subjects': int(stats['complete_subjects']),
@@ -294,7 +294,7 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
         'missing_files_count': int(stats['missing_files_total'])
     }
     
-    # Add dataset breakdown
+    # add dataset breakdown
     results['dataset_breakdown'] = {
         section: {
             'total': len(results['detailed_results'][section]),
@@ -304,10 +304,10 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
         for section in ['brats', 'upenn']
     }
     
-    # Add modality statistics
+    # add modality statistics
     results['modality_statistics'] = stats['modality_breakdown']
     
-    # Add quality analysis with proper JSON serialization
+    # add quality analysis with proper json serialization
     cv_values = stats['quality_metrics']['cv_values']
     intensity_ranges = stats['quality_metrics']['intensity_ranges']
     
@@ -336,7 +336,7 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
     
     results['quality_analysis'] = quality_analysis
     
-    # Add timing info
+    # add timing info
     elapsed_time = time.time() - start_time
     results['verification_info']['elapsed_time_seconds'] = float(elapsed_time)
     results['verification_info']['end_time'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -346,7 +346,7 @@ def run_pipeline_verification(metadata: Dict[str, Any], splits_to_verify: List[s
 
 
 def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate summary statistics for pipeline verification."""
+    """generate summary statistics for pipeline verification."""
     summary = {
         'pipeline_readiness': 'unknown',
         'completion_rates': {},
@@ -354,7 +354,7 @@ def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
         'recommendations': []
     }
     
-    # Calculate completion rates
+    # calculate completion rates
     total_subjects = results['summary_statistics']['total_subjects_verified']
     complete_subjects = results['summary_statistics']['complete_subjects']
     training_ready = results['summary_statistics']['training_ready_subjects']
@@ -369,7 +369,7 @@ def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
             'subjects_with_issues': float(results['summary_statistics']['subjects_with_quality_issues'] / total_subjects)
         }
         
-        # Assess pipeline readiness
+        # assess pipeline readiness
         if training_ready_rate >= 0.95:
             summary['pipeline_readiness'] = 'excellent'
         elif training_ready_rate >= 0.90:
@@ -379,7 +379,7 @@ def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
         else:
             summary['pipeline_readiness'] = 'needs_improvement'
     
-    # Quality assessment
+    # quality assessment
     cv_stats = results['quality_analysis'].get('cv_statistics', {})
     if 'median' in cv_stats:
         median_cv = cv_stats['median']
@@ -398,7 +398,7 @@ def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
     else:
         summary['quality_assessment']['spacing_consistency'] = 'needs_improvement'
     
-    # Generate recommendations
+    # generate recommendations
     recommendations = []
     
     if total_subjects > 0:
@@ -424,7 +424,7 @@ def generate_verification_summary(results: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def save_verification_results(results: Dict[str, Any], summary: Dict[str, Any], output_path: Path) -> None:
-    """Save verification results to JSON file with proper serialization."""
+    """save verification results to json file with proper serialization."""
     output_data = {
         'verification_info': results.get('verification_info', {}),
         'summary_statistics': results.get('summary_statistics', {}),
@@ -435,7 +435,7 @@ def save_verification_results(results: Dict[str, Any], summary: Dict[str, Any], 
         'detailed_results': results.get('detailed_results', {})
     }
     
-    # Sanitize all data for JSON serialization
+    # sanitize all data for json serialization
     output_data = sanitize_for_json(output_data)
     
     try:
@@ -452,12 +452,12 @@ def save_verification_results(results: Dict[str, Any], summary: Dict[str, Any], 
 
 
 def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any]) -> None:
-    """Print comprehensive verification summary."""
+    """print comprehensive verification summary."""
     print("\n" + "="*80)
-    print("NEUROSCOPE PREPROCESSING PIPELINE VERIFICATION")
+    print("neuroscope preprocessing pipeline verification")
     print("="*80)
     
-    # Overall status
+    # overall status
     summary_stats = results.get('summary_statistics', {})
     pipeline_status = summary['pipeline_readiness'].upper()
     status_emoji = {
@@ -467,26 +467,26 @@ def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any])
         'NEEDS_IMPROVEMENT': '🔴'
     }.get(pipeline_status, '⚪')
     
-    print(f"\nOverall Pipeline Status: {status_emoji} {pipeline_status}")
+    print(f"\noverall pipeline status: {status_emoji} {pipeline_status}")
     
-    print(f"\nProcessing Summary:")
-    print(f"  Total subjects verified:    {summary_stats.get('total_subjects_verified', 0)}")
-    print(f"  Complete subjects:          {summary_stats.get('complete_subjects', 0)}")
-    print(f"  Training-ready subjects:    {summary_stats.get('training_ready_subjects', 0)}")
-    print(f"  Subjects with issues:       {summary_stats.get('subjects_with_quality_issues', 0)}")
-    print(f"  Missing files:              {summary_stats.get('missing_files_count', 0)}")
+    print(f"\nprocessing summary:")
+    print(f"  total subjects verified:    {summary_stats.get('total_subjects_verified', 0)}")
+    print(f"  complete subjects:          {summary_stats.get('complete_subjects', 0)}")
+    print(f"  training-ready subjects:    {summary_stats.get('training_ready_subjects', 0)}")
+    print(f"  subjects with issues:       {summary_stats.get('subjects_with_quality_issues', 0)}")
+    print(f"  missing files:              {summary_stats.get('missing_files_count', 0)}")
     
-    # Completion rates
+    # completion rates
     completion_rates = summary.get('completion_rates', {})
     if completion_rates:
-        print(f"\nCompletion Rates:")
-        print(f"  Overall completion:         {completion_rates.get('overall_completion', 0)*100:.1f}%")
-        print(f"  Training ready:             {completion_rates.get('training_ready', 0)*100:.1f}%")
-        print(f"  Subjects with issues:       {completion_rates.get('subjects_with_issues', 0)*100:.1f}%")
+        print(f"\ncompletion rates:")
+        print(f"  overall completion:         {completion_rates.get('overall_completion', 0)*100:.1f}%")
+        print(f"  training ready:             {completion_rates.get('training_ready', 0)*100:.1f}%")
+        print(f"  subjects with issues:       {completion_rates.get('subjects_with_issues', 0)*100:.1f}%")
     
-    # Dataset breakdown
+    # dataset breakdown
     dataset_breakdown = results.get('dataset_breakdown', {})
-    print(f"\nDataset Breakdown:")
+    print(f"\ndataset breakdown:")
     for section in ['brats', 'upenn']:
         section_name = 'BraTS-TCGA-GBM' if section == 'brats' else 'UPenn-GBM'
         section_data = dataset_breakdown.get(section, {})
@@ -496,13 +496,13 @@ def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any])
             training_ready = section_data.get('training_ready', 0)
             
             print(f"  {section_name}:")
-            print(f"    Total:                    {total}")
-            print(f"    Complete:                 {complete} ({complete/max(total,1)*100:.1f}%)")
-            print(f"    Training-ready:           {training_ready} ({training_ready/max(total,1)*100:.1f}%)")
+            print(f"    total:                    {total}")
+            print(f"    complete:                 {complete} ({complete/max(total,1)*100:.1f}%)")
+            print(f"    training-ready:           {training_ready} ({training_ready/max(total,1)*100:.1f}%)")
     
-    # Modality statistics
+    # modality statistics
     modality_stats = results.get('modality_statistics', {})
-    print(f"\nModality Availability:")
+    print(f"\nmodality availability:")
     modality_names = {'t1': 'T1', 't1gd': 'T1-Gd', 't2': 'T2', 'flair': 'FLAIR'}
     for modality, display_name in modality_names.items():
         mod_data = modality_stats.get(modality, {})
@@ -517,36 +517,36 @@ def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any])
             print(f"  {display_name:6}: {available:3}/{total_expected:3} available ({availability_rate:5.1f}%), "
                   f"{quality_ok:3} quality OK ({quality_rate:5.1f}%)")
     
-    # Quality assessment
+    # quality assessment
     quality_assessment = summary.get('quality_assessment', {})
-    print(f"\nQuality Assessment:")
+    print(f"\nquality assessment:")
     if 'intensity_uniformity' in quality_assessment:
         uniformity = quality_assessment['intensity_uniformity']
         uniformity_emoji = {'excellent': '🟢', 'good': '🟡', 'needs_improvement': '🔴'}.get(uniformity, '⚪')
-        print(f"  Intensity uniformity:       {uniformity_emoji} {uniformity}")
+        print(f"  intensity uniformity:       {uniformity_emoji} {uniformity}")
     
     if 'spacing_consistency' in quality_assessment:
         spacing = quality_assessment['spacing_consistency']
         spacing_emoji = {'excellent': '🟢', 'good': '🟡', 'needs_improvement': '🔴'}.get(spacing, '⚪')
-        print(f"  Spacing consistency:        {spacing_emoji} {spacing}")
+        print(f"  spacing consistency:        {spacing_emoji} {spacing}")
     
-    # Quality statistics
+    # quality statistics
     cv_stats = results['quality_analysis'].get('cv_statistics', {})
     if 'median' in cv_stats:
-        print(f"  Median CV:                  {cv_stats['median']:.3f}")
-        print(f"  Mean CV:                    {cv_stats['mean']:.3f} (±{cv_stats['std']:.3f})")
+        print(f"  median cv:                  {cv_stats['median']:.3f}")
+        print(f"  mean cv:                    {cv_stats['mean']:.3f} (±{cv_stats['std']:.3f})")
     
     spacing_compliance = results['quality_analysis'].get('spacing_compliance', 0)
-    print(f"  Spacing compliance:         {spacing_compliance*100:.1f}%")
+    print(f"  spacing compliance:         {spacing_compliance*100:.1f}%")
     
-    # Recommendations
+    # recommendations
     recommendations = summary.get('recommendations', [])
     print(f"\nrecommendations:")
     for i, rec in enumerate(recommendations, 1):
         rec_symbol = "+" if "passed" in rec.lower() else "-"
         print(f"  {rec_symbol} {rec}")
 
-    # Next steps
+    # next steps
     print(f"\nnext steps:")
     if summary['pipeline_readiness'] in ['excellent', 'good']:
         print(f"  + preprocessing pipeline is working excellently")
@@ -558,9 +558,9 @@ def print_verification_summary(summary: Dict[str, Any], results: Dict[str, Any])
         print(f"  - review detailed results in the json output file")
         print(f"  - run preprocessing scripts again if needed")
     
-    # Timing info
+    # timing info
     elapsed_time = results['verification_info'].get('elapsed_time_seconds', 0)
-    print(f"\nProcessing Time: {elapsed_time:.1f} seconds ({elapsed_time/60:.1f} minutes)")
+    print(f"\nprocessing time: {elapsed_time:.1f} seconds ({elapsed_time/60:.1f} minutes)")
     
     print("="*80)
 
@@ -593,7 +593,7 @@ def main():
         splits = [s.strip() for s in args.splits.split(',') if s.strip()]
         results = run_pipeline_verification(metadata, splits_to_verify=splits)
         summary = generate_verification_summary(results)
-        # Use schema writer after generating results
+        # use schema writer after generating results
         save_verification_results(results, summary, output_path)
         summary_path = output_path.parent / (output_path.stem + '_summary.json')
         light = {

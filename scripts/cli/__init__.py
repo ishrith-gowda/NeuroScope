@@ -1,6 +1,6 @@
-"""CLI implementations for NeuroScope.
+"""cli implementations for neuroscope.
 
-This module provides command-line interface implementations for NeuroScope.
+this module provides command-line interface implementations for neuroscope.
 """
 
-# CLI initialization
+# cli initialization

@@ -203,28 +203,28 @@ def create_full_cyclegan_diagram(output_dir: Path):
     ax.text(5.75, 6.7, 'SA-CycleGAN-2.5D: Bidirectional MRI Harmonization', fontsize=14,
            ha='center', fontweight='bold')
 
-    # domain A (brats)
+    # domain a (brats)
     draw_block(ax, 1, 5, 1.8, 1.2, '#E3F2FD', 'Domain A\n(BraTS)', fontsize=9)
 
-    # domain B (upenn)
+    # domain b (upenn)
     draw_block(ax, 1, 2, 1.8, 1.2, '#FFF3E0', 'Domain B\n(UPenn-GBM)', fontsize=9)
 
-    # generator A->B
+    # generator a->b
     draw_block(ax, 4, 5, 2.2, 1.2, COLORS['attention'], 'Generator\nG_A→B', fontsize=10)
 
-    # generator B->A
+    # generator b->a
     draw_block(ax, 4, 2, 2.2, 1.2, COLORS['attention'], 'Generator\nG_B→A', fontsize=10)
 
-    # fake B
+    # fake b
     draw_block(ax, 7.5, 5, 1.8, 1.2, '#FFF3E0', 'Fake B', fontsize=9)
 
-    # fake A
+    # fake a
     draw_block(ax, 7.5, 2, 1.8, 1.2, '#E3F2FD', 'Fake A', fontsize=9)
 
-    # discriminator B
+    # discriminator b
     draw_block(ax, 10.5, 5, 1.8, 1.2, COLORS['discriminator'], 'Discriminator\nD_B', fontsize=9)
 
-    # discriminator A
+    # discriminator a
     draw_block(ax, 10.5, 2, 1.8, 1.2, COLORS['discriminator'], 'Discriminator\nD_A', fontsize=9)
 
     # arrows forward direction
@@ -237,13 +237,13 @@ def create_full_cyclegan_diagram(output_dir: Path):
     draw_arrow(ax, (8.4, 2), (9.6, 2), COLORS['arrow'])
 
     # cycle consistency arrows (curved)
-    # fake B -> G_B2A -> rec A
+    # fake b -> g_b2a -> rec a
     ax.annotate('', xy=(4, 4.3), xytext=(7.5, 4.4),
                arrowprops=dict(arrowstyle='->', color='#1976D2', lw=1.5,
                               connectionstyle='arc3,rad=-0.3'))
     ax.text(5.75, 3.9, 'Cycle A', fontsize=8, color='#1976D2', ha='center')
 
-    # fake A -> G_A2B -> rec B
+    # fake a -> g_a2b -> rec b
     ax.annotate('', xy=(4, 2.7), xytext=(7.5, 2.6),
                arrowprops=dict(arrowstyle='->', color='#E64A19', lw=1.5,
                               connectionstyle='arc3,rad=0.3'))

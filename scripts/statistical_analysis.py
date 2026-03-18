@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Statistical Analysis Script for Model Comparison.
+statistical analysis script for model comparison.
 
-Performs rigorous statistical tests to validate experimental results:
-- Paired t-tests
-- Wilcoxon signed-rank tests
-- ANOVA with post-hoc tests
-- Effect size calculations (Cohen's d)
-- Bonferroni correction for multiple comparisons
-- Bootstrap confidence intervals
+performs rigorous statistical tests to validate experimental results:
+- paired t-tests
+- wilcoxon signed-rank tests
+- anova with post-hoc tests
+- effect size calculations (cohen's d)
+- bonferroni correction for multiple comparisons
+- bootstrap confidence intervals
 
-Usage:
+usage:
     python scripts/statistical_analysis.py \
         --results-dir ./results/evaluation \
         --output-dir ./results/statistics \
@@ -32,10 +32,10 @@ from scipy.stats import bootstrap
 from statsmodels.stats.multitest import multipletests
 from tqdm import tqdm
 
-# Add project root to path
+# add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Setup logging
+# setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class StatisticalAnalyzer:
-    """Performs statistical analysis for model comparisons."""
+    """performs statistical analysis for model comparisons."""
 
     def __init__(
         self,
@@ -53,12 +53,12 @@ class StatisticalAnalyzer:
         n_bootstrap: int = 10000,
     ):
         """
-        Initialize statistical analyzer.
+        initialize statistical analyzer.
 
-        Args:
-            alpha: Significance level
-            correction_method: Method for multiple testing correction
-            n_bootstrap: Number of bootstrap samples
+        args:
+            alpha: significance level
+            correction_method: method for multiple testing correction
+            n_bootstrap: number of bootstrap samples
         """
         self.alpha = alpha
         self.correction_method = correction_method
@@ -70,13 +70,13 @@ class StatisticalAnalyzer:
         data2: np.ndarray
     ) -> Tuple[float, float]:
         """
-        Perform paired t-test.
+        perform paired t-test.
 
-        Args:
-            data1: First dataset
-            data2: Second dataset
+        args:
+            data1: first dataset
+            data2: second dataset
 
-        Returns:
+        returns:
             (t-statistic, p-value)
         """
         t_stat, p_value = stats.ttest_rel(data1, data2)
@@ -88,13 +88,13 @@ class StatisticalAnalyzer:
         data2: np.ndarray
     ) -> Tuple[float, float]:
         """
-        Perform Wilcoxon signed-rank test (non-parametric).
+        perform wilcoxon signed-rank test (non-parametric).
 
-        Args:
-            data1: First dataset
-            data2: Second dataset
+        args:
+            data1: first dataset
+            data2: second dataset
 
-        Returns:
+        returns:
             (statistic, p-value)
         """
         stat, p_value = stats.wilcoxon(data1, data2)
@@ -106,14 +106,14 @@ class StatisticalAnalyzer:
         data2: np.ndarray
     ) -> float:
         """
-        Calculate Cohen's d effect size.
+        calculate cohen's d effect size.
 
-        Args:
-            data1: First dataset
-            data2: Second dataset
+        args:
+            data1: first dataset
+            data2: second dataset
 
-        Returns:
-            Cohen's d value
+        returns:
+            cohen's d value
         """
         mean_diff = np.mean(data1) - np.mean(data2)
         pooled_std = np.sqrt((np.var(data1, ddof=1) + np.var(data2, ddof=1)) / 2)
@@ -126,14 +126,14 @@ class StatisticalAnalyzer:
         statistic=np.mean
     ) -> Tuple[float, float]:
         """
-        Calculate bootstrap confidence interval.
+        calculate bootstrap confidence interval.
 
-        Args:
-            data: Dataset
-            confidence_level: Confidence level (default 0.95 for 95% CI)
-            statistic: Statistic function to apply
+        args:
+            data: dataset
+            confidence_level: confidence level (default 0.95 for 95% ci)
+            statistic: statistic function to apply
 
-        Returns:
+        returns:
             (lower_bound, upper_bound)
         """
         rng = np.random.default_rng(seed=42)
@@ -153,21 +153,21 @@ class StatisticalAnalyzer:
         data_dict: Dict[str, np.ndarray]
     ) -> Tuple[float, float, Dict]:
         """
-        Perform one-way ANOVA with post-hoc pairwise tests.
+        perform one-way anova with post-hoc pairwise tests.
 
-        Args:
-            data_dict: Dictionary mapping group names to data arrays
+        args:
+            data_dict: dictionary mapping group names to data arrays
 
-        Returns:
-            (F-statistic, p-value, pairwise_results)
+        returns:
+            (f-statistic, p-value, pairwise_results)
         """
-        # Prepare data for ANOVA
+        # prepare data for anova
         groups = list(data_dict.values())
 
-        # Perform ANOVA
+        # perform anova
         f_stat, p_value = stats.f_oneway(*groups)
 
-        # Post-hoc pairwise comparisons
+        # post-hoc pairwise comparisons
         pairwise_results = {}
         model_names = list(data_dict.keys())
 
@@ -176,13 +176,13 @@ class StatisticalAnalyzer:
                 model1 = model_names[i]
                 model2 = model_names[j]
 
-                # Paired t-test
+                # paired t-test
                 t_stat, p_val = self.paired_t_test(
                     data_dict[model1],
                     data_dict[model2]
                 )
 
-                # Effect size
+                # effect size
                 effect_size = self.cohens_d(
                     data_dict[model1],
                     data_dict[model2]
@@ -194,7 +194,7 @@ class StatisticalAnalyzer:
                     'cohens_d': float(effect_size),
                 }
 
-        # Apply multiple testing correction
+        # apply multiple testing correction
         p_values = [v['p_value'] for v in pairwise_results.values()]
         _, corrected_p, _, _ = multipletests(
             p_values,
@@ -202,7 +202,7 @@ class StatisticalAnalyzer:
             method=self.correction_method
         )
 
-        # Update with corrected p-values
+        # update with corrected p-values
         for idx, key in enumerate(pairwise_results.keys()):
             pairwise_results[key]['p_value_corrected'] = float(corrected_p[idx])
             pairwise_results[key]['significant'] = corrected_p[idx] < self.alpha
@@ -211,12 +211,12 @@ class StatisticalAnalyzer:
 
     def normality_test(self, data: np.ndarray) -> Tuple[float, float]:
         """
-        Test for normality using Shapiro-Wilk test.
+        test for normality using shapiro-wilk test.
 
-        Args:
-            data: Dataset
+        args:
+            data: dataset
 
-        Returns:
+        returns:
             (statistic, p-value)
         """
         stat, p_value = stats.shapiro(data)
@@ -228,18 +228,18 @@ class StatisticalAnalyzer:
         metric: str
     ) -> Dict:
         """
-        Perform comprehensive statistical analysis for a single metric.
+        perform comprehensive statistical analysis for a single metric.
 
-        Args:
-            results: Dictionary of model results
-            metric: Metric name to analyze
+        args:
+            results: dictionary of model results
+            metric: metric name to analyze
 
-        Returns:
-            Dictionary with analysis results
+        returns:
+            dictionary with analysis results
         """
         logger.info(f"Analyzing {metric}...")
 
-        # Extract data for each model
+        # extract data for each model
         data_dict = {}
         for model_name, model_results in results.items():
             if metric in model_results['metrics']:
@@ -256,13 +256,13 @@ class StatisticalAnalyzer:
             'models': list(data_dict.keys()),
         }
 
-        # Descriptive statistics
+        # descriptive statistics
         descriptive = {}
         for model_name, data in data_dict.items():
-            # Normality test
+            # normality test
             shapiro_stat, shapiro_p = self.normality_test(data)
 
-            # Bootstrap CI
+            # bootstrap ci
             ci_low, ci_high = self.bootstrap_ci(data)
 
             descriptive[model_name] = {
@@ -279,7 +279,7 @@ class StatisticalAnalyzer:
 
         analysis['descriptive'] = descriptive
 
-        # ANOVA and post-hoc tests
+        # anova and post-hoc tests
         f_stat, anova_p, pairwise = self.anova_with_posthoc(data_dict)
 
         analysis['anova'] = {
@@ -290,19 +290,19 @@ class StatisticalAnalyzer:
 
         analysis['pairwise_comparisons'] = pairwise
 
-        # Find best performing model
+        # find best performing model
         means = {k: v['mean'] for k, v in descriptive.items()}
 
-        # For metrics where higher is better (SSIM, PSNR, NMI)
+        # for metrics where higher is better (ssim, psnr, nmi)
         if metric.upper() in ['SSIM', 'PSNR', 'NMI']:
             best_model = max(means, key=means.get)
-        else:  # For metrics where lower is better (LPIPS, FID)
+        else:  # for metrics where lower is better (lpips, fid)
             best_model = min(means, key=means.get)
 
         analysis['best_model'] = best_model
         analysis['best_model_mean'] = means[best_model]
 
-        # Check if best model is significantly better than others
+        # check if best model is significantly better than others
         significantly_better_than = []
         for other_model in means.keys():
             if other_model != best_model:
@@ -325,13 +325,13 @@ class StatisticalAnalyzer:
 
     def generate_summary_table(self, analyses: List[Dict]) -> pd.DataFrame:
         """
-        Generate summary table of statistical results.
+        generate summary table of statistical results.
 
-        Args:
-            analyses: List of analysis results for each metric
+        args:
+            analyses: list of analysis results for each metric
 
-        Returns:
-            DataFrame with summary
+        returns:
+            dataframe with summary
         """
         rows = []
 
@@ -363,15 +363,15 @@ class StatisticalAnalyzer:
         model2: str
     ) -> pd.DataFrame:
         """
-        Generate pairwise comparison table for two models.
+        generate pairwise comparison table for two models.
 
-        Args:
-            analyses: List of analysis results
-            model1: First model name
-            model2: Second model name
+        args:
+            analyses: list of analysis results
+            model1: first model name
+            model2: second model name
 
-        Returns:
-            DataFrame with pairwise comparisons
+        returns:
+            dataframe with pairwise comparisons
         """
         rows = []
 
@@ -407,7 +407,7 @@ class StatisticalAnalyzer:
 
 
 def main():
-    """Main execution function."""
+    """main execution function."""
     parser = argparse.ArgumentParser(
         description='Perform statistical analysis on evaluation results'
     )
@@ -450,7 +450,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Load results
+    # load results
     results_file = Path(args.results_dir) / 'all_results.json'
     if not results_file.exists():
         logger.error(f"Results file not found: {results_file}")
@@ -459,17 +459,17 @@ def main():
     with open(results_file, 'r') as f:
         results_list = json.load(f)
 
-    # Convert to dictionary
+    # convert to dictionary
     results = {r['model_name']: r for r in results_list}
 
-    # Initialize analyzer
+    # initialize analyzer
     analyzer = StatisticalAnalyzer(
         alpha=args.alpha,
         correction_method=args.correction,
         n_bootstrap=args.n_bootstrap,
     )
 
-    # Perform analysis for each metric
+    # perform analysis for each metric
     metrics = set()
     for model_results in results.values():
         metrics.update(model_results['metrics'].keys())
@@ -480,7 +480,7 @@ def main():
         if analysis:
             analyses.append(analysis)
 
-    # Save detailed results
+    # save detailed results
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -490,7 +490,7 @@ def main():
 
     logger.info(f"Detailed analysis saved to: {detailed_file}")
 
-    # Generate summary table
+    # generate summary table
     summary_table = analyzer.generate_summary_table(analyses)
     summary_file = output_dir / 'summary_table.csv'
     summary_table.to_csv(summary_file, index=False)
@@ -500,7 +500,7 @@ def main():
     logger.info("="*80)
     print(summary_table.to_string(index=False))
 
-    # Generate pairwise comparison tables for SA-CycleGAN vs baselines
+    # generate pairwise comparison tables for sa-cyclegan vs baselines
     model_names = list(results.keys())
     if 'sa_cyclegan' in model_names:
         for other_model in model_names:

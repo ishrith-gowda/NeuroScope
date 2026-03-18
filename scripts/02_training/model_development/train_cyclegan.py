@@ -18,13 +18,13 @@ import matplotlib as mpl
 
 from neuroscope_dataset_loader import get_cycle_domain_loaders
 
-# ─── Seaborn + Times New Roman setup ──────────────────────────────
+# ─── seaborn + times new roman setup ──────────────────────────────
 sns.set_theme(style="whitegrid")
 mpl.rcParams['font.family']      = 'serif'
 mpl.rcParams['font.serif']       = ['Times New Roman']
 mpl.rcParams['mathtext.fontset'] = 'stix'    # if you use math in labels
 
-# ─── Silence Matplotlib findfont DEBUG spam ───────────────────────
+# ─── silence matplotlib findfont debug spam ───────────────────────
 logging.getLogger('matplotlib.font_manager').setLevel(logging.INFO)
 
 
@@ -173,47 +173,47 @@ def train(args, device: torch.device):
     logging.getLogger('torch').setLevel(logging.INFO)
 
     print("\n" + "="*80)
-    print("CYCLEGAN TRAINING FUNCTION")
+    print("cyclegan training function")
     print("="*80 + "\n")
     
-    # Print start time for tracking
+    # print start time for tracking
     start_time = datetime.now()
-    print(f"Starting training at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"starting training at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Print every argument for debugging
-    print("Arguments received:")
+    # print every argument for debugging
+    print("arguments received:")
     for attr in dir(args):
-        if not attr.startswith('_'):  # Skip private attributes
+        if not attr.startswith('_'):  # skip private attributes
             try:
                 value = getattr(args, attr)
-                if not callable(value):  # Skip methods
+                if not callable(value):  # skip methods
                     print(f"  {attr}: {value}")
             except Exception as e:
-                print(f"  {attr}: Error accessing value: {e}")
+                print(f"  {attr}: error accessing value: {e}")
     print()
     
-    # Set more conservative batch size if using MPS backend
+    # set more conservative batch size if using mps backend
     if device.type == 'mps':
         original_batch_size = args.batch_size
         if args.batch_size > 4:
             args.batch_size = 4
-            print(f"WARNING: Reduced batch size from {original_batch_size} to {args.batch_size} for MPS backend")
+            print(f"warning: reduced batch size from {original_batch_size} to {args.batch_size} for mps backend")
     
-    # Print memory stats if available
+    # print memory stats if available
     if hasattr(torch, 'cuda') and torch.cuda.is_available():
-        print(f"CUDA Memory allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
-        print(f"CUDA Memory reserved: {torch.cuda.memory_reserved() / 1e9:.2f} GB")
+        print(f"cuda memory allocated: {torch.cuda.memory_allocated() / 1e9:.2f} gb")
+        print(f"cuda memory reserved: {torch.cuda.memory_reserved() / 1e9:.2f} gb")
     print()
 
     set_seed(args.seed)
-    print(f"Random seed set to: {args.seed}")
+    print(f"random seed set to: {args.seed}")
     logging.info("Starting CycleGAN training (domains: A=brats, B=upenn)")
     tb_writer = SummaryWriter(log_dir=os.path.join(args.run_dir, datetime.now().strftime('%Y%m%d_%H%M%S')))
 
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     os.makedirs(args.sample_dir, exist_ok=True)
 
-    # Domain-specific loaders (expects preprocessed data in [0,1] scaled to [-1,1] by dataset)
+    # domain-specific loaders (expects preprocessed data in [0,1] scaled to [-1,1] by dataset)
     loaders = get_cycle_domain_loaders(
         preprocessed_dir=args.data_root,
         metadata_json=args.meta_json,
@@ -231,11 +231,11 @@ def train(args, device: torch.device):
     train_loader_B = loaders['train_B']
     iter_B = iter(train_loader_B)
 
-    # Debug batch and validate tensor ranges
+    # debug batch and validate tensor ranges
     debug_A = next(iter(train_loader_A)).to(device)
     debug_B = next(iter(train_loader_B)).to(device)
     
-    # Validate tensor ranges
+    # validate tensor ranges
     a_min, a_max = debug_A.min().item(), debug_A.max().item()
     b_min, b_max = debug_B.min().item(), debug_B.max().item()
     
@@ -251,7 +251,7 @@ def train(args, device: torch.device):
         a_min, a_max, b_min, b_max
     )
 
-    # Model init
+    # model init
     G_A2B = ResNetGenerator().to(device)
     G_B2A = ResNetGenerator().to(device)
     D_A   = PatchDiscriminator().to(device)
@@ -259,7 +259,7 @@ def train(args, device: torch.device):
     for net in (G_A2B, G_B2A, D_A, D_B):
         net.apply(weights_init_normal)
 
-    # Quick model summary
+    # quick model summary
     try:
         from torchinfo import summary  # optional dependency
         summary_str = summary(G_A2B, input_size=(1,4,256,256), device=device, verbose=0).__str__()
@@ -269,21 +269,21 @@ def train(args, device: torch.device):
     except Exception as e:
         logging.warning("Model summary skipped (torchinfo unavailable or failed): %s", e)
 
-    # Losses & optimizers with performance optimizations
+    # losses & optimizers with performance optimizations
     L_GAN   = nn.MSELoss()
     L_cycle = nn.L1Loss()
     L_id    = nn.L1Loss()
     
-    # Use AdamW for better generalization
+    # use adamw for better generalization
     opt_G   = optim.AdamW(itertools.chain(G_A2B.parameters(), G_B2A.parameters()),
                          lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
     opt_D_A = optim.AdamW(D_A.parameters(), lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
     opt_D_B = optim.AdamW(D_B.parameters(), lr=args.lr, betas=(0.5, 0.999), weight_decay=1e-4)
     
-    # Gradient clipping parameters
+    # gradient clipping parameters
     max_grad_norm = 5.0
 
-    # LR schedulers with safe denominator
+    # lr schedulers with safe denominator
     if args.decay_epoch >= args.n_epochs:
         logging.warning("decay_epoch >= n_epochs; clamping to n_epochs - 1")
         args.decay_epoch = args.n_epochs - 1
@@ -300,7 +300,7 @@ def train(args, device: torch.device):
     loss_history = {"G": [], "D_A": [], "D_B": [], "Cycle": [], "Id": []}
     total_start = datetime.now()
 
-    # Training loop
+    # training loop
     for epoch in range(1, args.n_epochs + 1):
         epoch_start = datetime.now()
         logging.info(f"Epoch {epoch}/{args.n_epochs} started")
@@ -314,12 +314,12 @@ def train(args, device: torch.device):
             real_A = real_A.to(device)
             real_B = real_B.to(device)
 
-            # Labels
+            # labels
             pred_shape = D_A(real_A).shape
             valid      = torch.ones(pred_shape,  device=device)
             fake_label = torch.zeros(pred_shape, device=device)
 
-            # Generator step
+            # generator step
             opt_G.zero_grad()
             loss_id_A    = L_id(G_B2A(real_A), real_A) * args.lambda_identity
             loss_id_B    = L_id(G_A2B(real_B), real_B) * args.lambda_identity
@@ -334,38 +334,38 @@ def train(args, device: torch.device):
             loss_G = loss_id_A + loss_id_B + loss_GAN_A2B + loss_GAN_B2A + loss_cycle
             loss_G.backward()
             
-            # Gradient clipping for stability
+            # gradient clipping for stability
             torch.nn.utils.clip_grad_norm_(itertools.chain(G_A2B.parameters(), G_B2A.parameters()), max_grad_norm)
             
             opt_G.step()
 
-            # Log fake_B range once
+            # log fake_b range once
             if i == 1:
                 logging.info(f"Epoch {epoch} fake_B range: {fake_B.min():.4f}–{fake_B.max():.4f}")
 
-            # Discriminator A
+            # discriminator a
             opt_D_A.zero_grad()
             loss_D_A = (L_GAN(D_A(real_A), valid) +
                         L_GAN(D_A(fake_A.detach()), fake_label)) * 0.5
             loss_D_A.backward()
             
-            # Gradient clipping for discriminator
+            # gradient clipping for discriminator
             torch.nn.utils.clip_grad_norm_(D_A.parameters(), max_grad_norm)
             
             opt_D_A.step()
 
-            # Discriminator B
+            # discriminator b
             opt_D_B.zero_grad()
             loss_D_B = (L_GAN(D_B(real_B), valid) +
                         L_GAN(D_B(fake_B.detach()), fake_label)) * 0.5
             loss_D_B.backward()
             
-            # Gradient clipping for discriminator
+            # gradient clipping for discriminator
             torch.nn.utils.clip_grad_norm_(D_B.parameters(), max_grad_norm)
             
             opt_D_B.step()
 
-            # Record & TB
+            # record & tb
             loss_history["G"].append(loss_G.item())
             loss_history["D_A"].append(loss_D_A.item())
             loss_history["D_B"].append(loss_D_B.item())
@@ -397,14 +397,14 @@ def train(args, device: torch.device):
                 except Exception as e:
                     logging.warning("Sample image generation failed at step %d: %s", step, e)
 
-        # End of epoch
+        # end of epoch
         sched_G.step(); sched_D_A.step(); sched_D_B.step()
         epoch_time = (datetime.now() - epoch_start).total_seconds() / 60
         logging.info(f"Epoch {epoch} completed in {epoch_time:.2f} min")
         tb_writer.add_scalar('Time/Epoch', epoch_time, epoch)
 
         if epoch % args.checkpoint_interval == 0:
-            # Save state_dicts
+            # save state_dicts
             torch.save(G_A2B.state_dict(),
                        os.path.join(args.checkpoint_dir, f"G_A2B_{epoch}.pth"))
             torch.save(G_B2A.state_dict(),
@@ -415,7 +415,7 @@ def train(args, device: torch.device):
                        os.path.join(args.checkpoint_dir, f"D_B_{epoch}.pth"))
             logging.info(f"Saved state_dicts at epoch {epoch}")
 
-            # Save full checkpoint
+            # save full checkpoint
             ckpt = {
                 'epoch':         epoch,
                 'G_A2B_state':   G_A2B.state_dict(),
@@ -430,7 +430,7 @@ def train(args, device: torch.device):
                        os.path.join(args.checkpoint_dir, f"full_models_epoch_{epoch}.pt"))
             logging.info(f"Saved full models at epoch {epoch}")
 
-    # Wrap‑up
+    # wrap‑up
     loss_log_path = os.path.join(args.sample_dir, 'training_loss_log.json')
     with open(loss_log_path, 'w') as f:
         json.dump(loss_history, f, indent=2)
@@ -439,7 +439,7 @@ def train(args, device: torch.device):
     plot_loss_graph(loss_history, args.sample_dir, tb_writer)
     logging.info("Training complete.")
 
-    # Final full checkpoint
+    # final full checkpoint
     final_ckpt = {
         'epoch':          args.n_epochs,
         'G_A2B_state':    G_A2B.state_dict(),

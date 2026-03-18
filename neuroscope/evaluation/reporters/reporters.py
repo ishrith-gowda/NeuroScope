@@ -1,8 +1,8 @@
 """
-Report Generators.
+report generators.
 
-Generate publication-ready reports in various formats
-including LaTeX, CSV, and JSON.
+generate publication-ready reports in various formats
+including latex, csv, and json.
 """
 
 from typing import Optional, Dict, List, Any, Union
@@ -15,7 +15,7 @@ from datetime import datetime
 
 @dataclass
 class EvaluationReport:
-    """Container for evaluation report data."""
+    """container for evaluation report data."""
     title: str
     methods: List[str]
     metrics: Dict[str, Dict[str, float]]  # method -> metric -> value
@@ -28,7 +28,7 @@ class EvaluationReport:
 
 @dataclass
 class AblationReport:
-    """Container for ablation study report."""
+    """container for ablation study report."""
     title: str
     baseline: str
     configurations: Dict[str, Dict[str, float]]
@@ -38,20 +38,20 @@ class AblationReport:
 
 @dataclass
 class ComparisonReport:
-    """Container for method comparison report."""
+    """container for method comparison report."""
     title: str
     methods: List[str]
     metrics: List[str]
-    results_table: List[List[Any]]  # 2D table
+    results_table: List[List[Any]]  # 2d table
     best_per_metric: Dict[str, str]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class LaTeXReporter:
     """
-    Generate LaTeX tables and figures for publication.
+    generate latex tables and figures for publication.
     
-    Creates publication-ready LaTeX code for tables
+    creates publication-ready latex code for tables
     with proper formatting and statistical annotations.
     """
     
@@ -62,10 +62,10 @@ class LaTeXReporter:
         include_std: bool = True
     ):
         """
-        Args:
-            decimal_places: Number of decimal places
-            bold_best: Bold the best value in each column
-            include_std: Include standard deviation
+        args:
+            decimal_places: number of decimal places
+            bold_best: bold the best value in each column
+            include_std: include standard deviation
         """
         self.decimal_places = decimal_places
         self.bold_best = bold_best
@@ -77,7 +77,7 @@ class LaTeXReporter:
         std: Optional[float] = None,
         is_best: bool = False
     ) -> str:
-        """Format a value with optional std and bolding."""
+        """format a value with optional std and bolding."""
         fmt = f"{{:.{self.decimal_places}f}}"
         
         if std is not None and self.include_std:
@@ -97,28 +97,28 @@ class LaTeXReporter:
         label: str = "tab:comparison"
     ) -> str:
         """
-        Generate comparison table.
+        generate comparison table.
         
-        Args:
-            report: Evaluation report
-            caption: Table caption
-            label: Table label for referencing
+        args:
+            report: evaluation report
+            caption: table caption
+            label: table label for referencing
             
-        Returns:
-            LaTeX table code
+        returns:
+            latex table code
         """
         methods = report.methods
         metrics = list(list(report.metrics.values())[0].keys())
         
-        # Find best values per metric
+        # find best values per metric
         best_values = {}
         for metric in metrics:
             values = [report.metrics[m].get(metric, 0) for m in methods]
-            # Assume higher is better (adjust for specific metrics)
+            # assume higher is better (adjust for specific metrics)
             best_idx = max(range(len(values)), key=lambda i: values[i])
             best_values[metric] = methods[best_idx]
         
-        # Generate LaTeX
+        # generate latex
         n_cols = len(metrics) + 1
         col_spec = 'l' + 'c' * len(metrics)
         
@@ -131,12 +131,12 @@ class LaTeXReporter:
             "\\toprule"
         ]
         
-        # Header
+        # header
         header = "Method & " + " & ".join(metrics) + " \\\\"
         lines.append(header)
         lines.append("\\midrule")
         
-        # Data rows
+        # data rows
         for method in methods:
             row_values = [method]
             for metric in metrics:
@@ -162,15 +162,15 @@ class LaTeXReporter:
         label: str = "tab:ablation"
     ) -> str:
         """
-        Generate ablation study table.
+        generate ablation study table.
         
-        Args:
-            report: Ablation report
-            caption: Table caption
-            label: Table label
+        args:
+            report: ablation report
+            caption: table caption
+            label: table label
             
-        Returns:
-            LaTeX table code
+        returns:
+            latex table code
         """
         configs = list(report.configurations.keys())
         metrics = list(list(report.configurations.values())[0].keys())
@@ -187,12 +187,12 @@ class LaTeXReporter:
             "\\toprule"
         ]
         
-        # Header
+        # header
         header = "Configuration & " + " & ".join(metrics) + " \\\\"
         lines.append(header)
         lines.append("\\midrule")
         
-        # Full model first
+        # full model first
         if report.baseline in configs:
             row = [f"\\textbf{{{report.baseline}}}"]
             for metric in metrics:
@@ -201,7 +201,7 @@ class LaTeXReporter:
             lines.append(" & ".join(row) + " \\\\")
             lines.append("\\midrule")
         
-        # Ablated configurations
+        # ablated configurations
         for config in configs:
             if config == report.baseline:
                 continue
@@ -226,15 +226,15 @@ class LaTeXReporter:
         label: str = "tab:stats"
     ) -> str:
         """
-        Generate table with statistical test results.
+        generate table with statistical test results.
         
-        Args:
-            test_results: Dict of test name -> results
-            caption: Table caption
-            label: Table label
+        args:
+            test_results: dict of test name -> results
+            caption: table caption
+            label: table label
             
-        Returns:
-            LaTeX table code
+        returns:
+            latex table code
         """
         lines = [
             "\\begin{table}[htbp]",
@@ -251,7 +251,7 @@ class LaTeXReporter:
             stat = f"{result.get('statistic', 0):.3f}"
             p_val = result.get('p_value', 1)
             
-            # Format p-value
+            # format p-value
             if p_val < 0.001:
                 p_str = "$<$0.001"
             else:
@@ -274,16 +274,16 @@ class LaTeXReporter:
         return "\n".join(lines)
     
     def save(self, content: str, path: Union[str, Path]):
-        """Save LaTeX content to file."""
+        """save latex content to file."""
         with open(path, 'w') as f:
             f.write(content)
 
 
 class CSVReporter:
     """
-    Generate CSV reports for data analysis.
+    generate csv reports for data analysis.
     
-    Creates machine-readable CSV files for further processing.
+    creates machine-readable csv files for further processing.
     """
     
     def __init__(self, delimiter: str = ','):
@@ -295,14 +295,14 @@ class CSVReporter:
         include_metadata: bool = True
     ) -> List[List[str]]:
         """
-        Generate comparison CSV data.
+        generate comparison csv data.
         
-        Args:
-            report: Evaluation report
-            include_metadata: Include metadata rows
+        args:
+            report: evaluation report
+            include_metadata: include metadata rows
             
-        Returns:
-            2D list of CSV rows
+        returns:
+            2d list of csv rows
         """
         rows = []
         
@@ -311,12 +311,12 @@ class CSVReporter:
             rows.append(['# Timestamp', report.metadata.get('timestamp', '')])
             rows.append([])
         
-        # Header
+        # header
         methods = report.methods
         metrics = list(list(report.metrics.values())[0].keys())
         rows.append(['Method'] + metrics)
         
-        # Data
+        # data
         for method in methods:
             row = [method]
             for metric in metrics:
@@ -330,7 +330,7 @@ class CSVReporter:
         rows: List[List[str]],
         path: Union[str, Path]
     ):
-        """Save CSV data to file."""
+        """save csv data to file."""
         with open(path, 'w', newline='') as f:
             writer = csv.writer(f, delimiter=self.delimiter)
             writer.writerows(rows)
@@ -338,9 +338,9 @@ class CSVReporter:
 
 class JSONReporter:
     """
-    Generate JSON reports for programmatic access.
+    generate json reports for programmatic access.
     
-    Creates structured JSON files with complete results.
+    creates structured json files with complete results.
     """
     
     def __init__(self, indent: int = 2):
@@ -351,13 +351,13 @@ class JSONReporter:
         report: Union[EvaluationReport, AblationReport, ComparisonReport]
     ) -> Dict:
         """
-        Generate complete JSON report.
+        generate complete json report.
         
-        Args:
-            report: Any report type
+        args:
+            report: any report type
             
-        Returns:
-            Dict representation
+        returns:
+            dict representation
         """
         if isinstance(report, EvaluationReport):
             return {
@@ -397,16 +397,16 @@ class JSONReporter:
         data: Dict,
         path: Union[str, Path]
     ):
-        """Save JSON data to file."""
+        """save json data to file."""
         with open(path, 'w') as f:
             json.dump(data, f, indent=self.indent)
 
 
 class ReportGenerator:
     """
-    Unified report generator.
+    unified report generator.
     
-    Generates reports in multiple formats simultaneously.
+    generates reports in multiple formats simultaneously.
     """
     
     def __init__(
@@ -415,9 +415,9 @@ class ReportGenerator:
         formats: List[str] = None
     ):
         """
-        Args:
-            output_dir: Output directory for reports
-            formats: List of formats ('latex', 'csv', 'json')
+        args:
+            output_dir: output directory for reports
+            formats: list of formats ('latex', 'csv', 'json')
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -434,14 +434,14 @@ class ReportGenerator:
         name: str = 'evaluation'
     ) -> Dict[str, Path]:
         """
-        Generate evaluation report in all formats.
+        generate evaluation report in all formats.
         
-        Args:
-            report: Evaluation report
-            name: Base filename
+        args:
+            report: evaluation report
+            name: base filename
             
-        Returns:
-            Dict of format -> file path
+        returns:
+            dict of format -> file path
         """
         paths = {}
         
@@ -470,7 +470,7 @@ class ReportGenerator:
         report: AblationReport,
         name: str = 'ablation'
     ) -> Dict[str, Path]:
-        """Generate ablation report in all formats."""
+        """generate ablation report in all formats."""
         paths = {}
         
         if 'latex' in self.formats:

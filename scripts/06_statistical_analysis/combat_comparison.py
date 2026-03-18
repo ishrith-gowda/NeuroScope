@@ -2,7 +2,7 @@
 """
 combat harmonization baseline for comparison with sa-cyclegan.
 
-implements neuroCombat statistical harmonization method as a baseline
+implements neurocombat statistical harmonization method as a baseline
 for comparing against deep learning-based harmonization.
 
 combat (combating batch effects when combining batches) is a widely-used

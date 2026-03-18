@@ -1,7 +1,7 @@
 """
-Experiment Analysis.
+experiment analysis.
 
-Compare experiments and generate publication-ready
+compare experiments and generate publication-ready
 reports and visualizations.
 """
 
@@ -13,26 +13,26 @@ import numpy as np
 
 class ExperimentAnalyzer:
     """
-    Analyze and compare multiple experiments.
+    analyze and compare multiple experiments.
     
-    Generates statistical comparisons, visualizations,
+    generates statistical comparisons, visualizations,
     and publication-ready reports.
     """
     
     def __init__(self, experiments: Dict[str, Dict]):
         """
-        Args:
-            experiments: Dict of experiment name -> results
+        args:
+            experiments: dict of experiment name -> results
         """
         self.experiments = experiments
         self.metrics = ['ssim', 'psnr', 'fid', 'lpips']
     
     def compute_statistics(self) -> Dict:
         """
-        Compute statistics for all experiments.
+        compute statistics for all experiments.
         
-        Returns:
-            Statistics dictionary
+        returns:
+            statistics dictionary
         """
         stats = {}
         
@@ -62,14 +62,14 @@ class ExperimentAnalyzer:
         higher_is_better: bool = True
     ) -> List[Tuple[str, float]]:
         """
-        Rank experiments by metric.
+        rank experiments by metric.
         
-        Args:
-            metric: Metric to rank by
-            higher_is_better: Whether higher values are better
+        args:
+            metric: metric to rank by
+            higher_is_better: whether higher values are better
             
-        Returns:
-            Sorted list of (name, value) tuples
+        returns:
+            sorted list of (name, value) tuples
         """
         rankings = []
         
@@ -89,13 +89,13 @@ class ExperimentAnalyzer:
         baseline_name: str
     ) -> Dict[str, Dict[str, float]]:
         """
-        Compute improvements over baseline.
+        compute improvements over baseline.
         
-        Args:
-            baseline_name: Name of baseline experiment
+        args:
+            baseline_name: name of baseline experiment
             
-        Returns:
-            Dict of experiment -> metric -> improvement
+        returns:
+            dict of experiment -> metric -> improvement
         """
         improvements = {}
         
@@ -119,7 +119,7 @@ class ExperimentAnalyzer:
                     if isinstance(curr_val, list):
                         curr_val = np.mean(curr_val)
                     
-                    # Calculate relative improvement
+                    # calculate relative improvement
                     if base_val != 0:
                         rel_improvement = (curr_val - base_val) / abs(base_val) * 100
                     else:
@@ -138,14 +138,14 @@ class ExperimentAnalyzer:
         format: str = 'latex'
     ) -> str:
         """
-        Generate comparison table.
+        generate comparison table.
         
-        Args:
-            metrics: Metrics to include
+        args:
+            metrics: metrics to include
             format: 'latex', 'markdown', or 'csv'
             
-        Returns:
-            Formatted table string
+        returns:
+            formatted table string
         """
         metrics = metrics or self.metrics
         stats = self.compute_statistics()
@@ -162,7 +162,7 @@ class ExperimentAnalyzer:
         stats: Dict,
         metrics: List[str]
     ) -> str:
-        """Generate LaTeX table."""
+        """generate latex table."""
         lines = [
             "\\begin{table}[htbp]",
             "\\centering",
@@ -202,7 +202,7 @@ class ExperimentAnalyzer:
         stats: Dict,
         metrics: List[str]
     ) -> str:
-        """Generate Markdown table."""
+        """generate markdown table."""
         lines = [
             "| Method | " + " | ".join(m.upper() for m in metrics) + " |",
             "|--------|" + "|".join("-" * 8 for _ in metrics) + "|"
@@ -229,7 +229,7 @@ class ExperimentAnalyzer:
         stats: Dict,
         metrics: List[str]
     ) -> str:
-        """Generate CSV table."""
+        """generate csv table."""
         lines = ["Method," + ",".join(metrics)]
         
         for name, data in stats.items():
@@ -253,14 +253,14 @@ def compare_experiments(
     output_dir: Path
 ) -> Dict:
     """
-    Compare multiple experiments.
+    compare multiple experiments.
     
-    Args:
-        experiment_dirs: List of experiment directories
-        output_dir: Output directory for reports
+    args:
+        experiment_dirs: list of experiment directories
+        output_dir: output directory for reports
         
-    Returns:
-        Comparison results
+    returns:
+        comparison results
     """
     experiments = {}
     
@@ -272,7 +272,7 @@ def compare_experiments(
     
     analyzer = ExperimentAnalyzer(experiments)
     
-    # Generate comparison
+    # generate comparison
     comparison = {
         'statistics': analyzer.compute_statistics(),
         'rankings': {
@@ -283,13 +283,13 @@ def compare_experiments(
         }
     }
     
-    # Save comparison
+    # save comparison
     output_dir.mkdir(parents=True, exist_ok=True)
     
     with open(output_dir / 'comparison.json', 'w') as f:
         json.dump(comparison, f, indent=2)
     
-    # Generate tables
+    # generate tables
     with open(output_dir / 'comparison_table.tex', 'w') as f:
         f.write(analyzer.generate_comparison_table(format='latex'))
     
@@ -305,15 +305,15 @@ def generate_comparison_report(
     baseline_name: str = 'baseline'
 ) -> str:
     """
-    Generate comprehensive comparison report.
+    generate comprehensive comparison report.
     
-    Args:
-        experiments: Dict of experiment results
-        output_path: Output path for report
-        baseline_name: Name of baseline experiment
+    args:
+        experiments: dict of experiment results
+        output_path: output path for report
+        baseline_name: name of baseline experiment
         
-    Returns:
-        Report content
+    returns:
+        report content
     """
     analyzer = ExperimentAnalyzer(experiments)
     
@@ -347,7 +347,7 @@ def generate_comparison_report(
             )
         lines.append("")
     
-    # Rankings
+    # rankings
     lines.extend([
         "## Rankings",
         "",

@@ -1,13 +1,13 @@
 """
-Full Training Script for 2.5D SA-CycleGAN.
+full training script for 2.5d sa-cyclegan.
 
-Complete training pipeline for brain MRI harmonization:
-- BraTS (multi-institutional) ↔ UPenn-GBM (single-institution)
+complete training pipeline for brain mri harmonization:
+- brats (multi-institutional) ↔ upenn-gbm (single-institution)
 
-Usage:
+usage:
     python train.py --epochs 100 --batch_size 4 --image_size 128
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 import os
@@ -27,7 +27,7 @@ from torch.cuda.amp import GradScaler, autocast
 import numpy as np
 from tqdm import tqdm
 
-# Add project root to path
+# add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from unified.models.architectures.sa_cyclegan_25d import (
@@ -38,7 +38,7 @@ from unified.models.losses import CombinedLoss, LSGANLoss
 
 
 class ReplayBuffer:
-    """Image buffer for discriminator training stability."""
+    """image buffer for discriminator training stability."""
     
     def __init__(self, max_size: int = 50):
         self.max_size = max_size
@@ -63,7 +63,7 @@ class ReplayBuffer:
 
 class Trainer:
     """
-    Complete training pipeline for 2.5D SA-CycleGAN.
+    complete training pipeline for 2.5d sa-cyclegan.
     """
     
     def __init__(
@@ -85,7 +85,7 @@ class Trainer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Device setup
+        # device setup
         if device == 'auto':
             if torch.cuda.is_available():
                 self.device = torch.device('cuda')
@@ -95,22 +95,22 @@ class Trainer:
                 self.device = torch.device('cpu')
         else:
             self.device = torch.device(device)
-        print(f"Using device: {self.device}")
+        print(f"using device: {self.device}")
         
-        # Mixed precision
+        # mixed precision
         self.use_amp = use_amp and self.device.type == 'cuda'
         self.scaler = GradScaler() if self.use_amp else None
         
-        # Create model
+        # create model
         print("\n" + "=" * 60)
-        print("Creating 2.5D SA-CycleGAN Model")
+        print("creating 2.5d sa-cyclegan model")
         print("=" * 60)
         self.model = create_model(config)
         self.model = self.model.to(self.device)
         
-        # Create dataloaders
+        # create dataloaders
         print("\n" + "=" * 60)
-        print("Creating Dataloaders")
+        print("creating dataloaders")
         print("=" * 60)
         self.train_loader, self.val_loader, self.test_loader = create_dataloaders(
             brats_dir=brats_dir,
@@ -120,7 +120,7 @@ class Trainer:
             num_workers=num_workers
         )
         
-        # Optimizers
+        # optimizers
         self.opt_G = optim.Adam(
             list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
             lr=lr, betas=(beta1, beta2)
@@ -130,7 +130,7 @@ class Trainer:
             lr=lr, betas=(beta1, beta2)
         )
         
-        # Learning rate schedulers
+        # learning rate schedulers
         self.scheduler_G = optim.lr_scheduler.CosineAnnealingLR(
             self.opt_G, T_max=100, eta_min=1e-6
         )
@@ -138,7 +138,7 @@ class Trainer:
             self.opt_D, T_max=100, eta_min=1e-6
         )
         
-        # Loss functions
+        # loss functions
         self.losses = CombinedLoss(
             lambda_cycle=config.lambda_cycle,
             lambda_identity=config.lambda_identity,
@@ -146,11 +146,11 @@ class Trainer:
             lambda_gradient=1.0
         ).to(self.device)
         
-        # Replay buffers for discriminator
+        # replay buffers for discriminator
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
         
-        # Training history
+        # training history
         self.history = {
             'train_G_loss': [], 'train_D_loss': [],
             'train_cycle_loss': [], 'train_identity_loss': [],
@@ -163,7 +163,7 @@ class Trainer:
         self.best_val_ssim = 0
         
     def compute_ssim(self, x: torch.Tensor, y: torch.Tensor) -> float:
-        """Compute SSIM between two tensors."""
+        """compute ssim between two tensors."""
         x = x.detach().cpu()
         y = y.detach().cpu()
         
@@ -179,14 +179,14 @@ class Trainer:
         return ssim.item()
     
     def compute_psnr(self, x: torch.Tensor, y: torch.Tensor) -> float:
-        """Compute PSNR between two tensors."""
+        """compute psnr between two tensors."""
         mse = ((x - y) ** 2).mean().item()
         if mse == 0:
             return 100.0
         return 10 * np.log10(1.0 / mse)
     
     def train_epoch(self, epoch: int) -> Dict[str, float]:
-        """Train for one epoch."""
+        """train for one epoch."""
         self.model.train()
         
         epoch_losses = {
@@ -204,53 +204,53 @@ class Trainer:
         )
         
         for batch_idx, batch in enumerate(pbar):
-            real_A = batch['A'].to(self.device)  # [B, 12, H, W]
+            real_A = batch['A'].to(self.device)  # [b, 12, h, w]
             real_B = batch['B'].to(self.device)
-            center_A = batch['A_center'].to(self.device)  # [B, 4, H, W]
+            center_A = batch['A_center'].to(self.device)  # [b, 4, h, w]
             center_B = batch['B_center'].to(self.device)
             
             # ================================================================
-            # Train Generators
+            # train generators
             # ================================================================
             self.opt_G.zero_grad()
             
-            # Generate fake images
-            fake_B = self.model.G_A2B(real_A)  # [B, 4, H, W]
+            # generate fake images
+            fake_B = self.model.G_A2B(real_A)  # [b, 4, h, w]
             fake_A = self.model.G_B2A(real_B)
             
-            # For cycle consistency, we need 3 slices of the fake
-            # Simplified: repeat the generated slice
+            # for cycle consistency, we need 3 slices of the fake
+            # simplified: repeat the generated slice
             fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
             fake_A_3slice = fake_A.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_A_3slice = fake_A_3slice.view(fake_A.size(0), -1, fake_A.size(2), fake_A.size(3))
             
-            # Cycle consistency
+            # cycle consistency
             rec_A = self.model.G_B2A(fake_B_3slice)
             rec_B = self.model.G_A2B(fake_A_3slice)
             
             loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
             loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
             
-            # Identity loss
+            # identity loss
             identity_A = self.model.G_B2A(real_A)
             identity_B = self.model.G_A2B(real_B)
             
             loss_identity_A = self.losses.identity_loss(center_A, identity_A)
             loss_identity_B = self.losses.identity_loss(center_B, identity_B)
             
-            # GAN loss
+            # gan loss
             pred_fake_B = self.model.D_B(fake_B)
             pred_fake_A = self.model.D_A(fake_A)
             
             loss_gan_A2B = self.losses.gan_loss.generator_loss(pred_fake_B)
             loss_gan_B2A = self.losses.gan_loss.generator_loss(pred_fake_A)
             
-            # SSIM loss for structural preservation
+            # ssim loss for structural preservation
             loss_ssim = self.losses.ssim_loss(center_A, rec_A) + \
                         self.losses.ssim_loss(center_B, rec_B)
             
-            # Total generator loss
+            # total generator loss
             loss_G = (loss_gan_A2B + loss_gan_B2A + 
                       loss_cycle_A + loss_cycle_B + 
                       loss_identity_A + loss_identity_B +
@@ -260,20 +260,20 @@ class Trainer:
             self.opt_G.step()
             
             # ================================================================
-            # Train Discriminators
+            # train discriminators
             # ================================================================
             self.opt_D.zero_grad()
             
-            # Use replay buffer for stability
+            # use replay buffer for stability
             fake_A_buffer = self.fake_A_buffer.push_and_pop(fake_A.detach())
             fake_B_buffer = self.fake_B_buffer.push_and_pop(fake_B.detach())
             
-            # D_A loss
+            # d_a loss
             pred_real_A = self.model.D_A(center_A)
             pred_fake_A = self.model.D_A(fake_A_buffer)
             loss_D_A = self.losses.gan_loss.discriminator_loss(pred_real_A, pred_fake_A)
             
-            # D_B loss
+            # d_b loss
             pred_real_B = self.model.D_B(center_B)
             pred_fake_B = self.model.D_B(fake_B_buffer)
             loss_D_B = self.losses.gan_loss.discriminator_loss(pred_real_B, pred_fake_B)
@@ -282,7 +282,7 @@ class Trainer:
             loss_D.backward()
             self.opt_D.step()
             
-            # Accumulate losses
+            # accumulate losses
             epoch_losses['G_loss'] += loss_G.item()
             epoch_losses['D_loss'] += loss_D.item()
             epoch_losses['cycle_A'] += loss_cycle_A.item()
@@ -292,14 +292,14 @@ class Trainer:
             epoch_losses['gan_A2B'] += loss_gan_A2B.item()
             epoch_losses['gan_B2A'] += loss_gan_B2A.item()
             
-            # Update progress bar
+            # update progress bar
             pbar.set_postfix({
                 'G': f'{loss_G.item():.3f}',
                 'D': f'{loss_D.item():.3f}',
                 'cyc': f'{(loss_cycle_A + loss_cycle_B).item():.3f}'
             })
         
-        # Average losses
+        # average losses
         n_batches = len(self.train_loader)
         for key in epoch_losses:
             epoch_losses[key] /= n_batches
@@ -308,7 +308,7 @@ class Trainer:
     
     @torch.no_grad()
     def validate(self) -> Dict[str, float]:
-        """Validate the model."""
+        """validate the model."""
         self.model.eval()
         
         ssim_A2B = []
@@ -322,7 +322,7 @@ class Trainer:
             center_A = batch['A_center'].to(self.device)
             center_B = batch['B_center'].to(self.device)
             
-            # Generate and reconstruct
+            # generate and reconstruct
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
             
@@ -334,7 +334,7 @@ class Trainer:
             rec_A = self.model.G_B2A(fake_B_3slice)
             rec_B = self.model.G_A2B(fake_A_3slice)
             
-            # Compute metrics
+            # compute metrics
             for i in range(center_A.size(0)):
                 ssim_A2B.append(self.compute_ssim(center_A[i], rec_A[i]))
                 ssim_B2A.append(self.compute_ssim(center_B[i], rec_B[i]))
@@ -349,7 +349,7 @@ class Trainer:
         }
     
     def save_checkpoint(self, epoch: int, is_best: bool = False):
-        """Save model checkpoint."""
+        """save model checkpoint."""
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
@@ -362,20 +362,20 @@ class Trainer:
             'config': self.config.__dict__
         }
         
-        # Save latest
+        # save latest
         torch.save(checkpoint, self.output_dir / 'checkpoint_latest.pth')
         
-        # Save periodic
+        # save periodic
         if epoch % 10 == 0:
             torch.save(checkpoint, self.output_dir / f'checkpoint_epoch_{epoch}.pth')
         
-        # Save best
+        # save best
         if is_best:
             torch.save(checkpoint, self.output_dir / 'checkpoint_best.pth')
-            print(f"  ⭐ New best model saved (SSIM: {self.best_val_ssim:.4f})")
+            print(f"  ⭐ new best model saved (ssim: {self.best_val_ssim:.4f})")
     
     def load_checkpoint(self, path: str):
-        """Load model from checkpoint."""
+        """load model from checkpoint."""
         checkpoint = torch.load(path, map_location=self.device)
         
         self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -387,18 +387,18 @@ class Trainer:
         self.best_val_ssim = checkpoint['best_val_ssim']
         self.start_epoch = checkpoint['epoch'] + 1
         
-        print(f"Loaded checkpoint from epoch {checkpoint['epoch']}")
+        print(f"loaded checkpoint from epoch {checkpoint['epoch']}")
     
     def train(self, epochs: int, validate_every: int = 5, save_every: int = 10):
-        """Full training loop."""
+        """full training loop."""
         print("\n" + "=" * 60)
-        print("Starting Training")
+        print("starting training")
         print("=" * 60)
-        print(f"Epochs: {epochs}")
-        print(f"Training samples: {len(self.train_loader.dataset)}")
-        print(f"Validation samples: {len(self.val_loader.dataset)}")
-        print(f"Batch size: {self.train_loader.batch_size}")
-        print(f"Device: {self.device}")
+        print(f"epochs: {epochs}")
+        print(f"training samples: {len(self.train_loader.dataset)}")
+        print(f"validation samples: {len(self.val_loader.dataset)}")
+        print(f"batch size: {self.train_loader.batch_size}")
+        print(f"device: {self.device}")
         print("=" * 60 + "\n")
         
         start_time = time.time()
@@ -406,14 +406,14 @@ class Trainer:
         for epoch in range(self.start_epoch, epochs):
             epoch_start = time.time()
             
-            # Train
+            # train
             train_losses = self.train_epoch(epoch + 1)
             
-            # Update schedulers
+            # update schedulers
             self.scheduler_G.step()
             self.scheduler_D.step()
             
-            # Log training losses
+            # log training losses
             self.history['train_G_loss'].append(train_losses['G_loss'])
             self.history['train_D_loss'].append(train_losses['D_loss'])
             self.history['train_cycle_loss'].append(
@@ -424,7 +424,7 @@ class Trainer:
             )
             self.history['learning_rate'].append(self.scheduler_G.get_last_lr()[0])
             
-            # Validate
+            # validate
             if (epoch + 1) % validate_every == 0:
                 val_metrics = self.validate()
                 
@@ -438,29 +438,29 @@ class Trainer:
                 if is_best:
                     self.best_val_ssim = avg_ssim
                 
-                # Print epoch summary
+                # print epoch summary
                 epoch_time = time.time() - epoch_start
-                print(f"\n  Epoch {epoch + 1}/{epochs} ({epoch_time:.1f}s)")
-                print(f"  Train: G={train_losses['G_loss']:.4f}, D={train_losses['D_loss']:.4f}")
-                print(f"  Val SSIM: A→B→A={val_metrics['ssim_A2B']:.4f}, B→A→B={val_metrics['ssim_B2A']:.4f}")
-                print(f"  Val PSNR: A→B→A={val_metrics['psnr_A2B']:.2f}dB, B→A→B={val_metrics['psnr_B2A']:.2f}dB")
-                print(f"  LR: {self.scheduler_G.get_last_lr()[0]:.2e}")
+                print(f"\n  epoch {epoch + 1}/{epochs} ({epoch_time:.1f}s)")
+                print(f"  train: g={train_losses['G_loss']:.4f}, d={train_losses['D_loss']:.4f}")
+                print(f"  val ssim: a→b→a={val_metrics['ssim_A2B']:.4f}, b→a→b={val_metrics['ssim_B2A']:.4f}")
+                print(f"  val psnr: a→b→a={val_metrics['psnr_A2B']:.2f}db, b→a→b={val_metrics['psnr_B2A']:.2f}db")
+                print(f"  lr: {self.scheduler_G.get_last_lr()[0]:.2e}")
                 
-                # Save checkpoint
+                # save checkpoint
                 self.save_checkpoint(epoch + 1, is_best)
             
-            # Save periodic checkpoint
+            # save periodic checkpoint
             elif (epoch + 1) % save_every == 0:
                 self.save_checkpoint(epoch + 1)
         
         total_time = time.time() - start_time
         print("\n" + "=" * 60)
-        print(f"Training Complete!")
-        print(f"Total time: {total_time / 3600:.2f} hours")
-        print(f"Best validation SSIM: {self.best_val_ssim:.4f}")
+        print(f"training complete!")
+        print(f"total time: {total_time / 3600:.2f} hours")
+        print(f"best validation ssim: {self.best_val_ssim:.4f}")
         print("=" * 60)
         
-        # Save final history
+        # save final history
         with open(self.output_dir / 'training_history.json', 'w') as f:
             json.dump(self.history, f, indent=2)
 
@@ -468,7 +468,7 @@ class Trainer:
 def main():
     parser = argparse.ArgumentParser(description='Train 2.5D SA-CycleGAN')
     
-    # Data arguments
+    # data arguments
     parser.add_argument('--brats_dir', type=str, 
                         default='/Volumes/usb drive/neuroscope/preprocessed/brats',
                         help='Path to BraTS data')
@@ -479,29 +479,29 @@ def main():
                         default='/Volumes/usb drive/neuroscope/experiments',
                         help='Output directory for checkpoints')
     
-    # Training arguments
+    # training arguments
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
     parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
     parser.add_argument('--image_size', type=int, default=128, help='Image size')
     parser.add_argument('--lr', type=float, default=2e-4, help='Learning rate')
     parser.add_argument('--num_workers', type=int, default=4, help='Data loader workers')
     
-    # Model arguments
+    # model arguments
     parser.add_argument('--ngf', type=int, default=64, help='Generator filters')
     parser.add_argument('--ndf', type=int, default=64, help='Discriminator filters')
     parser.add_argument('--n_residual', type=int, default=9, help='Residual blocks')
     
-    # Loss weights
+    # loss weights
     parser.add_argument('--lambda_cycle', type=float, default=10.0)
     parser.add_argument('--lambda_identity', type=float, default=5.0)
     parser.add_argument('--lambda_ssim', type=float, default=1.0)
     
-    # Resume training
+    # resume training
     parser.add_argument('--resume', type=str, default=None, help='Resume from checkpoint')
     
     args = parser.parse_args()
     
-    # Create config
+    # create config
     config = SACycleGAN25DConfig(
         ngf=args.ngf,
         ndf=args.ndf,
@@ -511,7 +511,7 @@ def main():
         lambda_ssim=args.lambda_ssim
     )
     
-    # Create trainer
+    # create trainer
     trainer = Trainer(
         config=config,
         brats_dir=args.brats_dir,
@@ -523,11 +523,11 @@ def main():
         num_workers=args.num_workers
     )
     
-    # Resume if specified
+    # resume if specified
     if args.resume:
         trainer.load_checkpoint(args.resume)
     
-    # Train
+    # train
     trainer.train(epochs=args.epochs)
 
 

@@ -14,7 +14,7 @@ from preprocessing_utils import write_json_with_schema
 import argparse
 from preprocessing_utils import generate_brain_mask
 
-# Custom JSON encoder to handle all data types
+# custom json encoder to handle all data types
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
@@ -33,7 +33,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 
 def configure_logging() -> None:
-    """Configure logging for N4 diagnostic analysis."""
+    """configure logging for n4 diagnostic analysis."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
@@ -41,13 +41,13 @@ def configure_logging() -> None:
 
 
 def load_metadata(metadata_path: Path) -> Dict[str, Any]:
-    """Load metadata file."""
+    """load metadata file."""
     with open(metadata_path, 'r') as f:
         return json.load(f)
 
 
 def verify_image_file(file_path: Path) -> bool:
-    """Verify that an image file exists and is readable."""
+    """verify that an image file exists and is readable."""
     if not file_path.exists():
         return False
     
@@ -68,7 +68,7 @@ def parse_args():
 
 
 def analyze_intensity_distribution(image: sitk.Image, mask: sitk.Image, label: str) -> Dict[str, float]:
-    """Analyze intensity distribution within brain mask."""
+    """analyze intensity distribution within brain mask."""
     arr = sitk.GetArrayFromImage(image)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
     brain_values = arr[mask_arr]
@@ -91,7 +91,7 @@ def analyze_intensity_distribution(image: sitk.Image, mask: sitk.Image, label: s
 
 
 def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> Dict[str, float]:
-    """Analyze slice-wise uniformity."""
+    """analyze slice-wise uniformity."""
     arr = sitk.GetArrayFromImage(image)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
     
@@ -101,7 +101,7 @@ def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> Dict[str, f
     
     for z in range(arr.shape[0]):
         slice_mask = mask_arr[z]
-        if slice_mask.sum() > 50:  # Minimum voxels for reliable stats
+        if slice_mask.sum() > 50:  # minimum voxels for reliable stats
             slice_vals = arr[z][slice_mask]
             slice_mean = slice_vals.mean()
             slice_std = slice_vals.std()
@@ -129,7 +129,7 @@ def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> Dict[str, f
 
 
 def check_intensity_scaling_issues(original: sitk.Image, n4_corrected: sitk.Image, mask: sitk.Image) -> Dict[str, Any]:
-    """Check for intensity scaling or range issues after N4 correction."""
+    """check for intensity scaling or range issues after n4 correction."""
     orig_arr = sitk.GetArrayFromImage(original)
     n4_arr = sitk.GetArrayFromImage(n4_corrected)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
@@ -140,25 +140,25 @@ def check_intensity_scaling_issues(original: sitk.Image, n4_corrected: sitk.Imag
     if len(orig_brain) < 100:
         return {'error': 'insufficient_brain_tissue'}
     
-    # Compute intensity range changes
+    # compute intensity range changes
     orig_range = orig_brain.max() - orig_brain.min()
     n4_range = n4_brain.max() - n4_brain.min()
     
-    # Compute mean intensity changes
+    # compute mean intensity changes
     orig_mean = orig_brain.mean()
     n4_mean = n4_brain.mean()
     
-    # Check for problematic scaling
+    # check for problematic scaling
     range_ratio = n4_range / (orig_range + 1e-8)
     mean_ratio = n4_mean / (orig_mean + 1e-8)
     
-    # Correlation between original and corrected
+    # correlation between original and corrected
     correlation = np.corrcoef(orig_brain, n4_brain)[0, 1] if len(orig_brain) > 1 else np.nan
     
-    # Check for negative values (shouldn't happen with MRI)
+    # check for negative values (shouldn't happen with mri)
     negative_values = (n4_brain < 0).sum()
     
-    # Check for extreme values
+    # check for extreme values
     orig_99th = np.percentile(orig_brain, 99)
     n4_99th = np.percentile(n4_brain, 99)
     
@@ -180,7 +180,7 @@ def check_intensity_scaling_issues(original: sitk.Image, n4_corrected: sitk.Imag
 
 
 def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]) -> Dict[str, Any]:
-    """Comprehensive diagnosis of N4 correction issues for one subject."""
+    """comprehensive diagnosis of n4 correction issues for one subject."""
     original_dir = PATHS['preprocessed_dir'] / section / subject_id
     n4_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected" / subject_id
     
@@ -210,22 +210,22 @@ def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]
             continue
         
         try:
-            # Load images
+            # load images
             original = sitk.ReadImage(str(orig_file))
             n4_corrected = sitk.ReadImage(str(n4_file))
             
-            # Generate mask from original (more reliable for comparison)
+            # generate mask from original (more reliable for comparison)
             mask = generate_brain_mask(original)
             
-            # Analyze intensity distributions
+            # analyze intensity distributions
             orig_stats = analyze_intensity_distribution(original, mask, 'original')
             n4_stats = analyze_intensity_distribution(n4_corrected, mask, 'n4_corrected')
             
-            # Analyze slice uniformity
+            # analyze slice uniformity
             orig_uniformity = analyze_slice_uniformity(original, mask)
             n4_uniformity = analyze_slice_uniformity(n4_corrected, mask)
             
-            # Check for scaling/range issues
+            # check for scaling/range issues
             scaling_analysis = check_intensity_scaling_issues(original, n4_corrected, mask)
             
             modality_diagnosis.update({
@@ -241,28 +241,28 @@ def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]
                 'diagnosis_successful': True
             })
             
-            # Detect specific issues
+            # detect specific issues
             issues = []
             
-            # Issue 1: CV got worse instead of better
+            # issue 1: cv got worse instead of better
             if 'cv' in orig_stats and 'cv' in n4_stats:
                 cv_ratio = n4_stats['cv'] / (orig_stats['cv'] + 1e-8)
                 if cv_ratio > 1.1:
                     issues.append(f"CV increased by {cv_ratio:.2f}x (should decrease)")
             
-            # Issue 2: Extreme intensity scaling
+            # issue 2: extreme intensity scaling
             if scaling_analysis.get('extreme_scaling_detected', False):
                 issues.append(f"Extreme intensity scaling detected (ratio: {scaling_analysis.get('range_ratio', 'N/A'):.2f})")
             
-            # Issue 3: Mean intensity shift
+            # issue 3: mean intensity shift
             if scaling_analysis.get('mean_shift_detected', False):
                 issues.append(f"Large mean intensity shift (ratio: {scaling_analysis.get('mean_ratio', 'N/A'):.2f})")
             
-            # Issue 4: Poor correlation
+            # issue 4: poor correlation
             if scaling_analysis.get('poor_correlation_detected', False):
                 issues.append(f"Poor correlation between original and N4 ({scaling_analysis.get('correlation', 'N/A'):.3f})")
             
-            # Issue 5: Negative values
+            # issue 5: negative values
             if scaling_analysis.get('negative_values_count', 0) > 0:
                 issues.append(f"Negative values introduced: {scaling_analysis['negative_values_count']}")
             
@@ -283,7 +283,7 @@ def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]
 def run_diagnostic_analysis(metadata: Dict[str, Any], 
                           max_subjects_per_section: int = 10,
                           splits: List[str] = None) -> Dict[str, Any]:
-    """Run diagnostic analysis on a sample of subjects."""
+    """run diagnostic analysis on a sample of subjects."""
     logging.info("Starting N4 diagnostic analysis...")
     
     results = {
@@ -304,23 +304,23 @@ def run_diagnostic_analysis(metadata: Dict[str, Any],
     
     modalities = ['t1', 't1gd', 't2', 'flair']
     
-    # Analyze sample of subjects from each dataset
+    # analyze sample of subjects from each dataset
     for section in ['brats', 'upenn']:
         logging.info(f"Analyzing {section} subjects...")
         valid_subjects = metadata[section]['valid_subjects']
         
-        # Get subjects with both original and N4-corrected files
+        # get subjects with both original and n4-corrected files
         available_subjects = []
         for subject_id, subject_info in valid_subjects.items():
-            if subject_info.get('split') in (splits or ['train','val']):  # Focus on chosen splits
-                # Check if subject has N4-corrected files
+            if subject_info.get('split') in (splits or ['train','val']):  # focus on chosen splits
+                # check if subject has n4-corrected files
                 n4_dir = PATHS['preprocessed_dir'] / f"{section}_n4corrected" / subject_id
                 if n4_dir.exists():
                     available_subjects.append(subject_id)
         
-        # Sample subjects for analysis
+        # sample subjects for analysis
         import random
-        random.seed(42)  # For reproducible results
+        random.seed(42)  # for reproducible results
         sample_subjects = random.sample(available_subjects, 
                                       min(max_subjects_per_section, len(available_subjects)))
         
@@ -331,7 +331,7 @@ def run_diagnostic_analysis(metadata: Dict[str, Any],
             diagnosis = diagnose_single_subject(section, subject_id, modalities)
             results['detailed_diagnoses'][section][subject_id] = diagnosis
             
-            # Collect common issues
+            # collect common issues
             for issue in diagnosis.get('overall_issues', []):
                 results['common_issues'][issue] += 1
     
@@ -339,7 +339,7 @@ def run_diagnostic_analysis(metadata: Dict[str, Any],
 
 
 def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate summary of diagnostic findings."""
+    """generate summary of diagnostic findings."""
     summary = {
         'analysis_overview': {
             'subjects_analyzed': sum(len(subjects) for subjects in results['subjects_analyzed'].values()),
@@ -350,11 +350,11 @@ def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
         'recommendations': []
     }
     
-    # Sort issues by frequency
+    # sort issues by frequency
     sorted_issues = sorted(results['common_issues'].items(), key=lambda x: x[1], reverse=True)
-    summary['top_issues'] = sorted_issues[:10]  # Top 10 most common issues
+    summary['top_issues'] = sorted_issues[:10]  # top 10 most common issues
     
-    # Generate recommendations based on findings
+    # generate recommendations based on findings
     recommendations = []
     
     for issue, count in sorted_issues:
@@ -369,7 +369,7 @@ def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
         elif 'Negative values' in issue:
             recommendations.append("Negative values introduced - check N4 implementation and input image preprocessing")
     
-    # Add general recommendations
+    # add general recommendations
     recommendations.extend([
         "Consider using more conservative N4 parameters (fewer iterations, larger smoothing)",
         "Verify that input images are properly intensity normalized before N4 correction", 
@@ -377,13 +377,13 @@ def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
         "Consider alternative bias correction methods if N4 consistently performs poorly"
     ])
     
-    summary['recommendations'] = list(set(recommendations))  # Remove duplicates
+    summary['recommendations'] = list(set(recommendations))  # remove duplicates
     
     return summary
 
 
 def save_diagnostic_results(results: Dict[str, Any], summary: Dict[str, Any], output_path: Path) -> None:
-    """Save diagnostic results to JSON file."""
+    """save diagnostic results to json file."""
     output_data = {
         'diagnostic_info': results.get('diagnostic_info', {}),
         'analysis_summary': summary,
@@ -398,7 +398,7 @@ def save_diagnostic_results(results: Dict[str, Any], summary: Dict[str, Any], ou
             'subjects_analyzed': dict,
             'detailed_diagnoses': dict
         }
-        # Write JSON directly using our custom encoder
+        # write json directly using our custom encoder
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
             json.dump(output_data, f, indent=2, sort_keys=True, cls=CustomJSONEncoder)
@@ -417,20 +417,20 @@ def save_diagnostic_results(results: Dict[str, Any], summary: Dict[str, Any], ou
 
 
 def print_diagnostic_summary(summary: Dict[str, Any]) -> None:
-    """Print diagnostic summary."""
+    """print diagnostic summary."""
     print("\n" + "="*80)
-    print("N4 CORRECTION DIAGNOSTIC ANALYSIS")
+    print("n4 correction diagnostic analysis")
     print("="*80)
     
-    print(f"\nAnalysis Overview:")
-    print(f"  Subjects analyzed: {summary['analysis_overview']['subjects_analyzed']}")
-    print(f"  Sections analyzed: {summary['analysis_overview']['sections_analyzed']}")
+    print(f"\nanalysis overview:")
+    print(f"  subjects analyzed: {summary['analysis_overview']['subjects_analyzed']}")
+    print(f"  sections analyzed: {summary['analysis_overview']['sections_analyzed']}")
     
-    print(f"\nTop Issues Detected:")
+    print(f"\ntop issues detected:")
     for i, (issue, count) in enumerate(summary['top_issues'][:5], 1):
         print(f"  {i}. {issue} (occurred {count} times)")
     
-    print(f"\nRecommendations:")
+    print(f"\nrecommendations:")
     for i, rec in enumerate(summary['recommendations'][:5], 1):
         print(f"  {i}. {rec}")
     

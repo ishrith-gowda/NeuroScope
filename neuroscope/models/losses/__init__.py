@@ -1,11 +1,11 @@
 """
-Loss Functions Module.
+loss functions module.
 
-This module provides comprehensive loss functions for image-to-image translation,
-particularly optimized for medical imaging and MRI domain adaptation.
+this module provides comprehensive loss functions for image-to-image translation,
+particularly optimized for medical imaging and mri domain adaptation.
 """
 
-# Adversarial losses
+# adversarial losses
 from .adversarial import (
     GANLoss,
     LSGANLoss,
@@ -20,7 +20,7 @@ from .adversarial import (
     MultiScaleGANLoss,
 )
 
-# Perceptual and style losses
+# perceptual and style losses
 from .perceptual import (
     VGGFeatureExtractor,
     PerceptualLoss,
@@ -28,7 +28,7 @@ from .perceptual import (
     ContentStyleLoss,
 )
 
-# Reconstruction losses
+# reconstruction losses
 from .reconstruction import (
     L1Loss,
     L2Loss,
@@ -39,7 +39,7 @@ from .reconstruction import (
     FocalFrequencyLoss,
 )
 
-# Consistency losses
+# consistency losses
 from .consistency import (
     CycleConsistencyLoss,
     CycleLoss,
@@ -51,7 +51,7 @@ from .consistency import (
     ModeSeekingLoss,
 )
 
-# Medical imaging losses
+# medical imaging losses
 from .medical import (
     TumorPreservationLoss,
     RadiomicsPreservationLoss,
@@ -61,7 +61,7 @@ from .medical import (
     NormalizedCrossCorrelationLoss,
 )
 
-# Regularization losses
+# regularization losses
 from .regularization import (
     GradientPenalty,
     SpectralRegularization,
@@ -74,7 +74,7 @@ from .regularization import (
     CutoutRegularization,
 )
 
-# Volumetric (3D) losses
+# volumetric (3d) losses
 from .volumetric import (
     VolumetricSSIM,
     VolumetricMultiScaleSSIM,
@@ -89,7 +89,7 @@ from .volumetric import (
 )
 
 __all__ = [
-    # Adversarial
+    # adversarial
     'GANLoss',
     'LSGANLoss',
     'WassersteinLoss',
@@ -102,13 +102,13 @@ __all__ = [
     'SoftplusLoss',
     'MultiScaleGANLoss',
     
-    # Perceptual
+    # perceptual
     'VGGFeatureExtractor',
     'PerceptualLoss',
     'StyleLoss',
     'ContentStyleLoss',
     
-    # Reconstruction
+    # reconstruction
     'L1Loss',
     'L2Loss',
     'SSIMLoss',
@@ -117,7 +117,7 @@ __all__ = [
     'CharbonnierLoss',
     'FocalFrequencyLoss',
     
-    # Consistency
+    # consistency
     'CycleConsistencyLoss',
     'CycleLoss',
     'IdentityLoss',
@@ -127,7 +127,7 @@ __all__ = [
     'TemporalConsistencyLoss',
     'ModeSeekingLoss',
     
-    # Medical
+    # medical
     'TumorPreservationLoss',
     'RadiomicsPreservationLoss',
     'ModalityConsistencyLoss',
@@ -135,7 +135,7 @@ __all__ = [
     'ContrastEnhancementLoss',
     'NormalizedCrossCorrelationLoss',
     
-    # Regularization
+    # regularization
     'GradientPenalty',
     'SpectralRegularization',
     'R1Regularization',
@@ -146,7 +146,7 @@ __all__ = [
     'ConsistencyRegularization',
     'CutoutRegularization',
     
-    # Volumetric (3D)
+    # volumetric (3d)
     'VolumetricSSIM',
     'VolumetricMultiScaleSSIM',
     'VolumetricCycleConsistencyLoss',

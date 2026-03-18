@@ -1,4 +1,4 @@
-# Python
+# python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,21 +19,46 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
+# virtual environments
 venv/
 .venv/
 ENV/
 env/
 .env
 
-# macOS
+# ide
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macos
 .DS_Store
 ._.DS_Store
 ._*
 
-# VS Code (keep settings but ignore history)
-.vscode/
+# tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# distribution and packaging
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Large data folders (too big for git)
 preprocessed/
@@ -113,3 +138,10 @@ paper/
 *.fls
 *.synctex.gz
 *.out
+
+# jupyter notebooks
+.ipynb_checkpoints/
+
+# profiling
+*.prof
+*.lprof

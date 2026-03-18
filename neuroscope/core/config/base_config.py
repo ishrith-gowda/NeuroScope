@@ -1,4 +1,4 @@
-"""Core configuration module for neuroscope."""
+"""core configuration module for neuroscope."""
 
 import os
 from pathlib import Path
@@ -6,14 +6,14 @@ from typing import Dict, Any, Optional
 
 
 class BaseConfig:
-    """Base configuration class for neuroscope."""
+    """base configuration class for neuroscope."""
     
     def __init__(self):
-        """Initialize base configuration."""
-        # Find project root (parent directory of neuroscope package)
+        """initialize base configuration."""
+        # find project root (parent directory of neuroscope package)
         self.project_root = Path(__file__).resolve().parent.parent.parent.parent
         
-        # Default paths
+        # default paths
         self.paths = {
             "data_dir": self.project_root / "data",
             "preprocessed_dir": self.project_root / "preprocessed",
@@ -26,7 +26,7 @@ class BaseConfig:
             "mlruns_dir": self.project_root / "mlruns",
         }
         
-        # Default preprocessing parameters
+        # default preprocessing parameters
         self.preprocessing = {
             "n4_bias_correction": True,
             "skull_stripping": True,
@@ -37,9 +37,9 @@ class BaseConfig:
             "normalization_percentiles": [1, 99],
         }
         
-        # Default model parameters
+        # default model parameters
         self.model = {
-            "dimensions": 3,  # 2D or 3D
+            "dimensions": 3,  # 2d or 3d
             "generator_features": 64,
             "discriminator_features": 64,
             "num_residual_blocks": 9,
@@ -47,7 +47,7 @@ class BaseConfig:
             "use_instance_norm": True,
         }
         
-        # Default training parameters
+        # default training parameters
         self.training = {
             "batch_size": 4,
             "learning_rate": 0.0002,
@@ -61,30 +61,30 @@ class BaseConfig:
             "samples_per_volume": 8,
         }
         
-        # Default evaluation parameters
+        # default evaluation parameters
         self.evaluation = {
             "metrics": ["ssim", "psnr", "mse", "mae"],
             "sample_count": 10,
             "batch_size": 4,
         }
         
-        # Initialize from environment variables
+        # initialize from environment variables
         self._init_from_env()
     
     def _init_from_env(self):
-        """Initialize configuration from environment variables."""
-        # Override paths from environment variables
+        """initialize configuration from environment variables."""
+        # override paths from environment variables
         for key in self.paths:
             env_key = f"NEUROSCOPE_{key.upper()}"
             if env_key in os.environ:
                 self.paths[key] = Path(os.environ[env_key])
         
-        # Create directories if they don't exist
+        # create directories if they don't exist
         for path in self.paths.values():
             os.makedirs(path, exist_ok=True)
     
     def update(self, config_dict: Dict[str, Any]):
-        """Update configuration from dictionary."""
+        """update configuration from dictionary."""
         for section, values in config_dict.items():
             if hasattr(self, section) and isinstance(getattr(self, section), dict):
                 getattr(self, section).update(values)
@@ -92,7 +92,7 @@ class BaseConfig:
                 setattr(self, section, values)
     
     def from_file(self, config_path: Path):
-        """Load configuration from file."""
+        """load configuration from file."""
         import json
         
         with open(config_path, "r") as f:
@@ -101,15 +101,15 @@ class BaseConfig:
         self.update(config_dict)
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert configuration to dictionary."""
+        """convert configuration to dictionary."""
         config_dict = {}
         
-        # Convert attributes to dictionary
+        # convert attributes to dictionary
         for attr in dir(self):
             if not attr.startswith("_") and attr != "to_dict" and attr != "from_file" and attr != "update":
                 value = getattr(self, attr)
                 
-                # Convert Path objects to strings
+                # convert path objects to strings
                 if isinstance(value, dict):
                     config_dict[attr] = {k: str(v) if isinstance(v, Path) else v for k, v in value.items()}
                 else:
@@ -118,7 +118,7 @@ class BaseConfig:
         return config_dict
     
     def save(self, config_path: Optional[Path] = None):
-        """Save configuration to file."""
+        """save configuration to file."""
         import json
         
         if config_path is None:
@@ -128,5 +128,5 @@ class BaseConfig:
             json.dump(self.to_dict(), f, indent=2)
 
 
-# Create default configuration
+# create default configuration
 config = BaseConfig()

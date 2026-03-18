@@ -1,9 +1,9 @@
 """
-Training Samplers Package.
+training samplers package.
 
-Sample generation and visualization during training.
+sample generation and visualization during training.
 
-Author: NeuroScope Research Team
+author: neuroscope research team
 """
 
 from .sample_generator import SampleGenerator

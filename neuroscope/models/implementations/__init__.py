@@ -1,4 +1,4 @@
-"""Model implementations for neuroscope."""
+"""model implementations for neuroscope."""
 
 from neuroscope.models.implementations.cyclegan import CycleGAN
 
