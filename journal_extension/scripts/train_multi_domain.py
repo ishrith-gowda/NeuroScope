@@ -29,7 +29,7 @@ import torch.optim as optim
 from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 import numpy as np
 from tqdm import tqdm
 
@@ -132,6 +132,16 @@ class MultiDomainMRIDataset(Dataset):
         }
 
 
+def setup_torch_performance():
+    """configure torch for maximum gpu throughput."""
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
+    torch.autograd.set_detect_anomaly(False)
+    torch.autograd.profiler.profile(enabled=False)
+    torch.autograd.profiler.emit_nvtx(enabled=False)
+
+
 class MultiDomainTrainer:
     """
     trainer for multi-domain sa-cyclegan-2.5d.
@@ -171,6 +181,7 @@ class MultiDomainTrainer:
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
     ):
+        setup_torch_performance()
         self.config = config
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -214,8 +225,9 @@ class MultiDomainTrainer:
         print(f"lambda_rec: {lambda_rec}")
 
         # tensorboard
+        runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
         self.writer = SummaryWriter(
-            log_dir=str(PROJECT_ROOT / "runs" / experiment_name)
+            log_dir=str(runs_dir / experiment_name)
         )
 
         # create model
@@ -288,8 +300,8 @@ class MultiDomainTrainer:
 
         # mixed precision
         self.use_amp = use_amp and torch.cuda.is_available()
-        self.scaler_G = GradScaler(enabled=self.use_amp)
-        self.scaler_D = GradScaler(enabled=self.use_amp)
+        self.scaler_G = GradScaler("cuda", enabled=self.use_amp)
+        self.scaler_D = GradScaler("cuda", enabled=self.use_amp)
         self.gradient_clip_norm = gradient_clip_norm
 
         # training history
@@ -356,9 +368,9 @@ class MultiDomainTrainer:
         # ================================================================
         # train discriminator
         # ================================================================
-        self.opt_D.zero_grad()
+        self.opt_D.zero_grad(set_to_none=True)
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             # real images
             adv_real, cls_real = self.model.discriminator(center)
             loss_D_real = self.adv_loss(adv_real, torch.ones_like(adv_real))
@@ -384,9 +396,9 @@ class MultiDomainTrainer:
         # ================================================================
         # train generator
         # ================================================================
-        self.opt_G.zero_grad()
+        self.opt_G.zero_grad(set_to_none=True)
 
-        with autocast(enabled=self.use_amp):
+        with autocast("cuda", enabled=self.use_amp):
             # forward translation
             fake = self.model.generator(real, tgt_domain)
 
