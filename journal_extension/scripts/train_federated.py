@@ -84,7 +84,7 @@ class LocalClient:
     local training client for federated cyclegan.
 
     each client has its own data, model copy, and optimizer.
-    trains locally for E epochs, then returns model updates.
+    trains locally for e epochs, then returns model updates.
     """
 
     def __init__(
@@ -227,7 +227,7 @@ class LocalClient:
         }
 
     def train_local(self, epochs: int, prox_loss_fn=None) -> Dict[str, float]:
-        """train locally for E epochs. returns average losses."""
+        """train locally for e epochs. returns average losses."""
         self.model.train()
         total_losses = {"G_loss": 0, "D_loss": 0, "cycle": 0}
         n_steps = 0

@@ -416,10 +416,10 @@ class DownstreamEvaluator:
         with and without harmonization.
 
         args:
-            train_loader_A: training data from domain a (raw)
-            test_loader_B: test data from domain b (raw)
-            train_loader_A_harmonized: training data from domain a (harmonized)
-            test_loader_B_harmonized: test data from domain b (harmonized)
+            train_loader_a: training data from domain a (raw)
+            test_loader_b: test data from domain b (raw)
+            train_loader_a_harmonized: training data from domain a (harmonized)
+            test_loader_b_harmonized: test data from domain b (harmonized)
         returns:
             dict with results for raw and harmonized conditions
         """

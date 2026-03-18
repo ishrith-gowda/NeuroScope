@@ -76,8 +76,8 @@ class CompressionTrainer:
 
     extends the base trainer with:
     - compression-aware bottleneck with quantization + entropy model
-    - rate-distortion loss: L_total = L_harmonization + lambda_rate * R
-    - warmup phase where compression is disabled for the first N epochs
+    - rate-distortion loss: l_total = l_harmonization + lambda_rate * r
+    - warmup phase where compression is disabled for the first n epochs
     - rate-distortion curve logging (ssim vs bits-per-voxel)
     """
 
