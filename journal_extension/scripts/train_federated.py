@@ -385,7 +385,23 @@ class FederatedTrainer:
             "global_metrics": [],
         }
 
-        self._save_config(locals())
+        self._save_config()
+
+    def _save_config(self):
+        """save experiment configuration."""
+        config_dict = {
+            "model": {k: v for k, v in self.config.__dict__.items()},
+            "training": {
+                "aggregation_strategy": self.aggregation_strategy,
+                "n_clients": self.n_clients,
+                "local_epochs": self.local_epochs,
+                "communication_rounds": self.communication_rounds,
+                "device": str(self.device),
+                "experiment_name": self.experiment_name,
+            },
+        }
+        with open(self.experiment_dir / "config.json", "w") as f:
+            json.dump(config_dict, f, indent=2, default=str)
 
     def _create_client_loaders(
         self, brats_dir, upenn_dir, batch_size, image_size, num_workers
