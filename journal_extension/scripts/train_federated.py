@@ -494,28 +494,51 @@ class FederatedTrainer:
             "ssim_B2A": np.mean(metrics["ssim_B2A"]),
         }
 
-    def save_checkpoint(self, round_idx: int):
+    def save_checkpoint(self, round_idx: int, best_ssim: float = 0.0):
         checkpoint = {
             "round": round_idx,
             "global_model_state_dict": self.global_model.state_dict(),
             "history": self.history,
             "config": self.config.__dict__,
             "aggregation_strategy": self.aggregation_strategy,
+            "best_ssim": best_ssim,
         }
         ckpt_dir = self.experiment_dir / "checkpoints"
         torch.save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
         if round_idx % 10 == 0:
             torch.save(checkpoint, ckpt_dir / f"checkpoint_round_{round_idx}.pth")
 
-    def train(self):
+    def load_checkpoint(self, path: str = None):
+        """resume from a checkpoint. returns (start_round, best_ssim)."""
+        if path is None:
+            path = self.experiment_dir / "checkpoints" / "checkpoint_latest.pth"
+        path = Path(path)
+        if not path.exists():
+            return 0, 0.0
+        print(f"resuming from checkpoint: {path}")
+        checkpoint = torch.load(path, map_location=self.device, weights_only=False)
+        self.global_model.load_state_dict(checkpoint["global_model_state_dict"])
+        self.history = checkpoint.get("history", self.history)
+        start_round = checkpoint["round"] + 1
+        best_ssim = checkpoint.get("best_ssim", 0.0)
+        print(f"  resumed at round {start_round}/{self.communication_rounds}, best_ssim={best_ssim:.4f}")
+        return start_round, best_ssim
+
+    def train(self, resume: bool = False):
         """run federated training simulation."""
+        start_round = 0
+        best_ssim = 0.0
+
+        if resume:
+            start_round, best_ssim = self.load_checkpoint()
+
         print(f"\nstarting federated training ({self.aggregation_strategy})")
         print(f"  {self.communication_rounds} rounds x {self.local_epochs} local epochs")
+        if start_round > 0:
+            print(f"  resuming from round {start_round}")
         print()
 
-        best_ssim = 0
-
-        for round_idx in range(self.communication_rounds):
+        for round_idx in range(start_round, self.communication_rounds):
             round_start = time.time()
 
             # create fresh client models (copy of global)
@@ -592,7 +615,12 @@ class FederatedTrainer:
 
                 if mean_ssim > best_ssim:
                     best_ssim = mean_ssim
-                    self.save_checkpoint(round_idx)
+                    self.save_checkpoint(round_idx, best_ssim)
+                    torch.save(
+                        {"round": round_idx, "global_model_state_dict": self.global_model.state_dict(),
+                         "best_ssim": best_ssim},
+                        self.experiment_dir / "checkpoints" / "checkpoint_best.pth",
+                    )
                     print(f"  *** new best ssim: {mean_ssim:.4f} ***")
 
                 self.history["global_metrics"].append({
@@ -606,12 +634,11 @@ class FederatedTrainer:
                 "time": round_time,
             })
 
-            # periodic checkpoint
-            if (round_idx + 1) % 10 == 0:
-                self.save_checkpoint(round_idx)
+            # save latest every round (each round is ~2hrs, minimize lost progress)
+            self.save_checkpoint(round_idx, best_ssim)
 
         # save final
-        self.save_checkpoint(self.communication_rounds - 1)
+        self.save_checkpoint(self.communication_rounds - 1, best_ssim)
         self.writer.close()
 
         with open(self.experiment_dir / "training_history.json", "w") as f:
@@ -647,6 +674,8 @@ def parse_args():
     parser.add_argument("--n_residual_blocks", type=int, default=9)
     parser.add_argument("--eval_every_n_rounds", type=int, default=5)
     parser.add_argument("--experiment_name", type=str, default=None)
+    parser.add_argument("--resume", action="store_true",
+                        help="resume from latest checkpoint")
     return parser.parse_args()
 
 
@@ -689,7 +718,7 @@ def main():
         eval_every_n_rounds=getattr(args, "eval_every_n_rounds", 5),
     )
 
-    trainer.train()
+    trainer.train(resume=getattr(args, "resume", False))
 
 
 if __name__ == "__main__":
