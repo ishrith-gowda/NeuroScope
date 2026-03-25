@@ -1,4 +1,4 @@
-# NeuroScope
+# SA-CycleGAN-2.5D
 
 [![arXiv](https://img.shields.io/badge/arXiv-2603.17219-b31b1b.svg)](https://arxiv.org/abs/2603.17219)
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
