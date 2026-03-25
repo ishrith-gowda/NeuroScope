@@ -1,7 +1,9 @@
 # NeuroScope
 
+[![arXiv](https://img.shields.io/badge/arXiv-2603.17219-b31b1b.svg)](https://arxiv.org/abs/2603.17219)
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![pytorch](https://img.shields.io/badge/pytorch-1.11%2B-red.svg)](https://pytorch.org)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 domain-aware standardization of multimodal glioma mri; cyclegan-based framework for standardizing multi-institutional glioblastoma mri scans (t1, t1ce, t2, flair) across different scanner protocols.
 
@@ -733,3 +735,31 @@ contributions are welcome. please follow these guidelines:
 3. add tests for new functionality
 4. ensure all tests pass
 5. submit a pull request
+
+## citation
+
+if you find this work useful, please cite our paper:
+
+```bibtex
+@article{gowda2026sacyclegan25d,
+  title={SA-CycleGAN-2.5D: Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization},
+  author={Gowda, Ishrith and Liu, Chunwei},
+  journal={arXiv preprint arXiv:2603.17219},
+  year={2026},
+  url={https://arxiv.org/abs/2603.17219},
+  doi={10.48550/arXiv.2603.17219}
+}
+```
+
+## acknowledgments
+
+this work uses publicly available data from the cancer imaging archive (tcia):
+
+- **BraTS-TCGA-GBM**: multi-institutional glioblastoma data from the brain tumor segmentation challenge
+- **UPenn-GBM**: university of pennsylvania glioblastoma dataset (nifti + segmentations)
+
+compute resources provided by chameleon cloud.
+
+## license
+
+this project is licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/). see [LICENSE](LICENSE) for details.

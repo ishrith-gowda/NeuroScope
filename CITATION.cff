@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite our paper."
+title: "SA-CycleGAN-2.5D: Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization"
+type: software
+authors:
+  - family-names: Gowda
+    given-names: Ishrith
+    email: ishrithgowda@berkeley.edu
+    affiliation: "University of California, Berkeley"
+    orcid: ""
+  - family-names: Liu
+    given-names: Chunwei
+    email: chunwei@purdue.edu
+    affiliation: "Purdue University"
+url: "https://github.com/ishrith-gowda/NeuroScope"
+repository-code: "https://github.com/ishrith-gowda/NeuroScope"
+license: CC-BY-NC-ND-4.0
+date-released: "2026-03-17"
+identifiers:
+  - type: url
+    value: "https://arxiv.org/abs/2603.17219"
+    description: "arXiv preprint"
+  - type: doi
+    value: "10.48550/arXiv.2603.17219"
+    description: "arXiv DOI"
+keywords:
+  - mri-harmonization
+  - cyclegan
+  - self-attention
+  - domain-adaptation
+  - medical-imaging
+  - brain-tumor
+  - glioma
+  - deep-learning
+  - neuroimaging
+preferred-citation:
+  type: article
+  title: "SA-CycleGAN-2.5D: Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization"
+  authors:
+    - family-names: Gowda
+      given-names: Ishrith
+    - family-names: Liu
+      given-names: Chunwei
+  year: 2026
+  journal: "arXiv preprint arXiv:2603.17219"
+  url: "https://arxiv.org/abs/2603.17219"
+  doi: "10.48550/arXiv.2603.17219"
