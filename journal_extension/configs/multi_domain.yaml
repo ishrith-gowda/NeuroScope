@@ -1,21 +1,25 @@
 # multi-domain sa-cyclegan-2.5d configuration
 # extension c: n>2 domain harmonization with adain conditioning
+# domains split by real scanner acquisition parameters from tcia metadata
 
 experiment_name: sa_cyclegan_25d_multidomain
 seed: 42
 deterministic: false
 
-# data paths
+# data paths (scanner-based domain split)
 data_dirs:
-  brats_siemens: /home/cc/neuroscope/preprocessed/brats_siemens
-  brats_ge: /home/cc/neuroscope/preprocessed/brats_ge
-  brats_philips: /home/cc/neuroscope/preprocessed/brats_philips
-  upenn: /home/cc/neuroscope/preprocessed/upenn
+  brats: /home/cc/neuroscope/preprocessed/brats
+  upenn_3t_triotim: /home/cc/neuroscope/preprocessed/upenn
+  upenn_3t_other: /home/cc/neuroscope/preprocessed/upenn
+  upenn_15t: /home/cc/neuroscope/preprocessed/upenn
 output_dir: /data/experiments/journal_extension/multi_domain
+
+# domain split file (subject ids per domain from acquisition metadata)
+domain_split_file: /home/cc/neuroscope/data/metadata/multi_domain_split.json
 
 # domain configuration
 n_domains: 4
-domain_names: [brats_siemens, brats_ge, brats_philips, upenn]
+domain_names: [brats, upenn_3t_triotim, upenn_3t_other, upenn_15t]
 domain_embed_dim: 64
 style_dim: 256
 

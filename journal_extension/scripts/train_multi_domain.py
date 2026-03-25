@@ -45,11 +45,19 @@ from neuroscope.models.architectures.sa_cyclegan_25d_multidomain import (
 
 class MultiDomainMRIDataset(Dataset):
     """
-    multi-domain mri dataset for n>2 site harmonization.
+    multi-domain 2.5d mri dataset for n>2 site harmonization.
 
-    loads 2.5d slices from multiple scanner domains. each sample includes
-    the 3-slice input, center slice ground truth, and domain label.
+    loads 2.5d slice triplets from multiple scanner domains, consistent
+    with the base unpairedmridataset25d. each sample includes
+    the 12-channel input (3 slices x 4 modalities), 4-channel center
+    slice target, and domain label.
+
+    supports domain_split_file: a json mapping domain names to lists of
+    subject ids, enabling multiple domains from the same data directory
+    (e.g., splitting upenn by scanner type from tcia acquisition metadata).
     """
+
+    MODALITIES = ["t1", "t1gd", "flair", "t2"]
 
     def __init__(
         self,
@@ -57,6 +65,9 @@ class MultiDomainMRIDataset(Dataset):
         domain_names: List[str],
         image_size: Tuple[int, int] = (128, 128),
         split: str = "train",
+        domain_split_file: Optional[str] = None,
+        slice_range: Tuple[int, int] = (30, 125),
+        cache_volumes: bool = True,
     ):
         """
         args:
@@ -64,71 +75,146 @@ class MultiDomainMRIDataset(Dataset):
             domain_names: ordered list of domain names
             image_size: target spatial resolution
             split: train/val/test
+            domain_split_file: json file mapping domain -> list of subject ids
+            slice_range: axial slice range to sample from
+            cache_volumes: cache volumes in memory for faster loading
         """
+        import nibabel as nib
+        self.nib = nib
+
         self.data_dirs = data_dirs
         self.domain_names = domain_names
         self.image_size = image_size
+        self.slice_range = slice_range
+        self.cache_volumes = cache_volumes
         self.domain_to_id = {name: i for i, name in enumerate(domain_names)}
+        self._cache: Dict[str, np.ndarray] = {}
 
-        # collect all samples with domain labels
-        self.samples = []
+        # load domain split if provided
+        domain_subjects = None
+        if domain_split_file and Path(domain_split_file).exists():
+            with open(domain_split_file) as f:
+                domain_subjects = json.load(f)
+            print(f"loaded domain split from {domain_split_file}")
+
+        # collect subjects per domain
+        self.domain_subject_dirs: Dict[str, List[Path]] = {}
         for domain_name in domain_names:
             domain_dir = Path(data_dirs[domain_name])
             if not domain_dir.exists():
                 print(f"warning: domain directory not found: {domain_dir}")
+                self.domain_subject_dirs[domain_name] = []
                 continue
 
-            # look for preprocessed nifti or numpy files
-            for ext in ["*.npy", "*.npz", "*.nii.gz"]:
-                files = sorted(domain_dir.glob(f"**/{ext}"))
-                for f in files:
-                    self.samples.append({
-                        "path": str(f),
-                        "domain": domain_name,
-                        "domain_id": self.domain_to_id[domain_name],
-                    })
+            # filter subjects by split file if available
+            if domain_subjects and domain_name in domain_subjects:
+                allowed = set(domain_subjects[domain_name])
+                subjects = []
+                for subj_dir in sorted(domain_dir.iterdir()):
+                    if subj_dir.is_dir() and subj_dir.name in allowed:
+                        if self._has_all_modalities(subj_dir):
+                            subjects.append(subj_dir)
+            else:
+                subjects = []
+                for subj_dir in sorted(domain_dir.iterdir()):
+                    if subj_dir.is_dir() and self._has_all_modalities(subj_dir):
+                        subjects.append(subj_dir)
 
-        print(f"loaded {len(self.samples)} samples across {len(domain_names)} domains")
+            self.domain_subject_dirs[domain_name] = subjects
+
+        # create (domain, subject_idx, slice_idx) sample index
+        self.samples = []
+        start = slice_range[0] + 1
+        end = slice_range[1] - 1
+
+        for domain_name in domain_names:
+            for subj_idx, subj_dir in enumerate(self.domain_subject_dirs[domain_name]):
+                for slice_idx in range(start, end):
+                    self.samples.append((domain_name, subj_idx, slice_idx))
+
+        # apply train/val/test split (80/10/10)
+        rng = np.random.RandomState(42)
+        rng.shuffle(self.samples)
+        n = len(self.samples)
+        if split == "train":
+            self.samples = self.samples[:int(0.8 * n)]
+        elif split == "val":
+            self.samples = self.samples[int(0.8 * n):int(0.9 * n)]
+        elif split == "test":
+            self.samples = self.samples[int(0.9 * n):]
+
+        # print summary
+        print(f"\nmulti-domain dataset ({split}): {len(self.samples)} samples")
         for name in domain_names:
-            count = sum(1 for s in self.samples if s["domain"] == name)
-            print(f"  {name}: {count} samples")
+            n_subj = len(self.domain_subject_dirs[name])
+            n_samp = sum(1 for s in self.samples if s[0] == name)
+            print(f"  {name}: {n_subj} subjects, {n_samp} samples")
+
+    def _has_all_modalities(self, subj_dir: Path) -> bool:
+        """check if subject has all 4 modalities."""
+        return all(
+            (subj_dir / f"{mod}.nii.gz").exists()
+            for mod in self.MODALITIES
+        )
+
+    def _load_volume(self, subj_dir: Path) -> np.ndarray:
+        """load all modalities for a subject. returns [4, d, h, w]."""
+        cache_key = str(subj_dir)
+        if self.cache_volumes and cache_key in self._cache:
+            return self._cache[cache_key]
+
+        vols = []
+        for mod in self.MODALITIES:
+            path = subj_dir / f"{mod}.nii.gz"
+            vol = self.nib.load(str(path)).get_fdata().astype(np.float32)
+            vols.append(vol)
+
+        volume = np.stack(vols, axis=0)  # [4, h, w, d]
+        volume = np.transpose(volume, (0, 3, 1, 2))  # [4, d, h, w]
+
+        if self.cache_volumes:
+            self._cache[cache_key] = volume
+        return volume
+
+    def _normalize_and_resize(self, slices: np.ndarray) -> torch.Tensor:
+        """normalize to [-1, 1] and resize. input: [c, h, w]."""
+        tensor = torch.from_numpy(slices).float()
+        vmax = tensor.max()
+        if vmax > 0:
+            tensor = tensor / vmax * 2 - 1
+
+        if self.image_size and tensor.shape[-2:] != tuple(self.image_size):
+            tensor = torch.nn.functional.interpolate(
+                tensor.unsqueeze(0), size=self.image_size,
+                mode="bilinear", align_corners=False
+            ).squeeze(0)
+        return tensor
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        sample = self.samples[idx]
-        path = sample["path"]
-        domain_id = sample["domain_id"]
+        domain_name, subj_idx, slice_idx = self.samples[idx]
+        domain_id = self.domain_to_id[domain_name]
+        subj_dir = self.domain_subject_dirs[domain_name][subj_idx]
 
-        # load volume slice
-        if path.endswith(".npy"):
-            data = np.load(path)
-        elif path.endswith(".npz"):
-            data = np.load(path)["data"]
-        else:
-            import nibabel as nib
-            data = nib.load(path).get_fdata()
+        volume = self._load_volume(subj_dir)  # [4, d, h, w]
 
-        # convert to tensor and normalize to [-1, 1]
-        data = torch.from_numpy(data).float()
-        if data.max() > 0:
-            data = data / data.max() * 2 - 1
+        # extract 2.5d triplet: [4, 3, h, w] -> [12, h, w]
+        triplet = volume[:, slice_idx - 1:slice_idx + 2, :, :]  # [4, 3, h, w]
+        input_25d = triplet.reshape(-1, triplet.shape[2], triplet.shape[3])  # [12, h, w]
 
-        # ensure correct shape [c, h, w]
-        if data.dim() == 2:
-            data = data.unsqueeze(0)
+        # center slice as target: [4, h, w]
+        center = volume[:, slice_idx, :, :]  # [4, h, w]
 
-        # resize if needed
-        if data.shape[-2:] != tuple(self.image_size):
-            data = torch.nn.functional.interpolate(
-                data.unsqueeze(0), size=self.image_size, mode="bilinear", align_corners=False
-            ).squeeze(0)
+        input_tensor = self._normalize_and_resize(input_25d)
+        target_tensor = self._normalize_and_resize(center)
 
         return {
-            "data": data,
+            "input": input_tensor,        # [12, h, w]
+            "target": target_tensor,       # [4, h, w]
             "domain_id": torch.tensor(domain_id, dtype=torch.long),
-            "domain_name": sample["domain"],
+            "domain_name": domain_name,
         }
 
 
@@ -180,6 +266,7 @@ class MultiDomainTrainer:
         min_lr: float = 1e-6,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
+        domain_split_file: str = None,
     ):
         setup_torch_performance()
         self.config = config
@@ -242,20 +329,31 @@ class MultiDomainTrainer:
             self.model.generator = DataParallel(self.model.generator)
             self.model.discriminator = DataParallel(self.model.discriminator)
 
-        # create dataset and dataloader
-        self.dataset = MultiDomainMRIDataset(
+        # create datasets and dataloaders
+        loader_kwargs = dict(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            pin_memory=True,
+            prefetch_factor=4 if num_workers > 0 else None,
+            persistent_workers=num_workers > 0,
+            drop_last=True,
+        )
+        self.train_dataset = MultiDomainMRIDataset(
             data_dirs=data_dirs,
             domain_names=domain_names,
             image_size=(image_size, image_size),
+            split="train",
+            domain_split_file=domain_split_file,
         )
-        self.train_loader = DataLoader(
-            self.dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=num_workers,
-            pin_memory=True,
-            drop_last=True,
+        self.val_dataset = MultiDomainMRIDataset(
+            data_dirs=data_dirs,
+            domain_names=domain_names,
+            image_size=(image_size, image_size),
+            split="val",
+            domain_split_file=domain_split_file,
         )
+        self.train_loader = DataLoader(self.train_dataset, shuffle=True, **loader_kwargs)
+        self.val_loader = DataLoader(self.val_dataset, shuffle=False, **loader_kwargs)
 
         print(f"training batches: {len(self.train_loader)}")
 
@@ -623,6 +721,7 @@ def main():
         experiment_name=getattr(args, "experiment_name", None),
         lambda_cls=getattr(args, "lambda_cls", 1.0),
         lambda_rec=getattr(args, "lambda_rec", 10.0),
+        domain_split_file=getattr(args, "domain_split_file", None),
     )
 
     if args.resume:
