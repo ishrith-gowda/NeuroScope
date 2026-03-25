@@ -17,6 +17,7 @@ source "$VENV/bin/activate"
 
 # add project root to pythonpath
 export PYTHONPATH="/home/cc/neuroscope:$PYTHONPATH"
+export PYTHONUNBUFFERED=1
 
 # ensure experiment output dirs exist
 mkdir -p /data/experiments/journal_extension/{patchnce_hybrid,compression,multi_domain,federated}
@@ -41,8 +42,26 @@ run_experiment() {
     echo "-----------------------------------------"
 
     local logfile="$LOG_DIR/${name}_$(date +%Y%m%d_%H%M%S).log"
+    local resume_args=""
 
-    python3 "$SCRIPT_DIR/$script" --config "$CONFIG_DIR/$config" 2>&1 | tee "$logfile"
+    # auto-detect existing checkpoints for resume
+    local ckpt_dir="/data/experiments/journal_extension/$name"
+    # find checkpoint_latest.pth in any subdirectory
+    local latest_ckpt=$(find "$ckpt_dir" -name "checkpoint_latest.pth" 2>/dev/null | head -1)
+
+    if [ -n "$latest_ckpt" ]; then
+        echo " found checkpoint: $latest_ckpt"
+        echo " resuming from checkpoint..."
+        if [ "$name" = "federated" ]; then
+            # federated uses --resume flag (auto-detects path)
+            resume_args="--resume"
+        else
+            # patchnce and compression use --resume <path>
+            resume_args="--resume $latest_ckpt"
+        fi
+    fi
+
+    PYTHONUNBUFFERED=1 python3 -u "$SCRIPT_DIR/$script" --config "$CONFIG_DIR/$config" $resume_args 2>&1 | tee "$logfile"
 
     echo ""
     echo " completed: $name at $(date)"

@@ -145,3 +145,10 @@ paper/
 # profiling
 *.prof
 *.lprof
+
+# raw data packages (large tcia downloads)
+PKG*/
+PKG - */
+
+# local data/metadata
+data/
