@@ -1,11 +1,11 @@
-# NeuroScope
+# SA-CycleGAN-2.5D
 
 [![arXiv](https://img.shields.io/badge/arXiv-2603.17219-b31b1b.svg)](https://arxiv.org/abs/2603.17219)
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![pytorch](https://img.shields.io/badge/pytorch-1.11%2B-red.svg)](https://pytorch.org)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
-domain-aware standardization of multimodal glioma mri; cyclegan-based framework for standardizing multi-institutional glioblastoma mri scans (t1, t1ce, t2, flair) across different scanner protocols.
+self-attention cyclegan with tri-planar context for multi-site mri harmonization. unsupervised domain adaptation framework for standardizing multi-institutional glioblastoma mri scans (t1, t1ce, t2, flair) across different scanner protocols.
 
 ## table of contents
 
@@ -29,7 +29,7 @@ domain-aware standardization of multimodal glioma mri; cyclegan-based framework 
 
 ## overview
 
-neuroscope addresses the critical challenge of scanner-protocol heterogeneity in multi-institutional glioblastoma mri data. this framework implements an unsupervised image-to-image translation between BraTS-TCGA and UPenn-GBM datasets using cyclegan architecture optimized for volumetric medical data. by learning the mapping between domains, neuroscope enables harmonization of imaging features while preserving anatomical structures and pathologically-relevant information.
+sa-cyclegan-2.5d addresses the critical challenge of scanner-protocol heterogeneity in multi-institutional glioblastoma mri data. this framework implements an unsupervised image-to-image translation between BraTS-TCGA and UPenn-GBM datasets using a self-attention cyclegan architecture with tri-planar 2.5d context, optimized for volumetric medical data. by learning the mapping between domains, sa-cyclegan-2.5d enables harmonization of imaging features while preserving anatomical structures and pathologically-relevant information.
 
 the framework operates on four-channel 2d axial slices (t1, t1ce, t2, flair) with specialized handling for 3d context and inter-sequence relationships. this approach produces harmonized volumes suitable for downstream radiomics analysis, clinical feature extraction, and machine learning applications where scanner variability would otherwise introduce confounding effects.
 
@@ -211,8 +211,8 @@ where:
 
 ```bash
 # clone repository
-git clone https://github.com/ishrith-gowda/neuroscope.git
-cd neuroscope
+git clone https://github.com/ishrith-gowda/SA-CycleGAN-2.5D.git
+cd SA-CycleGAN-2.5D
 
 # create virtual environment
 python -m venv venv
@@ -230,7 +230,7 @@ pip install -e ".[extended]"
 
 ## project structure
 
-neuroscope is structured as a modular python package with clear separation of concerns:
+sa-cyclegan-2.5d is structured as a modular python package with clear separation of concerns:
 
 ```
 neuroscope/
@@ -679,7 +679,7 @@ model = CycleGAN3D(
 
 ### integration with other frameworks
 
-neuroscope can be integrated with popular frameworks:
+sa-cyclegan-2.5d can be integrated with popular frameworks:
 
 ```python
 # pytorch lightning integration
