@@ -28,7 +28,7 @@ Your paper is currently listed under cs.CV, cs.AI, cs.LG. You should **add eess.
 ### 2. Link Code & Data
 
 **How:** On the arXiv user page, click the "Link code & data" icon (the barcode icon) next to your paper. This redirects to Papers with Code where you link:
-- **Official Code:** `https://github.com/ishrith-gowda/NeuroScope`
+- **Official Code:** `https://github.com/ishrith-gowda/SA-CycleGAN-2.5D`
 - Mark as "Official Implementation"
 - Add tasks: "MRI Harmonization", "Domain Adaptation", "Image-to-Image Translation"
 - Add datasets: "BraTS-TCGA-GBM", "UPenn-GBM"
@@ -37,7 +37,7 @@ Your paper is currently listed under cs.CV, cs.AI, cs.LG. You should **add eess.
 
 Consider updating the comments field to include the code URL:
 ```
-12 pages, 5 figures, 5 tables. Submitted to MICCAI 2026. Code: https://github.com/ishrith-gowda/NeuroScope
+12 pages, 5 figures, 5 tables. Submitted to MICCAI 2026. Code: https://github.com/ishrith-gowda/SA-CycleGAN-2.5D
 ```
 
 ---
@@ -115,7 +115,7 @@ Links papers to code, datasets, and benchmarks. Integrated directly into arXiv a
 
 1. Search for your paper on paperswithcode.com (it should auto-appear from arXiv within 24-48 hours)
 2. If not auto-detected, manually add the paper
-3. Click "Add Code" and link `https://github.com/ishrith-gowda/NeuroScope`
+3. Click "Add Code" and link `https://github.com/ishrith-gowda/SA-CycleGAN-2.5D`
 4. Mark as "Official Implementation"
 5. Add relevant tasks:
    - "MRI Harmonization" (create this task if it doesn't exist)
@@ -150,7 +150,7 @@ Currently working on brain MRI harmonization using deep learning -- developing m
 **Links:** [Google Scholar](YOUR_SCHOLAR_URL) | [ORCID](https://orcid.org/YOUR_ORCID) | [Semantic Scholar](YOUR_S2_URL)
 ```
 
-2. **Pin the NeuroScope repo** to your GitHub profile
+2. **Pin the SA-CycleGAN-2.5D repo** to your GitHub profile
 3. **Profile settings:**
    - Professional photo (same across all platforms)
    - Bio: "UC Berkeley EECS | Medical AI Researcher"

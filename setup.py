@@ -16,7 +16,7 @@ def read_readme():
     if readme_path.exists():
         with open(readme_path, "r", encoding="utf-8") as fh:
             return fh.read()
-    return "NeuroScope: Domain-aware standardization of multimodal glioma MRI"
+    return "SA-CycleGAN-2.5D: Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization"
 
 # read requirements
 def read_requirements():
@@ -36,10 +36,10 @@ setup(
     description="Domain-aware standardization of multimodal glioma MRI",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/ishrith-gowda/NeuroScope",
+    url="https://github.com/ishrith-gowda/SA-CycleGAN-2.5D",
     project_urls={
-        "Bug Reports": "https://github.com/ishrith-gowda/NeuroScope/issues",
-        "Source": "https://github.com/ishrith-gowda/NeuroScope",
+        "Bug Reports": "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D/issues",
+        "Source": "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D",
         "Documentation": "https://neuroscope.readthedocs.io/",
     },
     

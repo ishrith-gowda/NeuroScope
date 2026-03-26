@@ -72,9 +72,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ishrith-gowda/NeuroScope"
-Repository = "https://github.com/ishrith-gowda/NeuroScope"
-Issues = "https://github.com/ishrith-gowda/NeuroScope/issues"
+Homepage = "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D"
+Repository = "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D"
+Issues = "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D/issues"
 
 # ---------------------------------------------------------------------------
 # black
