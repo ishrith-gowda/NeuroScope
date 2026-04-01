@@ -451,7 +451,7 @@ class MultiDomainTrainer:
 
     def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
         """single training step for multi-domain model."""
-        real = batch["data"].to(self.device)
+        real = batch["input"].to(self.device)
         src_domain = batch["domain_id"].to(self.device)
 
         # need 12-channel input (3 slices x 4 modalities)
