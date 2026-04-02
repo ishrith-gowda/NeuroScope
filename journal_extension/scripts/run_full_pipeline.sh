@@ -138,10 +138,23 @@ run_multi_domain() {
 run_downstream() {
     log "=== stage 4: downstream evaluation (extension d) ==="
 
-    # check that patchnce model exists (needed for harmonized data)
-    local patchnce_ckpt="$EXP_DIR/patchnce_hybrid/sa_cyclegan_25d_patchnce_hybrid/checkpoints/checkpoint_best.pth"
-    if [ ! -f "$patchnce_ckpt" ]; then
-        log "error: patchnce checkpoint not found — cannot run downstream eval"
+    # use best available harmonization checkpoint (federated best > compression best > federated latest)
+    local harmonization_ckpt=""
+    local fed_best="$EXP_DIR/federated/sa_cyclegan_25d_federated/checkpoints/checkpoint_best.pth"
+    local comp_best="$EXP_DIR/compression/sa_cyclegan_25d_compressed/checkpoints/checkpoint_best.pth"
+    local fed_latest="$EXP_DIR/federated/sa_cyclegan_25d_federated/checkpoints/checkpoint_latest.pth"
+
+    if [ -f "$fed_best" ]; then
+        harmonization_ckpt="$fed_best"
+        log "using federated best checkpoint for harmonization"
+    elif [ -f "$comp_best" ]; then
+        harmonization_ckpt="$comp_best"
+        log "using compression best checkpoint for harmonization"
+    elif [ -f "$fed_latest" ]; then
+        harmonization_ckpt="$fed_latest"
+        log "using federated latest checkpoint for harmonization"
+    else
+        log "error: no harmonization checkpoint found — cannot run downstream eval"
         return 1
     fi
 
@@ -156,7 +169,7 @@ run_downstream() {
     python3 -u "$SCRIPT_DIR/eval_downstream.py" \
         --brats_dir "$PROJECT_ROOT/preprocessed/brats" \
         --upenn_dir "$PROJECT_ROOT/preprocessed/upenn" \
-        --checkpoint "$patchnce_ckpt" \
+        --checkpoint_dir "$harmonization_ckpt" \
         --output_dir "$EXP_DIR/downstream_eval" \
         2>&1 | tee "$LOG_DIR/downstream_eval_$(timestamp).log"
 

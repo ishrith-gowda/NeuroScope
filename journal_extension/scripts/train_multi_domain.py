@@ -670,7 +670,7 @@ def parse_args():
     parser.add_argument("--image_size", type=int, default=128)
     parser.add_argument("--lr_G", type=float, default=5e-5)
     parser.add_argument("--lr_D", type=float, default=5e-5)
-    parser.add_argument("--num_workers", type=int, default=32)
+    parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument("--n_domains", type=int, default=4)
     parser.add_argument("--style_dim", type=int, default=256)
     parser.add_argument("--lambda_cls", type=float, default=1.0)

@@ -37,7 +37,7 @@ attention_layers: [3, 4, 5]
 epochs: 200
 batch_size: 32
 image_size: 128
-num_workers: 16
+num_workers: 4
 lr_G: 5.0e-05
 lr_D: 5.0e-05
 beta1: 0.5
