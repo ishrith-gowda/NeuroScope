@@ -549,7 +549,7 @@ def generate_harmonized_data(
     returns:
         path to the harmonized output directory
     """
-    from neuroscope.models.sa_cyclegan_25d import SACycleGAN25DConfig, GeneratorSA25D
+    from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig, SAGenerator25D as GeneratorSA25D
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -563,10 +563,23 @@ def generate_harmonized_data(
     else:
         config = SACycleGAN25DConfig()
 
-    # load generator
-    gen_key = "generator_AB" if direction == "a_to_b" else "generator_BA"
+    # load generator — handle different checkpoint formats
     generator = GeneratorSA25D(config).to(device)
-    generator.load_state_dict(checkpoint[gen_key])
+    gen_prefix = "G_A2B." if direction == "a_to_b" else "G_B2A."
+
+    if "global_model_state_dict" in checkpoint:
+        # federated checkpoint: keys like G_A2B.encoder.0.0.weight
+        state_dict = {k[len(gen_prefix):]: v for k, v in checkpoint["global_model_state_dict"].items() if k.startswith(gen_prefix)}
+    elif "model_state_dict" in checkpoint:
+        # standard checkpoint: keys like G_A2B.encoder.0.0.weight
+        state_dict = {k[len(gen_prefix):]: v for k, v in checkpoint["model_state_dict"].items() if k.startswith(gen_prefix)}
+    elif "generator_AB" in checkpoint or "generator_BA" in checkpoint:
+        gen_key = "generator_AB" if direction == "a_to_b" else "generator_BA"
+        state_dict = checkpoint[gen_key]
+    else:
+        raise ValueError(f"unknown checkpoint format, keys: {list(checkpoint.keys())}")
+
+    generator.load_state_dict(state_dict)
     generator.eval()
 
     source_path = Path(source_dir)
