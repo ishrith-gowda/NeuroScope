@@ -1,0 +1,17 @@
+title: Ishrith Gowda
+baseURL: 'https://ishrith-gowda.github.io/'
+copyright: ''
+
+module:
+  imports:
+    - path: github.com/HugoBlox/hugo-blox-builder/modules/blox-plugin-netlify
+    - path: github.com/HugoBlox/hugo-blox-builder/modules/blox-tailwind
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    lineNos: false
+
+enableGitInfo: false

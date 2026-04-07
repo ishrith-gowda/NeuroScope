@@ -1,0 +1,33 @@
+appearance:
+  theme_day: minimal
+  theme_night: minimal
+  font: minimal
+  font_size: L
+
+marketing:
+  seo:
+    site_type: Person
+    local_business_type: ''
+    org_name: 'University of California, Berkeley'
+    description: 'Ishrith Gowda - UC Berkeley EECS - Medical AI Research'
+    twitter: ''
+
+header:
+  navbar:
+    enable: true
+    align: l
+    show_logo: true
+    show_language: false
+    show_day_night: true
+    show_search: false
+    highlight_active_link: true
+
+footer:
+  copyright:
+    notice: 'Ishrith Gowda {year}'
+    license:
+      enable: false
+
+locale:
+  date_format: 'Jan 2, 2006'
+  time_format: '3:04 PM'

@@ -1,0 +1,13 @@
+main:
+  - name: Home
+    url: '#about'
+    weight: 10
+  - name: Publications
+    url: '#publications'
+    weight: 20
+  - name: Research
+    url: '#projects'
+    weight: 30
+  - name: CV
+    url: uploads/cv.pdf
+    weight: 40
