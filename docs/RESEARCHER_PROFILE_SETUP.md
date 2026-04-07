@@ -19,32 +19,32 @@ This document provides step-by-step instructions for setting up a world-class re
 
 ## Immediate arXiv Actions
 
-### 1. Cross-List to eess.IV
+### 1. Cross-List to eess.IV ✓ DONE
 
-Your paper is currently listed under cs.CV, cs.AI, cs.LG. You should **add eess.IV** (Image and Video Processing) as a cross-list. This is the primary home for medical imaging papers and will significantly increase visibility among the MRI/medical imaging community.
+Paper is now listed under cs.CV (primary), cs.AI, cs.LG, eess.IV.
 
-**How:** Go to https://arxiv.org/user > find paper 2603.17219 > click "Cross list" > add `eess.IV`
+### 2. Link Code & Data ✓ DONE (via Hugging Face Papers)
 
-### 2. Link Code & Data
+Papers with Code shut down July 2025. The barcode icon now redirects to Hugging Face Papers.
+Completed actions:
+- Authorship claimed on huggingface.co/papers/2603.17219
+- Model repo linked: huggingface.co/ishrith-gowda/SA-CycleGAN-2.5D
+- Dataset repo linked: huggingface.co/datasets/ishrith-gowda/MRI-Harmonization-BraTS-UPenn
+- Live demo Space: huggingface.co/spaces/ishrith-gowda/SA-CycleGAN-2.5D-demo
 
-**How:** On the arXiv user page, click the "Link code & data" icon (the barcode icon) next to your paper. This redirects to Papers with Code where you link:
-- **Official Code:** `https://github.com/ishrith-gowda/SA-CycleGAN-2.5D`
-- Mark as "Official Implementation"
-- Add tasks: "MRI Harmonization", "Domain Adaptation", "Image-to-Image Translation"
-- Add datasets: "BraTS-TCGA-GBM", "UPenn-GBM"
+### 3. Update Comments Field
 
-### 3. Update Comments Field (Optional)
-
-Consider updating the comments field to include the code URL:
+Update the comments field to include the code URL:
 ```
-12 pages, 5 figures, 5 tables. Submitted to MICCAI 2026. Code: https://github.com/ishrith-gowda/SA-CycleGAN-2.5D
+12 pages, 5 figures, 5 tables. Submitted to MICCAI 2026. Code: https://github.com/ishrith-gowda/SA-CycleGAN-2.5D. Model and data: https://huggingface.co/ishrith-gowda/SA-CycleGAN-2.5D
 ```
+See `docs/arxiv-comments-update.md` for step-by-step instructions.
 
 ---
 
 ## Priority 1: Foundational Identifiers
 
-### ORCID (https://orcid.org/register)
+### ORCID ✓ DONE — https://orcid.org/0009-0003-0969-7190
 
 ORCID is a persistent digital identifier that uniquely distinguishes you. Required by NIH, most publishers, and funders. This is the universal connector between all platforms.
 
@@ -63,7 +63,7 @@ ORCID is a persistent digital identifier that uniquely distinguishes you. Requir
 
 > After creating ORCID, update `CITATION.cff` in the repo with your ORCID iD.
 
-### Google Scholar (https://scholar.google.com/citations)
+### Google Scholar ✓ DONE — https://scholar.google.com/citations?user=eMEs_JoAAAAJ
 
 The most widely used academic search engine. First place researchers check someone's work.
 
@@ -78,7 +78,7 @@ The most widely used academic search engine. First place researchers check someo
 9. Enable automatic updates for new papers
 10. Save your Google Scholar profile URL
 
-### OpenReview (https://openreview.net/signup)
+### OpenReview ✓ DONE — https://openreview.net/profile?id=~Ishrith_Gowda1
 
 Required for submitting to NeurIPS, ICML, ICLR, MICCAI, and most top ML/AI venues.
 
@@ -97,7 +97,7 @@ Required for submitting to NeurIPS, ICML, ICLR, MICCAI, and most top ML/AI venue
 
 ## Priority 2: Discovery & Visibility Platforms
 
-### Semantic Scholar (https://www.semanticscholar.org)
+### Semantic Scholar ✓ DONE
 
 AI-powered academic search engine by Allen Institute for AI. Tracks influential citations and generates TLDRs.
 
@@ -109,20 +109,20 @@ AI-powered academic search engine by Allen Institute for AI. Tracks influential 
 6. Remove any incorrectly attributed papers
 7. Save your Semantic Scholar profile URL
 
-### Papers with Code (https://paperswithcode.com)
+### Hugging Face Papers ✓ DONE — https://huggingface.co/papers/2603.17219
 
-Links papers to code, datasets, and benchmarks. Integrated directly into arXiv abstract pages.
+Papers with Code was shut down July 2025 and replaced by Hugging Face Papers.
 
-1. Search for your paper on paperswithcode.com (it should auto-appear from arXiv within 24-48 hours)
-2. If not auto-detected, manually add the paper
-3. Click "Add Code" and link `https://github.com/ishrith-gowda/SA-CycleGAN-2.5D`
-4. Mark as "Official Implementation"
-5. Add relevant tasks:
-   - "MRI Harmonization" (create this task if it doesn't exist)
-   - "Domain Adaptation"
-   - "Image-to-Image Translation"
-6. Add datasets: BraTS, UPenn-GBM
-7. Add results/benchmarks from your paper's tables
+Completed:
+- Authorship claimed on huggingface.co/papers/2603.17219
+- Model repo created: huggingface.co/ishrith-gowda/SA-CycleGAN-2.5D (full model card uploaded)
+- Dataset repo created: huggingface.co/datasets/ishrith-gowda/MRI-Harmonization-BraTS-UPenn (full dataset card uploaded)
+- arXiv cross-list to eess.IV submitted
+- v2 PDF submitted (corrected GitHub URL)
+
+Pending:
+- Upload model weights (after experiments complete)
+- Create Gradio Space demo (after experiments complete)
 
 ### DBLP (https://dblp.org)
 
@@ -136,19 +136,8 @@ Computer science bibliography. Auto-indexes from arXiv.
 ### GitHub Profile Optimization
 
 1. **Create a profile README** (create repo `ishrith-gowda/ishrith-gowda` with README.md):
-
-```markdown
-### Ishrith Gowda
-
-UC Berkeley EECS | Medical AI Researcher
-
-Currently working on brain MRI harmonization using deep learning -- developing methods to standardize multi-institutional neuroimaging data for improved clinical analysis.
-
-**Publications:**
-- [SA-CycleGAN-2.5D](https://arxiv.org/abs/2603.17219) -- Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization (MICCAI 2026, under review)
-
-**Links:** [Google Scholar](YOUR_SCHOLAR_URL) | [ORCID](https://orcid.org/YOUR_ORCID) | [Semantic Scholar](YOUR_S2_URL)
-```
+   - Full README content prepared in `docs/github-profile/README.md`
+   - Includes research description, publication with links, and platform cross-links
 
 2. **Pin the SA-CycleGAN-2.5D repo** to your GitHub profile
 3. **Profile settings:**
@@ -163,18 +152,21 @@ Currently working on brain MRI harmonization using deep learning -- developing m
 
 ### Personal Academic Website
 
-Your canonical online presence. Recommended: Hugo + GitHub Pages with an academic theme.
+Your canonical online presence. Using Hugo + GitHub Pages with HugoBlox Academic theme.
 
-**Quick setup with GitHub Pages:**
-1. Create repo `ishrith-gowda.github.io`
-2. Use Hugo Academic theme (now HugoBlox) or Jekyll Academic Pages
-3. Sections to include:
-   - **Home:** Photo, name, one-paragraph bio, affiliation, research interests, links
-   - **Publications:** Full citation with PDF, arXiv, code, BibTeX links
-   - **Research:** Plain-language project descriptions with figures
-   - **CV:** Downloadable PDF
-4. Add custom domain if desired (e.g., ishrithgowda.com)
-5. Link this website from all other profiles
+**Full site scaffold prepared in `docs/website/`** with:
+- Home page with biography block
+- Publications page (SA-CycleGAN-2.5D with all links)
+- Research project page (MRI harmonization with full description and results table)
+- Hugo config with HugoBlox Tailwind module
+- Deployment guide in `docs/website/DEPLOY.md`
+
+**To deploy:**
+1. Create repo `ishrith-gowda/ishrith-gowda.github.io`
+2. Copy `docs/website/*` as the repo root
+3. Add GitHub Actions workflow (see DEPLOY.md)
+4. Add avatar.jpg and cv.pdf
+5. Site will be live at `https://ishrith-gowda.github.io`
 
 ### Academic Social Media (Bluesky / X)
 
@@ -186,11 +178,9 @@ For paper promotion and community building:
 
 ### LinkedIn
 
-Update your LinkedIn with:
-- Headline: "UC Berkeley EECS | Medical AI Researcher"
-- About section: Research focus and interests
-- Publications section: Add your arXiv paper
-- Featured section: Pin your paper and GitHub repo
+Full LinkedIn update content prepared in `docs/linkedin-update.md` with:
+- Headline, About section, Featured section, Publications section, Skills
+- Ready to copy-paste into LinkedIn editor
 
 ### ResearchGate (https://www.researchgate.net)
 
@@ -218,17 +208,17 @@ These become relevant once your paper is published in a peer-reviewed journal or
 
 Once all profiles are created, cross-link everything:
 
-| Platform | Links To |
-|---|---|
-| ORCID | Google Scholar, Semantic Scholar, GitHub, personal website, all papers via DOI |
-| Google Scholar | Personal website (in profile settings) |
-| OpenReview | DBLP, Google Scholar, Semantic Scholar, LinkedIn, personal website, ORCID |
-| Semantic Scholar | ORCID |
-| GitHub | arXiv (repo homepage URL), personal website |
-| Personal Website | All of the above |
-| arXiv | Code link via Papers with Code |
-| Papers with Code | GitHub repo |
-| LinkedIn | Personal website, Google Scholar |
+| Platform | Links To | Status |
+|---|---|---|
+| ORCID | Google Scholar, Semantic Scholar, GitHub, personal website, all papers via DOI | Done (paper imported) |
+| Google Scholar | Personal website (in profile settings) | Done (profile public) |
+| OpenReview | DBLP, Google Scholar, Semantic Scholar, LinkedIn, personal website, ORCID | Done |
+| Semantic Scholar | ORCID | Done (claimed) |
+| GitHub | arXiv (repo homepage URL), personal website | Done (repo pinned) |
+| Hugging Face | Paper, Model, Dataset, Demo Space, arXiv link | Done |
+| Personal Website | All of the above | Scaffold ready, deploy pending |
+| arXiv | Code link via HF Papers | Done (HF auto-linked) |
+| LinkedIn | Personal website, Google Scholar | Content prepared |
 
 ---
 
@@ -246,20 +236,22 @@ Use the EXACT same information everywhere:
 
 ---
 
-## Recommended Order of Operations
+## Completion Status
 
-1. ORCID (5 min) -- foundation for everything
-2. Google Scholar (5 min) -- most important visibility
-3. OpenReview (10 min) -- needed for conference submissions
-4. Semantic Scholar claim (5 min) -- auto-generated, just claim it
-5. Papers with Code link (5 min) -- via arXiv "Link code & data"
-6. arXiv cross-list to eess.IV (2 min) -- one click
-7. GitHub profile README (15 min) -- public-facing code presence
-8. Personal website (1-2 hours) -- can be done later but high value
-9. LinkedIn update (10 min)
-10. Academic social media (ongoing)
-
-**Total estimated time for critical platforms (1-7): ~45 minutes**
+| # | Task | Status |
+|---|---|---|
+| 1 | ORCID | Done |
+| 2 | Google Scholar | Done |
+| 3 | OpenReview | Done |
+| 4 | Semantic Scholar claim | Done |
+| 5 | Hugging Face (Paper + Model + Dataset + Space) | Done |
+| 6 | arXiv cross-list to eess.IV | Done |
+| 7 | arXiv v2 PDF update | Done |
+| 8 | GitHub profile README | Content ready in `docs/github-profile/` |
+| 9 | Personal website | Scaffold ready in `docs/website/`, deploy pending |
+| 10 | arXiv comments field update | Text ready in `docs/arxiv-comments-update.md` |
+| 11 | LinkedIn update | Content ready in `docs/linkedin-update.md` |
+| 12 | Academic social media | Not started (lower priority) |
 
 ---
 
