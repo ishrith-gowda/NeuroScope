@@ -4,6 +4,12 @@
 
 ---
 
+## Q1. Reviewer Guide Confirmation
+I agree. I have read and understood the MICCAI 2026 Reviewers' Guide and the Confidentiality section; no part of the paper has been shown to an LLM.
+
+## Q2. Public Release Consent
+I agree.
+
 ## Q3. Relevance Category
 - MIC (Medical Image Computing)
 - Clinical Translation of Methodology
