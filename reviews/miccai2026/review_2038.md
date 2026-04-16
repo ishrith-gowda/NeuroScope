@@ -17,17 +17,9 @@ I agree.
 ## Q4. Paper Type
 Methodological contribution (framework/systems paper)
 
-## Q5. Main Contribution (main contribution the paper makes)
+## Q5. Main Contribution
 
-The paper proposes an artifact contract-based agentic framework that introduces a semantic layer above deterministic medical image processing workflows, targeting the tension between adaptability (dataset-aware workflow configuration) and reproducibility (deterministic, auditable execution) in real clinical deployments. The key technical contributions are threefold.
-
-First, the authors formalize an "artifact contract" that encodes all workflow outputs (intermediate and final) as tuples of the form (type, structured attributes, provenance), providing a machine-readable state representation over which semantic reasoning can be grounded. This contract serves both as a reproducibility mechanism and, critically, as a grounding interface that reduces inference over unstructured file organization.
-
-Second, the authors introduce a constrained agent layer implementing two operators over the artifact set: a workflow assembly operator that synthesizes a configuration C = (pi, theta) by selecting and composing rules from a modular rule library conditioned on the current artifact state and analytical goal, and a semantic query operator that answers natural-language questions derived strictly from contract-compliant artifacts. Planning and querying operate over structured state while execution is delegated to a deterministic workflow executor (Snakemake) that preserves provenance tracking and DAG construction.
-
-Third, the authors empirically validate the framework across three real-world clinical cohorts spanning both CT (NLST research cohort, LungCaTrial clinical cohort) and MRI (BrainICU research cohort) with varied heterogeneity levels, testing nine different analytical goals including data conversion/curation, lung lobe/nodule segmentation, lung cancer risk estimation, harmonization, and brain segmentation. They report three evaluation axes — reproducibility (DAG equivalence across repeated runs), adaptability (Initial Rule Matching, Planning Iterations, and Final Output metrics), and semantic querying accuracy (status, filtering/counting, and provenance queries) — plus an ablation isolating the effect of the artifact contract.
-
-The paper positions itself as addressing a gap in existing workflow tooling (Nextflow, Snakemake, BIDS) and agentic systems (Toolformer, ReAct): existing workflow engines assume pre-specified configurations and offer no adaptive assembly, while unconstrained agent architectures sacrifice deterministic execution and provenance tracking.
+The paper proposes an artifact contract-based agent framework that inserts a semantic planning layer above a deterministic medical image processing workflow engine (Snakemake), targeting the tension between dataset-aware adaptability and reproducible execution in real clinical deployments. The core idea is the "artifact contract": workflow outputs are represented as typed tuples of (type, structured attributes, provenance), giving the LLM agent a machine-readable state to reason over instead of raw files, and simultaneously recording provenance for auditing. The agent uses this structured state for two operations — assembling a configuration C = (π, θ) by selecting rules from a modular rule library conditioned on the artifact set and the analytical goal, and answering natural-language queries over contract-compliant artifacts — while execution remains deterministic. The framework is validated across three clinical cohorts (NLST, LungCaTrial, BrainICU) spanning CT and MRI with varied heterogeneity, on nine analytical goals (curation, lung lobe/nodule segmentation, risk estimation, harmonization, brain segmentation), and an ablation removing access to the artifact contract quantifies the contribution of the structured grounding.
 
 ## Q6. Major Strengths
 
