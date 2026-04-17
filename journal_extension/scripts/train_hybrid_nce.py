@@ -200,15 +200,18 @@ class HybridNCETrainer:
 
         self.lambda_nce = lambda_nce
 
-        # torch.compile for kernel fusion (generators only — discriminators
-        # use inplace ops that conflict with cuda graphs in gan training)
-        if use_compile and hasattr(torch, "compile"):
+        # torch.compile for kernel fusion — disabled on rocm due to dynamo
+        # graph capture failures with encoder_initial attribute resolution
+        # (torch._dynamo.exc.InternalTorchDynamoError on pytorch 2.4.1+rocm6.0)
+        if use_compile and hasattr(torch, "compile") and not torch.version.hip:
             try:
                 self.model.G_A2B = torch.compile(self.model.G_A2B, mode="default")
                 self.model.G_B2A = torch.compile(self.model.G_B2A, mode="default")
                 print("torch.compile: enabled (generators, default mode)")
             except Exception as e:
                 print(f"torch.compile: disabled ({e})")
+        else:
+            print("torch.compile: skipped (rocm/hip backend)")
 
         # wrap with dataparallel for multi-gpu
         if self.use_multi_gpu:
