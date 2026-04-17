@@ -68,6 +68,50 @@ run_with_resume() {
 }
 
 # =========================================================================
+# stage 0: patchnce hybrid loss (extension a)
+# =========================================================================
+run_patchnce() {
+    log "=== stage 0: patchnce hybrid loss (extension a) ==="
+
+    # check if already complete
+    local history="$EXP_DIR/patchnce_hybrid/sa_cyclegan_25d_patchnce_hybrid/training_history.json"
+    if [ -f "$history" ]; then
+        local n_epochs=$(python3 -c "import json; h=json.load(open('$history')); print(len(h.get('train',{}).get('G_loss',[])))")
+        if [ "$n_epochs" -ge 200 ]; then
+            log "patchnce hybrid already complete ($n_epochs/200 epochs) — skipping"
+            return 0
+        fi
+    fi
+
+    run_with_resume "patchnce_hybrid" "train_hybrid_nce.py" "patchnce_hybrid.yaml"
+}
+
+# patchnce lambda ablation sweep (extension a, table 4 in manuscript)
+run_patchnce_ablation() {
+    log "=== patchnce lambda ablation sweep ==="
+
+    for lam in 0.1 0.5 2.0; do
+        local name="patchnce_ablation_lambda${lam}"
+        local history="$EXP_DIR/$name/training_history.json"
+        if [ -f "$history" ]; then
+            local n_epochs=$(python3 -c "import json; h=json.load(open('$history')); print(len(h.get('train',{}).get('G_loss',[])))" 2>/dev/null)
+            if [ "$n_epochs" -ge 200 ]; then
+                log "patchnce ablation lambda=$lam already complete ($n_epochs/200 epochs) — skipping"
+                continue
+            fi
+        fi
+
+        log "running patchnce with lambda_nce=$lam"
+        python3 -u "$SCRIPT_DIR/train_hybrid_nce.py" \
+            --config "$CONFIG_DIR/patchnce_hybrid.yaml" \
+            --lambda_nce "$lam" \
+            --experiment_name "$name" \
+            --output_dir "$EXP_DIR/$name" \
+            2>&1 | tee "$LOG_DIR/${name}_$(timestamp).log"
+    done
+}
+
+# =========================================================================
 # stage 1: federated learning (extension e)
 # =========================================================================
 run_federated() {
@@ -189,6 +233,12 @@ log " $(date)"
 log "========================================="
 
 case "$STAGE" in
+    patchnce|nce|a)
+        run_patchnce
+        ;;
+    patchnce_ablation|nce_ablation|a_ablation)
+        run_patchnce_ablation
+        ;;
     federated|fed|e)
         run_federated
         ;;
@@ -203,6 +253,12 @@ case "$STAGE" in
         ;;
     all)
         log "running full pipeline sequentially..."
+
+        # extension a: patchnce hybrid (primary lambda=1.0 run)
+        run_patchnce
+
+        # extension a: patchnce ablation sweep (lambda=0.1, 0.5, 2.0)
+        run_patchnce_ablation
 
         # extension e: federated (resume if interrupted)
         run_federated
@@ -223,7 +279,7 @@ case "$STAGE" in
         ;;
     *)
         echo "unknown stage: $STAGE"
-        echo "usage: $0 [federated|compression|multi_domain|downstream|all]"
+        echo "usage: $0 [patchnce|patchnce_ablation|federated|compression|multi_domain|downstream|all]"
         exit 1
         ;;
 esac
