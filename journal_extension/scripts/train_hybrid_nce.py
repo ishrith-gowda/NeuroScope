@@ -78,6 +78,9 @@ def setup_torch_performance():
     if hasattr(torch.backends, 'cudnn') and torch.backends.cudnn.is_available():
         torch.backends.cudnn.allow_tf32 = True
         torch.backends.cudnn.benchmark = True
+    # enable flash sdp for efficient attention (rocm 6.0+ on mi100)
+    if hasattr(torch.backends.cuda, 'enable_flash_sdp'):
+        torch.backends.cuda.enable_flash_sdp(True)
     # disable debug profiling for max speed
     torch.autograd.set_detect_anomaly(False)
     torch.autograd.profiler.profile(enabled=False)
@@ -121,11 +124,13 @@ class HybridNCETrainer:
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
         use_compile: bool = True,
+        epochs: int = 200,
     ):
         # configure torch for maximum throughput
         setup_torch_performance()
 
         self.config = config
+        self.epochs = epochs
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -247,14 +252,15 @@ class HybridNCETrainer:
 
         if scheduler_type == "cosine":
             self.scheduler_G = optim.lr_scheduler.CosineAnnealingLR(
-                self.opt_G, T_max=200, eta_min=min_lr
+                self.opt_G, T_max=self.epochs, eta_min=min_lr
             )
             self.scheduler_D = optim.lr_scheduler.CosineAnnealingLR(
-                self.opt_D, T_max=200, eta_min=min_lr
+                self.opt_D, T_max=self.epochs, eta_min=min_lr
             )
         else:
             # linear decay after 50%
-            def lambda_rule(epoch, total_epochs=200):
+            total_ep = self.epochs
+            def lambda_rule(epoch, total_epochs=total_ep):
                 decay_start = total_epochs // 2
                 if epoch < decay_start:
                     return 1.0
@@ -611,7 +617,7 @@ class HybridNCETrainer:
             "psnr_B2A": np.mean(metrics["psnr_B2A"]),
         }
 
-    def save_checkpoint(self, epoch: int, is_best: bool = False):
+    def save_checkpoint(self, epoch: int, is_best: bool = False, save_epoch_copy: bool = True):
         """save model checkpoint."""
         checkpoint = {
             "epoch": epoch,
@@ -622,6 +628,8 @@ class HybridNCETrainer:
             "opt_D_state_dict": self.opt_D.state_dict(),
             "scheduler_G_state_dict": self.scheduler_G.state_dict(),
             "scheduler_D_state_dict": self.scheduler_D.state_dict(),
+            "scaler_G_state_dict": self.scaler_G.state_dict(),
+            "scaler_D_state_dict": self.scaler_D.state_dict(),
             "history": self.history,
             "best_val_ssim": self.best_val_ssim,
             "global_step": self.global_step,
@@ -632,7 +640,7 @@ class HybridNCETrainer:
         ckpt_dir = self.experiment_dir / "checkpoints"
         torch.save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
 
-        if epoch % 10 == 0:
+        if save_epoch_copy:
             torch.save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
 
         if is_best:
@@ -651,6 +659,9 @@ class HybridNCETrainer:
         self.opt_D.load_state_dict(checkpoint["opt_D_state_dict"])
         self.scheduler_G.load_state_dict(checkpoint["scheduler_G_state_dict"])
         self.scheduler_D.load_state_dict(checkpoint["scheduler_D_state_dict"])
+        if "scaler_G_state_dict" in checkpoint:
+            self.scaler_G.load_state_dict(checkpoint["scaler_G_state_dict"])
+            self.scaler_D.load_state_dict(checkpoint["scaler_D_state_dict"])
         self.history = checkpoint.get("history", self.history)
         self.best_val_ssim = checkpoint.get("best_val_ssim", 0)
         self.global_step = checkpoint.get("global_step", 0)
@@ -718,13 +729,22 @@ class HybridNCETrainer:
                     self.best_val_ssim = mean_ssim
                     print(f"  *** new best val ssim: {mean_ssim:.4f} ***")
 
-                # save checkpoint
-                if (epoch + 1) % save_every == 0 or is_best:
-                    self.save_checkpoint(epoch, is_best)
+                # update val history
+                self.history["val"]["ssim_A2B"].append(val_metrics["ssim_A2B"])
+                self.history["val"]["ssim_B2A"].append(val_metrics["ssim_B2A"])
+                self.history["val"]["psnr_A2B"].append(val_metrics["psnr_A2B"])
+                self.history["val"]["psnr_B2A"].append(val_metrics["psnr_B2A"])
+
+                # save checkpoint — always save latest, epoch copy at save_every
+                save_epoch_copy = (epoch + 1) % save_every == 0
+                self.save_checkpoint(epoch, is_best, save_epoch_copy=save_epoch_copy)
 
             # update history
             self.history["train"]["G_loss"].append(train_losses["G_loss"])
             self.history["train"]["D_loss"].append(train_losses["D_loss"])
+            self.history["train"]["cycle_loss"].append(
+                train_losses["cycle_A"] + train_losses["cycle_B"]
+            )
             self.history["train"]["nce_loss"].append(train_losses["nce_total"])
             self.history["epoch_times"].append(epoch_time)
             self.history["learning_rate"].append(lr)
@@ -818,6 +838,7 @@ def main():
         lambda_nce=args.lambda_nce,
         nce_num_patches=args.nce_num_patches,
         nce_temperature=args.nce_temperature,
+        epochs=args.epochs,
     )
 
     # resume if specified

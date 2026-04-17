@@ -30,11 +30,21 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
 
 MODE="${1:-all}"
 
+gpu_info() {
+    # try nvidia first, then rocm for amd gpus
+    if command -v nvidia-smi &>/dev/null; then
+        nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
+    elif command -v rocm-smi &>/dev/null; then
+        rocm-smi --showproductname --showmeminfo vram 2>/dev/null | head -5
+    else
+        python3 -c "import torch; [print(f'{torch.cuda.get_device_name(i)}, {torch.cuda.get_device_properties(i).total_memory//1024**3}gb') for i in range(torch.cuda.device_count())]" 2>/dev/null || echo "unknown"
+    fi
+}
+
 log "========================================="
 log " extension a: patchnce hybrid loss"
 log " mode: $MODE"
-log " gpu: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || echo 'unknown')"
-log " vram: $(nvidia-smi --query-gpu=memory.total --format=csv,noheader 2>/dev/null || echo 'unknown')"
+log " gpu: $(gpu_info)"
 log "========================================="
 
 # =========================================================================
