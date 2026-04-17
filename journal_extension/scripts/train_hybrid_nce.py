@@ -72,11 +72,12 @@ class ReplayBuffer:
 
 def setup_torch_performance():
     """configure torch for maximum gpu throughput."""
-    # tf32 on ampere gpus: ~2x speedup on fp32 matmuls with minimal precision loss
-    torch.backends.cuda.matmul.allow_tf32 = True
-    torch.backends.cudnn.allow_tf32 = True
-    # cudnn autotuner: finds optimal convolution algorithms for fixed input sizes
-    torch.backends.cudnn.benchmark = True
+    # tf32 on ampere gpus (nvidia only, no-op on amd)
+    if hasattr(torch.backends, 'cuda'):
+        torch.backends.cuda.matmul.allow_tf32 = True
+    if hasattr(torch.backends, 'cudnn') and torch.backends.cudnn.is_available():
+        torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cudnn.benchmark = True
     # disable debug profiling for max speed
     torch.autograd.set_detect_anomaly(False)
     torch.autograd.profiler.profile(enabled=False)
