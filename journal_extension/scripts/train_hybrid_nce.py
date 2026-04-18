@@ -645,13 +645,20 @@ class HybridNCETrainer:
         }
 
         ckpt_dir = self.experiment_dir / "checkpoints"
-        torch.save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
+
+        def atomic_save(obj, target: Path):
+            """atomic save: write to .tmp then rename to avoid partial writes."""
+            tmp = target.with_suffix(target.suffix + ".tmp")
+            torch.save(obj, tmp)
+            tmp.replace(target)
+
+        atomic_save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
 
         if save_epoch_copy:
-            torch.save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
+            atomic_save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
 
         if is_best:
-            torch.save(checkpoint, ckpt_dir / "checkpoint_best.pth")
+            atomic_save(checkpoint, ckpt_dir / "checkpoint_best.pth")
 
     def load_checkpoint(self, checkpoint_path: str):
         """load checkpoint for resuming training."""
