@@ -625,14 +625,27 @@ class HybridNCETrainer:
         }
 
     def save_checkpoint(self, epoch: int, is_best: bool = False, save_epoch_copy: bool = True):
-        """save model checkpoint."""
+        """save model checkpoint. moves all tensors to cpu first and uses legacy
+        pickle format to avoid glibc heap corruption observed with rocm + zip
+        serialization (malloc unaligned tcache chunk during torch.save)."""
+
+        def to_cpu(obj):
+            if isinstance(obj, torch.Tensor):
+                return obj.detach().cpu().clone()
+            if isinstance(obj, dict):
+                return {k: to_cpu(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                seq = [to_cpu(v) for v in obj]
+                return type(obj)(seq) if not isinstance(obj, tuple) else tuple(seq)
+            return obj
+
         checkpoint = {
             "epoch": epoch,
-            "model_state_dict": self.model.state_dict(),
-            "nce_A2B_state_dict": self.nce_loss_A2B.state_dict(),
-            "nce_B2A_state_dict": self.nce_loss_B2A.state_dict(),
-            "opt_G_state_dict": self.opt_G.state_dict(),
-            "opt_D_state_dict": self.opt_D.state_dict(),
+            "model_state_dict": to_cpu(self.model.state_dict()),
+            "nce_A2B_state_dict": to_cpu(self.nce_loss_A2B.state_dict()),
+            "nce_B2A_state_dict": to_cpu(self.nce_loss_B2A.state_dict()),
+            "opt_G_state_dict": to_cpu(self.opt_G.state_dict()),
+            "opt_D_state_dict": to_cpu(self.opt_D.state_dict()),
             "scheduler_G_state_dict": self.scheduler_G.state_dict(),
             "scheduler_D_state_dict": self.scheduler_D.state_dict(),
             "scaler_G_state_dict": self.scaler_G.state_dict(),
@@ -647,9 +660,11 @@ class HybridNCETrainer:
         ckpt_dir = self.experiment_dir / "checkpoints"
 
         def atomic_save(obj, target: Path):
-            """atomic save: write to .tmp then rename to avoid partial writes."""
+            """atomic save: write to .tmp then rename to avoid partial writes.
+            legacy pickle format (_use_new_zipfile_serialization=false) avoids
+            a zip/malloc interaction that corrupts heap on rocm."""
             tmp = target.with_suffix(target.suffix + ".tmp")
-            torch.save(obj, tmp)
+            torch.save(obj, tmp, _use_new_zipfile_serialization=False)
             tmp.replace(target)
 
         atomic_save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
