@@ -158,7 +158,8 @@ class HybridNCETrainer:
             self.device = torch.device(device)
 
         self.num_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 1
-        self.use_multi_gpu = self.num_gpus > 1
+        # dataparallel deadlocks on rocm/hip due to miopen concurrent kernel search
+        self.use_multi_gpu = self.num_gpus > 1 and not torch.version.hip
 
         print("=" * 60)
         print("  sa-cyclegan-2.5d + patchnce hybrid training")
@@ -166,6 +167,9 @@ class HybridNCETrainer:
         print(f"device: {self.device}")
         if self.use_multi_gpu:
             print(f"multi-gpu: {self.num_gpus} gpus (dataparallel)")
+        elif self.num_gpus > 1 and torch.version.hip:
+            print(f"single-gpu mode: {self.num_gpus} gpus detected but dataparallel "
+                  f"disabled on rocm (miopen deadlock)")
         print(f"experiment: {experiment_name}")
         print(f"lambda_nce: {lambda_nce}")
         print(f"nce_temperature: {nce_temperature}")
