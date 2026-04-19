@@ -660,11 +660,29 @@ class HybridNCETrainer:
         ckpt_dir = self.experiment_dir / "checkpoints"
 
         def atomic_save(obj, target: Path):
-            """atomic save: write to .tmp then rename to avoid partial writes.
-            legacy pickle format (_use_new_zipfile_serialization=false) avoids
-            a zip/malloc interaction that corrupts heap on rocm."""
+            """atomic save via subprocess: isolates torch.save's malloc/free
+            activity so rocm heap corruption (malloc_consolidate / unaligned
+            tcache chunk) aborts only the child, not training."""
+            import multiprocessing as mp
             tmp = target.with_suffix(target.suffix + ".tmp")
-            torch.save(obj, tmp, _use_new_zipfile_serialization=False)
+
+            def _save_worker(data, path):
+                import torch as t
+                t.save(data, path)
+
+            ctx = mp.get_context("fork")
+            p = ctx.Process(target=_save_worker, args=(obj, str(tmp)))
+            p.start()
+            p.join(timeout=600)
+            if p.is_alive():
+                p.terminate()
+                p.join(5)
+                raise RuntimeError(f"checkpoint save timed out: {target}")
+            if p.exitcode != 0:
+                print(f"  [warn] checkpoint save subprocess exited {p.exitcode} — skipping {target.name}")
+                if tmp.exists():
+                    tmp.unlink()
+                return
             tmp.replace(target)
 
         atomic_save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
