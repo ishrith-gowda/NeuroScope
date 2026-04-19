@@ -625,73 +625,84 @@ class HybridNCETrainer:
         }
 
     def save_checkpoint(self, epoch: int, is_best: bool = False, save_epoch_copy: bool = True):
-        """save model checkpoint. moves all tensors to cpu first and uses legacy
-        pickle format to avoid glibc heap corruption observed with rocm + zip
-        serialization (malloc unaligned tcache chunk during torch.save)."""
-
-        def to_cpu(obj):
-            if isinstance(obj, torch.Tensor):
-                return obj.detach().cpu().clone()
-            if isinstance(obj, dict):
-                return {k: to_cpu(v) for k, v in obj.items()}
-            if isinstance(obj, (list, tuple)):
-                seq = [to_cpu(v) for v in obj]
-                return type(obj)(seq) if not isinstance(obj, tuple) else tuple(seq)
-            return obj
-
-        checkpoint = {
-            "epoch": epoch,
-            "model_state_dict": to_cpu(self.model.state_dict()),
-            "nce_A2B_state_dict": to_cpu(self.nce_loss_A2B.state_dict()),
-            "nce_B2A_state_dict": to_cpu(self.nce_loss_B2A.state_dict()),
-            "opt_G_state_dict": to_cpu(self.opt_G.state_dict()),
-            "opt_D_state_dict": to_cpu(self.opt_D.state_dict()),
-            "scheduler_G_state_dict": self.scheduler_G.state_dict(),
-            "scheduler_D_state_dict": self.scheduler_D.state_dict(),
-            "scaler_G_state_dict": self.scaler_G.state_dict(),
-            "scaler_D_state_dict": self.scaler_D.state_dict(),
-            "history": self.history,
-            "best_val_ssim": self.best_val_ssim,
-            "global_step": self.global_step,
-            "config": self.config.__dict__,
-            "lambda_nce": self.lambda_nce,
-        }
+        """save model checkpoint. forks a child process BEFORE allocating any
+        checkpoint data so all malloc/free for state_dict extraction + tensor
+        cloning + torch.save happens in a disposable child. if rocm heap
+        corruption (malloc unaligned tcache chunk / free invalid size / etc.)
+        aborts the child, training continues unaffected in the parent."""
+        import multiprocessing as mp
+        import os as _os
 
         ckpt_dir = self.experiment_dir / "checkpoints"
+        ckpt_dir.mkdir(parents=True, exist_ok=True)
 
-        def atomic_save(obj, target: Path):
-            """atomic save via subprocess: isolates torch.save's malloc/free
-            activity so rocm heap corruption (malloc_consolidate / unaligned
-            tcache chunk) aborts only the child, not training."""
-            import multiprocessing as mp
-            tmp = target.with_suffix(target.suffix + ".tmp")
+        latest = ckpt_dir / "checkpoint_latest.pth"
+        epoch_ckpt = ckpt_dir / f"checkpoint_epoch_{epoch}.pth" if save_epoch_copy else None
+        best = ckpt_dir / "checkpoint_best.pth" if is_best else None
+        targets = [p for p in (latest, epoch_ckpt, best) if p is not None]
 
-            def _save_worker(data, path):
-                import torch as t
-                t.save(data, path)
+        trainer_self = self  # captured by child via fork
 
-            ctx = mp.get_context("fork")
-            p = ctx.Process(target=_save_worker, args=(obj, str(tmp)))
-            p.start()
-            p.join(timeout=600)
-            if p.is_alive():
-                p.terminate()
-                p.join(5)
-                raise RuntimeError(f"checkpoint save timed out: {target}")
-            if p.exitcode != 0:
-                print(f"  [warn] checkpoint save subprocess exited {p.exitcode} — skipping {target.name}")
+        def _worker():
+            try:
+                def to_cpu(obj):
+                    if isinstance(obj, torch.Tensor):
+                        return obj.detach().cpu().clone()
+                    if isinstance(obj, dict):
+                        return {k: to_cpu(v) for k, v in obj.items()}
+                    if isinstance(obj, (list, tuple)):
+                        seq = [to_cpu(v) for v in obj]
+                        return tuple(seq) if isinstance(obj, tuple) else seq
+                    return obj
+
+                checkpoint = {
+                    "epoch": epoch,
+                    "model_state_dict": to_cpu(trainer_self.model.state_dict()),
+                    "nce_A2B_state_dict": to_cpu(trainer_self.nce_loss_A2B.state_dict()),
+                    "nce_B2A_state_dict": to_cpu(trainer_self.nce_loss_B2A.state_dict()),
+                    "opt_G_state_dict": to_cpu(trainer_self.opt_G.state_dict()),
+                    "opt_D_state_dict": to_cpu(trainer_self.opt_D.state_dict()),
+                    "scheduler_G_state_dict": trainer_self.scheduler_G.state_dict(),
+                    "scheduler_D_state_dict": trainer_self.scheduler_D.state_dict(),
+                    "scaler_G_state_dict": trainer_self.scaler_G.state_dict(),
+                    "scaler_D_state_dict": trainer_self.scaler_D.state_dict(),
+                    "history": trainer_self.history,
+                    "best_val_ssim": trainer_self.best_val_ssim,
+                    "global_step": trainer_self.global_step,
+                    "config": trainer_self.config.__dict__,
+                    "lambda_nce": trainer_self.lambda_nce,
+                }
+
+                primary = targets[0]
+                tmp = primary.with_suffix(primary.suffix + ".tmp")
+                torch.save(checkpoint, tmp)
+                tmp.replace(primary)
+                # hardlink the remaining targets so we don't re-serialize
+                for t in targets[1:]:
+                    if t.exists():
+                        t.unlink()
+                    _os.link(primary, t)
+                _os._exit(0)
+            except Exception as e:
+                print(f"  [save-child] exception: {e}")
+                _os._exit(1)
+
+        ctx = mp.get_context("fork")
+        p = ctx.Process(target=_worker)
+        p.start()
+        p.join(timeout=900)
+        if p.is_alive():
+            p.terminate()
+            p.join(5)
+            print(f"  [warn] checkpoint save timed out — skipping epoch {epoch}")
+            return
+        if p.exitcode != 0:
+            print(f"  [warn] checkpoint save subprocess exited {p.exitcode} — continuing training")
+            for t in targets:
+                tmp = t.with_suffix(t.suffix + ".tmp")
                 if tmp.exists():
                     tmp.unlink()
-                return
-            tmp.replace(target)
-
-        atomic_save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
-
-        if save_epoch_copy:
-            atomic_save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
-
-        if is_best:
-            atomic_save(checkpoint, ckpt_dir / "checkpoint_best.pth")
+            return
 
     def load_checkpoint(self, checkpoint_path: str):
         """load checkpoint for resuming training."""
