@@ -1,0 +1,15 @@
+\begin{table*}[t]
+\centering
+\caption{Detailed test-set evaluation of Extension A across all four $\lambda_{\mathrm{NCE}}$ values. Means $\pm$ standard deviations on 5{,}265 held-out 2.5D slices. MMD computed on global-average-pooled spatial features (lower is better).}
+\label{tab:patchnce_testset}
+\begin{tabular}{lcccccc}
+\toprule
+$\lambda_{\mathrm{NCE}}$ & SSIM (A$\rightarrow$B) & SSIM (B$\rightarrow$A) & PSNR (A$\rightarrow$B) & PSNR (B$\rightarrow$A) & MAE (A$\rightarrow$B) & MMD (A$\rightarrow$B) \\
+\midrule
+0.1 & 0.3161 $\pm$ 0.0711 & 0.4029 $\pm$ 0.0828 & 24.10 $\pm$ 1.73 & 26.06 $\pm$ 1.52 & 0.0530 $\pm$ 0.0160 & 0.0000 \\
+0.5 & 0.3115 $\pm$ 0.0691 & 0.3766 $\pm$ 0.0760 & 24.51 $\pm$ 1.90 & 26.76 $\pm$ 1.70 & 0.0561 $\pm$ 0.0160 & 0.0001 \\
+1.0 & 0.2966 $\pm$ 0.0640 & 0.4026 $\pm$ 0.0887 & 23.55 $\pm$ 1.84 & 25.60 $\pm$ 1.57 & 0.0571 $\pm$ 0.0183 & 0.0000 \\
+2.0 & 0.3127 $\pm$ 0.0631 & 0.3260 $\pm$ 0.0706 & 24.76 $\pm$ 1.74 & 25.21 $\pm$ 1.53 & 0.0539 $\pm$ 0.0147 & 0.0003 \\
+\bottomrule
+\end{tabular}
+\end{table*}
