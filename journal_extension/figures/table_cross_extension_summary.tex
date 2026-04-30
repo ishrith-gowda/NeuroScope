@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering
+\caption{Synthesis of all five journal-extension contributions. SSIM values are reported on the standard 200-epoch protocol. Wall times use the deployment cluster (NVIDIA A100-PCIE-40GB).}
+\label{tab:cross_extension}
+\begin{tabular}{clllllr}
+\toprule
+Ext. & Contribution & Configuration & Primary Metric & Secondary & Epochs / Rounds & Wall Time \\
+\midrule
+A & PatchNCE Hybrid & $\lambda_{\mathrm{NCE}}$=0.5 & 0.9892 (Mean Val SSIM) & 30.55 dB & 200 & 42.0 h \\
+B & Compression-Harmonization & BPE=8.38 & 0.9700 (Best Val SSIM) & -- dB & 200 & 50.6 h \\
+C & Multi-Domain (N>2) AdaIN & N=4 domains & 0.0339 (Final Rec Loss) & $\mathcal{L}_{cls}$=0.0274 & 200 & 28.1 h \\
+D & Downstream Segmentation Transfer & U-Net, BraTS$\leftrightarrow$UPenn & -0.1480 ($\Delta$ Dice (A$\rightarrow$B)) & -19.05\% rel. & -- & -- \\
+E & Federated FEDAVG & 40 rounds, 2 clients & 0.9978 (Best Global SSIM) & Final A$\rightarrow$B=0.9981 & 40 & 16.7 h \\
+\bottomrule
+\end{tabular}
+\end{table*}
