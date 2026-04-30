@@ -231,6 +231,44 @@ sweep for future medical-translation work.
   \label{fig:patchnce_lambda_sweep}
 \end{figure}
 
+\paragraph{Per-slice robustness.}
+Beyond means, we examine the full per-slice distribution
+(Fig.~\ref{fig:patchnce_per_slice_box}). $\lambda_{\mathrm{NCE}}{=}0.5$ has a
+tighter inter-quartile range than $\lambda_{\mathrm{NCE}}{=}1.0$, and the
+empirical CDF (Fig.~\ref{fig:patchnce_per_slice_cdf}) stochastically dominates
+the baseline across the entire distribution -- evidence that the win is not
+driven by a few easy cases. Paired per-slice differences relative to the
+$\lambda_{\mathrm{NCE}}{=}1.0$ baseline (Fig.~\ref{fig:patchnce_diff_violin})
+have positive median for both $\lambda{=}0.5$ and $\lambda{=}2.0$, with
+$\lambda{=}0.1$ centred at zero or slightly negative.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../figures/fig_patchnce_per_slice_box.pdf}
+  \caption{Per-slice metric distribution on the held-out test set. Boxes show
+  the inter-quartile range; flying points are suppressed; horizontal mark
+  inside is the median.}
+  \label{fig:patchnce_per_slice_box}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../figures/fig_patchnce_per_slice_cdf.pdf}
+  \caption{Empirical CDF of per-slice global SSIM. The $\lambda_{\mathrm{NCE}}{=}0.5$
+  and $\lambda_{\mathrm{NCE}}{=}2.0$ curves stochastically dominate the
+  $\lambda_{\mathrm{NCE}}{=}1.0$ baseline across the entire distribution.}
+  \label{fig:patchnce_per_slice_cdf}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../figures/fig_patchnce_diff_violin.pdf}
+  \caption{Paired per-slice differences relative to $\lambda_{\mathrm{NCE}}{=}1.0$.
+  Each violin shows the per-slice $(\lambda{-}1.0)$ difference distribution;
+  horizontal dashed line marks zero (no improvement).}
+  \label{fig:patchnce_diff_violin}
+\end{figure}
+
 \paragraph{Loss components.}
 Fig.~\ref{fig:patchnce_loss_components} confirms that all four runs reduce
 cycle and PatchNCE losses by an order of magnitude. The two larger
@@ -472,8 +510,7 @@ contributions exceed the journal-extension threshold and chart a
 research roadmap for clinically deployable, privacy-preserving
 multi-site MRI harmonization.
 
-% bibliography would normally be \bibliographystyle{plainnat}\bibliography{refs}
-% truncated for this preprint draft; full bibliography accompanies the
-% camera-ready submission.
+\bibliographystyle{plainnat}
+\bibliography{refs}
 
 \end{document}
