@@ -230,6 +230,25 @@ no observable cost to cycle consistency.
   \label{fig:patchnce_loss_components}
 \end{figure}
 
+\paragraph{Qualitative comparison.}
+Fig.~\ref{fig:patchnce_qualitative} renders four held-out test cases for the
+T1 modality across the four $\lambda_{\mathrm{NCE}}$ settings. Per case we
+display the source slice (Real~A), the harmonized output (Fake~B), the target
+real-B slice (Real~B), and a magma-coloured absolute-difference map
+$|\,$Real~A$-$Fake~B$\,|$. Larger $\lambda_{\mathrm{NCE}}$ values yield
+visibly tighter texture transfer near tumour boundaries; smaller values err on
+the side of preserving source contrast.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.97\linewidth]{../figures/fig_patchnce_qualitative.pdf}
+  \caption{Qualitative T1 translations for the four $\lambda_{\mathrm{NCE}}$
+  settings. Rows: four held-out test cases. Within each case, four columns
+  per $\lambda$ show Real~A, Fake~B, Real~B, and the absolute difference
+  $|\,$Real~A$-$Fake~B$\,|$ on a magma colormap.}
+  \label{fig:patchnce_qualitative}
+\end{figure}
+
 \paragraph{Single-figure summary.}
 Fig.~\ref{fig:patchnce_summary_panel} presents the recommended
 journal-version composite figure: validation SSIM/PSNR, cycle/NCE losses,

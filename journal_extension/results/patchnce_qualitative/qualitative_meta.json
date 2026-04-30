@@ -1,0 +1,16 @@
+{
+  "lambdas": [
+    1.0,
+    0.1,
+    0.5,
+    2.0
+  ],
+  "case_count": 4,
+  "modality_names": [
+    "FLAIR",
+    "T1",
+    "T1ce",
+    "T2"
+  ],
+  "modality_index": 1
+}
