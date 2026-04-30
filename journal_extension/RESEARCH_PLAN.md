@@ -6,6 +6,29 @@
 
 ---
 
+## Status (2026-04-30)
+
+| Extension | Code | Trained | Test Eval | Figures | Manuscript |
+|-----------|------|---------|-----------|---------|------------|
+| A. Contrastive hybrid loss (PatchNCE)   | done | done (4 lambdas)         | done    | done | done |
+| B. Neural compression-harmonization     | done | done (lambda_rate=0.01)  | val only| done | done |
+| C. Multi-domain (N>2) architecture      | done | done (200 epochs)        | partial | done | done |
+| D. Downstream task evaluation           | done | done (U-Net 50 epochs)   | done    | done | done |
+| E. Federated learning feasibility       | done | done (FedAvg 40 rounds)  | done    | done | done |
+
+Open follow-ups for the camera-ready window:
+- triple-seed runs for Extension A to add mean +/- std error bars
+- full lambda_rate sweep for Extension B and the canonical RD curve
+- FedProx / SCAFFOLD baselines for Extension E
+- task-aware harmonization loss to address the Extension D regression
+- N=4 multi-domain translation matrix figure for Extension C
+
+Pipeline: `bash journal_extension/scripts/regenerate_all_artifacts.sh`
+regenerates every figure, table, and statistical test from the on-disk
+training histories and test-set evaluations.
+
+---
+
 ## 1. Extension Overview
 
 The journal extension adds five complementary contributions to the MICCAI paper:
