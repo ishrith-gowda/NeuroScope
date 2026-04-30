@@ -1,0 +1,38 @@
+\begin{table*}[t]
+\centering
+\caption{Pairwise statistical comparison across $\lambda_{\mathrm{NCE}}$ values on the held-out test set (5{,}265 slices). Wilcoxon signed-rank $p$-values are reported with Bonferroni correction across the six pairs per metric ($\alpha_{\mathrm{adj}}{=}0.0083$). Significant differences are marked $\dagger$.}
+\label{tab:patchnce_pairwise_significance}
+\begin{tabular}{l l c c c c c}
+\toprule
+Metric & Pair & Mean A & Mean B & $\Delta$ Mean & Cohen's $d$ & Wilcoxon $p$ \\
+\midrule
+SSIM (A$\to$B, global) & $\lambda$0.1 vs $\lambda$0.5 & 0.9838 & 0.9913 & -0.0076 & -2.447 & 0.00e+00$\dagger$ \\
+SSIM (A$\to$B, global) & $\lambda$0.1 vs $\lambda$1.0 & 0.9838 & 0.9830 & +0.0008 & +0.572 & 0.00e+00$\dagger$ \\
+SSIM (A$\to$B, global) & $\lambda$0.1 vs $\lambda$2.0 & 0.9838 & 0.9910 & -0.0072 & -2.602 & 0.00e+00$\dagger$ \\
+SSIM (A$\to$B, global) & $\lambda$0.5 vs $\lambda$1.0 & 0.9913 & 0.9830 & +0.0084 & +2.351 & 0.00e+00$\dagger$ \\
+SSIM (A$\to$B, global) & $\lambda$0.5 vs $\lambda$2.0 & 0.9913 & 0.9910 & +0.0004 & +0.430 & 6.44e-187$\dagger$ \\
+SSIM (A$\to$B, global) & $\lambda$1.0 vs $\lambda$2.0 & 0.9830 & 0.9910 & -0.0080 & -2.504 & 0.00e+00$\dagger$ \\
+\midrule
+SSIM (B$\to$A, global) & $\lambda$0.1 vs $\lambda$0.5 & 0.9826 & 0.9873 & -0.0048 & -1.568 & 0.00e+00$\dagger$ \\
+SSIM (B$\to$A, global) & $\lambda$0.1 vs $\lambda$1.0 & 0.9826 & 0.9805 & +0.0021 & +0.749 & 0.00e+00$\dagger$ \\
+SSIM (B$\to$A, global) & $\lambda$0.1 vs $\lambda$2.0 & 0.9826 & 0.9864 & -0.0038 & -1.512 & 0.00e+00$\dagger$ \\
+SSIM (B$\to$A, global) & $\lambda$0.5 vs $\lambda$1.0 & 0.9873 & 0.9805 & +0.0068 & +1.881 & 0.00e+00$\dagger$ \\
+SSIM (B$\to$A, global) & $\lambda$0.5 vs $\lambda$2.0 & 0.9873 & 0.9864 & +0.0009 & +0.567 & 0.00e+00$\dagger$ \\
+SSIM (B$\to$A, global) & $\lambda$1.0 vs $\lambda$2.0 & 0.9805 & 0.9864 & -0.0059 & -1.943 & 0.00e+00$\dagger$ \\
+\midrule
+PSNR (A$\to$B, dB) & $\lambda$0.1 vs $\lambda$0.5 & 24.1009 & 24.5124 & -0.4115 & -0.334 & 7.53e-129$\dagger$ \\
+PSNR (A$\to$B, dB) & $\lambda$0.1 vs $\lambda$1.0 & 24.1009 & 23.5547 & +0.5462 & +0.455 & 2.16e-212$\dagger$ \\
+PSNR (A$\to$B, dB) & $\lambda$0.1 vs $\lambda$2.0 & 24.1009 & 24.7595 & -0.6586 & -0.531 & 3.47e-275$\dagger$ \\
+PSNR (A$\to$B, dB) & $\lambda$0.5 vs $\lambda$1.0 & 24.5124 & 23.5547 & +0.9577 & +0.769 & 0.00e+00$\dagger$ \\
+PSNR (A$\to$B, dB) & $\lambda$0.5 vs $\lambda$2.0 & 24.5124 & 24.7595 & -0.2471 & -0.196 & 2.98e-38$\dagger$ \\
+PSNR (A$\to$B, dB) & $\lambda$1.0 vs $\lambda$2.0 & 23.5547 & 24.7595 & -1.2048 & -0.974 & 0.00e+00$\dagger$ \\
+\midrule
+PSNR (B$\to$A, dB) & $\lambda$0.1 vs $\lambda$0.5 & 26.0616 & 26.7551 & -0.6935 & -0.530 & 1.00e-289$\dagger$ \\
+PSNR (B$\to$A, dB) & $\lambda$0.1 vs $\lambda$1.0 & 26.0616 & 25.5968 & +0.4648 & +0.388 & 1.16e-173$\dagger$ \\
+PSNR (B$\to$A, dB) & $\lambda$0.1 vs $\lambda$2.0 & 26.0616 & 25.2064 & +0.8552 & +0.671 & 0.00e+00$\dagger$ \\
+PSNR (B$\to$A, dB) & $\lambda$0.5 vs $\lambda$1.0 & 26.7551 & 25.5968 & +1.1583 & +0.928 & 0.00e+00$\dagger$ \\
+PSNR (B$\to$A, dB) & $\lambda$0.5 vs $\lambda$2.0 & 26.7551 & 25.2064 & +1.5487 & +1.293 & 0.00e+00$\dagger$ \\
+PSNR (B$\to$A, dB) & $\lambda$1.0 vs $\lambda$2.0 & 25.5968 & 25.2064 & +0.3904 & +0.300 & 5.03e-98$\dagger$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
