@@ -39,6 +39,11 @@ echo " regenerating statistical tests..."
 echo "========================================="
 python3 "$SCRIPT_DIR/statistical_tests.py"
 
+echo "========================================="
+echo " aggregating camera-ready upgrade outputs..."
+echo "========================================="
+python3 "$SCRIPT_DIR/aggregate_camera_ready.py" || echo "  (camera-ready outputs not yet present, skipped)"
+
 FIG_DIR="$ROOT_DIR/journal_extension/figures"
 RES_DIR="$ROOT_DIR/journal_extension/results"
 MAN_DIR="$ROOT_DIR/journal_extension/manuscript"

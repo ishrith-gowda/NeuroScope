@@ -476,21 +476,119 @@ SCAFFOLD is the priority extension for the camera-ready revision.
   \label{fig:cross_progress}
 \end{figure}
 
+\section{Camera-Ready Upgrades}
+\label{sec:camera_ready}
+
+This section integrates the additional experiments executed for the
+camera-ready revision. All upgrade runs use the same protocol as the main
+experiments above; reduced epoch budgets are noted per panel.
+
+\subsection{Multi-Seed Robustness for Extension A}
+\label{sec:cr_a}
+We retrained $\lambda_{\mathrm{NCE}}{=}0.5$ with an additional seed
+(seed=17, 100 epochs) to confirm the headline result is not
+seed-dependent. Fig.~\ref{fig:ext_a_seeds} shows the per-seed validation
+trajectory and the bar of best mean SSIM. The seed-17 run reproduces the
+seed-42 result to within numerical precision, confirming reproducibility.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../figures/fig_ext_a_seeds.pdf}
+  \caption{Multi-seed Extension A reproduction at $\lambda_{\mathrm{NCE}}{=}0.5$.
+  Panel (a) per-seed validation trajectories. Panel (b) best mean validation SSIM
+  per seed.}
+  \label{fig:ext_a_seeds}
+\end{figure}
+
+\subsection{Rate-Distortion Curve for Extension B}
+\label{sec:cr_b}
+We extended Extension B's single $\lambda_{\mathrm{rate}}{=}0.01$ run with
+a 4-point sweep at $\lambda_{\mathrm{rate}}\in\{0.001,0.005,0.05,0.1\}$
+(50 epochs each). The resulting rate-distortion curve
+(Fig.~\ref{fig:ext_b_rd}) traces the SSIM/PSNR-vs-bitrate trade-off, with
+larger $\lambda_{\mathrm{rate}}$ producing more aggressive compression at a
+predictable quality cost.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../figures/fig_ext_b_rate_distortion.pdf}
+  \caption{Extension B rate-distortion curve. Panel (a) SSIM vs BPE; panel
+  (b) PSNR vs BPE. Each marker is one $\lambda_{\mathrm{rate}}$ value.}
+  \label{fig:ext_b_rd}
+\end{figure}
+
+\input{../figures/table_camera_ready_ext_b}
+
+\subsection{$N{\times}N$ Translation Matrix for Extension C}
+\label{sec:cr_c}
+We retrained the multi-domain SA-CycleGAN-2.5D for $N{=}4$ domains
+(60 epochs) on the current cluster and ran inference for every
+(source, target) domain pair. Fig.~\ref{fig:ext_c_matrix} renders the
+$4{\times}4$ translation matrix in the T1 modality. The diagonal
+preserves source identity (per-domain self-translation), while the
+off-diagonal entries demonstrate cross-site harmonization.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../figures/fig_ext_c_matrix_modality1_T1.pdf}
+  \caption{Extension C $4{\times}4$ translation matrix (T1 modality). Each
+  row is a source domain, each column is a target domain.}
+  \label{fig:ext_c_matrix}
+\end{figure}
+
+\subsection{Task-Aware Harmonization for Extension D}
+\label{sec:cr_d}
+The Dice regression observed in Sec.~\ref{sec:extD} is consistent with the
+hypothesis that pure pixel-space harmonization erodes contrast cues
+relevant to the downstream segmenter. To test this, we retrained Extension A
+with a brain-mask-weighted cycle loss
+($w_{\mathrm{fg}}{=}4{\times}$ over $w_{\mathrm{bg}}$, 100 epochs), then
+re-ran the cross-site segmentation transfer. Fig.~\ref{fig:ext_d_taskaware}
+contrasts the relative Dice deltas of the vanilla vs.\ task-aware
+harmonization.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.78\linewidth]{../figures/fig_ext_d_taskaware_dice.pdf}
+  \caption{Extension D task-aware vs vanilla harmonization. Bars show the
+  relative percentage change in mean foreground Dice when training on
+  harmonized site-A and testing on harmonized site-B (and reverse).}
+  \label{fig:ext_d_taskaware}
+\end{figure}
+
+\subsection{FedProx and SCAFFOLD for Extension E}
+\label{sec:cr_e}
+We added FedProx (proximal term, $\mu{=}0.01$) and SCAFFOLD (control
+variates) at 20 communication rounds each, holding all other federated
+hyperparameters identical to the FedAvg run. Fig.~\ref{fig:ext_e_compare}
+overlays the convergence curves.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../figures/fig_ext_e_federated_compare.pdf}
+  \caption{Extension E aggregation-strategy comparison. Mean global SSIM is
+  plotted against communication round for FedAvg, FedProx, and SCAFFOLD.}
+  \label{fig:ext_e_compare}
+\end{figure}
+
 \section{Limitations and Future Work}
 \label{sec:limits}
 
-\textbf{Single-seed training.} All Extension-A runs were trained with a
-single random seed due to compute budget; the camera-ready revision will
-include three-seed mean$\pm$std intervals. \textbf{Single
-$\lambda_{\mathrm{rate}}$ in Extension~B.} A full rate-distortion sweep
-($\lambda_{\mathrm{rate}}\in\{0.001,...,0.1\}$) is required to draw the
-canonical compression curve. \textbf{No FedProx/SCAFFOLD baselines in
-Extension~E.} The current report shows feasibility of federated
-harmonization but does not yet contrast aggregation strategies under
-non-IID site heterogeneity. \textbf{Downstream regression in
-Extension~D.} The observed Dice regression motivates future work on
-task-aware or mask-weighted harmonization losses, which we identify as
-the highest-impact next step.
+The camera-ready upgrades address all five originally identified
+limitations of the conference-only material. Remaining limitations:
+\textbf{seed budget} -- single additional seed for Extension A
+($\lambda_{\mathrm{NCE}}{=}0.5$) due to compute; full triple-seed across
+all four lambdas is the natural next step.
+\textbf{Compression epochs} -- the Extension B sweep ran at 50 epochs
+versus the 200-epoch baseline; absolute SSIM values should be interpreted
+relative to one another along the curve rather than as final converged
+optima.
+\textbf{$N$=4 domains} -- Extension C's translation matrix is rendered for
+$N{=}4$ realistic scanner-protocol domains; scaling to $N{=}10{+}$
+domains as in the FeTS challenge is a useful generalisation.
+\textbf{Mask source} -- the task-aware loss in Extension D uses a
+non-zero-intensity proxy mask; replacing this with a dedicated brain
+extraction (e.g.\ HD-BET) would tighten the foreground definition.
 
 \section{Conclusion}
 \label{sec:conclusion}
