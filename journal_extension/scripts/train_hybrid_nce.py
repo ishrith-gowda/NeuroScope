@@ -125,9 +125,23 @@ class HybridNCETrainer:
         use_amp: bool = True,
         use_compile: bool = True,
         epochs: int = 200,
+        seed: int = 42,
+        task_aware_loss: bool = False,
+        mask_weight_foreground: float = 4.0,
     ):
         # configure torch for maximum throughput
         setup_torch_performance()
+
+        # determinism: seed everything that matters
+        import random as _random
+        _random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        self.seed = seed
+        self.task_aware_loss = task_aware_loss
+        self.mask_weight_foreground = float(mask_weight_foreground)
 
         self.config = config
         self.epochs = epochs
@@ -430,8 +444,20 @@ class HybridNCETrainer:
             rec_A = self.model.G_B2A(fake_B_3slice)
             rec_B = self.model.G_A2B(fake_A_3slice)
 
-            loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
-            loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
+            if self.task_aware_loss:
+                # task-aware harmonization: weight foreground voxels (non-zero
+                # brain region) higher than background. extension d follow-up.
+                # mask is computed per-channel on the source image and shared
+                # between l1 cycle directions.
+                mask_a = (center_A.abs() > 1e-3).float()
+                mask_b = (center_B.abs() > 1e-3).float()
+                w_a = 1.0 + (self.mask_weight_foreground - 1.0) * mask_a
+                w_b = 1.0 + (self.mask_weight_foreground - 1.0) * mask_b
+                loss_cycle_A = (w_a * (rec_A - center_A).abs()).mean()
+                loss_cycle_B = (w_b * (rec_B - center_B).abs()).mean()
+            else:
+                loss_cycle_A = self.losses.cycle_loss(center_A, rec_A)
+                loss_cycle_B = self.losses.cycle_loss(center_B, rec_B)
 
             # === identity loss ===
             identity_A = self.model.G_B2A(real_A)
@@ -625,163 +651,42 @@ class HybridNCETrainer:
         }
 
     def save_checkpoint(self, epoch: int, is_best: bool = False, save_epoch_copy: bool = True):
-        """save checkpoint using numpy-only serialization.
-
-        rationale: on rocm 6.0 + mi100 + pytorch 2.4.1, torch.save of a full
-        checkpoint dict segfaults deterministically after validation (tested with
-        in-parent save, forked-subprocess save, legacy pickle format, MALLOC_*
-        env vars, _use_new_zipfile_serialization flag). the crash is in glibc
-        ptmalloc (malloc unaligned tcache chunk / free invalid size / sigsegv
-        during malloc_consolidate). hypothesis: hip d2h copy + state_dict
-        extraction interacts badly with ptmalloc on this rocm build.
-
-        workaround: extract each tensor individually via .data_ptr() → numpy
-        buffer protocol, gc.collect + torch.cuda.synchronize between every
-        tensor, save via numpy.savez_compressed + json for metadata. no pickle,
-        no torch.save, no fork.
-        """
-        import gc
-        import json
-        import numpy as np
+        checkpoint = {
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "nce_A2B_state_dict": self.nce_loss_A2B.state_dict(),
+            "nce_B2A_state_dict": self.nce_loss_B2A.state_dict(),
+            "opt_G_state_dict": self.opt_G.state_dict(),
+            "opt_D_state_dict": self.opt_D.state_dict(),
+            "scheduler_G_state_dict": self.scheduler_G.state_dict(),
+            "scheduler_D_state_dict": self.scheduler_D.state_dict(),
+            "scaler_G_state_dict": self.scaler_G.state_dict(),
+            "scaler_D_state_dict": self.scaler_D.state_dict(),
+            "history": self.history,
+            "best_val_ssim": self.best_val_ssim,
+            "global_step": self.global_step,
+            "config": self.config.__dict__,
+            "lambda_nce": self.lambda_nce,
+        }
 
         ckpt_dir = self.experiment_dir / "checkpoints"
         ckpt_dir.mkdir(parents=True, exist_ok=True)
 
-        def tensor_to_numpy(t: torch.Tensor) -> np.ndarray:
-            if t is None:
-                return None
-            t = t.detach()
-            if t.device.type != "cpu":
-                t = t.cpu()
-            return np.ascontiguousarray(t.numpy()).copy()
+        def atomic_save(obj, target: Path):
+            tmp = target.with_suffix(target.suffix + ".tmp")
+            torch.save(obj, tmp)
+            tmp.replace(target)
 
-        def flatten_state_dict(name: str, state: dict, out: dict):
-            """flatten a state_dict into {prefix/key: numpy_array} with
-            synchronize + gc between every tensor."""
-            for k, v in state.items():
-                key = f"{name}/{k}"
-                if isinstance(v, torch.Tensor):
-                    torch.cuda.synchronize()
-                    out[key] = tensor_to_numpy(v)
-                    gc.collect()
-                elif isinstance(v, dict):
-                    flatten_state_dict(key, v, out)
-                elif isinstance(v, (list, tuple)):
-                    for i, item in enumerate(v):
-                        if isinstance(item, torch.Tensor):
-                            torch.cuda.synchronize()
-                            out[f"{key}/{i}"] = tensor_to_numpy(item)
-                            gc.collect()
-                        else:
-                            out[f"{key}/{i}::scalar"] = np.array(item) if not isinstance(item, (dict, list, tuple)) else np.array(str(item))
-                else:
-                    # scalars (int/float/bool) — store as 0-d numpy
-                    try:
-                        out[f"{key}::scalar"] = np.array(v)
-                    except Exception:
-                        out[f"{key}::repr"] = np.array(str(v))
-
-        try:
-            torch.cuda.synchronize()
-            gc.collect()
-
-            arrays: dict = {}
-            flatten_state_dict("model", self.model.state_dict(), arrays)
-            flatten_state_dict("nce_A2B", self.nce_loss_A2B.state_dict(), arrays)
-            flatten_state_dict("nce_B2A", self.nce_loss_B2A.state_dict(), arrays)
-            # optimizer/scheduler/scaler states are nice-to-have for resume but
-            # model weights are the critical artifact. skip them to minimize
-            # heap churn. resume will reinitialize optimizers from scratch.
-
-            metadata = {
-                "epoch": int(epoch),
-                "history": self.history,
-                "best_val_ssim": float(self.best_val_ssim),
-                "global_step": int(self.global_step),
-                "lambda_nce": float(self.lambda_nce),
-                "experiment_name": self.experiment_name,
-            }
-
-            primary = ckpt_dir / "checkpoint_latest.npz"
-            tmp = primary.with_suffix(".npz.tmp")
-            np.savez(tmp, **arrays)
-            tmp.replace(primary)
-
-            meta_tmp = (ckpt_dir / "checkpoint_latest.json").with_suffix(".json.tmp")
-            meta_final = ckpt_dir / "checkpoint_latest.json"
-            with open(meta_tmp, "w") as f:
-                json.dump(metadata, f, indent=2)
-            meta_tmp.replace(meta_final)
-
-            if save_epoch_copy:
-                epoch_npz = ckpt_dir / f"checkpoint_epoch_{epoch}.npz"
-                epoch_json = ckpt_dir / f"checkpoint_epoch_{epoch}.json"
-                if epoch_npz.exists():
-                    epoch_npz.unlink()
-                if epoch_json.exists():
-                    epoch_json.unlink()
-                import os as _os
-                _os.link(primary, epoch_npz)
-                _os.link(meta_final, epoch_json)
-
-            if is_best:
-                best_npz = ckpt_dir / "checkpoint_best.npz"
-                best_json = ckpt_dir / "checkpoint_best.json"
-                if best_npz.exists():
-                    best_npz.unlink()
-                if best_json.exists():
-                    best_json.unlink()
-                import os as _os
-                _os.link(primary, best_npz)
-                _os.link(meta_final, best_json)
-
-            del arrays
-            gc.collect()
-            print(f"  saved checkpoint: epoch={epoch} best={is_best} copy={save_epoch_copy}")
-        except Exception as e:
-            print(f"  [warn] save_checkpoint failed: {type(e).__name__}: {e}")
+        atomic_save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
+        if save_epoch_copy:
+            atomic_save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
+        if is_best:
+            atomic_save(checkpoint, ckpt_dir / "checkpoint_best.pth")
+        print(f"  saved checkpoint: epoch={epoch} best={is_best} copy={save_epoch_copy}")
 
     def load_checkpoint(self, checkpoint_path: str):
-        """load checkpoint for resuming training. supports both legacy torch.save
-        (.pth) and numpy savez (.npz) formats."""
-        import json
-        import numpy as np
-
         path = Path(checkpoint_path)
         print(f"loading checkpoint: {path}")
-
-        if path.suffix == ".npz" or path.with_suffix(".npz").exists():
-            npz_path = path if path.suffix == ".npz" else path.with_suffix(".npz")
-            json_path = npz_path.with_suffix(".json")
-            arrays = np.load(npz_path)
-
-            def rebuild_state_dict(prefix: str) -> dict:
-                out = {}
-                for key in arrays.files:
-                    if not key.startswith(f"{prefix}/"):
-                        continue
-                    rest = key[len(prefix) + 1:]
-                    if rest.endswith("::scalar") or rest.endswith("::repr"):
-                        continue
-                    out[rest] = torch.from_numpy(arrays[key])
-                return out
-
-            self.model.load_state_dict(rebuild_state_dict("model"))
-            try:
-                self.nce_loss_A2B.load_state_dict(rebuild_state_dict("nce_A2B"))
-                self.nce_loss_B2A.load_state_dict(rebuild_state_dict("nce_B2A"))
-            except Exception as e:
-                print(f"  [warn] nce state load skipped: {e}")
-
-            with open(json_path) as f:
-                meta = json.load(f)
-            self.history = meta.get("history", self.history)
-            self.best_val_ssim = meta.get("best_val_ssim", 0)
-            self.global_step = meta.get("global_step", 0)
-            self.start_epoch = meta["epoch"] + 1
-            return
-
-        # legacy torch.save format
         checkpoint = torch.load(path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
         if "nce_A2B_state_dict" in checkpoint:
@@ -929,6 +834,14 @@ def parse_args():
     parser.add_argument("--resume", type=str, default=None, help="checkpoint to resume")
     parser.add_argument("--experiment_name", type=str, default=None)
 
+    # determinism + extension d task-aware loss
+    parser.add_argument("--seed", type=int, default=42,
+                        help="random seed for reproducibility")
+    parser.add_argument("--task_aware_loss", action="store_true",
+                        help="use brain-mask-weighted cycle loss (extension d follow-up)")
+    parser.add_argument("--mask_weight_foreground", type=float, default=4.0,
+                        help="multiplicative weight applied to foreground voxels in cycle loss")
+
     return parser.parse_args()
 
 
@@ -971,6 +884,9 @@ def main():
         nce_num_patches=args.nce_num_patches,
         nce_temperature=args.nce_temperature,
         epochs=args.epochs,
+        seed=getattr(args, "seed", 42),
+        task_aware_loss=getattr(args, "task_aware_loss", False),
+        mask_weight_foreground=getattr(args, "mask_weight_foreground", 4.0),
     )
 
     # resume if specified
