@@ -1,9 +1,14 @@
 # Parallel Submission Strategy: SA-CycleGAN-2.5D + Five Journal Extensions
 
 **Compiled**: 2026-05-01
+**Last revised**: 2026-05-06
 **Project**: SA-CycleGAN-2.5D for multi-site MRI harmonization, plus a five-contribution journal extension (PatchNCE hybrid loss / neural compression-harmonization / multi-domain AdaIN / downstream task-aware harmonization / federated harmonization)
 **Authors**: Ishrith Gowda et al.
 **Goal**: Maximize impact factor, prestige, and citation footprint by framing each contribution toward the venue best suited for its angle, and submitting in parallel without violating dual-submission policies.
+
+## Revision Log
+
+- **2026-05-06**: NeurIPS 2026 (Ext B) deadline (2026-05-06 AOE) passed without submission. Ext B is now slotted for **ICML 2027** (deadline late January 2027) as the next-tier ML conference, with **MedIA** (rolling, IF 10.9) as the parallel journal track. The freed May calendar consolidates around BMVC 2026 (Ext C, paper due 2026-05-29) as the highest-priority near-term target.
 
 ---
 
@@ -81,8 +86,8 @@ The project has six independently-publishable units. Each can be re-framed for a
 
 | # | Priority | Venue | Deadline | Framing | Page budget | Reuse % | Status |
 |---|----------|-------|----------|---------|-------------|---------|--------|
-| 1 | **CRITICAL** | **NeurIPS 2026** | abstract 2026-05-04 / paper 2026-05-06 | **Ext B (Neural Compression-Harmonization)** | 9 pp + appendix | new write-up using existing code/results | NEEDS DRAFT NOW |
-| 2 | **HIGH** | **BMVC 2026** | 2026-05-22 / 2026-05-29 | **Ext C (Multi-Domain AdaIN)** | 9 pp | new write-up | begins draft week of May 8 |
+| 1 | ~~CRITICAL~~ **PASSED** | ~~NeurIPS 2026~~ | ~~abstract 2026-05-04 / paper 2026-05-06~~ | ~~Ext B (Neural Compression-Harmonization)~~ | -- | -- | **NOT SUBMITTED — slotted for ICML 2027** |
+| 2 | **CRITICAL (new)** | **BMVC 2026** | abstract **2026-05-22** / paper **2026-05-29** | **Ext C (Multi-Domain AdaIN)** | 9 pp | new write-up | **PRIMARY FOCUS — draft now** |
 | 3 | **HIGH** | **DGM4MICCAI 2026** workshop | ~late June 2026 (VERIFY) | **Ext A (PatchNCE Hybrid)** | 8 pp LNCS | tight extension of journal-ext Sec A | begins draft mid-May |
 | 4 | **HIGH** | **SASHIMI 2026** workshop | ~July 1 2026 (VERIFY) | **Ext C** if BMVC rejects, otherwise **Ext D** | 8 pp LNCS | reuse from BMVC / journal Sec D | begins draft June |
 | 5 | **HIGH** | **IEEE TMI** journal | rolling, target 2026-07 | **Base + Ext A + Ext D** combined | 14 pp | full journal extension; the master deliverable | post MICCAI decision |
@@ -201,16 +206,31 @@ Each submission must include:
 
 ---
 
-## 10. Single Decision That Unblocks Everything
+## 10. Updated Critical Path (post-NeurIPS-skip, 2026-05-06)
 
-The single most consequential decision in the next 72 hours is:
+NeurIPS 2026 has passed without submission as planned. The new critical path collapses around BMVC 2026 and the post-MICCAI TMI extension:
 
-**Do we attempt NeurIPS 2026 (Ext B) by 2026-05-06?**
+**Phase 1 (now -> 2026-05-29): BMVC 2026 sprint, Ext C.**
+- 2026-05-08 -> 2026-05-15: assemble BMVC paper using existing multi-domain training history + N x N translation matrix from `journal_extension/figures/`. Outline: introduction, related work (StarGAN v2 / ImUnity / CALAMITI), method (AdaIN + self-attention), four-domain experiment, ablation, qualitative N x N matrix.
+- 2026-05-15 -> 2026-05-22: revise. Submit abstract by 2026-05-22 23:59 UTC.
+- 2026-05-22 -> 2026-05-29: final pass on figures, supplementary, anonymisation. Submit paper by 2026-05-29 23:59 UTC.
 
-If **yes**, all energy this week goes to drafting the compression paper using whatever lambda_rate runs are complete by 2026-05-05. The remaining lambda_rate values can be added in supplementary material at camera-ready.
+**Phase 2 (2026-05-30 -> 2026-06-30): MICCAI 2026 decision wait + workshop drafts.**
+- 2026-06-12: MICCAI 2026 decision. If **accept**, immediately begin TMI journal extension drafting using `journal_extension/manuscript/journal_extension.tex` as scaffold. If **reject**, redirect Base + Ext A + Ext D into a standalone TMI / MedIA submission with 14-page format. Either way, journal extension goes out by ~2026-07-15.
+- 2026-06-15 -> 2026-06-30: draft DGM4MICCAI 2026 workshop paper for Ext A (PatchNCE) targeting late-June deadline (VERIFY).
+- 2026-06-15 -> 2026-07-01: draft SASHIMI 2026 workshop paper for Ext D or Ext C-backup targeting ~July 1 deadline (VERIFY).
 
-If **no**, defer Ext B to ICML 2027 (deadline late January 2027), and use the freed week to draft BMVC 2026 Ext C (deadline 2026-05-29).
+**Phase 3 (2026-08 -> 2026-12): broader portfolio.**
+- 2026-08-01: AAAI 2027 paper deadline (VERIFY); resubmit Ext C if BMVC rejected.
+- 2026-09-15: NeurIPS 2026 workshops (FL@FM, AI4Health) for Ext E and Ext D.
+- 2026-10-01: ICLR 2027 deadline (VERIFY); submit Ext A as a general-domain method paper with non-medical experiments added.
+- 2026-10-30: ISBI 2027 short paper for Ext D.
+- 2026-11: CVPR 2027 deadline (VERIFY); Ext C extended (K=10 sites).
 
-**Recommended choice**: defer to ICML 2027. Reason: Ext B's headline result is the *full* rate-distortion curve, which the cluster queue puts at finishing on or after 2026-05-05; submitting NeurIPS with only 1-2 lambda points instead of 5 would weaken the paper. ICML 2027 gives us 8 months of runway.
+**Phase 4 (2027-01 onward): backups.**
+- 2027-01-25: ICML 2027 for Ext B (the deferred compression paper).
+- Rolling: MedIA full extension of Ext E once federated workshop paper is accepted.
+
+**Active leases / cluster status**: The Chameleon Cloud `compute_gigaio` lease is up for periodic renewal; ssh to 129.114.109.228 returned a connection timeout on 2026-05-06 19:00 UTC, indicating the lease may have expired or the node is rebooting. The camera-ready training queue (started 2026-05-01) was at FedProx round 8 of 20 as of last check. Action item: verify lease status, restart the queue if needed, and accept whatever subset of camera-ready data has landed for the BMVC 2026 sprint. **The BMVC paper does not depend on the camera-ready upgrades** — Ext C's multi-domain training is on the legacy results in `all_results.json` and the matrix figure can be rendered from any reasonable Ext C checkpoint, with seed-1 preliminary results sufficient for an initial submission and the camera-ready additions added in revision/rebuttal.
 
 This document should be revisited weekly as deadlines firm up and the cluster queue completes.
