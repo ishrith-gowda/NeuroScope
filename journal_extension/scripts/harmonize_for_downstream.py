@@ -84,6 +84,8 @@ def harmonize_site(model, direction: str, site_dir: str, out_dir: str,
 
     for n, (subj_idx, items) in enumerate(by_subj.items()):
         subj = ds.subjects[subj_idx]
+        if not (subj / "seg.nii.gz").exists():
+            continue  # downstream eval only uses seg-bearing subjects; skip the rest
         vol = ds._load_volume(subj)          # [4, d, h, w]
         D = vol.shape[1]
         hv = np.zeros((4, 128, 128, D), dtype=np.float32)
