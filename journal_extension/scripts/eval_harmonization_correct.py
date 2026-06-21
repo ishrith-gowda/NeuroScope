@@ -47,10 +47,11 @@ from skimage.metrics import structural_similarity as ssim_fn
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
-    SACycleGAN25DConfig, create_model,
-)
 from neuroscope.data.datasets.dataset_25d import create_dataloaders  # noqa: E402
+from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
+    SACycleGAN25DConfig,
+    create_model,
+)
 
 MODALITIES = ["FLAIR", "T1", "T1ce", "T2"]  # 4 output channels
 
@@ -63,20 +64,34 @@ class DomainClassifier(nn.Module):
     def __init__(self, in_channels=4, base_filters=32, n_domains=2, dropout=0.3):
         super().__init__()
         bf = base_filters
+
         def block(ci, co):
             return [
-                nn.Conv2d(ci, co, 3, padding=1), nn.InstanceNorm2d(co), nn.LeakyReLU(0.2, True),
-                nn.Conv2d(co, co, 3, padding=1), nn.InstanceNorm2d(co), nn.LeakyReLU(0.2, True),
+                nn.Conv2d(ci, co, 3, padding=1),
+                nn.InstanceNorm2d(co),
+                nn.LeakyReLU(0.2, True),
+                nn.Conv2d(co, co, 3, padding=1),
+                nn.InstanceNorm2d(co),
+                nn.LeakyReLU(0.2, True),
             ]
+
         self.features = nn.Sequential(
-            *block(in_channels, bf), nn.MaxPool2d(2),
-            *block(bf, bf * 2), nn.MaxPool2d(2),
-            *block(bf * 2, bf * 4), nn.MaxPool2d(2),
-            *block(bf * 4, bf * 8), nn.AdaptiveAvgPool2d(1),
+            *block(in_channels, bf),
+            nn.MaxPool2d(2),
+            *block(bf, bf * 2),
+            nn.MaxPool2d(2),
+            *block(bf * 2, bf * 4),
+            nn.MaxPool2d(2),
+            *block(bf * 4, bf * 8),
+            nn.AdaptiveAvgPool2d(1),
         )
         self.classifier = nn.Sequential(
-            nn.Flatten(), nn.Dropout(dropout), nn.Linear(bf * 8, bf * 4),
-            nn.LeakyReLU(0.2, True), nn.Dropout(dropout), nn.Linear(bf * 4, n_domains),
+            nn.Flatten(),
+            nn.Dropout(dropout),
+            nn.Linear(bf * 8, bf * 4),
+            nn.LeakyReLU(0.2, True),
+            nn.Dropout(dropout),
+            nn.Linear(bf * 4, n_domains),
         )
 
     def forward(self, x):
@@ -158,7 +173,9 @@ def load_generator_weights(model, ckpt_path, device):
             nk = nk.replace(p, "")
         cleaned[nk] = v
     missing, unexpected = model.load_state_dict(cleaned, strict=False)
-    print(f"  loaded model: missing={len(missing)} unexpected={len(unexpected)} epoch={ck.get('epoch','?')}")
+    print(
+        f"  loaded model: missing={len(missing)} unexpected={len(unexpected)} epoch={ck.get('epoch', '?')}"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -171,8 +188,9 @@ def evaluate(args):
     from torchmetrics.image.kid import KernelInceptionDistance
 
     # model
-    config = SACycleGAN25DConfig(ngf=64, ndf=64, n_residual_blocks=9,
-                                 attention_layers=(3, 4, 5), nce_feature_layers=(2, 5))
+    config = SACycleGAN25DConfig(
+        ngf=64, ndf=64, n_residual_blocks=9, attention_layers=(3, 4, 5), nce_feature_layers=(2, 5)
+    )
     model = create_model(config).to(device).eval()
     print(f"[{args.label}] loading generator weights from {args.checkpoint}")
     load_generator_weights(model, args.checkpoint, device)
@@ -183,15 +201,24 @@ def evaluate(args):
     clf.load_state_dict(clf_ck.get("model_state_dict", clf_ck), strict=True)
 
     _, _, test_loader = create_dataloaders(
-        brats_dir=args.brats_dir, upenn_dir=args.upenn_dir,
-        batch_size=args.batch_size, image_size=(128, 128), num_workers=args.num_workers,
+        brats_dir=args.brats_dir,
+        upenn_dir=args.upenn_dir,
+        batch_size=args.batch_size,
+        image_size=(128, 128),
+        num_workers=args.num_workers,
     )
 
     # fid/kid per modality, per direction
-    fid = {f"{d}_{m}": FrechetInceptionDistance(feature=2048, normalize=True).to(device)
-           for d in ("A2B", "B2A") for m in MODALITIES}
-    kid = {f"{d}_{m}": KernelInceptionDistance(subset_size=50, normalize=True).to(device)
-           for d in ("A2B", "B2A") for m in MODALITIES}
+    fid = {
+        f"{d}_{m}": FrechetInceptionDistance(feature=2048, normalize=True).to(device)
+        for d in ("A2B", "B2A")
+        for m in MODALITIES
+    }
+    kid = {
+        f"{d}_{m}": KernelInceptionDistance(subset_size=50, normalize=True).to(device)
+        for d in ("A2B", "B2A")
+        for m in MODALITIES
+    }
 
     # domain-classifier acc accumulators
     clf_correct_raw = clf_total_raw = 0
@@ -199,8 +226,8 @@ def evaluate(args):
     feat_realB, feat_fakeB = [], []
 
     # subject-level masked-ssim accumulators
-    subj_struct = defaultdict(list)   # source vs harmonized (A->B)
-    subj_cycle = defaultdict(list)    # cycle recon (A->B->A)
+    subj_struct = defaultdict(list)  # source vs harmonized (A->B)
+    subj_cycle = defaultdict(list)  # cycle recon (A->B->A)
 
     for bi, batch in enumerate(test_loader):
         if args.max_batches and bi >= args.max_batches:
@@ -216,12 +243,16 @@ def evaluate(args):
 
         # --- domain classifier: raw (cen_A=0, cen_B=1) vs harmonized (fake_B from A keeps label 0) ---
         raw_logits = clf(torch.cat([cen_A, cen_B], 0))
-        raw_labels = torch.cat([torch.zeros(cen_A.size(0)), torch.ones(cen_B.size(0))]).to(device).long()
+        raw_labels = (
+            torch.cat([torch.zeros(cen_A.size(0)), torch.ones(cen_B.size(0))]).to(device).long()
+        )
         clf_correct_raw += (raw_logits.argmax(1) == raw_labels).sum().item()
         clf_total_raw += raw_labels.size(0)
         # harmonized: fake_B (was domain A, label 0) + fake_A (was domain B, label 1)
         harm_logits = clf(torch.cat([fake_B, fake_A], 0))
-        harm_labels = torch.cat([torch.zeros(fake_B.size(0)), torch.ones(fake_A.size(0))]).to(device).long()
+        harm_labels = (
+            torch.cat([torch.zeros(fake_B.size(0)), torch.ones(fake_A.size(0))]).to(device).long()
+        )
         clf_correct_harm += (harm_logits.argmax(1) == harm_labels).sum().item()
         clf_total_harm += harm_labels.size(0)
         feat_realB.append(clf.extract_features(cen_B).cpu().numpy())
@@ -229,14 +260,14 @@ def evaluate(args):
 
         # --- fid/kid per modality ---
         for mi, m in enumerate(MODALITIES):
-            fid[f"A2B_{m}"].update(to_3ch_uint8(cen_B[:, mi:mi+1]), real=True)
-            fid[f"A2B_{m}"].update(to_3ch_uint8(fake_B[:, mi:mi+1]), real=False)
-            kid[f"A2B_{m}"].update(to_3ch_uint8(cen_B[:, mi:mi+1]), real=True)
-            kid[f"A2B_{m}"].update(to_3ch_uint8(fake_B[:, mi:mi+1]), real=False)
-            fid[f"B2A_{m}"].update(to_3ch_uint8(cen_A[:, mi:mi+1]), real=True)
-            fid[f"B2A_{m}"].update(to_3ch_uint8(fake_A[:, mi:mi+1]), real=False)
-            kid[f"B2A_{m}"].update(to_3ch_uint8(cen_A[:, mi:mi+1]), real=True)
-            kid[f"B2A_{m}"].update(to_3ch_uint8(fake_A[:, mi:mi+1]), real=False)
+            fid[f"A2B_{m}"].update(to_3ch_uint8(cen_B[:, mi : mi + 1]), real=True)
+            fid[f"A2B_{m}"].update(to_3ch_uint8(fake_B[:, mi : mi + 1]), real=False)
+            kid[f"A2B_{m}"].update(to_3ch_uint8(cen_B[:, mi : mi + 1]), real=True)
+            kid[f"A2B_{m}"].update(to_3ch_uint8(fake_B[:, mi : mi + 1]), real=False)
+            fid[f"B2A_{m}"].update(to_3ch_uint8(cen_A[:, mi : mi + 1]), real=True)
+            fid[f"B2A_{m}"].update(to_3ch_uint8(fake_A[:, mi : mi + 1]), real=False)
+            kid[f"B2A_{m}"].update(to_3ch_uint8(cen_A[:, mi : mi + 1]), real=True)
+            kid[f"B2A_{m}"].update(to_3ch_uint8(fake_A[:, mi : mi + 1]), real=False)
 
         # --- masked windowed ssim, subject-level (A->B direction) ---
         cen_A_np = cen_A.cpu().numpy()
@@ -252,8 +283,11 @@ def evaluate(args):
     # aggregate
     def subj_agg(d):
         per_subj = [np.nanmean(v) for v in d.values() if len(v)]
-        return {"mean": float(np.nanmean(per_subj)), "std": float(np.nanstd(per_subj)),
-                "n_subjects": len(per_subj)}
+        return {
+            "mean": float(np.nanmean(per_subj)),
+            "std": float(np.nanstd(per_subj)),
+            "n_subjects": len(per_subj),
+        }
 
     fr = np.concatenate(feat_realB) if feat_realB else np.zeros((1, 1))
     ff = np.concatenate(feat_fakeB) if feat_fakeB else np.zeros((1, 1))
@@ -283,11 +317,15 @@ def evaluate(args):
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"[{args.label}] wrote {out_path}")
-    print(f"  domain-clf acc raw={results['domain_classifier']['acc_raw']:.3f} "
-          f"harmonized={results['domain_classifier']['acc_harmonized']:.3f}")
-    print(f"  fid A2B avg={results['fid_A2B_avg']:.2f} | "
-          f"struct-ssim={results['masked_windowed_ssim_structure_A2B']['mean']:.3f} | "
-          f"cycle-ssim={results['masked_windowed_ssim_cycle_A2B']['mean']:.3f}")
+    print(
+        f"  domain-clf acc raw={results['domain_classifier']['acc_raw']:.3f} "
+        f"harmonized={results['domain_classifier']['acc_harmonized']:.3f}"
+    )
+    print(
+        f"  fid A2B avg={results['fid_A2B_avg']:.2f} | "
+        f"struct-ssim={results['masked_windowed_ssim_structure_A2B']['mean']:.3f} | "
+        f"cycle-ssim={results['masked_windowed_ssim_cycle_A2B']['mean']:.3f}"
+    )
     return results
 
 
@@ -301,7 +339,12 @@ def parse_args():
     p.add_argument("--output_dir", required=True)
     p.add_argument("--batch_size", type=int, default=32)
     p.add_argument("--num_workers", type=int, default=16)
-    p.add_argument("--max_batches", type=int, default=0, help="0 = full test set; N for a quick validation pass")
+    p.add_argument(
+        "--max_batches",
+        type=int,
+        default=0,
+        help="0 = full test set; N for a quick validation pass",
+    )
     return p.parse_args()
 
 

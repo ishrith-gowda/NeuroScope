@@ -38,18 +38,20 @@ import torch
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
-    SACycleGAN25DConfig, create_model,
-)
 from neuroscope.data.datasets.dataset_25d import MRIDataset25D  # noqa: E402
+from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
+    SACycleGAN25DConfig,
+    create_model,
+)
 
 # output channel order MUST match MRIDataset25D.MODALITIES (training)
 MOD_OUT = ["t1", "t1gd", "t2", "flair"]
 
 
 def load_generator(ckpt_path: str, device: str):
-    cfg = SACycleGAN25DConfig(ngf=64, ndf=64, n_residual_blocks=9,
-                              attention_layers=(3, 4, 5), nce_feature_layers=(2, 5))
+    cfg = SACycleGAN25DConfig(
+        ngf=64, ndf=64, n_residual_blocks=9, attention_layers=(3, 4, 5), nce_feature_layers=(2, 5)
+    )
     m = create_model(cfg).to(device).eval()
     ck = torch.load(ckpt_path, map_location=device, weights_only=False)
     sd = ck.get("model_state_dict", ck)
@@ -60,19 +62,41 @@ def load_generator(ckpt_path: str, device: str):
             nk = nk.replace(p, "")
         cleaned[nk] = v
     missing, unexpected = m.load_state_dict(cleaned, strict=False)
-    print(f"loaded generator: missing={len(missing)} unexpected={len(unexpected)} epoch={ck.get('epoch','?')}")
+    print(
+        f"loaded generator: missing={len(missing)} unexpected={len(unexpected)} epoch={ck.get('epoch', '?')}"
+    )
     return m
 
 
+def _harmonize_batch(G, device, imgs, slis, hv):
+    """run one batch of slices through the generator and write into hv in place."""
+    if not imgs:
+        return
+    x = torch.stack(imgs).to(device)  # [b,12,128,128]
+    y = G(x).clamp(0, 1).cpu().numpy()  # [b,4,128,128]
+    for j, sl in enumerate(slis):
+        hv[:, :, :, sl] = y[j]
+    imgs.clear()
+    slis.clear()
+
+
 @torch.no_grad()
-def harmonize_site(model, direction: str, site_dir: str, out_dir: str,
-                   device: str, batch: int = 32, slice_range=(30, 125)):
+def harmonize_site(
+    model,
+    direction: str,
+    site_dir: str,
+    out_dir: str,
+    device: str,
+    batch: int = 32,
+    slice_range=(30, 125),
+):
     import nibabel as nib
     from skimage.transform import resize as skresize
 
     G = model.G_A2B if direction == "A2B" else model.G_B2A
-    ds = MRIDataset25D(root_dir=site_dir, slice_range=slice_range,
-                       image_size=(128, 128), cache_volumes=True)
+    ds = MRIDataset25D(
+        root_dir=site_dir, slice_range=slice_range, image_size=(128, 128), cache_volumes=True
+    )
 
     by_subj = defaultdict(list)
     for i, (subj_idx, sl) in enumerate(ds.samples):
@@ -86,28 +110,17 @@ def harmonize_site(model, direction: str, site_dir: str, out_dir: str,
         subj = ds.subjects[subj_idx]
         if not (subj / "seg.nii.gz").exists():
             continue  # downstream eval only uses seg-bearing subjects; skip the rest
-        vol = ds._load_volume(subj)          # [4, d, h, w]
+        vol = ds._load_volume(subj)  # [4, d, h, w]
         D = vol.shape[1]
         hv = np.zeros((4, 128, 128, D), dtype=np.float32)
 
         imgs, slis = [], []
-
-        def flush():
-            if not imgs:
-                return
-            x = torch.stack(imgs).to(device)             # [b,12,128,128]
-            y = G(x).clamp(0, 1).cpu().numpy()           # [b,4,128,128]
-            for j, sl in enumerate(slis):
-                hv[:, :, :, sl] = y[j]
-            imgs.clear()
-            slis.clear()
-
         for i, sl in items:
             imgs.append(ds[i]["image"])
             slis.append(sl)
             if len(imgs) >= batch:
-                flush()
-        flush()
+                _harmonize_batch(G, device, imgs, slis, hv)
+        _harmonize_batch(G, device, imgs, slis, hv)
 
         # fill out-of-range edge slices with the nearest harmonized slice
         in_range = sorted(sl for _, sl in items)
@@ -127,8 +140,9 @@ def harmonize_site(model, direction: str, site_dir: str, out_dir: str,
         seg = nib.load(str(subj / "seg.nii.gz")).get_fdata()
         segr = np.zeros((128, 128, seg.shape[2]), dtype=np.int16)
         for s in range(seg.shape[2]):
-            segr[:, :, s] = skresize(seg[:, :, s], (128, 128), order=0,
-                                     preserve_range=True, anti_aliasing=False).astype(np.int16)
+            segr[:, :, s] = skresize(
+                seg[:, :, s], (128, 128), order=0, preserve_range=True, anti_aliasing=False
+            ).astype(np.int16)
         nib.save(nib.Nifti1Image(segr, affine), str(osub / "seg.nii.gz"))
 
         if (n + 1) % 25 == 0:
@@ -141,8 +155,12 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--checkpoint", required=True)
     p.add_argument("--site_dir", required=True)
-    p.add_argument("--direction", required=True, choices=["A2B", "B2A"],
-                   help="A2B = harmonize this site with G_A2B; B2A = with G_B2A")
+    p.add_argument(
+        "--direction",
+        required=True,
+        choices=["A2B", "B2A"],
+        help="A2B = harmonize this site with G_A2B; B2A = with G_B2A",
+    )
     p.add_argument("--output_dir", required=True)
     p.add_argument("--batch", type=int, default=32)
     return p.parse_args()

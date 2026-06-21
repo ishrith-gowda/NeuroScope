@@ -34,8 +34,11 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from eval_downstream import (  # noqa: E402
-    DownstreamEvaluator, get_subject_ids, split_subjects, setup_torch_performance,
+from eval_downstream import (
+    DownstreamEvaluator,
+    get_subject_ids,
+    setup_torch_performance,
+    split_subjects,
 )
 
 FG = "dice_mean_foreground_mean"
@@ -43,9 +46,18 @@ WT = "region_wt_mean"
 
 
 def _summary(r):
-    return {k: r.get(k) for k in (FG, "dice_mean_foreground_std", WT,
-                                  "region_tc_mean", "region_et_mean",
-                                  "hd95_mean", "hd95_std")}
+    return {
+        k: r.get(k)
+        for k in (
+            FG,
+            "dice_mean_foreground_std",
+            WT,
+            "region_tc_mean",
+            "region_et_mean",
+            "hd95_mean",
+            "hd95_std",
+        )
+    }
 
 
 def main():
@@ -62,71 +74,120 @@ def main():
     args = p.parse_args()
 
     setup_torch_performance()
-    ev = DownstreamEvaluator(output_dir=args.output_dir, n_classes=4,
-                             seg_epochs=args.seg_epochs, seg_lr=args.seg_lr,
-                             batch_size=args.batch_size, num_workers=args.num_workers,
-                             image_size=128, use_amp=True)
+    ev = DownstreamEvaluator(
+        output_dir=args.output_dir,
+        n_classes=4,
+        seg_epochs=args.seg_epochs,
+        seg_lr=args.seg_lr,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        image_size=128,
+        use_amp=True,
+    )
 
     ids_a = get_subject_ids(args.brats_dir)
     ids_b = get_subject_ids(args.upenn_dir)
     train_a, test_a = split_subjects(ids_a)
     train_b, test_b = split_subjects(ids_b)
-    print(f"brats: {len(ids_a)} ({len(train_a)} train / {len(test_a)} test) | "
-          f"upenn: {len(ids_b)} ({len(train_b)} train / {len(test_b)} test)")
+    print(
+        f"brats: {len(ids_a)} ({len(train_a)} train / {len(test_a)} test) | "
+        f"upenn: {len(ids_b)} ({len(train_b)} train / {len(test_b)} test)"
+    )
 
-    results: dict = {"splits": {"brats_train": len(train_a), "brats_test": len(test_a),
-                                "upenn_train": len(train_b), "upenn_test": len(test_b)}}
+    results: dict = {
+        "splits": {
+            "brats_train": len(train_a),
+            "brats_test": len(test_a),
+            "upenn_train": len(train_b),
+            "upenn_test": len(test_b),
+        }
+    }
 
     # ---- forward: train on raw brats (A), test raw upenn vs upenn->brats ----
     print("\n[A] training segmenter on raw brats ...")
-    S_A, _ = ev.train_segmentation(ev._make_loader(args.brats_dir, train_a, shuffle=True),
-                                   model_name="segA")
+    S_A, _ = ev.train_segmentation(
+        ev._make_loader(args.brats_dir, train_a, shuffle=True), model_name="segA"
+    )
     print("[A] eval within-site (brats test) ...")
-    results["A_on_rawA"] = _summary(ev.evaluate_segmentation(
-        S_A, ev._make_loader(args.brats_dir, test_a, shuffle=False, require_tumor=False)))
+    results["A_on_rawA"] = _summary(
+        ev.evaluate_segmentation(
+            S_A, ev._make_loader(args.brats_dir, test_a, shuffle=False, require_tumor=False)
+        )
+    )
     print("[A] eval cross-site raw (upenn) ...")
-    results["A_on_rawB"] = _summary(ev.evaluate_segmentation(
-        S_A, ev._make_loader(args.upenn_dir, test_b, shuffle=False, require_tumor=False)))
+    results["A_on_rawB"] = _summary(
+        ev.evaluate_segmentation(
+            S_A, ev._make_loader(args.upenn_dir, test_b, shuffle=False, require_tumor=False)
+        )
+    )
     print("[A] eval cross-site harmonized (upenn->brats) ...")
-    results["A_on_harmB"] = _summary(ev.evaluate_segmentation(
-        S_A, ev._make_loader(args.harm_upenn_to_brats, test_b, shuffle=False, require_tumor=False)))
+    results["A_on_harmB"] = _summary(
+        ev.evaluate_segmentation(
+            S_A,
+            ev._make_loader(args.harm_upenn_to_brats, test_b, shuffle=False, require_tumor=False),
+        )
+    )
 
     # ---- reverse: train on raw upenn (B), test raw brats vs brats->upenn ----
     print("\n[B] training segmenter on raw upenn ...")
-    S_B, _ = ev.train_segmentation(ev._make_loader(args.upenn_dir, train_b, shuffle=True),
-                                   model_name="segB")
+    S_B, _ = ev.train_segmentation(
+        ev._make_loader(args.upenn_dir, train_b, shuffle=True), model_name="segB"
+    )
     print("[B] eval within-site (upenn test) ...")
-    results["B_on_rawB"] = _summary(ev.evaluate_segmentation(
-        S_B, ev._make_loader(args.upenn_dir, test_b, shuffle=False, require_tumor=False)))
+    results["B_on_rawB"] = _summary(
+        ev.evaluate_segmentation(
+            S_B, ev._make_loader(args.upenn_dir, test_b, shuffle=False, require_tumor=False)
+        )
+    )
     print("[B] eval cross-site raw (brats) ...")
-    results["B_on_rawA"] = _summary(ev.evaluate_segmentation(
-        S_B, ev._make_loader(args.brats_dir, test_a, shuffle=False, require_tumor=False)))
+    results["B_on_rawA"] = _summary(
+        ev.evaluate_segmentation(
+            S_B, ev._make_loader(args.brats_dir, test_a, shuffle=False, require_tumor=False)
+        )
+    )
     print("[B] eval cross-site harmonized (brats->upenn) ...")
-    results["B_on_harmA"] = _summary(ev.evaluate_segmentation(
-        S_B, ev._make_loader(args.harm_brats_to_upenn, test_a, shuffle=False, require_tumor=False)))
+    results["B_on_harmA"] = _summary(
+        ev.evaluate_segmentation(
+            S_B,
+            ev._make_loader(args.harm_brats_to_upenn, test_a, shuffle=False, require_tumor=False),
+        )
+    )
 
     # ---- harmonization deltas (the headline) ----
     def delta(harm, raw):
         d = results[harm][FG] - results[raw][FG]
-        return {"raw": results[raw][FG], "harmonized": results[harm][FG],
-                "delta": d, "relative_pct": 100 * d / max(results[raw][FG], 1e-8)}
+        return {
+            "raw": results[raw][FG],
+            "harmonized": results[harm][FG],
+            "delta": d,
+            "relative_pct": 100 * d / max(results[raw][FG], 1e-8),
+        }
+
     results["harmonization_effect"] = {
         "A_to_B_direction (train brats, test upenn)": delta("A_on_harmB", "A_on_rawB"),
         "B_to_A_direction (train upenn, test brats)": delta("B_on_harmA", "B_on_rawA"),
     }
-    results["metadata"] = {"timestamp": datetime.now().isoformat(),
-                           "seg_epochs": args.seg_epochs, "protocol": "train-raw-test-raw-vs-harmonized"}
+    results["metadata"] = {
+        "timestamp": datetime.now().isoformat(),
+        "seg_epochs": args.seg_epochs,
+        "protocol": "train-raw-test-raw-vs-harmonized",
+    }
 
-    out = Path(args.output_dir); out.mkdir(parents=True, exist_ok=True)
+    out = Path(args.output_dir)
+    out.mkdir(parents=True, exist_ok=True)
     with open(out / "downstream_corrected.json", "w") as f:
         json.dump(results, f, indent=2)
 
     print("\n==== DOWNSTREAM (corrected) ====")
     for k, v in results["harmonization_effect"].items():
-        print(f"  {k}: raw {v['raw']:.4f} -> harmonized {v['harmonized']:.4f} "
-              f"({v['delta']:+.4f}, {v['relative_pct']:+.1f}%)")
-    print(f"  within-site upper bounds: brats {results['A_on_rawA'][FG]:.4f}, "
-          f"upenn {results['B_on_rawB'][FG]:.4f}")
+        print(
+            f"  {k}: raw {v['raw']:.4f} -> harmonized {v['harmonized']:.4f} "
+            f"({v['delta']:+.4f}, {v['relative_pct']:+.1f}%)"
+        )
+    print(
+        f"  within-site upper bounds: brats {results['A_on_rawA'][FG]:.4f}, "
+        f"upenn {results['B_on_rawB'][FG]:.4f}"
+    )
     print(f"saved -> {out/'downstream_corrected.json'}")
 
 

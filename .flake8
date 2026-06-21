@@ -15,6 +15,8 @@ extend-ignore =
 per-file-ignores =
     __init__.py:F401
     tests/*:B011,S101
+    # late imports after sys.path/matplotlib backend setup (ruff allows these)
+    journal_extension/scripts/*:E402
 exclude =
     .git,
     .venv,

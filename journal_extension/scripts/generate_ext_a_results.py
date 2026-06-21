@@ -23,8 +23,9 @@ import re
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 MODS = ["FLAIR", "T1", "T1ce", "T2"]
 
@@ -49,41 +50,55 @@ def write_harmonization_table(arms, out_dir: Path):
         return
     best_lam = min(arms, key=lambda L: abs(arms[L]["domain_classifier"]["acc_harmonized"] - 0.5))
     lines = [
-        r"\begin{tabular}{lccccc}", r"\toprule",
+        r"\begin{tabular}{lccccc}",
+        r"\toprule",
         r"$\lambda_{\mathrm{NCE}}$ & dom.-clf raw$\to$harm & FID$_{A\to B}$ & "
-        r"masked SSIM (cycle) & struct.\ SSIM & MMD \\", r"\midrule",
+        r"masked SSIM (cycle) & struct.\ SSIM & MMD \\",
+        r"\midrule",
     ]
     for L, r in arms.items():
         dc = r["domain_classifier"]
-        row = (f"{L:g} & {fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])} & "
-               f"{fmt(r.get('fid_A2B_avg'), 1)} & "
-               f"{fmt(r['masked_windowed_ssim_cycle_A2B']['mean'])} & "
-               f"{fmt(r['masked_windowed_ssim_structure_A2B']['mean'])} & "
-               f"{fmt(r.get('mmd_feature_space_fakeB_vs_realB'), 4)} \\\\")
-        if L == best_lam:
+        row = (
+            f"{L:g} & {fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])} & "
+            f"{fmt(r.get('fid_A2B_avg'), 1)} & "
+            f"{fmt(r['masked_windowed_ssim_cycle_A2B']['mean'])} & "
+            f"{fmt(r['masked_windowed_ssim_structure_A2B']['mean'])} & "
+            f"{fmt(r.get('mmd_feature_space_fakeB_vs_realB'), 4)} \\\\"
+        )
+        if best_lam == L:
             row = r"\textbf{" + row.replace(" & ", r"} & \textbf{", 1)
             row = row[:-2] + r"} \\"
         lines.append(row)
     lines += [r"\bottomrule", r"\end{tabular}"]
     (out_dir / "table_ext_a_harmonization.tex").write_text("\n".join(lines) + "\n")
-    print(f"  wrote table_ext_a_harmonization.tex ({len(arms)} arms; closest-to-chance lambda={best_lam:g})")
+    print(
+        f"  wrote table_ext_a_harmonization.tex ({len(arms)} arms; closest-to-chance lambda={best_lam:g})"
+    )
 
 
 def write_downstream_table(ds, out_dir: Path):
     if not ds or "harmonization_effect" not in ds:
         return
     FG = "dice_mean_foreground_mean"
-    lines = [r"\begin{tabular}{lcccc}", r"\toprule",
-             r"direction & raw Dice & harmonized Dice & $\Delta$ & rel.\ \% \\", r"\midrule"]
+    lines = [
+        r"\begin{tabular}{lcccc}",
+        r"\toprule",
+        r"direction & raw Dice & harmonized Dice & $\Delta$ & rel.\ \% \\",
+        r"\midrule",
+    ]
     for k, v in ds["harmonization_effect"].items():
         short = k.split(" ")[0]
-        lines.append(f"{short} & {fmt(v['raw'])} & {fmt(v['harmonized'])} & "
-                     f"{v['delta']:+.3f} & {v['relative_pct']:+.1f} \\\\")
+        lines.append(
+            f"{short} & {fmt(v['raw'])} & {fmt(v['harmonized'])} & "
+            f"{v['delta']:+.3f} & {v['relative_pct']:+.1f} \\\\"
+        )
     # within-site upper bounds
     if "A_on_rawA" in ds:
-        lines += [r"\midrule",
-                  f"within-site brats & \\multicolumn{{4}}{{c}}{{{fmt(ds['A_on_rawA'][FG])}}} \\\\",
-                  f"within-site upenn & \\multicolumn{{4}}{{c}}{{{fmt(ds['B_on_rawB'][FG])}}} \\\\"]
+        lines += [
+            r"\midrule",
+            f"within-site brats & \\multicolumn{{4}}{{c}}{{{fmt(ds['A_on_rawA'][FG])}}} \\\\",
+            f"within-site upenn & \\multicolumn{{4}}{{c}}{{{fmt(ds['B_on_rawB'][FG])}}} \\\\",
+        ]
     lines += [r"\bottomrule", r"\end{tabular}"]
     (out_dir / "table_ext_a_downstream.tex").write_text("\n".join(lines) + "\n")
     print("  wrote table_ext_a_downstream.tex")
@@ -101,15 +116,20 @@ def fig_lambda_sweep(arms, out_dir: Path):
     fig, axes = plt.subplots(1, 3, figsize=(11, 3.2))
     axes[0].plot(lams, dc, "o-", color="#B45309")
     axes[0].axhline(0.5, ls="--", color="gray", lw=1, label="chance")
-    axes[0].set_title("domain-clf acc (harmonized)"); axes[0].set_xlabel(r"$\lambda_{NCE}$"); axes[0].legend()
+    axes[0].set_title("domain-clf acc (harmonized)")
+    axes[0].set_xlabel(r"$\lambda_{NCE}$")
+    axes[0].legend()
     axes[1].plot(lams, fid, "s-", color="#1D4ED8")
-    axes[1].set_title(r"FID$_{A\to B}$ (lower better)"); axes[1].set_xlabel(r"$\lambda_{NCE}$")
+    axes[1].set_title(r"FID$_{A\to B}$ (lower better)")
+    axes[1].set_xlabel(r"$\lambda_{NCE}$")
     axes[2].plot(lams, ssim, "^-", color="#059669")
-    axes[2].set_title("masked windowed SSIM (cycle)"); axes[2].set_xlabel(r"$\lambda_{NCE}$")
+    axes[2].set_title("masked windowed SSIM (cycle)")
+    axes[2].set_xlabel(r"$\lambda_{NCE}$")
     for a in axes:
         a.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(out_dir / "fig_ext_a_lambda_sweep.pdf"); fig.savefig(out_dir / "fig_ext_a_lambda_sweep.png", dpi=150)
+    fig.savefig(out_dir / "fig_ext_a_lambda_sweep.pdf")
+    fig.savefig(out_dir / "fig_ext_a_lambda_sweep.png", dpi=150)
     plt.close(fig)
     print("  wrote fig_ext_a_lambda_sweep.{pdf,png}")
 
@@ -124,11 +144,15 @@ def fig_downstream(ds, out_dir: Path):
     fig, ax = plt.subplots(figsize=(5.5, 3.4))
     ax.bar([i - 0.2 for i in x], raw, 0.4, label="raw (cross-site)", color="#9CA3AF")
     ax.bar([i + 0.2 for i in x], harm, 0.4, label="harmonized", color="#059669")
-    ax.set_xticks(list(x)); ax.set_xticklabels([d.split("_")[0] for d in dirs])
-    ax.set_ylabel("cross-site Dice (mean fg)"); ax.set_title("downstream segmentation: raw vs harmonized")
-    ax.legend(); ax.grid(axis="y", alpha=0.3)
+    ax.set_xticks(list(x))
+    ax.set_xticklabels([d.split("_")[0] for d in dirs])
+    ax.set_ylabel("cross-site Dice (mean fg)")
+    ax.set_title("downstream segmentation: raw vs harmonized")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
-    fig.savefig(out_dir / "fig_ext_a_downstream.pdf"); fig.savefig(out_dir / "fig_ext_a_downstream.png", dpi=150)
+    fig.savefig(out_dir / "fig_ext_a_downstream.pdf")
+    fig.savefig(out_dir / "fig_ext_a_downstream.png", dpi=150)
     plt.close(fig)
     print("  wrote fig_ext_a_downstream.{pdf,png}")
 
@@ -140,14 +164,17 @@ def main():
     p.add_argument("--out_dir", required=True)
     args = p.parse_args()
 
-    out = Path(args.out_dir); out.mkdir(parents=True, exist_ok=True)
+    out = Path(args.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
     arms = load_eval_arms(Path(args.eval_dir))
     ds = None
     if args.downstream_json and Path(args.downstream_json).exists():
         with open(args.downstream_json) as f:
             ds = json.load(f)
 
-    print(f"loaded {len(arms)} harmonization arm(s): {[f'{L:g}' for L in arms]}; downstream={'yes' if ds else 'no'}")
+    print(
+        f"loaded {len(arms)} harmonization arm(s): {[f'{L:g}' for L in arms]}; downstream={'yes' if ds else 'no'}"
+    )
     write_harmonization_table(arms, out)
     write_downstream_table(ds, out)
     fig_lambda_sweep(arms, out)
