@@ -1,0 +1,179 @@
+% ---------------------------------------------------------------------------
+% dgm4miccai 2026 -- cycle + patchnce hybrid for unpaired mri harmonization
+% bibliography assembled from the literature-positioning map. verify the
+% cut/patchnce loss symbols and hyperparameters against arXiv:2007.15651
+% before camera-ready. all entries double-checked for venue/year.
+% ---------------------------------------------------------------------------
+
+% ----- contrastive / unpaired image translation lineage -----
+
+@inproceedings{zhu2017cyclegan,
+  title     = {Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks},
+  author    = {Zhu, Jun-Yan and Park, Taesung and Isola, Phillip and Efros, Alexei A.},
+  booktitle = {IEEE International Conference on Computer Vision (ICCV)},
+  year      = {2017}
+}
+
+@inproceedings{park2020cut,
+  title     = {Contrastive Learning for Unpaired Image-to-Image Translation},
+  author    = {Park, Taesung and Efros, Alexei A. and Zhang, Richard and Zhu, Jun-Yan},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2020}
+}
+
+@inproceedings{han2021dclgan,
+  title     = {Dual Contrastive Learning for Unsupervised Image-to-Image Translation},
+  author    = {Han, Junlin and Shoeiby, Mehrdad and Petersson, Lars and Armin, Mohammad Ali},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)},
+  year      = {2021}
+}
+
+@inproceedings{hu2022qsattn,
+  title     = {QS-Attn: Query-Selected Attention for Contrastive Learning in I2I Translation},
+  author    = {Hu, Xueqi and Zhou, Xinyue and Huang, Qiusheng and Shi, Zhengyi and Sun, Li and Li, Qingli},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2022}
+}
+
+@inproceedings{wang2021negcut,
+  title     = {Instance-wise Hard Negative Example Generation for Contrastive Learning in Unpaired Image-to-Image Translation},
+  author    = {Wang, Weilun and Zhou, Wengang and Bao, Jianmin and Chen, Dong and Li, Houqiang},
+  booktitle = {IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year      = {2021}
+}
+
+@inproceedings{zhan2022monce,
+  title     = {Modulated Contrast for Versatile Image Synthesis},
+  author    = {Zhan, Fangneng and Yu, Yingchen and Cui, Kaiwen and Zhang, Gongjie and Lu, Shijian and Pan, Jianxiong and Zhang, Changgong and Ma, Feiying and Xie, Xuansong and Miao, Chunyan},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2022}
+}
+
+@inproceedings{jung2022src,
+  title     = {Exploring Patch-wise Semantic Relation for Contrastive Learning in Image-to-Image Translation Tasks},
+  author    = {Jung, Chanyong and Kwon, Gihyun and Ye, Jong Chul},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2022}
+}
+
+@article{oord2018cpc,
+  title   = {Representation Learning with Contrastive Predictive Coding},
+  author  = {van den Oord, Aaron and Li, Yazhe and Vinyals, Oriol},
+  journal = {arXiv preprint arXiv:1807.03748},
+  year    = {2018}
+}
+
+% ----- mri harmonization -----
+
+@article{fortin2017combat,
+  title   = {Harmonization of multi-site diffusion tensor imaging data},
+  author  = {Fortin, Jean-Philippe and Parker, Drew and Tun{\c{c}}, Birkan and Watanabe, Takanori and Elliott, Mark A. and others},
+  journal = {NeuroImage},
+  volume  = {161},
+  pages   = {149--170},
+  year    = {2017}
+}
+
+@inproceedings{zuo2021calamiti,
+  title     = {Information-Based Disentangled Representation Learning for Unsupervised MR Harmonization},
+  author    = {Zuo, Lianrui and Dewey, Blake E. and Carass, Aaron and Liu, Yihao and He, Yufan and Calabresi, Peter A. and Prince, Jerry L.},
+  booktitle = {Information Processing in Medical Imaging (IPMI)},
+  year      = {2021}
+}
+
+@article{zuo2023haca3,
+  title   = {HACA3: A unified approach for multi-site MR image harmonization},
+  author  = {Zuo, Lianrui and Liu, Yihao and Xue, Yuan and Dewey, Blake E. and Remedios, Samuel W. and others},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {109},
+  pages   = {102285},
+  year    = {2023}
+}
+
+@article{cackowski2023imunity,
+  title   = {ImUnity: A generalizable VAE-GAN solution for multicenter MR image harmonization},
+  author  = {Cackowski, St{\'e}phane and Barbier, Emmanuel L. and Dojat, Michel and Christen, Thomas},
+  journal = {Medical Image Analysis},
+  volume  = {88},
+  pages   = {102799},
+  year    = {2023}
+}
+
+@article{roca2024iguane,
+  title   = {IGUANe: A 3D generalizable CycleGAN for multicenter harmonization of brain MR images},
+  author  = {Roca, Vincent and Kuchcinski, Gr{\'e}gory and Pruvo, Jean-Pierre and Manouvriez, Dorian and Lopes, Renaud},
+  journal = {Medical Image Analysis},
+  year    = {2024}
+}
+
+@article{wang2022cyclecut,
+  title   = {A cycle-consistent contrastive learning framework for unpaired MR-to-CT synthesis},
+  author  = {Wang, Chao and others},
+  journal = {Journal of Applied Clinical Medical Physics},
+  year    = {2022}
+}
+
+@inproceedings{seibel2024oct,
+  title     = {Anatomical Conditioning for Contrastive Unpaired Image-to-Image Translation of Optical Coherence Tomography Images},
+  author    = {Seibel, Marc S. and others},
+  booktitle = {IEEE International Symposium on Biomedical Imaging (ISBI)},
+  year      = {2024}
+}
+
+% ----- generative-model evaluation -----
+
+@inproceedings{heusel2017fid,
+  title     = {GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium},
+  author    = {Heusel, Martin and Ramsauer, Hubert and Unterthiner, Thomas and Nessler, Bernhard and Hochreiter, Sepp},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017}
+}
+
+@inproceedings{binkowski2018kid,
+  title     = {Demystifying MMD GANs},
+  author    = {Bi{\'n}kowski, Miko{\l}aj and Sutherland, Danica J. and Arbel, Michael and Gretton, Arthur},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018}
+}
+
+% ----- downstream segmentation -----
+
+@article{isensee2021nnunet,
+  title   = {nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation},
+  author  = {Isensee, Fabian and Jaeger, Paul F. and Kohl, Simon A. A. and Petersen, Jens and Maier-Hein, Klaus H.},
+  journal = {Nature Methods},
+  volume  = {18},
+  number  = {2},
+  pages   = {203--211},
+  year    = {2021}
+}
+
+% ----- datasets -----
+
+@article{menze2015brats,
+  title   = {The Multimodal Brain Tumor Image Segmentation Benchmark (BRATS)},
+  author  = {Menze, Bjoern H. and Jakab, Andras and Bauer, Stefan and Kalpathy-Cramer, Jayashree and others},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume  = {34},
+  number  = {10},
+  pages   = {1993--2024},
+  year    = {2015}
+}
+
+@article{bakas2017brats,
+  title   = {Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features},
+  author  = {Bakas, Spyridon and Akbari, Hamed and Sotiras, Aristeidis and Bilello, Michel and others},
+  journal = {Scientific Data},
+  volume  = {4},
+  pages   = {170117},
+  year    = {2017}
+}
+
+@article{bakas2022upenngbm,
+  title   = {The University of Pennsylvania glioblastoma (UPenn-GBM) cohort: advanced MRI, clinical, genomics, and radiomics},
+  author  = {Bakas, Spyridon and Sako, Chiharu and Akbari, Hamed and Bilello, Michel and others},
+  journal = {Scientific Data},
+  volume  = {9},
+  pages   = {453},
+  year    = {2022}
+}

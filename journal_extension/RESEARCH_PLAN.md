@@ -6,7 +6,11 @@
 
 ---
 
-## Status (2026-04-30)
+## Status (2026-06-08 update)
+
+**Reality check (2026-06-08)**: the camera-ready compute queue launched 2026-05-01 never landed — `experiments/` is empty and the cluster lease lapsed ~2026-05-06. The follow-ups listed below are therefore still open, not in progress. BMVC 2026 (Ext C) was also missed. Venue strategy and recovery path live in `research/parallel_submission_strategy.md` (revised 2026-06-08): nearest deadline is **DGM4MICCAI 2026 / Ext A on 2026-06-19**, then **SASHIMI 2026 / Ext C on 2026-07-01**, both of which run on the legacy single-seed results already on disk. The camera-ready upgrades below are needed for the TMI journal extension and AAAI upgrade, not the workshops.
+
+The table below reflects the original 2026-04-30 snapshot.
 
 | Extension | Code | Trained | Test Eval | Figures | Manuscript |
 |-----------|------|---------|-----------|---------|------------|

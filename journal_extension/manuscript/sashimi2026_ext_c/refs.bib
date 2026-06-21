@@ -1,0 +1,165 @@
+% sashimi 2026 -- single-generator multi-domain (n=4) adain mri harmonizer.
+% bibliography from the ext-c positioning brief. verify adain arXiv id and
+% bakas 2017 doi in the reference manager. wu2026mmh is the CRITICAL closest
+% prior (tri-planar attention + unified multi-site) -- cite + differentiate.
+
+% ----- multi-domain translation lineage -----
+
+@inproceedings{choi2018stargan,
+  title     = {StarGAN: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation},
+  author    = {Choi, Yunjey and Choi, Minje and Kim, Munyoung and Ha, Jung-Woo and Kim, Sunghun and Choo, Jaegul},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2018}
+}
+
+@inproceedings{choi2020starganv2,
+  title     = {StarGAN v2: Diverse Image Synthesis for Multiple Domains},
+  author    = {Choi, Yunjey and Uh, Youngjung and Yoo, Jaejun and Ha, Jung-Woo},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2020}
+}
+
+@inproceedings{huang2017adain,
+  title     = {Arbitrary Style Transfer in Real-Time with Adaptive Instance Normalization},
+  author    = {Huang, Xun and Belongie, Serge},
+  booktitle = {IEEE International Conference on Computer Vision (ICCV)},
+  year      = {2017}
+}
+
+@inproceedings{odena2017acgan,
+  title     = {Conditional Image Synthesis with Auxiliary Classifier GANs},
+  author    = {Odena, Augustus and Olah, Christopher and Shlens, Jonathon},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2017}
+}
+
+@inproceedings{zhang2019sagan,
+  title     = {Self-Attention Generative Adversarial Networks},
+  author    = {Zhang, Han and Goodfellow, Ian and Metaxas, Dimitris and Odena, Augustus},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2019}
+}
+
+% ----- multi-site mri harmonization (n>2) -----
+
+@inproceedings{zuo2021calamiti,
+  title     = {Information-Based Disentangled Representation Learning for Unsupervised MR Harmonization},
+  author    = {Zuo, Lianrui and Dewey, Blake E. and Carass, Aaron and Liu, Yihao and He, Yufan and Calabresi, Peter A. and Prince, Jerry L.},
+  booktitle = {Information Processing in Medical Imaging (IPMI)},
+  year      = {2021}
+}
+
+@article{zuo2023haca3,
+  title   = {HACA3: A unified approach for multi-site MR image harmonization},
+  author  = {Zuo, Lianrui and Liu, Yihao and Xue, Yuan and Dewey, Blake E. and Remedios, Samuel W. and others},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {109},
+  pages   = {102285},
+  year    = {2023}
+}
+
+@article{cackowski2023imunity,
+  title   = {ImUnity: A generalizable VAE-GAN solution for multicenter MR image harmonization},
+  author  = {Cackowski, St{\'e}phane and Barbier, Emmanuel L. and Dojat, Michel and Christen, Thomas},
+  journal = {Medical Image Analysis},
+  volume  = {88},
+  pages   = {102799},
+  year    = {2023}
+}
+
+@article{roca2025iguane,
+  title   = {IGUANe: A 3D generalizable CycleGAN for multicenter harmonization of brain MR images},
+  author  = {Roca, Vincent and Kuchcinski, Gr{\'e}gory and Pruvo, Jean-Pierre and Manouvriez, Dorian and Lopes, Renaud},
+  journal = {Medical Image Analysis},
+  volume  = {99},
+  pages   = {103388},
+  year    = {2025}
+}
+
+@inproceedings{liu2021stgan,
+  title     = {Style Transfer Using Generative Adversarial Networks for Multi-Site MRI Harmonization},
+  author    = {Liu, Mengting and others},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention (MICCAI)},
+  year      = {2021}
+}
+
+@article{wu2026mmh,
+  title   = {Unified Multi-Site Multi-Sequence Brain MRI Harmonization Enriched by Biomedical Semantic Style},
+  author  = {Wu, and Sun, and Wang, and Yap, Pew-Thian and Liu, },
+  journal = {arXiv preprint arXiv:2601.08193 (extended from MICCAI 2025)},
+  year    = {2026}
+}
+
+% ----- surveys / methodology anchors -----
+
+@article{yang2025harmsurvey,
+  title   = {Harmonization in Magnetic Resonance Imaging: A Survey of Acquisition, Image-level, and Feature-level Methods},
+  author  = {Yang, and Shomal-Zadeh, and Gholipour, Ali},
+  journal = {arXiv preprint arXiv:2507.16962},
+  year    = {2025}
+}
+
+% ----- shared: harmonization baseline, segmentation, gen eval -----
+
+@article{fortin2017combat,
+  title   = {Harmonization of multi-site diffusion tensor imaging data},
+  author  = {Fortin, Jean-Philippe and Parker, Drew and Tun{\c{c}}, Birkan and Watanabe, Takanori and Elliott, Mark A. and others},
+  journal = {NeuroImage},
+  volume  = {161},
+  pages   = {149--170},
+  year    = {2017}
+}
+
+@article{isensee2021nnunet,
+  title   = {nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation},
+  author  = {Isensee, Fabian and Jaeger, Paul F. and Kohl, Simon A. A. and Petersen, Jens and Maier-Hein, Klaus H.},
+  journal = {Nature Methods},
+  volume  = {18},
+  number  = {2},
+  pages   = {203--211},
+  year    = {2021}
+}
+
+@inproceedings{heusel2017fid,
+  title     = {GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium},
+  author    = {Heusel, Martin and Ramsauer, Hubert and Unterthiner, Thomas and Nessler, Bernhard and Hochreiter, Sepp},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017}
+}
+
+@inproceedings{binkowski2018kid,
+  title     = {Demystifying MMD GANs},
+  author    = {Bi{\'n}kowski, Miko{\l}aj and Sutherland, Danica J. and Arbel, Michael and Gretton, Arthur},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018}
+}
+
+% ----- datasets -----
+
+@article{menze2015brats,
+  title   = {The Multimodal Brain Tumor Image Segmentation Benchmark (BRATS)},
+  author  = {Menze, Bjoern H. and Jakab, Andras and Bauer, Stefan and Kalpathy-Cramer, Jayashree and others},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume  = {34},
+  number  = {10},
+  pages   = {1993--2024},
+  year    = {2015}
+}
+
+@article{bakas2017bratsadv,
+  title   = {Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features},
+  author  = {Bakas, Spyridon and Akbari, Hamed and Sotiras, Aristeidis and Bilello, Michel and others},
+  journal = {Scientific Data},
+  volume  = {4},
+  pages   = {170117},
+  year    = {2017}
+}
+
+@article{bakas2022upenngbm,
+  title   = {The University of Pennsylvania glioblastoma (UPenn-GBM) cohort: advanced MRI, clinical, genomics, and radiomics},
+  author  = {Bakas, Spyridon and Sako, Chiharu and Akbari, Hamed and Bilello, Michel and others},
+  journal = {Scientific Data},
+  volume  = {9},
+  pages   = {453},
+  year    = {2022}
+}

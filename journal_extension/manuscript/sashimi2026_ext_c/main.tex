@@ -1,0 +1,179 @@
+% sashimi 2026 -- 8pp + up to 2pp refs LNCS, double-blind. VERIFY the exact
+% 2026 page limit on sashimiworkshop.org/submission (changed from 2025).
+% anonymized: no names, emails, institutions, grant ids, repo urls.
+% framing: a single-generator ANY-TO-ANY n-site harmonizer (adain site-style +
+% stargan auxiliary classifier + self-attention 2.5d) with DOWNSTREAM per-site
+% validation -- NOT "stargan for mri". numerics are TODO pending the corrected
+% evaluation. MUST cite + differentiate wu2026mmh (closest prior: tri-planar
+% attention + unified multi-site).
+
+\documentclass[runningheads]{llncs}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\begin{document}
+
+\title{One Generator, Any Scanner: AdaIN-Conditioned\\
+Self-Attention Harmonization Across $N$ MRI Sites\\with Downstream Glioma Validation}
+
+\titlerunning{AdaIN-Conditioned Multi-Site MRI Harmonization}
+
+\author{Anonymous}
+\authorrunning{Anonymous (SASHIMI 2026 submission)}
+\institute{Paper ID \#TODO. Author and institution details omitted for double-blind review.}
+
+\maketitle
+
+\begin{abstract}
+Multi-site MRI studies span many scanners and acquisition protocols, and
+pairwise generative harmonizers need $O(N^2)$ models to cover $N$ sites.
+We learn a \emph{single} generator that translates any input to any of $N$
+acquisition domains, conditioned through Adaptive Instance Normalization on a
+learned per-site style and supervised by a StarGAN-style auxiliary domain
+classifier, on a self-attention 2.5D tri-planar backbone. We frame
+cross-scanner discrepancy as a channel-wise intensity-distribution shift that
+AdaIN site-conditioning is purpose-built to correct, with self-attention
+capturing its spatially non-stationary component. On four scanner/field-strength
+domains drawn from BraTS\,/\,TCGA-GBM and UPenn-GBM we evaluate with an
+$N{\times}N$ translation matrix, per-pair distribution distances
+(\todo{FID/KID/MMD}), site-classification accuracy toward chance, and ---
+crucially --- \emph{downstream} per-site glioma sub-region segmentation
+(\todo{Dice/HD95}). \todo{headline result sentence once corrected metrics land.}
+\keywords{MRI harmonization \and multi-domain translation \and AdaIN \and self-attention \and downstream validation.}
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+\todo{3 paragraphs: (1) multi-site confound + why image-space generative
+harmonization (vs feature-space ComBat) is needed for spatial downstream tasks;
+(2) the $O(N^2)$ pairwise problem and the any-to-any vs many-to-one distinction
+(IGUANe collapses to one reference; we keep controllable target choice);
+(3) why image-similarity alone misleads and downstream validation is the right
+test --- the gap the prior 2-domain version of this work was faulted for.}
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item A single $O(N)$-parameter generator giving \emph{any-to-any}
+        translation across $N$ acquisition domains via AdaIN site-style
+        conditioning and a StarGAN-style auxiliary site classifier, on a
+        self-attention 2.5D backbone --- with a scanner-physics motivation for
+        each design choice (AdaIN for channel-statistic shift, self-attention
+        for non-stationary bias).
+  \item A downstream-validated $N$-site evaluation protocol: $N{\times}N$
+        translation matrix, per-pair distribution distances, site-confusion,
+        and per-site glioma segmentation Dice/HD95 \todo{(+ radiomic ICC if it
+        lands)} on tumor-bearing cohorts.
+  \item \todo{the empirical finding, stated honestly once corrected.}
+\end{enumerate}
+
+\section{Related Work}
+\label{sec:related}
+\paragraph{Multi-domain translation.}
+StarGAN~\cite{choi2018stargan} conditions a single generator on a target-domain
+label with a discriminator auxiliary classifier; StarGAN~v2~\cite{choi2020starganv2}
+injects per-domain style via AdaIN~\cite{huang2017adain}; the auxiliary-classifier
+objective originates in ACGAN~\cite{odena2017acgan} and self-attention in
+GANs in SAGAN~\cite{zhang2019sagan}. \todo{1--2 sentences: we adopt the
+StarGAN objective but replace label-concatenation with AdaIN site-style
+modulation and add self-attention --- stated openly to disarm ``just StarGAN''.}
+
+\paragraph{Multi-site MRI harmonization ($N{>}2$).}
+Disentanglement methods (CALAMITI~\cite{zuo2021calamiti}, HACA3~\cite{zuo2023haca3})
+and the adversarial site-\emph{removal} of ImUnity~\cite{cackowski2023imunity}
+contrast with our discriminative site-\emph{conditioning}; IGUANe~\cite{roca2025iguane}
+is many-to-\emph{one} (collapses to a reference) whereas we are
+many-to-\emph{many}; STGAN~\cite{liu2021stgan} frames harmonization as style
+transfer. The closest prior, \textbf{MMH}~\cite{wu2026mmh}, also combines
+tri-planar attention with unified multi-site harmonization; we differ on three
+concrete axes: a single-pass deterministic GAN vs.\ a two-stage diffusion
+pipeline, an explicit discriminative site classifier vs.\ a semantic-embedding
+encoder, and per-target controllability without a per-site fine-tuning stage.
+\todo{state the gap: no prior couples a discriminatively-conditioned AdaIN
+single generator + self-attention + 2.5D with glioma downstream validation.}
+See~\cite{yang2025harmsurvey} for the harmonization taxonomy.
+
+\section{Method}
+\label{sec:method}
+\paragraph{AdaIN site-conditioning.}
+A single generator $G(x; s)$ maps an input to target site $s\in\{1,\dots,N\}$.
+Generator features are modulated by site-specific affine parameters predicted
+from a learned site embedding,
+\begin{equation}
+  \mathrm{AdaIN}(x; s) = \gamma_s \cdot \frac{x-\mu(x)}{\sigma(x)} + \beta_s,
+  \label{eq:adain}
+\end{equation}
+i.e.\ source-site channel statistics are replaced by learned target-site
+statistics --- a learned intensity-distribution remap.
+
+\paragraph{Objective.}
+We adopt the StarGAN losses: a WGAN-GP adversarial term $\mathcal{L}_{\mathrm{adv}}$,
+a domain-classification loss on real ($\mathcal{L}_{\mathrm{cls}}^{r}$) and
+generated ($\mathcal{L}_{\mathrm{cls}}^{f}$) images, and a cycle reconstruction
+term enforcing anatomy preservation,
+\begin{equation}
+  \mathcal{L}_{\mathrm{rec}} = \mathbb{E}_{x,s,s'}\big[\,\|x - G(G(x;s);s')\|_1\,\big],
+  \label{eq:rec}
+\end{equation}
+giving $\mathcal{L}_D = -\mathcal{L}_{\mathrm{adv}} + \lambda_{\mathrm{cls}}\mathcal{L}_{\mathrm{cls}}^{r}$
+and $\mathcal{L}_G = \mathcal{L}_{\mathrm{adv}} + \lambda_{\mathrm{cls}}\mathcal{L}_{\mathrm{cls}}^{f}
++ \lambda_{\mathrm{rec}}\mathcal{L}_{\mathrm{rec}}$.
+\todo{report the actual $\lambda_{\mathrm{cls}},\lambda_{\mathrm{rec}}$ used;
+config has $\lambda_{\mathrm{cls}}{=}1$, $\lambda_{\mathrm{rec}}{=}10$.}
+
+\begin{figure}[t]
+  \centering
+  \fbox{\parbox{0.96\linewidth}{\centering\vspace{2cm}\todo{method diagram:
+  single generator + AdaIN site-style injection + self-attention; discriminator
+  with auxiliary site classifier. reviewers flagged the missing diagram in the
+  prior submission.}\vspace{2cm}}}
+  \caption{Single AdaIN-conditioned self-attention 2.5D generator for any-to-any
+  $N$-site harmonization, with a StarGAN-style auxiliary site classifier.}
+  \label{fig:method}
+\end{figure}
+
+\section{Experiments}
+\label{sec:exp}
+\paragraph{Domains.}
+Four acquisition domains split by scanner/field-strength metadata
+\todo{(brats, upenn-3T-TrioTim, upenn-3T-other, upenn-1.5T per
+\texttt{multi\_domain\_split.json}); subject counts; per-subject splits;
+report SUBJECT-LEVEL metrics}.
+\paragraph{Metrics.}
+$N{\times}N$ translation matrix; per-pair \todo{FID/KID/MMD} before vs after;
+site-classification accuracy $\to$ chance ($1/N$); brain-masked windowed SSIM
+for anatomy preservation; downstream \todo{per-site U-Net glioma Dice/HD95,
+raw vs harmonized; radiomic ICC on fixed ROIs if it lands}.
+\paragraph{Baselines / ablations.}
+\todo{ComBat (feature-level), pairwise CycleGAN, many-to-one (IGUANe-style).
+Ablations: label-concat vs AdaIN; with/without self-attention; with/without
+auxiliary classifier ($\lambda_{\mathrm{cls}}{=}0$); 2.5D vs 2D. Report the
+$O(N)$ vs $O(N^2)$ parameter/time numbers.}
+
+\section{Results}
+\label{sec:results}
+\todo{ALL NUMBERS PENDING corrected evaluation. Figures: $N{\times}N$ matrix
+(the expected genre figure); per-pair distance matrix heatmap; per-site
+downstream Dice. Tables: distribution + site-confusion; downstream Dice/HD95.
+Mean$\pm$std with paired tests across subjects. Regenerate from logged run
+dirs; never hand-edit numbers (the global-moment SSIM lesson).}
+
+\section{Discussion and Limitations}
+\label{sec:discuss}
+\todo{honest reading; limitations: domains from two cohorts only, single seed,
+held-out-site transfer if omitted, mask source, no traveling subjects.}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\todo{1 short paragraph.}
+
+\bibliographystyle{splncs04}
+\bibliography{refs}
+
+\end{document}
