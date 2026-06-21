@@ -36,7 +36,7 @@ scaler_G/D + history + global_step + best_val_ssim + epoch.
    rsync -a cluster_backup/experiments/ cc@NEW_IP:~/neuroscope/experiments/   # RESTORES in-progress checkpoints
    cd ~/neuroscope/code && uv venv --python 3.11 .venv && source .venv/bin/activate
    uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
-   uv pip install numpy scipy scikit-image nibabel SimpleITK pyyaml tqdm tensorboard scikit-learn matplotlib pandas h5py torchmetrics monai
+   uv pip install numpy scipy scikit-image nibabel SimpleITK pyyaml tqdm tensorboard scikit-learn matplotlib pandas h5py torchmetrics monai torch-fidelity
    ```
 3. resume the interrupted arm (full state restored):
    ```
