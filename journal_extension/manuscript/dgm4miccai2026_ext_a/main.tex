@@ -1,11 +1,10 @@
-% dgm4miccai 2026 -- 8pp lncs, double-blind. anonymized: no author names,
-% emails, institutions, grant ids, or repository urls anywhere in this file.
+% sashimi 2026 -- ext a (patchnce hybrid), 8pp + up to 2pp refs LNCS, double-blind.
+% VERIFY the exact 2026 page limit on sashimiworkshop.org/submission.
+% anonymized: no names, emails, institutions, grant ids, repo urls.
 % framing: a MECHANISM STUDY (complementary failure modes of cycle vs
-% patch-contrastive content preservation) with downstream validation, NOT a
-% "we added a loss" paper. all numerics below marked TODO pending the
-% corrected, defensible evaluation (windowed/masked ssim, fid/kid, domain
-% classifier accuracy, downstream segmentation dice/hd95). do not headline
-% the global-moment ssim.
+% patch-contrastive content preservation) with corrected metrics + downstream
+% validation -- NOT a "we added a loss" paper. numerics marked TODO pending the
+% corrected evaluation. do NOT headline the global-moment ssim.
 
 \documentclass[runningheads]{llncs}
 
@@ -26,106 +25,157 @@ Multi-Site Glioma MRI: A Mechanism Study\\with Downstream Validation}
 \titlerunning{Cycle-Consistent Patch-Contrastive MRI Harmonization}
 
 \author{Anonymous}
-\authorrunning{Anonymous (DGM4MICCAI 2026 submission)}
+\authorrunning{Anonymous (SASHIMI 2026 submission)}
 \institute{Paper ID \#TODO. Author and institution details omitted for double-blind review.}
 
 \maketitle
 
 \begin{abstract}
-Scanner- and site-induced intensity shift confounds multi-institutional MRI
-studies. Unpaired image translation addresses this through two largely
-disjoint content-preservation mechanisms: global, bidirectional
-cycle-consistency, and local, feature-space patch-contrastive alignment
-(PatchNCE). We argue these mechanisms fail in complementary ways under
-unpaired glioma data --- the cycle constraint admits an appearance-leaking,
-boundary-smoothing equilibrium, while one-sided PatchNCE lacks a global
-appearance anchor --- and we study their combination on a self-attention
-2.5D tri-planar backbone. We frame the work as a mechanism study: rather than
-asking ``does adding PatchNCE help,'' we ask under what weighting, on what
-backbone, and measured by which downstream task the cycle/contrastive
-combination resolves a failure mode that neither component resolves alone.
-On a BraTS\,$\leftrightarrow$\,UPenn-GBM benchmark we evaluate with
-distribution-matching metrics (\todo{FID/KID, domain-classifier accuracy}),
-brain-masked structural similarity, and \emph{downstream} cross-site glioma
-sub-region segmentation (\todo{Dice/HD95}), and we ablate the contrastive
-weight $\lambda_{\mathrm{NCE}}\in\{0.1,0.5,1.0,2.0\}$.
+Scanner- and protocol-induced intensity shift confounds multi-institutional MRI
+studies, and unpaired image translation is an increasingly common remedy.
+Two largely disjoint mechanisms preserve anatomical content during translation:
+\emph{global, bidirectional} cycle-consistency, and \emph{local, feature-space}
+patch-contrastive alignment (PatchNCE). We argue these mechanisms fail in
+complementary ways under unpaired glioma data---the cycle constraint admits an
+appearance-leaking, boundary-smoothing equilibrium, while one-sided PatchNCE
+lacks a global appearance anchor---and we study their combination on a
+self-attention 2.5D tri-planar backbone. We frame the work as a \emph{mechanism
+study}: rather than asking ``does adding PatchNCE help,'' we ask under what
+weighting and measured by which task the cycle/contrastive combination resolves
+a failure mode that neither component resolves alone. On a
+BraTS\,$\leftrightarrow$\,UPenn-GBM benchmark we evaluate with distribution
+metrics (FID/KID, domain-classifier confusion), brain-masked \emph{windowed}
+structural similarity, and \emph{downstream} cross-site glioma sub-region
+segmentation (Dice/HD95), ablating the contrastive weight
+$\lambda_{\mathrm{NCE}}\in\{0,0.1,0.5,1.0,2.0\}$ at a matched fine-tuning budget.
 \todo{headline result sentence once corrected metrics land.}
 \keywords{MRI harmonization \and unpaired translation \and contrastive learning \and cycle-consistency \and downstream validation.}
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
-\todo{2--3 paragraphs: (1) the multi-site harmonization problem and why
-image-space generative harmonization (vs feature-space ComBat) is needed for
-spatial downstream tasks; (2) the two content-preservation mechanisms and
-their complementary failure modes; (3) why image-similarity scores (esp.
-global SSIM) mislead and why downstream validation is the right test ---
-directly motivated by the over-smoothing/hallucination risk.}
+Pooling magnetic resonance imaging (MRI) across institutions is essential for
+statistically powered neuro-oncology studies, yet scanner vendor, field strength,
+receive-coil configuration, and acquisition protocol induce systematic intensity
+and contrast variation that confounds quantitative analysis. Feature-space
+correction such as ComBat~\cite{fortin2017combat} removes batch effects from
+\emph{extracted features} but cannot produce harmonized \emph{images}, and is
+therefore unavailable to spatial downstream tasks---tumor segmentation, lesion
+volumetry, voxel-level radiomics---that operate on the image itself. This
+motivates generative, image-space harmonization, in which an unpaired translation
+model maps an image acquired at one site to the appearance of another while
+preserving anatomy.
+
+The central difficulty is preserving content. Two mechanisms dominate the
+unpaired-translation literature. \emph{Cycle-consistency}~\cite{zhu2017cyclegan}
+enforces content preservation \emph{globally and bidirectionally} through
+pixel-space reconstruction, but the cycle constraint is satisfiable by an
+appearance-leaking equilibrium: under unpaired data with pathology, the generator
+can hide source information in low-amplitude, high-frequency signal that survives
+the round trip, manifesting as over-smoothed tissue boundaries and, in glioma
+cohorts, attenuated or hallucinated lesion texture. \emph{Patch-contrastive}
+translation (CUT/PatchNCE~\cite{park2020cut}) instead preserves content
+\emph{locally in feature space} by maximizing patch-level mutual information,
+which is robust to the cycle's failure mode---but applied one-sided it provides
+no global anchor on the target appearance distribution and is known to require
+aggressive weighting and careful negative sampling to remain
+stable~\cite{wang2021negcut,zhan2022monce}. We hypothesize that these failure
+modes are \emph{complementary}, and we study their combination on a
+self-attention 2.5D tri-planar backbone for within-modality glioma harmonization.
+
+A second, methodological point motivates this work. Harmonization quality is
+routinely reported with image-similarity scores, but a global structural-similarity
+index over an MRI slice is dominated by the large background region and is
+misleadingly high; worse, it does not reveal whether disease-relevant signal is
+preserved. The appropriate test is \emph{downstream}: does a model trained at one
+site retain its accuracy when applied, after harmonization, to another? We
+therefore center our evaluation on cross-site tumor-segmentation transfer, and we
+report distribution-matching and \emph{brain-masked windowed} similarity rather
+than a single global score.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item A \emph{mechanism} analysis of cycle-consistency vs.\ patch-contrastive
+  \item A \emph{mechanism} analysis of cycle-consistency versus patch-contrastive
         content preservation for within-modality MRI harmonization, with a
-        controlled $\lambda_{\mathrm{NCE}}$ ablation that locates an interior
-        optimum well below the CUT/FastCUT regime --- evidence of
-        complementarity rather than substitution.
-  \item A downstream-validated evaluation protocol (cross-site glioma
-        sub-region segmentation Dice/HD95 \todo{+ radiomic ICC if it lands})
-        that exposes harmonization artifacts which image-similarity scores
-        miss, on glioma cohorts (BraTS/TCGA-GBM, UPenn-GBM).
-  \item \todo{the empirical finding, stated honestly once corrected.}
+        controlled $\lambda_{\mathrm{NCE}}$ ablation (including the
+        $\lambda_{\mathrm{NCE}}{=}0$ cycle-only control) at a matched fine-tuning
+        budget that locates the operating regime in which the combination is
+        beneficial.
+  \item A downstream-validated, training-consistent evaluation protocol on glioma
+        cohorts (BraTS/TCGA-GBM, UPenn-GBM): cross-site sub-region segmentation
+        Dice/HD95, distribution-matching (FID/KID, domain-classifier confusion),
+        and brain-masked windowed similarity. We show that a naive
+        harmonization-for-evaluation pipeline (mismatched channel order and
+        normalization) silently corrupts results, and we describe the consistent
+        protocol that avoids it.
+  \item \todo{the empirical finding, stated honestly once corrected metrics land
+        (e.g.\ the regime in which the hybrid improves cross-site Dice, and the
+        correction of a previously-reported downstream regression).}
 \end{enumerate}
 
 \section{Related Work}
 \label{sec:related}
 \paragraph{Contrastive unpaired translation.}
 CUT~\cite{park2020cut} replaced cycle-consistency with a one-sided multi-layer
-PatchNCE objective; DCLGAN~\cite{han2021dclgan} showed contrastive and
-cycle-style dual objectives are complementary on natural images; subsequent
-work refined patch sampling and negatives (QS-Attn~\cite{hu2022qsattn},
-SRC~\cite{jung2022src}, NEGCUT~\cite{wang2021negcut}, MoNCE~\cite{zhan2022monce}),
-all rooted in InfoNCE~\cite{oord2018cpc}. \todo{1--2 sentences positioning our
-\emph{re-introduction} of full cycle on top of PatchNCE as the inverse design
-choice we justify, not hide.}
+PatchNCE objective drawing negatives from within the input image;
+DCLGAN~\cite{han2021dclgan} showed contrastive and cycle-style dual objectives
+are complementary on natural images. Subsequent work refined where and how
+patches are sampled---query selection~\cite{hu2022qsattn}, semantic-relation
+consistency~\cite{jung2022src}, hard-negative generation~\cite{wang2021negcut},
+and modulated negatives~\cite{zhan2022monce}---all instances of the InfoNCE
+estimator~\cite{oord2018cpc}. We deliberately \emph{re-introduce} full
+cycle-consistency on top of multi-layer PatchNCE---the inverse of CUT's design
+choice---and justify it rather than hide it: cycle supplies the global appearance
+anchor that one-sided PatchNCE lacks, so the contrastive term can act as a
+complement at a weight well below the CUT/FastCUT regime.
 
 \paragraph{MRI harmonization.}
-ComBat~\cite{fortin2017combat} corrects batch effects in \emph{features}, not
-images, and cannot serve spatial downstream tasks. Disentanglement methods
-(CALAMITI~\cite{zuo2021calamiti}, HACA3~\cite{zuo2023haca3}) and the 2.5D
-VAE-GAN ImUnity~\cite{cackowski2023imunity} are the closest image-space
-neighbors; IGUANe~\cite{roca2024iguane} is a strong pure-cycle baseline. The
-closest methodological precedent, cycleCUT~\cite{wang2022cyclecut}, combines
-cycle and contrastive losses but for cross-modality MR$\to$CT synthesis with
-no glioma downstream task; one-sided contrastive medical translation relies on
-auxiliary segmentation supervision~\cite{seibel2024oct}. \todo{state the gap
-explicitly: no within-modality MRI harmonizer keeps full cycle + multi-layer
-PatchNCE with lesion-level downstream validation.}
+Beyond feature-space ComBat~\cite{fortin2017combat}, image-space harmonizers
+include disentanglement methods (CALAMITI~\cite{zuo2021calamiti},
+HACA3~\cite{zuo2023haca3}), the 2.5D VAE-GAN ImUnity~\cite{cackowski2023imunity},
+and the many-to-one CycleGAN IGUANe~\cite{roca2024iguane}. The closest
+methodological precedent, cycleCUT~\cite{wang2022cyclecut}, combines cycle and
+contrastive losses---but for cross-modality MR$\to$CT synthesis, with no
+within-modality harmonization and no lesion-level downstream task; one-sided
+contrastive medical translation otherwise relies on auxiliary segmentation
+supervision~\cite{seibel2024oct}. To our knowledge no prior work studies a
+cycle\,$+$\,multi-layer-PatchNCE hybrid for within-modality MRI harmonization
+with glioma downstream validation. We position our work as a mechanism study in
+that gap rather than as a new loss.
+
+\paragraph{Evaluation.}
+Harmonization is commonly assessed by image similarity and distribution distance.
+We follow the stronger conventions: distribution matching via FID and
+KID~\cite{heusel2017fid,binkowski2018kid}, a domain classifier driven toward
+chance, brain-masked \emph{windowed} similarity rather than a global moment, and
+downstream segmentation with a frozen cross-site segmenter
+(Dice/HD95)~\cite{isensee2021nnunet}, all aggregated at the subject level.
 
 \section{Method}
 \label{sec:method}
 \paragraph{Backbone.}
-\todo{1 paragraph: self-attention CycleGAN with 2.5D tri-planar input
-$(s_{z-1},s_z,s_{z+1})$, four modalities (FLAIR/T1/T1ce/T2); cite own prior
-backbone anonymously. Include the method/architecture diagram
-(Fig.~\ref{fig:method}).}
+We build on a self-attention CycleGAN with a 2.5D tri-planar generator: each
+input stacks three consecutive axial slices $(s_{z-1},s_z,s_{z+1})$ across four
+modalities (FLAIR, T1, T1ce/T1gd, T2), giving inter-slice context at the memory
+cost of a 2D model, with self-attention to capture the spatially non-stationary
+component of scanner bias. The generators $G_{A\to B},G_{B\to A}$ output the
+harmonized center slice; the architecture is summarized in
+Fig.~\ref{fig:method}.
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\linewidth]{figs/method_diagram.pdf}
   \fbox{\parbox{0.96\linewidth}{\centering\vspace{2.2cm}\todo{method/architecture
-  diagram: backbone + per-layer PatchNCE heads; cycle path (global anchor) vs
-  contrastive path (local feature-space content); the reviewers explicitly
-  flagged the absence of a method diagram.}\vspace{2.2cm}}}
-  \caption{Architecture: self-attention 2.5D CycleGAN with per-layer PatchNCE
-  projection heads. Cycle-consistency provides a global, bidirectional
-  appearance/anatomy anchor; multi-layer PatchNCE provides a local,
-  feature-space content regularizer.}
+  diagram: backbone + per-layer PatchNCE heads; cycle path (global appearance
+  anchor) vs contrastive path (local feature-space content). reviewers of the
+  prior submission explicitly flagged the absence of a method diagram.}\vspace{2.2cm}}}
+  \caption{Self-attention 2.5D CycleGAN with per-layer PatchNCE projection heads.
+  Cycle-consistency provides a global, bidirectional appearance/anatomy anchor;
+  multi-layer PatchNCE provides a local, feature-space content regularizer.}
   \label{fig:method}
 \end{figure}
 
 \paragraph{Cycle-consistency (global anchor).}
-For unpaired sets $\mathcal{D}_A,\mathcal{D}_B$ and generators
-$G_{A\to B},G_{B\to A}$,
+For unpaired collections $\mathcal{D}_A,\mathcal{D}_B$,
 \begin{equation}
   \mathcal{L}_{\mathrm{cyc}} =
   \mathbb{E}_{x_a}\!\big[\|x_a-G_{B\to A}(G_{A\to B}(x_a))\|_1\big]
@@ -134,70 +184,85 @@ $G_{A\to B},G_{B\to A}$,
 \end{equation}
 
 \paragraph{Multi-layer PatchNCE (local anchor).}
-With encoder features at $L$ layers passed through 2-layer MLP heads $h_\ell$
-and L2-normalized, for a query $z$, its positive $z^{+}$ at the corresponding
-spatial location, and internal negatives $z^{-}$, the InfoNCE loss is
+Encoder features at $L$ layers are passed through 2-layer MLP heads $h_\ell$ and
+L2-normalized. For a query $z$, its positive $z^{+}$ at the corresponding spatial
+location, and internal negatives $z^{-}$, the InfoNCE loss is
 \begin{equation}
   \ell(z,z^{+},z^{-}) = -\log
   \frac{\exp(z\!\cdot\!z^{+}/\tau)}
        {\exp(z\!\cdot\!z^{+}/\tau)+\sum_{n}\exp(z\!\cdot\!z^{-}_{n}/\tau)},
-  \qquad
+  \quad
   \mathcal{L}_{\mathrm{NCE}}=\mathbb{E}\sum_{\ell=1}^{L}\sum_{s}\ell(\cdot),
   \label{eq:nce}
 \end{equation}
-with temperature $\tau{=}0.07$, $L{=}5$ layers, and $256$ sampled locations
-per layer (following CUT~\cite{park2020cut}). \todo{verify $\tau$, $L$, patch
-count against the actual training config before camera-ready.}
+with temperature $\tau{=}0.07$, $L{=}5$ encoder stages, and $256$ sampled
+locations per layer, following CUT~\cite{park2020cut}.
 
 \paragraph{Hybrid objective.}
-PatchNCE \emph{augments} rather than replaces cycle-consistency:
+PatchNCE \emph{augments}, rather than replaces, cycle-consistency:
 \begin{equation}
   \mathcal{L} = \mathcal{L}_{\mathrm{adv}} + \mathcal{L}_{\mathrm{cyc}}
   + \mathcal{L}_{\mathrm{idt}} + \mathcal{L}_{\mathrm{ssim}}
   + \lambda_{\mathrm{NCE}}\,\mathcal{L}_{\mathrm{NCE}}.
   \label{eq:total}
 \end{equation}
-We sweep $\lambda_{\mathrm{NCE}}\in\{0.1,0.5,1.0,2.0\}$ at otherwise identical
-hyperparameters. \todo{1 sentence: a selected $\lambda_{\mathrm{NCE}}$ below
-the CUT/FastCUT regime ($1.0$/$10.0$) is principled --- cycle already supplies
-content pressure, so the contrastive term should complement, not dominate.}
+We sweep $\lambda_{\mathrm{NCE}}\in\{0,0.1,0.5,1.0,2.0\}$ at otherwise identical
+hyperparameters, where $\lambda_{\mathrm{NCE}}{=}0$ is the cycle-only control.
+A selected weight below the CUT/FastCUT regime ($1.0$/$10.0$) is principled
+rather than incidental: because cycle-consistency already supplies a strong
+content constraint, the contrastive term should complement it, not dominate;
+over-weighting re-introduces the instability that PatchNCE exhibits when it must
+carry content alone.
 
-\section{Experiments}
+\section{Experimental Setup}
 \label{sec:exp}
 \paragraph{Data.}
-\todo{BraTS/TCGA-GBM (site A) and UPenn-GBM (site B); subject counts; per-subject
-80/10/10 split; report SUBJECT-LEVEL metrics (aggregate slices by subject) and
-a held-out site/scanner setting if available.}
+Site~$A$ is BraTS/TCGA-GBM ($88$ subjects) and site~$B$ is UPenn-GBM ($566$
+subjects), each with four co-registered modalities and expert tumor
+segmentations at $1\,\mathrm{mm}$ isotropic, intensity-normalized to $[0,1]$. We
+split \emph{by subject} $80/10/10$ and sample axial 2.5D triplets, yielding
+\todo{$42{,}110$ train / $5{,}263$ val / $5{,}265$ test} slices; all metrics are
+aggregated to the subject level.
+\paragraph{Training.}
+Each $\lambda_{\mathrm{NCE}}$ arm is warm-started from a converged base
+SA-CycleGAN and fine-tuned for a matched budget (Adam, $\beta_1{=}0.5$; mixed
+precision; A100), so that any difference across arms reflects the contrastive
+weight and not the optimization budget.
 \paragraph{Metrics.}
-Distribution matching: \todo{FID, KID (fake-B vs real-B), domain-classifier
-accuracy (target $\approx$ chance), MMD}. Structural: brain-masked windowed
-SSIM (we report windowed and explain why global-moment SSIM is misleading for
-harmonization). Downstream: \todo{frozen cross-site U-Net glioma sub-region
-Dice/HD95, raw vs harmonized}.
+Distribution matching: FID and KID (harmonized vs target, per modality), domain
+classifier accuracy toward chance, and feature-space MMD. Structure: brain-masked
+\emph{windowed} SSIM (we report windowed, masked values and explain why a global
+moment is misleading for harmonization). Downstream: a frozen U-Net trained on one
+site and applied cross-site, raw versus harmonized, reporting whole-tumor and
+sub-region Dice and HD95. \emph{Critically, the harmonization used for downstream
+evaluation reuses the exact training data pipeline} (channel order, $[0,1]$
+normalization, slice-major 2.5D interleaving); we found that a mismatched
+evaluation pipeline corrupts the generator input and can manufacture a spurious
+downstream regression.
 \paragraph{Baselines / ablation.}
-\todo{cycle-only (= base CycleGAN), and the $\lambda_{\mathrm{NCE}}$ sweep on
-the same backbone/data; CUT-only if compute permits, else stated as a
-limitation. Identical training budget across arms.}
+The $\lambda_{\mathrm{NCE}}$ sweep includes the cycle-only control
+($\lambda_{\mathrm{NCE}}{=}0$) on the same backbone, data, and budget; we compare
+against the base SA-CycleGAN and \todo{CUT-only if compute permits}, with
+identical training budget across arms.
 
 \section{Results}
 \label{sec:results}
-\todo{ALL NUMBERS PENDING the corrected, defensible evaluation. Tables:
-(1) distribution + structural metrics per $\lambda$ and vs cycle-only;
-(2) downstream Dice/HD95. Figures: $\lambda$-vs-downstream curve;
-qualitative source/harmonized/target + difference with a boundary/edge metric
-to show the over-smoothing failure mode; failure cases. Report mean$\pm$std
-with paired Wilcoxon across subjects. NEVER hand-edit numbers --- regenerate
-from logged run dirs.}
+\todo{ALL NUMBERS PENDING the corrected evaluation. Tables: (1) distribution +
+windowed-masked structure metrics per $\lambda$ and vs cycle-only; (2) downstream
+cross-site Dice/HD95 raw vs harmonized, both directions. Figures: $\lambda$ vs
+downstream Dice; qualitative source/harmonized/target with a boundary/edge metric
+showing the over-smoothing failure mode; failure cases. Report mean$\pm$std with
+paired Wilcoxon across subjects. Regenerate from logged run dirs; never hand-edit.}
 
 \section{Discussion and Limitations}
 \label{sec:discuss}
-\todo{honest reading of the mechanism question; what the ablation reveals about
-complementarity; limitations: single seed, slice budget, CUT-only baseline if
-omitted, mask source for brain extraction, two-site scope.}
+\todo{honest reading of the mechanism question and the complementarity evidence;
+correction of the prior downstream regression; limitations: single seed per arm,
+two-site scope, slice budget, brain-mask source, CUT-only baseline if omitted.}
 
 \section{Conclusion}
 \label{sec:conclusion}
-\todo{1 short paragraph.}
+\todo{one short paragraph.}
 
 \bibliographystyle{splncs04}
 \bibliography{refs}
