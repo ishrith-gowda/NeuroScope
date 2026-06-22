@@ -10,13 +10,13 @@ the larger primary deliverable that later incorporates the full suite.
 
 | Ext | Topic | Venue (current plan) | Sprint status |
 |-----|-------|----------------------|---------------|
-| **A** | cycle + PatchNCE hybrid | **SASHIMI 2026 — LEAD, in progress** | **~80%** |
+| **A** | cycle + PatchNCE hybrid | **SASHIMI 2026 — LEAD, in progress** | **~90%** |
 | **C** | multi-domain N=4 AdaIN | SASHIMI 2026 / AAAI 2027 — next | **~12%** |
 | D | downstream task eval | folded into A's validation; standalone → ISBI/TMI later | (inside A) |
 | B | neural compression | ICML 2027 / MedIA — later | 0% |
 | E | federated harmonization | FL@FM-NeurIPS / MedIA — later | 0% |
 
-## EXT A (current lead) — ~80% (all experiments complete)
+## EXT A (current lead) — ~90% (experiments + manuscript drafted; submission polish remains)
 
 | Component | % | Status |
 |-----------|---|--------|
@@ -24,9 +24,9 @@ the larger primary deliverable that later incorporates the full suite.
 | λ-sweep training {0.0, 0.1, 0.5, 1.0, 2.0} | 100% | all 5 arms trained (λ=1.0 redo recovered the OOM casualty) |
 | Harmonization eval (FID/KID, masked SSIM, domain-clf, MMD) | 100% | 5/5 arms; 5-arm table + sweep figure generated + verified |
 | Downstream Dice/HD95 (hybrid + cycle-only) | 100% | both arms done; finding diagnosed (real, not a bug) |
-| Manuscript prose (intro/related/method/setup) | 60% | written, compiles (7pp), method diagram in; results/discussion to fill with final numbers |
-| Figures/tables | 70% | sweep fig + downstream fig + method diagram + 5-arm/downstream tables done + verified; qualitative montage pending |
-| Final assembly (compile, double-blind, submit) | 0% | pending |
+| Manuscript prose (all sections) | 100% | results/discussion/conclusion filled with final numbers; honest framing; compiles clean 7pp |
+| Figures/tables | 90% | sweep fig + downstream fig + method diagram + 5-arm/downstream tables done, rendered + verified; qualitative montage = optional polish |
+| Final assembly (compile, double-blind, submit) | 50% | compiles 7pp (≤ SASHIMI 8+2); double-blind audit clean; remaining: optional qual figure, final proofread, confirm SASHIMI format/page limit, submit |
 
 **Core result (STRONG, positive):** the λ-sweep validates the mechanism thesis —
 FID has a clean interior optimum at λ=0.5 (51.8→47.3→48.2), source-structure
