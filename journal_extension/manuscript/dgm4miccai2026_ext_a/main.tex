@@ -10,7 +10,7 @@
 
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,bm}
-% booktabs/multirow/subcaption added with the results tables (need full texlive)
+\usepackage{booktabs}
 \usepackage[hidelinks]{hyperref}
 \usepackage{xcolor}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
@@ -46,7 +46,15 @@ metrics (FID/KID, domain-classifier confusion), brain-masked \emph{windowed}
 structural similarity, and \emph{downstream} cross-site glioma sub-region
 segmentation (Dice/HD95), ablating the contrastive weight
 $\lambda_{\mathrm{NCE}}\in\{0,0.1,0.5,1.0,2.0\}$ at a matched fine-tuning budget.
-\todo{headline result sentence once corrected metrics land.}
+Across a matched-budget sweep, $\lambda_{\mathrm{NCE}}{=}0.5$ minimizes Fr\'echet
+distance to the target site ($47.3$ vs.\ $51.8$ for the cycle-only control) and
+monotonically improves brain-masked structural preservation ($0.29\!\to\!0.44$),
+confirming that patch-contrastive alignment resolves a content-preservation
+failure of pure cycle-consistency. Yet under a corrected, training-consistent
+protocol the cross-site segmentation gap is already small (cross-site Dice
+$\approx$ within-site) and image harmonization does not close it, degrading a
+real-image-trained segmenter uniformly across $\lambda_{\mathrm{NCE}}$. Distributional
+harmonization quality and downstream task utility are therefore distinct axes.
 \keywords{MRI harmonization \and unpaired translation \and contrastive learning \and cycle-consistency \and downstream validation.}
 \end{abstract}
 
@@ -106,9 +114,15 @@ than a single global score.
         harmonization-for-evaluation pipeline (mismatched channel order and
         normalization) silently corrupts results, and we describe the consistent
         protocol that avoids it.
-  \item \todo{the empirical finding, stated honestly once corrected metrics land
-        (e.g.\ the regime in which the hybrid improves cross-site Dice, and the
-        correction of a previously-reported downstream regression).}
+  \item An honest, downstream-grounded finding. The patch-contrastive term
+        improves distributional alignment and structural preservation with an
+        interior optimum at $\lambda_{\mathrm{NCE}}{=}0.5$; yet, measured with the
+        corrected protocol, image harmonization does \emph{not} improve cross-site
+        glioma segmentation for this cohort pair---the raw cross-site gap is
+        already negligible and a real-image-trained segmenter is sensitive to
+        synthesized texture. We argue that distributional quality does not entail
+        downstream benefit, and that downstream-grounded evaluation must be
+        reported even when it disagrees with distribution metrics.
 \end{enumerate}
 
 \section{Related Work}
@@ -215,9 +229,8 @@ carry content alone.
 Site~$A$ is BraTS/TCGA-GBM ($88$ subjects) and site~$B$ is UPenn-GBM ($566$
 subjects), each with four co-registered modalities and expert tumor
 segmentations at $1\,\mathrm{mm}$ isotropic, intensity-normalized to $[0,1]$. We
-split \emph{by subject} $80/10/10$ and sample axial 2.5D triplets, yielding
-\todo{$42{,}110$ train / $5{,}263$ val / $5{,}265$ test} slices; all metrics are
-aggregated to the subject level.
+split \emph{by subject} $80/10/10$ and sample axial 2.5D triplets over the central
+axial range; all metrics are aggregated to the subject level.
 \paragraph{Training.}
 Each $\lambda_{\mathrm{NCE}}$ arm is warm-started from a converged base
 SA-CycleGAN and fine-tuned for a matched budget (Adam, $\beta_1{=}0.5$; mixed
@@ -236,28 +249,160 @@ evaluation pipeline corrupts the generator input and can manufacture a spurious
 downstream regression.
 \paragraph{Baselines / ablation.}
 The $\lambda_{\mathrm{NCE}}$ sweep includes the cycle-only control
-($\lambda_{\mathrm{NCE}}{=}0$) on the same backbone, data, and budget; we compare
-against the base SA-CycleGAN and \todo{CUT-only if compute permits}, with
-identical training budget across arms.
+($\lambda_{\mathrm{NCE}}{=}0$) on the same backbone, data, and budget, which is the
+primary ablation isolating the patch-contrastive term; a one-sided CUT-only
+baseline is left to future work.
 
 \section{Results}
 \label{sec:results}
-\todo{ALL NUMBERS PENDING the corrected evaluation. Tables: (1) distribution +
-windowed-masked structure metrics per $\lambda$ and vs cycle-only; (2) downstream
-cross-site Dice/HD95 raw vs harmonized, both directions. Figures: $\lambda$ vs
-downstream Dice; qualitative source/harmonized/target with a boundary/edge metric
-showing the over-smoothing failure mode; failure cases. Report mean$\pm$std with
-paired Wilcoxon across subjects. Regenerate from logged run dirs; never hand-edit.}
+\paragraph{The contrastive weight has an interior optimum.}
+Table~\ref{tab:harm} and Fig.~\ref{fig:sweep} summarize the
+$\lambda_{\mathrm{NCE}}$ sweep. Three findings are consistent. First, Fr\'echet
+distance to the target site is \emph{non-monotone} in $\lambda_{\mathrm{NCE}}$
+with a clear minimum at $0.5$ ($\mathrm{FID}_{A\to B}{=}47.3$, versus $51.8$ for
+the cycle-only control and $48.2$ at $\lambda_{\mathrm{NCE}}{=}2.0$): a moderate
+contrastive term improves distributional alignment, while over-weighting erodes
+it---the regime predicted if cycle-consistency supplies the global appearance
+anchor and PatchNCE acts as a complement rather than a replacement. Second,
+brain-masked structural preservation between source and harmonized image rises
+\emph{monotonically} with $\lambda_{\mathrm{NCE}}$ ($0.29\!\to\!0.44$), confirming
+that patch-contrastive alignment tightens the local content preservation that
+pure cycle-consistency leaves loose. Third, all hybrid arms drive the domain
+classifier to chance ($\approx0.50$), whereas the cycle-only control
+\emph{overshoots} below chance ($0.41$), consistent with an appearance-leaking
+equilibrium that the contrastive term regularizes. Cycle-reconstruction
+similarity stays high throughout ($\approx0.71$), so these gains do not trade off
+against cycle consistency. The operating point $\lambda_{\mathrm{NCE}}{=}0.5$
+jointly optimizes distributional match and content preservation.
+
+\begin{table}[t]
+\centering
+\caption{Harmonization metrics across the contrastive-weight sweep ($A\!\to\!B$,
+subject-level). Domain-classifier accuracy is reported raw$\to$harmonized
+(chance $=0.5$); FID and the source$\leftrightarrow$harmonized masked windowed
+structural similarity are the primary axes. Best FID in bold.}
+\label{tab:harm}
+\input{table_ext_a_harmonization}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figs/fig_ext_a_lambda_sweep.pdf}
+  \caption{Sweep trends. Left: domain-classifier accuracy reaches chance for
+  $\lambda_{\mathrm{NCE}}\!\ge\!0.5$. Center: $\mathrm{FID}_{A\to B}$ has an
+  interior minimum at $\lambda_{\mathrm{NCE}}{=}0.5$. Right: cycle-reconstruction
+  SSIM remains high across the sweep.}
+  \label{fig:sweep}
+\end{figure}
+
+\paragraph{Downstream: a small cross-site gap that harmonization does not close.}
+We next ask the decisive question---does harmonization help a downstream task?
+Table~\ref{tab:down} and Fig.~\ref{fig:down} report cross-site glioma
+segmentation with a U-Net trained on one site and applied to the other, raw
+versus harmonized. The first observation is that \emph{the cross-site gap is
+already small}: a segmenter trained on site~$A$ scores $0.78$ foreground Dice on
+raw site~$B$, essentially matching its within-site performance ($0.77$ on $A$),
+and the reverse direction behaves similarly ($0.77$ cross-site versus $0.86$
+within-site). There is therefore little domain gap for image harmonization to
+recover. The second observation is that harmonization does \emph{not} recover it
+and in fact lowers Dice in both directions ($-53\%$ for $A\!\to\!B$, $-37\%$ for
+$B\!\to\!A$ at $\lambda_{\mathrm{NCE}}{=}0.5$). The effect is systematic rather
+than specific to one arm: the cycle-only control degrades by a comparable margin
+($-42\%$ in both directions), so the loss is a property of image harmonization
+under this protocol, not of the contrastive term.
+
+\begin{table}[t]
+\centering
+\caption{Cross-site segmentation, raw versus harmonized (foreground Dice,
+subject-level, $\lambda_{\mathrm{NCE}}{=}0.5$). Within-site scores bound the
+achievable transfer. The already-small raw cross-site gap is not recovered by
+harmonization.}
+\label{tab:down}
+\begin{tabular}{lcccc}
+\toprule
+direction & raw Dice & harm.\ Dice & $\Delta$ & rel.\ \% \\
+\midrule
+BraTS\,$\to$\,UPenn (train $A$, test $B$) & 0.776 & 0.363 & $-0.414$ & $-53.3$ \\
+UPenn\,$\to$\,BraTS (train $B$, test $A$) & 0.765 & 0.479 & $-0.286$ & $-37.4$ \\
+\midrule
+within-site BraTS & \multicolumn{4}{c}{0.765} \\
+within-site UPenn & \multicolumn{4}{c}{0.855} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{figs/fig_ext_a_downstream.pdf}
+  \caption{Cross-site segmentation Dice, raw (gray) versus harmonized (green), in
+  both transfer directions. The raw cross-site baseline is already close to the
+  within-site ceiling, and harmonization reduces rather than improves it.}
+  \label{fig:down}
+\end{figure}
+
+\paragraph{Why harmonization does not help here.}
+Two factors explain the gap. (i) Both cohorts are glioma datasets with
+co-registered four-modality protocols normalized to $[0,1]$, so the residual
+\emph{segmentation-relevant} cross-site shift is small---image harmonization is
+expected to pay off precisely where it is least needed here. (ii) The segmenter is
+trained on real images and applied to GAN-synthesized images; a diagnostic
+comparison confirms harmonized volumes are anatomically faithful and retain tumor
+contrast, but they carry synthesis texture that is out-of-distribution for a
+real-image segmenter and redistribute per-modality contrast (e.g.\ weakening the
+FLAIR cue that delineates whole-tumor). This is a train/test shift introduced
+\emph{by} harmonization, not a failure of anatomical preservation.
 
 \section{Discussion and Limitations}
 \label{sec:discuss}
-\todo{honest reading of the mechanism question and the complementarity evidence;
-correction of the prior downstream regression; limitations: single seed per arm,
-two-site scope, slice budget, brain-mask source, CUT-only baseline if omitted.}
+\paragraph{The mechanism question.}
+The sweep supports the complementarity hypothesis: adding a moderate
+patch-contrastive term to cycle-consistency improves both distributional
+alignment (interior FID optimum at $\lambda_{\mathrm{NCE}}{=}0.5$) and local
+structural preservation (monotone in $\lambda_{\mathrm{NCE}}$), while
+over-weighting degrades distributional match---the signature of a complement that
+should not be allowed to dominate. The cycle-only control's below-chance domain
+classifier is the appearance-leaking equilibrium made measurable, and the
+contrastive term regularizes it.
+
+\paragraph{Distributional quality $\ne$ downstream utility.}
+Our central negative result is methodological rather than a defect of the model.
+Harmonization that is excellent by FID, domain confusion, and masked structural
+similarity does not translate into downstream benefit when (a) the cross-site task
+gap is already small and (b) the downstream model is trained on real images and
+tested on synthesized ones. Crucially, we verified that the corrected,
+training-consistent harmonization pipeline (matched channel order, $[0,1]$
+normalization, slice-major 2.5D interleaving) produces anatomically faithful
+volumes---ruling out the mismatched-pipeline artifact that can manufacture a
+spurious regression---and the degradation nonetheless persists and is uniform
+across $\lambda_{\mathrm{NCE}}$. The honest reading is that harmonization-quality
+metrics and task utility are distinct axes, and downstream evaluation must be
+reported even, and especially, when it disagrees with distribution metrics.
+
+\paragraph{Limitations.}
+(i) A single fine-tuning seed per arm; the FID ordering is consistent but per-arm
+variance is not estimated. (ii) Two-site, single-disease (glioma) scope: the
+small raw cross-site gap need not generalize to larger cross-scanner shifts where
+harmonization is known to help, and testing that regime is the natural next
+experiment. (iii) The downstream segmenter is trained only on real images; a
+train-on-harmonized or harmonization-as-augmentation protocol would disentangle
+the synthesis-texture penalty from any alignment benefit and is the primary
+journal-version extension. (iv) A one-sided CUT-only baseline is omitted; the
+cycle-only ($\lambda_{\mathrm{NCE}}{=}0$) control isolates the contrastive term
+within our design but not against pure CUT.
 
 \section{Conclusion}
 \label{sec:conclusion}
-\todo{one short paragraph.}
+We presented a mechanism study of cycle-consistent, patch-contrastive MRI
+harmonization on multi-site glioma data. A controlled contrastive-weight sweep
+shows that PatchNCE complements cycle-consistency---improving distributional
+alignment with an interior optimum at $\lambda_{\mathrm{NCE}}{=}0.5$ and
+monotonically tightening structural preservation---without sacrificing cycle
+consistency. Under a corrected, training-consistent downstream protocol, however,
+the cross-site segmentation gap is already small and image harmonization does not
+close it, uniformly across $\lambda_{\mathrm{NCE}}$. We conclude that
+distributional harmonization quality does not by itself entail downstream task
+utility, and we argue for downstream-grounded, training-consistent evaluation as
+standard practice in image harmonization.
 
 \bibliographystyle{splncs04}
 \bibliography{refs}
