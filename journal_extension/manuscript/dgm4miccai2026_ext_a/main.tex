@@ -156,12 +156,10 @@ with glioma downstream validation. We position our work as a mechanism study in
 that gap rather than as a new loss.
 
 \paragraph{Evaluation.}
-Harmonization is commonly assessed by image similarity and distribution distance.
-We follow the stronger conventions: distribution matching via FID and
-KID~\cite{heusel2017fid,binkowski2018kid}, a domain classifier driven toward
-chance, brain-masked \emph{windowed} similarity rather than a global moment, and
-downstream segmentation with a frozen cross-site segmenter
-(Dice/HD95)~\cite{isensee2021nnunet}, all aggregated at the subject level.
+We follow stronger conventions than image similarity alone: distribution matching
+(FID/KID~\cite{heusel2017fid,binkowski2018kid}, domain-classifier confusion),
+brain-masked \emph{windowed} similarity rather than a global moment, and downstream
+segmentation~\cite{isensee2021nnunet}, all aggregated at the subject level.
 
 \section{Method}
 \label{sec:method}
@@ -237,16 +235,14 @@ SA-CycleGAN and fine-tuned for a matched budget (Adam, $\beta_1{=}0.5$; mixed
 precision; A100), so that any difference across arms reflects the contrastive
 weight and not the optimization budget.
 \paragraph{Metrics.}
-Distribution matching: FID and KID (harmonized vs target, per modality), domain
-classifier accuracy toward chance, and feature-space MMD. Structure: brain-masked
-\emph{windowed} SSIM (we report windowed, masked values and explain why a global
-moment is misleading for harmonization). Downstream: a frozen U-Net trained on one
-site and applied cross-site, raw versus harmonized, reporting whole-tumor and
-sub-region Dice and HD95. \emph{Critically, the harmonization used for downstream
-evaluation reuses the exact training data pipeline} (channel order, $[0,1]$
-normalization, slice-major 2.5D interleaving); we found that a mismatched
-evaluation pipeline corrupts the generator input and can manufacture a spurious
-downstream regression.
+Distribution matching: FID/KID (harmonized vs target, per modality), domain-
+classifier accuracy toward chance, and feature-space MMD; structure: brain-masked
+\emph{windowed} SSIM (a global moment is misleading here); downstream: a U-Net
+trained on one site and applied cross-site, raw versus harmonized (whole-tumor and
+sub-region Dice, HD95). \emph{Critically, the harmonization used for downstream
+evaluation reuses the exact training pipeline} (channel order, $[0,1]$
+normalization, slice-major 2.5D interleaving); a mismatched pipeline corrupts the
+generator input and can manufacture a spurious downstream regression.
 \paragraph{Baselines / ablation.}
 The $\lambda_{\mathrm{NCE}}$ sweep includes the cycle-only control
 ($\lambda_{\mathrm{NCE}}{=}0$) on the same backbone, data, and budget, which is the
