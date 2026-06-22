@@ -58,17 +58,17 @@ def write_harmonization_table(arms, out_dir: Path):
     ]
     for L, r in arms.items():
         dc = r["domain_classifier"]
-        row = (
-            f"{L:g} & {fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])} & "
-            f"{fmt(r.get('fid_A2B_avg'), 1)} & "
-            f"{fmt(r['masked_windowed_ssim_cycle_A2B']['mean'])} & "
-            f"{fmt(r['masked_windowed_ssim_structure_A2B']['mean'])} & "
-            f"{fmt(r.get('mmd_feature_space_fakeB_vs_realB'), 4)} \\\\"
-        )
+        cells = [
+            f"{L:g}",
+            f"{fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])}",
+            fmt(r.get("fid_A2B_avg"), 1),
+            fmt(r["masked_windowed_ssim_cycle_A2B"]["mean"]),
+            fmt(r["masked_windowed_ssim_structure_A2B"]["mean"]),
+            fmt(r.get("mmd_feature_space_fakeB_vs_realB"), 4),
+        ]
         if best_lam == L:
-            row = r"\textbf{" + row.replace(" & ", r"} & \textbf{", 1)
-            row = row[:-2] + r"} \\"
-        lines.append(row)
+            cells = [r"\textbf{" + c + "}" for c in cells]
+        lines.append(" & ".join(cells) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}"]
     (out_dir / "table_ext_a_harmonization.tex").write_text("\n".join(lines) + "\n")
     print(
