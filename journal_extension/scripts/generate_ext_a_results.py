@@ -48,7 +48,7 @@ def fmt(x, n=3):
 def write_harmonization_table(arms, out_dir: Path):
     if not arms:
         return
-    best_lam = min(arms, key=lambda L: abs(arms[L]["domain_classifier"]["acc_harmonized"] - 0.5))
+    best_lam = min(arms, key=lambda L: arms[L].get("fid_A2B_avg", 1e9))  # FID-optimal arm
     lines = [
         r"\begin{tabular}{lccccc}",
         r"\toprule",
@@ -72,7 +72,7 @@ def write_harmonization_table(arms, out_dir: Path):
     lines += [r"\bottomrule", r"\end{tabular}"]
     (out_dir / "table_ext_a_harmonization.tex").write_text("\n".join(lines) + "\n")
     print(
-        f"  wrote table_ext_a_harmonization.tex ({len(arms)} arms; closest-to-chance lambda={best_lam:g})"
+        f"  wrote table_ext_a_harmonization.tex ({len(arms)} arms; FID-optimal lambda={best_lam:g})"
     )
 
 
