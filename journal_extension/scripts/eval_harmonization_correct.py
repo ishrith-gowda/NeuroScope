@@ -184,6 +184,8 @@ def load_generator_weights(model, ckpt_path, device):
 @torch.no_grad()
 def evaluate(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.manual_seed(0)
+    np.random.seed(0)
     from torchmetrics.image.fid import FrechetInceptionDistance
     from torchmetrics.image.kid import KernelInceptionDistance
 
@@ -282,11 +284,13 @@ def evaluate(args):
 
     # aggregate
     def subj_agg(d):
-        per_subj = [np.nanmean(v) for v in d.values() if len(v)]
+        per = {s: float(np.nanmean(v)) for s, v in d.items() if len(v)}
+        vals = list(per.values())
         return {
-            "mean": float(np.nanmean(per_subj)),
-            "std": float(np.nanstd(per_subj)),
-            "n_subjects": len(per_subj),
+            "mean": float(np.nanmean(vals)),
+            "std": float(np.nanstd(vals)),
+            "n_subjects": len(vals),
+            "per_subject": per,  # subject_id -> mean ssim, for paired significance tests
         }
 
     fr = np.concatenate(feat_realB) if feat_realB else np.zeros((1, 1))
