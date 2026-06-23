@@ -460,7 +460,7 @@ class MultiDomainTrainer:
             n_repeats = 12 // real.size(1)
             real = real.repeat(1, n_repeats, 1, 1)[:, :12]
 
-        center = real[:, :4]  # center slice (first 4 channels)
+        center = batch["target"].to(self.device)  # 4-modality center slice [b,4,h,w]
         tgt_domain = self._sample_target_domains(src_domain)
 
         # ================================================================
