@@ -52,21 +52,15 @@ def kid_avg(r, direction):
     return 1000 * sum(vals) / len(vals) if vals else None
 
 
-def write_harmonization_table(arms, out_dir: Path):
+def write_harmonization_table(arms, out_dir: Path, base=None):
     if not arms:
         return
     best_lam = min(arms, key=lambda L: arms[L].get("fid_A2B_avg", 1e9))  # FID-optimal arm
-    lines = [
-        r"\begin{tabular}{lcccccc}",
-        r"\toprule",
-        r"$\lambda_{\mathrm{NCE}}$ & dom.-clf raw$\to$harm & FID$_{A\to B}$ & "
-        r"FID$_{B\to A}$ & KID$_{A\to B}(\times10^3)$ & struct.\ SSIM & cycle SSIM \\",
-        r"\midrule",
-    ]
-    for L, r in arms.items():
+
+    def row_cells(label, r):
         dc = r["domain_classifier"]
-        cells = [
-            f"{L:g}",
+        return [
+            label,
             f"{fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])}",
             fmt(r.get("fid_A2B_avg"), 1),
             fmt(r.get("fid_B2A_avg"), 1),
@@ -74,6 +68,19 @@ def write_harmonization_table(arms, out_dir: Path):
             fmt(r["masked_windowed_ssim_structure_A2B"]["mean"]),
             fmt(r["masked_windowed_ssim_cycle_A2B"]["mean"]),
         ]
+
+    lines = [
+        r"\begin{tabular}{lcccccc}",
+        r"\toprule",
+        r"backbone\,/\,$\lambda_{\mathrm{NCE}}$ & dom.-clf raw$\to$harm & FID$_{A\to B}$ & "
+        r"FID$_{B\to A}$ & KID$_{A\to B}(\times10^3)$ & struct.\ SSIM & cycle SSIM \\",
+        r"\midrule",
+    ]
+    if base:
+        lines.append(" & ".join(row_cells("base", base)) + r" \\")
+        lines.append(r"\midrule")
+    for L, r in arms.items():
+        cells = row_cells(f"{L:g}", r)
         if best_lam == L:
             cells = [r"\textbf{" + c + "}" for c in cells]
         lines.append(" & ".join(cells) + r" \\")
@@ -183,15 +190,21 @@ def main():
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     arms = load_eval_arms(Path(args.eval_dir))
+    base = None
+    base_path = Path(args.eval_dir) / "eval_base.json"
+    if base_path.exists():
+        with open(base_path) as f:
+            base = json.load(f)
     ds = None
     if args.downstream_json and Path(args.downstream_json).exists():
         with open(args.downstream_json) as f:
             ds = json.load(f)
 
     print(
-        f"loaded {len(arms)} harmonization arm(s): {[f'{L:g}' for L in arms]}; downstream={'yes' if ds else 'no'}"
+        f"loaded {len(arms)} harmonization arm(s): {[f'{L:g}' for L in arms]}; "
+        f"base={'yes' if base else 'no'}; downstream={'yes' if ds else 'no'}"
     )
-    write_harmonization_table(arms, out)
+    write_harmonization_table(arms, out, base=base)
     write_downstream_table(ds, out)
     fig_lambda_sweep(arms, out)
     fig_downstream(ds, out)
