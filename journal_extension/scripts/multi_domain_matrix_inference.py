@@ -116,15 +116,15 @@ def main():
     seen_domains = set()
     with torch.no_grad():
         for batch in trainer.train_loader:
-            src = int(batch["domain"][0].item())
+            src = int(batch["domain_id"][0].item())
             if src in seen_domains:
                 continue
             seen_domains.add(src)
             cases.append({
                 "source_domain": src,
-                "image": batch["image"][0].cpu(),
-                "image_3slice": batch["image_3slice"][0].cpu()
-                if "image_3slice" in batch else None,
+                "image": batch["target"][0].cpu(),       # 4-ch center slice (reference)
+                "image_3slice": batch["input"][0].cpu()  # 12-ch 2.5d generator input
+                if "input" in batch else None,
             })
             if len(cases) >= n_domains:
                 break
