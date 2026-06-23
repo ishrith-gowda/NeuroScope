@@ -10,7 +10,7 @@ the larger primary deliverable that later incorporates the full suite.
 
 | Ext | Topic | Venue (current plan) | Sprint status |
 |-----|-------|----------------------|---------------|
-| **A** | cycle + PatchNCE hybrid | **SASHIMI 2026 — LEAD, in progress** | **~90%** |
+| **A** | cycle + PatchNCE hybrid | **SASHIMI 2026 — LEAD, submission-ready** | **~95%** |
 | **C** | multi-domain N=4 AdaIN | SASHIMI 2026 / AAAI 2027 — next | **~12%** |
 | D | downstream task eval | folded into A's validation; standalone → ISBI/TMI later | (inside A) |
 | B | neural compression | ICML 2027 / MedIA — later | 0% |
@@ -25,8 +25,14 @@ the larger primary deliverable that later incorporates the full suite.
 | Harmonization eval (FID/KID, masked SSIM, domain-clf, MMD) | 100% | 5/5 arms; 5-arm table + sweep figure generated + verified |
 | Downstream Dice/HD95 (hybrid + cycle-only) | 100% | both arms done; finding diagnosed (real, not a bug) |
 | Manuscript prose (all sections) | 100% | results/discussion/conclusion filled with final numbers; honest framing; compiles clean 7pp |
-| Figures/tables | 90% | sweep fig + downstream fig + method diagram + 5-arm/downstream tables done, rendered + verified; qualitative montage = optional polish |
-| Final assembly (compile, double-blind, submit) | 50% | compiles 7pp (≤ SASHIMI 8+2); double-blind audit clean; remaining: optional qual figure, final proofread, confirm SASHIMI format/page limit, submit |
+| Figures/tables | 100% | method diagram + sweep fig + downstream fig + 5-arm/downstream tables, rendered + verified; qualitative montage generated (held for journal version) |
+| Final assembly (compile, double-blind, submit) | 90% | **fits 8pp content + refs (LNCS 8+2); compiles clean; double-blind audit clean; no dangling refs**; remaining: USER confirms SASHIMI 2026 exact format/limit, final proofread, submit via portal |
+
+**Open items for submission (need USER):** (1) confirm SASHIMI 2026 page limit on
+sashimiworkshop.org — if it permits >8pp content, re-add the qualitative montage
+(`fig_ext_a_qualitative.pdf`, generator committed) for its defensive value ("faithful
+but synthetic-textured", pre-empts "your harmonization is just bad"); (2) submit via
+the portal (the agent cannot).
 
 **Core result (STRONG, positive):** the λ-sweep validates the mechanism thesis —
 FID has a clean interior optimum at λ=0.5 (51.8→47.3→48.2), source-structure
