@@ -45,15 +45,22 @@ def fmt(x, n=3):
     return "--" if x is None else f"{x:.{n}f}"
 
 
+def kid_avg(r, direction):
+    """mean KID over the 4 modalities for a direction (A2B/B2A), x1000 for readability."""
+    km = r.get("kid_mean", {})
+    vals = [km[f"{direction}_{m}"] for m in MODS if f"{direction}_{m}" in km]
+    return 1000 * sum(vals) / len(vals) if vals else None
+
+
 def write_harmonization_table(arms, out_dir: Path):
     if not arms:
         return
     best_lam = min(arms, key=lambda L: arms[L].get("fid_A2B_avg", 1e9))  # FID-optimal arm
     lines = [
-        r"\begin{tabular}{lccccc}",
+        r"\begin{tabular}{lcccccc}",
         r"\toprule",
         r"$\lambda_{\mathrm{NCE}}$ & dom.-clf raw$\to$harm & FID$_{A\to B}$ & "
-        r"masked SSIM (cycle) & struct.\ SSIM & MMD \\",
+        r"FID$_{B\to A}$ & KID$_{A\to B}(\times10^3)$ & struct.\ SSIM & cycle SSIM \\",
         r"\midrule",
     ]
     for L, r in arms.items():
@@ -62,9 +69,10 @@ def write_harmonization_table(arms, out_dir: Path):
             f"{L:g}",
             f"{fmt(dc['acc_raw'])}$\\to${fmt(dc['acc_harmonized'])}",
             fmt(r.get("fid_A2B_avg"), 1),
-            fmt(r["masked_windowed_ssim_cycle_A2B"]["mean"]),
+            fmt(r.get("fid_B2A_avg"), 1),
+            fmt(kid_avg(r, "A2B"), 1),
             fmt(r["masked_windowed_ssim_structure_A2B"]["mean"]),
-            fmt(r.get("mmd_feature_space_fakeB_vs_realB"), 4),
+            fmt(r["masked_windowed_ssim_cycle_A2B"]["mean"]),
         ]
         if best_lam == L:
             cells = [r"\textbf{" + c + "}" for c in cells]
@@ -80,24 +88,32 @@ def write_downstream_table(ds, out_dir: Path):
     if not ds or "harmonization_effect" not in ds:
         return
     FG = "dice_mean_foreground_mean"
+    HD = "hd95_mean"
+    cond = {
+        "A_to_B_direction": ("A_on_rawB", "A_on_harmB"),
+        "B_to_A_direction": ("B_on_rawA", "B_on_harmA"),
+    }
     lines = [
-        r"\begin{tabular}{lcccc}",
+        r"\begin{tabular}{lccccc}",
         r"\toprule",
-        r"direction & raw Dice & harmonized Dice & $\Delta$ & rel.\ \% \\",
+        r"direction & raw Dice & harm.\ Dice & $\Delta$ & raw HD95 & harm HD95 \\",
         r"\midrule",
     ]
     for k, v in ds["harmonization_effect"].items():
         short = k.split(" ")[0]
+        rc, hc = cond.get(short, (None, None))
+        rhd = fmt(ds.get(rc, {}).get(HD), 1) if rc else "--"
+        hhd = fmt(ds.get(hc, {}).get(HD), 1) if hc else "--"
         lines.append(
             f"{short} & {fmt(v['raw'])} & {fmt(v['harmonized'])} & "
-            f"{v['delta']:+.3f} & {v['relative_pct']:+.1f} \\\\"
+            f"{v['delta']:+.3f} & {rhd} & {hhd} \\\\"
         )
     # within-site upper bounds
     if "A_on_rawA" in ds:
         lines += [
             r"\midrule",
-            f"within-site brats & \\multicolumn{{4}}{{c}}{{{fmt(ds['A_on_rawA'][FG])}}} \\\\",
-            f"within-site upenn & \\multicolumn{{4}}{{c}}{{{fmt(ds['B_on_rawB'][FG])}}} \\\\",
+            f"within-site brats & \\multicolumn{{5}}{{c}}{{{fmt(ds['A_on_rawA'][FG])}}} \\\\",
+            f"within-site upenn & \\multicolumn{{5}}{{c}}{{{fmt(ds['B_on_rawB'][FG])}}} \\\\",
         ]
     lines += [r"\bottomrule", r"\end{tabular}"]
     (out_dir / "table_ext_a_downstream.tex").write_text("\n".join(lines) + "\n")
