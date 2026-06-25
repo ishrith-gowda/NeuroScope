@@ -39,7 +39,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D, SACycleGAN25DConfig, create_model
+    SACycleGAN25D,
+    SACycleGAN25DConfig,
+    create_model,
 )
 from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
@@ -48,15 +50,15 @@ from neuroscope.models.losses.combined_losses import CombinedLoss
 class ReplayBuffer:
     """
     image buffer for discriminator training stability.
-    
+
     stores previously generated images and randomly samples from them
     to provide diverse training examples for the discriminator.
     """
-    
+
     def __init__(self, max_size: int = 50):
         self.max_size = max_size
         self.data = []
-        
+
     def push_and_pop(self, data: torch.Tensor) -> torch.Tensor:
         result = []
         for element in data:
@@ -77,7 +79,7 @@ class ReplayBuffer:
 class SACycleGAN25DTrainer:
     """
     comprehensive trainer for 2.5d sa-cyclegan.
-    
+
     features:
     - full training loop with validation
     - tensorboard logging
@@ -86,7 +88,7 @@ class SACycleGAN25DTrainer:
     - replay buffer for discriminator stability
     - comprehensive metrics tracking
     """
-    
+
     def __init__(
         self,
         config: SACycleGAN25DConfig,
@@ -99,33 +101,33 @@ class SACycleGAN25DTrainer:
         beta1: float = 0.5,
         beta2: float = 0.999,
         num_workers: int = 4,
-        device: str = 'auto',
-        experiment_name: str = None
+        device: str = "auto",
+        experiment_name: str = None,
     ):
         self.config = config
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # experiment naming
         if experiment_name is None:
             experiment_name = datetime.now().strftime("exp_%Y%m%d_%H%M%S")
         self.experiment_name = experiment_name
         self.experiment_dir = self.output_dir / experiment_name
         self.experiment_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # create subdirectories
         (self.experiment_dir / "checkpoints").mkdir(exist_ok=True)
         (self.experiment_dir / "samples").mkdir(exist_ok=True)
         (self.experiment_dir / "logs").mkdir(exist_ok=True)
-        
+
         # device setup
-        if device == 'auto':
+        if device == "auto":
             if torch.cuda.is_available():
-                self.device = torch.device('cuda')
+                self.device = torch.device("cuda")
             elif torch.backends.mps.is_available():
-                self.device = torch.device('mps')
+                self.device = torch.device("mps")
             else:
-                self.device = torch.device('cpu')
+                self.device = torch.device("cpu")
         else:
             self.device = torch.device(device)
 
@@ -139,10 +141,10 @@ class SACycleGAN25DTrainer:
             print(f"multi-gpu: {self.num_gpus} gpus available (dataparallel enabled)")
         print(f"experiment: {experiment_name}")
         print(f"output: {self.experiment_dir}")
-        
+
         # tensorboard
         self.writer = SummaryWriter(log_dir=str(PROJECT_ROOT / "runs" / experiment_name))
-        
+
         # create model
         print("\n" + "=" * 60)
         print("initializing 2.5d sa-cyclegan model")
@@ -167,46 +169,48 @@ class SACycleGAN25DTrainer:
             upenn_dir=upenn_dir,
             batch_size=batch_size,
             image_size=(image_size, image_size),
-            num_workers=num_workers
+            num_workers=num_workers,
         )
-        
+
         print(f"\ndataset statistics:")
         print(f"  training batches: {len(self.train_loader)}")
         print(f"  validation batches: {len(self.val_loader)}")
         print(f"  test batches: {len(self.test_loader)}")
-        
+
         # optimizers
         self.opt_G = optim.Adam(
             list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
-            lr=lr, betas=(beta1, beta2)
+            lr=lr,
+            betas=(beta1, beta2),
         )
         self.opt_D = optim.Adam(
             list(self.model.D_A.parameters()) + list(self.model.D_B.parameters()),
-            lr=lr, betas=(beta1, beta2)
+            lr=lr,
+            betas=(beta1, beta2),
         )
-        
+
         # learning rate schedulers (linear decay after 50%)
         def lambda_rule(epoch, total_epochs=100):
             decay_start = total_epochs // 2
             if epoch < decay_start:
                 return 1.0
             return 1.0 - (epoch - decay_start) / (total_epochs - decay_start + 1)
-        
+
         self.scheduler_G = optim.lr_scheduler.LambdaLR(
             self.opt_G, lr_lambda=lambda e: lambda_rule(e, 100)
         )
         self.scheduler_D = optim.lr_scheduler.LambdaLR(
             self.opt_D, lr_lambda=lambda e: lambda_rule(e, 100)
         )
-        
+
         # loss functions
         self.losses = CombinedLoss(
             lambda_cycle=config.lambda_cycle,
             lambda_identity=config.lambda_identity,
             lambda_ssim=config.lambda_ssim,
-            lambda_gradient=1.0
+            lambda_gradient=1.0,
         ).to(self.device)
-        
+
         # replay buffers for discriminator
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
@@ -220,70 +224,71 @@ class SACycleGAN25DTrainer:
 
         # training history
         self.history = {
-            'train': {'G_loss': [], 'D_loss': [], 'cycle_loss': [], 'identity_loss': []},
-            'val': {'ssim_A2B': [], 'ssim_B2A': [], 'psnr_A2B': [], 'psnr_B2A': []},
-            'learning_rate': [],
-            'epoch_times': []
+            "train": {"G_loss": [], "D_loss": [], "cycle_loss": [], "identity_loss": []},
+            "val": {"ssim_A2B": [], "ssim_B2A": [], "psnr_A2B": [], "psnr_B2A": []},
+            "learning_rate": [],
+            "epoch_times": [],
         }
-        
+
         self.start_epoch = 0
         self.best_val_ssim = 0
         self.global_step = 0
-        
+
         # save config
         self._save_config()
-        
+
     def _print_header(self):
         """print training header."""
         print("\n" + "=" * 60)
         print("  neuroscope: 2.5d sa-cyclegan mri harmonization")
         print("  cross-site brain mri translation")
         print("=" * 60)
-        
+
     def _save_config(self):
         """save experiment configuration."""
         config_dict = {
-            'model': self.config.__dict__,
-            'training': {
-                'device': str(self.device),
-                'experiment_name': self.experiment_name,
-                'train_batches': len(self.train_loader),
-                'val_batches': len(self.val_loader),
-                'test_batches': len(self.test_loader)
-            }
+            "model": self.config.__dict__,
+            "training": {
+                "device": str(self.device),
+                "experiment_name": self.experiment_name,
+                "train_batches": len(self.train_loader),
+                "val_batches": len(self.val_loader),
+                "test_batches": len(self.test_loader),
+            },
         }
-        with open(self.experiment_dir / "config.json", 'w') as f:
+        with open(self.experiment_dir / "config.json", "w") as f:
             json.dump(config_dict, f, indent=2)
-    
+
     def compute_ssim(self, x: torch.Tensor, y: torch.Tensor) -> float:
         """compute ssim between two tensors."""
         x = x.detach().cpu()
         y = y.detach().cpu()
-        
+
         mu_x = x.mean()
         mu_y = y.mean()
         sigma_x = ((x - mu_x) ** 2).mean()
         sigma_y = ((y - mu_y) ** 2).mean()
         sigma_xy = ((x - mu_x) * (y - mu_y)).mean()
-        
-        C1, C2 = 0.01 ** 2, 0.03 ** 2
-        ssim = ((2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2)) / \
-               ((mu_x ** 2 + mu_y ** 2 + C1) * (sigma_x + sigma_y + C2))
+
+        C1, C2 = 0.01**2, 0.03**2
+        ssim = ((2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2)) / (
+            (mu_x**2 + mu_y**2 + C1) * (sigma_x + sigma_y + C2)
+        )
         return ssim.item()
-    
+
     def compute_psnr(self, x: torch.Tensor, y: torch.Tensor) -> float:
         """compute psnr between two tensors."""
         mse = ((x - y) ** 2).mean().item()
         if mse == 0:
             return 100.0
         return 10 * np.log10(1.0 / mse)
-    
+
     def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
         """execute single training step with amp support."""
-        real_A = batch['A'].to(self.device)
-        real_B = batch['B'].to(self.device)
-        center_A = batch['A_center'].to(self.device)
-        center_B = batch['B_center'].to(self.device)
+        real_A = batch["A"].to(self.device)
+        real_B = batch["B"].to(self.device)
+        center_A = batch["A_center"].to(self.device)
+        center_B = batch["B_center"].to(self.device)
 
         # ================================================================
         # train generators with amp
@@ -323,14 +328,20 @@ class SACycleGAN25DTrainer:
             loss_gan_B2A = self.losses.gan_loss.generator_loss(pred_fake_A)
 
             # ssim loss
-            loss_ssim = self.losses.ssim_loss(center_A, rec_A) + \
-                        self.losses.ssim_loss(center_B, rec_B)
+            loss_ssim = self.losses.ssim_loss(center_A, rec_A) + self.losses.ssim_loss(
+                center_B, rec_B
+            )
 
             # total generator loss
-            loss_G = (loss_gan_A2B + loss_gan_B2A +
-                      loss_cycle_A + loss_cycle_B +
-                      loss_identity_A + loss_identity_B +
-                      loss_ssim)
+            loss_G = (
+                loss_gan_A2B
+                + loss_gan_B2A
+                + loss_cycle_A
+                + loss_cycle_B
+                + loss_identity_A
+                + loss_identity_B
+                + loss_ssim
+            )
 
         self.scaler_G.scale(loss_G).backward()
         self.scaler_G.step(self.opt_G)
@@ -361,182 +372,176 @@ class SACycleGAN25DTrainer:
         self.scaler_D.scale(loss_D).backward()
         self.scaler_D.step(self.opt_D)
         self.scaler_D.update()
-        
+
         return {
-            'G_loss': loss_G.item(),
-            'D_loss': loss_D.item(),
-            'cycle_A': loss_cycle_A.item(),
-            'cycle_B': loss_cycle_B.item(),
-            'identity_A': loss_identity_A.item(),
-            'identity_B': loss_identity_B.item(),
-            'gan_A2B': loss_gan_A2B.item(),
-            'gan_B2A': loss_gan_B2A.item(),
-            'ssim_loss': loss_ssim.item()
+            "G_loss": loss_G.item(),
+            "D_loss": loss_D.item(),
+            "cycle_A": loss_cycle_A.item(),
+            "cycle_B": loss_cycle_B.item(),
+            "identity_A": loss_identity_A.item(),
+            "identity_B": loss_identity_B.item(),
+            "gan_A2B": loss_gan_A2B.item(),
+            "gan_B2A": loss_gan_B2A.item(),
+            "ssim_loss": loss_ssim.item(),
         }
-    
+
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         """train for one epoch."""
         self.model.train()
-        
+
         epoch_losses = {
-            'G_loss': 0, 'D_loss': 0,
-            'cycle_A': 0, 'cycle_B': 0,
-            'identity_A': 0, 'identity_B': 0,
-            'gan_A2B': 0, 'gan_B2A': 0,
-            'ssim_loss': 0
+            "G_loss": 0,
+            "D_loss": 0,
+            "cycle_A": 0,
+            "cycle_B": 0,
+            "identity_A": 0,
+            "identity_B": 0,
+            "gan_A2B": 0,
+            "gan_B2A": 0,
+            "ssim_loss": 0,
         }
-        
-        pbar = tqdm(
-            self.train_loader,
-            desc=f"Epoch {epoch}",
-            ncols=120,
-            leave=True
-        )
-        
+
+        pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}", ncols=120, leave=True)
+
         for batch_idx, batch in enumerate(pbar):
             losses = self.train_step(batch)
-            
+
             # accumulate losses
             for key in epoch_losses:
                 if key in losses:
                     epoch_losses[key] += losses[key]
-            
+
             # tensorboard logging
             self.global_step += 1
             if self.global_step % 100 == 0:
-                self.writer.add_scalar('Train/G_loss', losses['G_loss'], self.global_step)
-                self.writer.add_scalar('Train/D_loss', losses['D_loss'], self.global_step)
-                self.writer.add_scalar('Train/Cycle_loss', 
-                                       losses['cycle_A'] + losses['cycle_B'], 
-                                       self.global_step)
-            
+                self.writer.add_scalar("Train/G_loss", losses["G_loss"], self.global_step)
+                self.writer.add_scalar("Train/D_loss", losses["D_loss"], self.global_step)
+                self.writer.add_scalar(
+                    "Train/Cycle_loss", losses["cycle_A"] + losses["cycle_B"], self.global_step
+                )
+
             # update progress bar
-            pbar.set_postfix({
-                'G': f'{losses["G_loss"]:.3f}',
-                'D': f'{losses["D_loss"]:.3f}',
-                'cyc': f'{losses["cycle_A"] + losses["cycle_B"]:.3f}'
-            })
-        
+            pbar.set_postfix(
+                {
+                    "G": f"{losses['G_loss']:.3f}",
+                    "D": f"{losses['D_loss']:.3f}",
+                    "cyc": f"{losses['cycle_A'] + losses['cycle_B']:.3f}",
+                }
+            )
+
         # average losses
         n_batches = len(self.train_loader)
         for key in epoch_losses:
             epoch_losses[key] /= n_batches
-            
+
         return epoch_losses
-    
+
     @torch.no_grad()
     def validate(self) -> Dict[str, float]:
         """validate the model."""
         self.model.eval()
-        
-        metrics = {
-            'ssim_A2B': [], 'ssim_B2A': [],
-            'psnr_A2B': [], 'psnr_B2A': []
-        }
-        
+
+        metrics = {"ssim_A2B": [], "ssim_B2A": [], "psnr_A2B": [], "psnr_B2A": []}
+
         for batch in tqdm(self.val_loader, desc="Validating", ncols=100, leave=False):
-            real_A = batch['A'].to(self.device)
-            real_B = batch['B'].to(self.device)
-            center_A = batch['A_center'].to(self.device)
-            center_B = batch['B_center'].to(self.device)
-            
+            real_A = batch["A"].to(self.device)
+            real_B = batch["B"].to(self.device)
+            center_A = batch["A_center"].to(self.device)
+            center_B = batch["B_center"].to(self.device)
+
             # generate and reconstruct
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
-            
+
             fake_B_3slice = fake_B.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_B_3slice = fake_B_3slice.view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3))
             fake_A_3slice = fake_A.unsqueeze(2).repeat(1, 1, 3, 1, 1)
             fake_A_3slice = fake_A_3slice.view(fake_A.size(0), -1, fake_A.size(2), fake_A.size(3))
-            
+
             rec_A = self.model.G_B2A(fake_B_3slice)
             rec_B = self.model.G_A2B(fake_A_3slice)
-            
+
             # compute metrics per sample
             for i in range(center_A.size(0)):
-                metrics['ssim_A2B'].append(self.compute_ssim(center_A[i], rec_A[i]))
-                metrics['ssim_B2A'].append(self.compute_ssim(center_B[i], rec_B[i]))
-                metrics['psnr_A2B'].append(self.compute_psnr(center_A[i], rec_A[i]))
-                metrics['psnr_B2A'].append(self.compute_psnr(center_B[i], rec_B[i]))
-        
+                metrics["ssim_A2B"].append(self.compute_ssim(center_A[i], rec_A[i]))
+                metrics["ssim_B2A"].append(self.compute_ssim(center_B[i], rec_B[i]))
+                metrics["psnr_A2B"].append(self.compute_psnr(center_A[i], rec_A[i]))
+                metrics["psnr_B2A"].append(self.compute_psnr(center_B[i], rec_B[i]))
+
         return {
-            'ssim_A2B': np.mean(metrics['ssim_A2B']),
-            'ssim_B2A': np.mean(metrics['ssim_B2A']),
-            'psnr_A2B': np.mean(metrics['psnr_A2B']),
-            'psnr_B2A': np.mean(metrics['psnr_B2A']),
-            'ssim_std_A2B': np.std(metrics['ssim_A2B']),
-            'ssim_std_B2A': np.std(metrics['ssim_B2A'])
+            "ssim_A2B": np.mean(metrics["ssim_A2B"]),
+            "ssim_B2A": np.mean(metrics["ssim_B2A"]),
+            "psnr_A2B": np.mean(metrics["psnr_A2B"]),
+            "psnr_B2A": np.mean(metrics["psnr_B2A"]),
+            "ssim_std_A2B": np.std(metrics["ssim_A2B"]),
+            "ssim_std_B2A": np.std(metrics["ssim_B2A"]),
         }
-    
+
     def save_checkpoint(self, epoch: int, is_best: bool = False):
         """save model checkpoint."""
         checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': self.model.state_dict(),
-            'opt_G_state_dict': self.opt_G.state_dict(),
-            'opt_D_state_dict': self.opt_D.state_dict(),
-            'scheduler_G_state_dict': self.scheduler_G.state_dict(),
-            'scheduler_D_state_dict': self.scheduler_D.state_dict(),
-            'history': self.history,
-            'best_val_ssim': self.best_val_ssim,
-            'global_step': self.global_step,
-            'config': self.config.__dict__
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "opt_G_state_dict": self.opt_G.state_dict(),
+            "opt_D_state_dict": self.opt_D.state_dict(),
+            "scheduler_G_state_dict": self.scheduler_G.state_dict(),
+            "scheduler_D_state_dict": self.scheduler_D.state_dict(),
+            "history": self.history,
+            "best_val_ssim": self.best_val_ssim,
+            "global_step": self.global_step,
+            "config": self.config.__dict__,
         }
-        
+
         ckpt_dir = self.experiment_dir / "checkpoints"
-        
+
         # save latest
-        torch.save(checkpoint, ckpt_dir / 'checkpoint_latest.pth')
-        
+        torch.save(checkpoint, ckpt_dir / "checkpoint_latest.pth")
+
         # save periodic
         if epoch % 10 == 0:
-            torch.save(checkpoint, ckpt_dir / f'checkpoint_epoch_{epoch}.pth')
-        
+            torch.save(checkpoint, ckpt_dir / f"checkpoint_epoch_{epoch}.pth")
+
         # save best
         if is_best:
-            torch.save(checkpoint, ckpt_dir / 'checkpoint_best.pth')
+            torch.save(checkpoint, ckpt_dir / "checkpoint_best.pth")
             # also save to main checkpoints folder
-            torch.save(checkpoint, PROJECT_ROOT / 'checkpoints' / 'best_model.pth')
+            torch.save(checkpoint, PROJECT_ROOT / "checkpoints" / "best_model.pth")
             print(f"  ⭐ new best model saved (ssim: {self.best_val_ssim:.4f})")
-    
+
     def load_checkpoint(self, path: str):
         """load model from checkpoint."""
         checkpoint = torch.load(path, map_location=self.device)
-        
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.opt_G.load_state_dict(checkpoint['opt_G_state_dict'])
-        self.opt_D.load_state_dict(checkpoint['opt_D_state_dict'])
-        self.scheduler_G.load_state_dict(checkpoint['scheduler_G_state_dict'])
-        self.scheduler_D.load_state_dict(checkpoint['scheduler_D_state_dict'])
-        self.history = checkpoint['history']
-        self.best_val_ssim = checkpoint['best_val_ssim']
-        self.global_step = checkpoint.get('global_step', 0)
-        self.start_epoch = checkpoint['epoch'] + 1
-        
+
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.opt_G.load_state_dict(checkpoint["opt_G_state_dict"])
+        self.opt_D.load_state_dict(checkpoint["opt_D_state_dict"])
+        self.scheduler_G.load_state_dict(checkpoint["scheduler_G_state_dict"])
+        self.scheduler_D.load_state_dict(checkpoint["scheduler_D_state_dict"])
+        self.history = checkpoint["history"]
+        self.best_val_ssim = checkpoint["best_val_ssim"]
+        self.global_step = checkpoint.get("global_step", 0)
+        self.start_epoch = checkpoint["epoch"] + 1
+
         print(f"loaded checkpoint from epoch {checkpoint['epoch']}")
-    
+
     def save_samples(self, epoch: int):
         """save sample images for visualization."""
         self.model.eval()
-        
+
         with torch.no_grad():
             batch = next(iter(self.val_loader))
-            real_A = batch['A'][:4].to(self.device)
-            real_B = batch['B'][:4].to(self.device)
-            
+            real_A = batch["A"][:4].to(self.device)
+            real_B = batch["B"][:4].to(self.device)
+
             fake_B = self.model.G_A2B(real_A)
             fake_A = self.model.G_B2A(real_B)
-            
+
             # log to tensorboard
-            self.writer.add_images(f'Samples/Real_A', 
-                                   batch['A_center'][:4, :1], epoch)
-            self.writer.add_images(f'Samples/Fake_B', 
-                                   fake_B[:4, :1], epoch)
-            self.writer.add_images(f'Samples/Real_B', 
-                                   batch['B_center'][:4, :1], epoch)
-            self.writer.add_images(f'Samples/Fake_A', 
-                                   fake_A[:4, :1], epoch)
-    
+            self.writer.add_images(f"Samples/Real_A", batch["A_center"][:4, :1], epoch)
+            self.writer.add_images(f"Samples/Fake_B", fake_B[:4, :1], epoch)
+            self.writer.add_images(f"Samples/Real_B", batch["B_center"][:4, :1], epoch)
+            self.writer.add_images(f"Samples/Fake_A", fake_A[:4, :1], epoch)
+
     def train(self, epochs: int, validate_every: int = 5, save_every: int = 10):
         """full training loop."""
         print("\n" + "=" * 60)
@@ -549,82 +554,86 @@ class SACycleGAN25DTrainer:
         print(f"validate every: {validate_every} epochs")
         print(f"save every: {save_every} epochs")
         print("=" * 60 + "\n")
-        
+
         training_start = time.time()
-        
+
         for epoch in range(self.start_epoch, epochs):
             epoch_start = time.time()
-            
+
             # train
             train_losses = self.train_epoch(epoch + 1)
-            
+
             # update schedulers
             self.scheduler_G.step()
             self.scheduler_D.step()
-            
+
             # log training losses
-            self.history['train']['G_loss'].append(train_losses['G_loss'])
-            self.history['train']['D_loss'].append(train_losses['D_loss'])
-            self.history['train']['cycle_loss'].append(
-                train_losses['cycle_A'] + train_losses['cycle_B']
+            self.history["train"]["G_loss"].append(train_losses["G_loss"])
+            self.history["train"]["D_loss"].append(train_losses["D_loss"])
+            self.history["train"]["cycle_loss"].append(
+                train_losses["cycle_A"] + train_losses["cycle_B"]
             )
-            self.history['train']['identity_loss'].append(
-                train_losses['identity_A'] + train_losses['identity_B']
+            self.history["train"]["identity_loss"].append(
+                train_losses["identity_A"] + train_losses["identity_B"]
             )
-            self.history['learning_rate'].append(self.scheduler_G.get_last_lr()[0])
-            
+            self.history["learning_rate"].append(self.scheduler_G.get_last_lr()[0])
+
             epoch_time = time.time() - epoch_start
-            self.history['epoch_times'].append(epoch_time)
-            
+            self.history["epoch_times"].append(epoch_time)
+
             # validate
             if (epoch + 1) % validate_every == 0:
                 val_metrics = self.validate()
-                
-                self.history['val']['ssim_A2B'].append(val_metrics['ssim_A2B'])
-                self.history['val']['ssim_B2A'].append(val_metrics['ssim_B2A'])
-                self.history['val']['psnr_A2B'].append(val_metrics['psnr_A2B'])
-                self.history['val']['psnr_B2A'].append(val_metrics['psnr_B2A'])
-                
+
+                self.history["val"]["ssim_A2B"].append(val_metrics["ssim_A2B"])
+                self.history["val"]["ssim_B2A"].append(val_metrics["ssim_B2A"])
+                self.history["val"]["psnr_A2B"].append(val_metrics["psnr_A2B"])
+                self.history["val"]["psnr_B2A"].append(val_metrics["psnr_B2A"])
+
                 # tensorboard
-                self.writer.add_scalar('Val/SSIM_A2B', val_metrics['ssim_A2B'], epoch + 1)
-                self.writer.add_scalar('Val/SSIM_B2A', val_metrics['ssim_B2A'], epoch + 1)
-                self.writer.add_scalar('Val/PSNR_A2B', val_metrics['psnr_A2B'], epoch + 1)
-                self.writer.add_scalar('Val/PSNR_B2A', val_metrics['psnr_B2A'], epoch + 1)
-                
-                avg_ssim = (val_metrics['ssim_A2B'] + val_metrics['ssim_B2A']) / 2
+                self.writer.add_scalar("Val/SSIM_A2B", val_metrics["ssim_A2B"], epoch + 1)
+                self.writer.add_scalar("Val/SSIM_B2A", val_metrics["ssim_B2A"], epoch + 1)
+                self.writer.add_scalar("Val/PSNR_A2B", val_metrics["psnr_A2B"], epoch + 1)
+                self.writer.add_scalar("Val/PSNR_B2A", val_metrics["psnr_B2A"], epoch + 1)
+
+                avg_ssim = (val_metrics["ssim_A2B"] + val_metrics["ssim_B2A"]) / 2
                 is_best = avg_ssim > self.best_val_ssim
                 if is_best:
                     self.best_val_ssim = avg_ssim
-                
+
                 # print epoch summary
-                print(f"\n{'='*60}")
+                print(f"\n{'=' * 60}")
                 print(f"epoch {epoch + 1}/{epochs} summary ({epoch_time:.1f}s)")
-                print(f"{'='*60}")
+                print(f"{'=' * 60}")
                 print(f"train losses:")
                 print(f"  generator: {train_losses['G_loss']:.4f}")
                 print(f"  discriminator: {train_losses['D_loss']:.4f}")
                 print(f"  cycle: {train_losses['cycle_A'] + train_losses['cycle_B']:.4f}")
                 print(f"  identity: {train_losses['identity_A'] + train_losses['identity_B']:.4f}")
                 print(f"\nvalidation metrics:")
-                print(f"  ssim a→b→a: {val_metrics['ssim_A2B']:.4f} ± {val_metrics['ssim_std_A2B']:.4f}")
-                print(f"  ssim b→a→b: {val_metrics['ssim_B2A']:.4f} ± {val_metrics['ssim_std_B2A']:.4f}")
+                print(
+                    f"  ssim a→b→a: {val_metrics['ssim_A2B']:.4f} ± {val_metrics['ssim_std_A2B']:.4f}"
+                )
+                print(
+                    f"  ssim b→a→b: {val_metrics['ssim_B2A']:.4f} ± {val_metrics['ssim_std_B2A']:.4f}"
+                )
                 print(f"  psnr a→b→a: {val_metrics['psnr_A2B']:.2f} db")
                 print(f"  psnr b→a→b: {val_metrics['psnr_B2A']:.2f} db")
                 print(f"\nlearning rate: {self.scheduler_G.get_last_lr()[0]:.2e}")
-                
+
                 # save samples
                 self.save_samples(epoch + 1)
-                
+
                 # save checkpoint
                 self.save_checkpoint(epoch + 1, is_best)
-            
+
             # save periodic checkpoint
             elif (epoch + 1) % save_every == 0:
                 self.save_checkpoint(epoch + 1)
                 print(f"\n  checkpoint saved at epoch {epoch + 1}")
-        
+
         total_time = time.time() - training_start
-        
+
         # final summary
         print("\n" + "=" * 60)
         print("training complete!")
@@ -635,84 +644,83 @@ class SACycleGAN25DTrainer:
         print(f"checkpoints saved to: {self.experiment_dir / 'checkpoints'}")
         print(f"tensorboard logs: {PROJECT_ROOT / 'runs' / self.experiment_name}")
         print("=" * 60)
-        
+
         # save final history
-        with open(self.experiment_dir / 'training_history.json', 'w') as f:
+        with open(self.experiment_dir / "training_history.json", "w") as f:
             json.dump(self.history, f, indent=2)
-        
+
         # close tensorboard writer
         self.writer.close()
-        
+
         return self.history
 
 
 def load_config(config_path: str) -> dict:
     """load configuration from yaml file."""
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Train 2.5D SA-CycleGAN for MRI Harmonization',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Train 2.5D SA-CycleGAN for MRI Harmonization",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     # config file (takes precedence)
-    parser.add_argument('--config', type=str, default=None,
-                        help='Path to yaml config file')
+    parser.add_argument("--config", type=str, default=None, help="Path to yaml config file")
 
     # data arguments
-    parser.add_argument('--brats_dir', type=str,
-                        default=str(PROJECT_ROOT / 'preprocessed' / 'brats'),
-                        help='Path to BraTS data')
-    parser.add_argument('--upenn_dir', type=str,
-                        default=str(PROJECT_ROOT / 'preprocessed' / 'upenn'),
-                        help='Path to UPenn data')
-    parser.add_argument('--output_dir', type=str,
-                        default=str(PROJECT_ROOT / 'experiments'),
-                        help='Output directory for experiments')
-    
+    parser.add_argument(
+        "--brats_dir",
+        type=str,
+        default=str(PROJECT_ROOT / "preprocessed" / "brats"),
+        help="Path to BraTS data",
+    )
+    parser.add_argument(
+        "--upenn_dir",
+        type=str,
+        default=str(PROJECT_ROOT / "preprocessed" / "upenn"),
+        help="Path to UPenn data",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=str(PROJECT_ROOT / "experiments"),
+        help="Output directory for experiments",
+    )
+
     # training arguments
-    parser.add_argument('--epochs', type=int, default=100, 
-                        help='Number of training epochs')
-    parser.add_argument('--batch_size', type=int, default=4, 
-                        help='Training batch size')
-    parser.add_argument('--image_size', type=int, default=128, 
-                        help='Image size (height and width)')
-    parser.add_argument('--lr', type=float, default=2e-4, 
-                        help='Learning rate')
-    parser.add_argument('--num_workers', type=int, default=4, 
-                        help='Number of data loader workers')
-    
+    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=4, help="Training batch size")
+    parser.add_argument("--image_size", type=int, default=128, help="Image size (height and width)")
+    parser.add_argument("--lr", type=float, default=2e-4, help="Learning rate")
+    parser.add_argument("--num_workers", type=int, default=4, help="Number of data loader workers")
+
     # model arguments
-    parser.add_argument('--ngf', type=int, default=64, 
-                        help='Number of generator filters')
-    parser.add_argument('--ndf', type=int, default=64, 
-                        help='Number of discriminator filters')
-    parser.add_argument('--n_residual', type=int, default=9, 
-                        help='Number of residual blocks')
-    
+    parser.add_argument("--ngf", type=int, default=64, help="Number of generator filters")
+    parser.add_argument("--ndf", type=int, default=64, help="Number of discriminator filters")
+    parser.add_argument("--n_residual", type=int, default=9, help="Number of residual blocks")
+
     # loss weights
-    parser.add_argument('--lambda_cycle', type=float, default=10.0,
-                        help='Cycle consistency loss weight')
-    parser.add_argument('--lambda_identity', type=float, default=5.0,
-                        help='Identity loss weight')
-    parser.add_argument('--lambda_ssim', type=float, default=1.0,
-                        help='SSIM loss weight')
-    
+    parser.add_argument(
+        "--lambda_cycle", type=float, default=10.0, help="Cycle consistency loss weight"
+    )
+    parser.add_argument("--lambda_identity", type=float, default=5.0, help="Identity loss weight")
+    parser.add_argument("--lambda_ssim", type=float, default=1.0, help="SSIM loss weight")
+
     # training settings
-    parser.add_argument('--validate_every', type=int, default=5,
-                        help='Validate every N epochs')
-    parser.add_argument('--save_every', type=int, default=10,
-                        help='Save checkpoint every N epochs')
-    parser.add_argument('--experiment_name', type=str, default=None,
-                        help='Experiment name (default: timestamp)')
-    
+    parser.add_argument("--validate_every", type=int, default=5, help="Validate every N epochs")
+    parser.add_argument("--save_every", type=int, default=10, help="Save checkpoint every N epochs")
+    parser.add_argument(
+        "--experiment_name", type=str, default=None, help="Experiment name (default: timestamp)"
+    )
+
     # resume training
-    parser.add_argument('--resume', type=str, default=None, 
-                        help='Path to checkpoint to resume from')
-    
+    parser.add_argument(
+        "--resume", type=str, default=None, help="Path to checkpoint to resume from"
+    )
+
     args = parser.parse_args()
 
     # load config from yaml if provided
@@ -726,10 +734,10 @@ def main():
                 setattr(args, key, value)
 
         # handle special mappings
-        if 'lr_G' in cfg:
-            args.lr = cfg['lr_G']
-        if 'n_residual_blocks' in cfg:
-            args.n_residual = cfg['n_residual_blocks']
+        if "lr_G" in cfg:
+            args.lr = cfg["lr_G"]
+        if "n_residual_blocks" in cfg:
+            args.n_residual = cfg["n_residual_blocks"]
 
     # create config
     config = SACycleGAN25DConfig(
@@ -738,9 +746,9 @@ def main():
         n_residual_blocks=args.n_residual,
         lambda_cycle=args.lambda_cycle,
         lambda_identity=args.lambda_identity,
-        lambda_ssim=args.lambda_ssim
+        lambda_ssim=args.lambda_ssim,
     )
-    
+
     # create trainer
     trainer = SACycleGAN25DTrainer(
         config=config,
@@ -751,20 +759,18 @@ def main():
         image_size=args.image_size,
         lr=args.lr,
         num_workers=args.num_workers,
-        experiment_name=args.experiment_name
+        experiment_name=args.experiment_name,
     )
-    
+
     # resume if specified
     if args.resume:
         trainer.load_checkpoint(args.resume)
-    
+
     # train
     trainer.train(
-        epochs=args.epochs,
-        validate_every=args.validate_every,
-        save_every=args.save_every
+        epochs=args.epochs, validate_every=args.validate_every, save_every=args.save_every
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -14,7 +14,7 @@ def setup_logging(
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ):
     """set up logging for neuroscope.
-    
+
     args:
         log_file: path to log file. if none, logs will only be printed to console.
         log_level: logging level.
@@ -23,33 +23,33 @@ def setup_logging(
     # create logger
     logger = logging.getLogger("neuroscope")
     logger.setLevel(log_level)
-    
+
     # create formatter
     formatter = logging.Formatter(log_format)
-    
+
     # create console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    
+
     # create file handler if log_file is provided
     if log_file is not None:
         # create directory if it doesn't exist
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-    
+
     return logger
 
 
 def get_logger(name: str) -> logging.Logger:
     """get logger with specified name.
-    
+
     args:
         name: logger name.
-    
+
     returns:
         logger instance.
     """

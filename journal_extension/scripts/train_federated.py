@@ -172,9 +172,12 @@ class LocalClient:
             )
 
             loss_G = (
-                loss_gan_A2B + loss_gan_B2A
-                + loss_cycle_A + loss_cycle_B
-                + loss_idt_A + loss_idt_B
+                loss_gan_A2B
+                + loss_gan_B2A
+                + loss_cycle_A
+                + loss_cycle_B
+                + loss_idt_A
+                + loss_idt_B
                 + loss_ssim
             )
 
@@ -303,7 +306,9 @@ class FederatedTrainer:
         self.eval_every_n_rounds = eval_every_n_rounds
 
         if experiment_name is None:
-            experiment_name = f"federated_{aggregation_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            experiment_name = (
+                f"federated_{aggregation_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
         self.experiment_name = experiment_name
         self.experiment_dir = self.output_dir / experiment_name
         self.experiment_dir.mkdir(parents=True, exist_ok=True)
@@ -335,9 +340,7 @@ class FederatedTrainer:
             print(f"fedprox mu: {fedprox_mu}")
 
         runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
-        self.writer = SummaryWriter(
-            log_dir=str(runs_dir / experiment_name)
-        )
+        self.writer = SummaryWriter(log_dir=str(runs_dir / experiment_name))
 
         # create global model
         self.global_model = create_model(config).to(self.device)
@@ -521,7 +524,9 @@ class FederatedTrainer:
         self.history = checkpoint.get("history", self.history)
         start_round = checkpoint["round"] + 1
         best_ssim = checkpoint.get("best_ssim", 0.0)
-        print(f"  resumed at round {start_round}/{self.communication_rounds}, best_ssim={best_ssim:.4f}")
+        print(
+            f"  resumed at round {start_round}/{self.communication_rounds}, best_ssim={best_ssim:.4f}"
+        )
         return start_round, best_ssim
 
     def train(self, resume: bool = False):
@@ -568,8 +573,10 @@ class FederatedTrainer:
                 )
 
             # aggregate client updates
-            dataset_sizes = [len(self.client_loaders[i % len(self.client_loaders)].dataset)
-                            for i in range(self.n_clients)]
+            dataset_sizes = [
+                len(self.client_loaders[i % len(self.client_loaders)].dataset)
+                for i in range(self.n_clients)
+            ]
             self.aggregator.aggregate(client_models, dataset_sizes)
 
             # scaffold control variate update
@@ -578,17 +585,12 @@ class FederatedTrainer:
                     n_local_steps = self.local_epochs * len(
                         self.client_loaders[i % len(self.client_loaders)]
                     )
-                    self.aggregator.update_controls(
-                        i, client_models[i], self.lr_G, n_local_steps
-                    )
+                    self.aggregator.update_controls(i, client_models[i], self.lr_G, n_local_steps)
 
             round_time = time.time() - round_start
 
             # log average client losses
-            avg_losses = {
-                k: np.mean([cl[k] for cl in round_losses])
-                for k in round_losses[0]
-            }
+            avg_losses = {k: np.mean([cl[k] for cl in round_losses]) for k in round_losses[0]}
             for k, v in avg_losses.items():
                 self.writer.add_scalar(f"federated/{k}", v, round_idx)
 
@@ -617,22 +619,29 @@ class FederatedTrainer:
                     best_ssim = mean_ssim
                     self.save_checkpoint(round_idx, best_ssim)
                     torch.save(
-                        {"round": round_idx, "global_model_state_dict": self.global_model.state_dict(),
-                         "best_ssim": best_ssim},
+                        {
+                            "round": round_idx,
+                            "global_model_state_dict": self.global_model.state_dict(),
+                            "best_ssim": best_ssim,
+                        },
                         self.experiment_dir / "checkpoints" / "checkpoint_best.pth",
                     )
                     print(f"  *** new best ssim: {mean_ssim:.4f} ***")
 
-                self.history["global_metrics"].append({
-                    "round": round_idx,
-                    "metrics": metrics,
-                })
+                self.history["global_metrics"].append(
+                    {
+                        "round": round_idx,
+                        "metrics": metrics,
+                    }
+                )
 
-            self.history["rounds"].append({
-                "round": round_idx,
-                "avg_losses": avg_losses,
-                "time": round_time,
-            })
+            self.history["rounds"].append(
+                {
+                    "round": round_idx,
+                    "avg_losses": avg_losses,
+                    "time": round_time,
+                }
+            )
 
             # save latest every round (each round is ~2hrs, minimize lost progress)
             self.save_checkpoint(round_idx, best_ssim)
@@ -660,8 +669,12 @@ def parse_args():
     parser.add_argument("--n_clients", type=int, default=2)
     parser.add_argument("--local_epochs", type=int, default=5)
     parser.add_argument("--communication_rounds", type=int, default=40)
-    parser.add_argument("--aggregation_strategy", type=str, default="fedavg",
-                        choices=["fedavg", "fedprox", "scaffold"])
+    parser.add_argument(
+        "--aggregation_strategy",
+        type=str,
+        default="fedavg",
+        choices=["fedavg", "fedprox", "scaffold"],
+    )
     parser.add_argument("--share_discriminators", action="store_true")
     parser.add_argument("--fedprox_mu", type=float, default=0.01)
     parser.add_argument("--batch_size", type=int, default=16)
@@ -674,8 +687,7 @@ def parse_args():
     parser.add_argument("--n_residual_blocks", type=int, default=9)
     parser.add_argument("--eval_every_n_rounds", type=int, default=5)
     parser.add_argument("--experiment_name", type=str, default=None)
-    parser.add_argument("--resume", action="store_true",
-                        help="resume from latest checkpoint")
+    parser.add_argument("--resume", action="store_true", help="resume from latest checkpoint")
     return parser.parse_args()
 
 

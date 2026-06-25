@@ -156,10 +156,9 @@ class MultiLayerPatchNCELoss(nn.Module):
         self.num_patches = num_patches
 
         # per-layer mlp projection heads
-        self.mlp_heads = nn.ModuleList([
-            MLPProjectionHead(nc, projection_dim)
-            for nc in layer_channels
-        ])
+        self.mlp_heads = nn.ModuleList(
+            [MLPProjectionHead(nc, projection_dim) for nc in layer_channels]
+        )
 
         # shared patchnce loss
         self.nce_loss = PatchNCELoss(
@@ -220,9 +219,7 @@ class MultiLayerPatchNCELoss(nn.Module):
         total_loss = 0.0
         n_layers = len(self.mlp_heads)
 
-        for i, (feat_q, feat_k, mlp) in enumerate(
-            zip(query_feats, key_feats, self.mlp_heads)
-        ):
+        for i, (feat_q, feat_k, mlp) in enumerate(zip(query_feats, key_feats, self.mlp_heads)):
             # sample corresponding patch locations from both feature maps
             b, c, h, w = feat_q.shape
             n = h * w
@@ -231,7 +228,7 @@ class MultiLayerPatchNCELoss(nn.Module):
             feat_k_flat = feat_k.permute(0, 2, 3, 1).reshape(b, n, c)
 
             if n > self.num_patches:
-                indices = torch.randperm(n, device=feat_q.device)[:self.num_patches]
+                indices = torch.randperm(n, device=feat_q.device)[: self.num_patches]
                 idx_exp = indices.unsqueeze(0).unsqueeze(-1).expand(b, -1, c)
                 feat_q_flat = feat_q_flat.gather(1, idx_exp)
                 feat_k_flat = feat_k_flat.gather(1, idx_exp)

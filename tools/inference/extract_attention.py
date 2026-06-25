@@ -47,57 +47,57 @@ class AttentionExtractor:
         # find all cbam and self-attention modules
         for name, module in self.model.named_modules():
             # cbam channel attention
-            if 'channel_attention' in name.lower() or 'cbam' in name.lower():
-                hook = module.register_forward_hook(
-                    self._get_channel_attention_hook(name)
-                )
+            if "channel_attention" in name.lower() or "cbam" in name.lower():
+                hook = module.register_forward_hook(self._get_channel_attention_hook(name))
                 self.hooks.append(hook)
                 print(f"registered hook on {name}")
 
             # cbam spatial attention
-            if 'spatial_attention' in name.lower() or 'spatial' in name.lower():
-                hook = module.register_forward_hook(
-                    self._get_spatial_attention_hook(name)
-                )
+            if "spatial_attention" in name.lower() or "spatial" in name.lower():
+                hook = module.register_forward_hook(self._get_spatial_attention_hook(name))
                 self.hooks.append(hook)
                 print(f"registered hook on {name}")
 
             # self-attention
-            if 'self_attention' in name.lower() or 'selfattention' in name.lower():
-                hook = module.register_forward_hook(
-                    self._get_self_attention_hook(name)
-                )
+            if "self_attention" in name.lower() or "selfattention" in name.lower():
+                hook = module.register_forward_hook(self._get_self_attention_hook(name))
                 self.hooks.append(hook)
                 print(f"registered hook on {name}")
 
     def _get_channel_attention_hook(self, name: str):
         """create hook for channel attention"""
+
         def hook(module, input, output):
             # channel attention typically outputs [b, c, 1, 1]
             if isinstance(output, torch.Tensor):
-                self.attention_maps[f'{name}_output'] = output.detach().cpu()
+                self.attention_maps[f"{name}_output"] = output.detach().cpu()
+
         return hook
 
     def _get_spatial_attention_hook(self, name: str):
         """create hook for spatial attention"""
+
         def hook(module, input, output):
             # spatial attention typically outputs [b, 1, h, w]
             if isinstance(output, torch.Tensor):
-                self.attention_maps[f'{name}_output'] = output.detach().cpu()
+                self.attention_maps[f"{name}_output"] = output.detach().cpu()
+
         return hook
 
     def _get_self_attention_hook(self, name: str):
         """create hook for self-attention"""
+
         def hook(module, input, output):
             # self-attention output can vary by implementation
             # typically [b, c, h, w] or attention weights [b, heads, hw, hw]
             if isinstance(output, tuple):
                 # some implementations return (output, attention_weights)
-                self.attention_maps[f'{name}_output'] = output[0].detach().cpu()
+                self.attention_maps[f"{name}_output"] = output[0].detach().cpu()
                 if len(output) > 1:
-                    self.attention_maps[f'{name}_weights'] = output[1].detach().cpu()
+                    self.attention_maps[f"{name}_weights"] = output[1].detach().cpu()
             elif isinstance(output, torch.Tensor):
-                self.attention_maps[f'{name}_output'] = output.detach().cpu()
+                self.attention_maps[f"{name}_output"] = output.detach().cpu()
+
         return hook
 
     def clear(self):
@@ -115,38 +115,39 @@ class AttentionExtractor:
         summary = {}
         for name, tensor in self.attention_maps.items():
             summary[name] = {
-                'shape': tuple(tensor.shape),
-                'mean': float(tensor.mean()),
-                'std': float(tensor.std()),
-                'min': float(tensor.min()),
-                'max': float(tensor.max())
+                "shape": tuple(tensor.shape),
+                "mean": float(tensor.mean()),
+                "std": float(tensor.std()),
+                "min": float(tensor.min()),
+                "max": float(tensor.max()),
             }
         return summary
 
 
-def load_model(checkpoint_path: Path, device: str = 'cuda') -> CycleGAN25D:
+def load_model(checkpoint_path: Path, device: str = "cuda") -> CycleGAN25D:
     """load trained cyclegan model from checkpoint"""
     print(f"loading model from {checkpoint_path}")
 
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
     # extract config
-    if 'config' in checkpoint:
-        config = checkpoint['config']
+    if "config" in checkpoint:
+        config = checkpoint["config"]
     else:
         from neuroscope.config.config import load_config
-        config = load_config('neuroscope/config/experiments/sa_cyclegan_25d.yaml')
+
+        config = load_config("neuroscope/config/experiments/sa_cyclegan_25d.yaml")
 
     # initialize model
     model = CycleGAN25D(config)
     model.to(device)
 
     # load weights
-    if 'generator_A2B_state_dict' in checkpoint:
-        model.G_A2B.load_state_dict(checkpoint['generator_A2B_state_dict'])
-        model.G_B2A.load_state_dict(checkpoint['generator_B2A_state_dict'])
-    elif 'model_state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['model_state_dict'])
+    if "generator_A2B_state_dict" in checkpoint:
+        model.G_A2B.load_state_dict(checkpoint["generator_A2B_state_dict"])
+        model.G_B2A.load_state_dict(checkpoint["generator_B2A_state_dict"])
+    elif "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"])
     else:
         raise ValueError("checkpoint format not recognized")
 
@@ -160,11 +161,7 @@ def load_test_dataset(config, case_indices: List[int]) -> DataLoader:
     """load test dataset with case filtering"""
     print("loading test dataset...")
 
-    test_dataset = BraTSDataset(
-        config=config,
-        split='test',
-        augment=False
-    )
+    test_dataset = BraTSDataset(config=config, split="test", augment=False)
 
     print(f"test dataset size: {len(test_dataset)}")
     print(f"filtering to {len(case_indices)} selected cases")
@@ -178,17 +175,14 @@ def load_test_dataset(config, case_indices: List[int]) -> DataLoader:
         batch_size=1,
         shuffle=False,
         num_workers=0,
-        pin_memory=True if torch.cuda.is_available() else False
+        pin_memory=True if torch.cuda.is_available() else False,
     )
 
     return test_loader
 
 
 def extract_attention_for_cases(
-    model: CycleGAN25D,
-    dataloader: DataLoader,
-    device: str,
-    case_info: Dict
+    model: CycleGAN25D, dataloader: DataLoader, device: str, case_info: Dict
 ) -> Dict:
     """
     extract attention maps for selected cases
@@ -210,11 +204,7 @@ def extract_attention_for_cases(
         print("this may be a baseline model without attention mechanisms.")
         return None
 
-    results = {
-        'attention_a2b': [],
-        'attention_b2a': [],
-        'case_indices': case_info['indices']
-    }
+    results = {"attention_a2b": [], "attention_b2a": [], "case_indices": case_info["indices"]}
 
     print(f"\nextracting attention maps from {len(dataloader)} cases...")
 
@@ -222,8 +212,8 @@ def extract_attention_for_cases(
         for batch_idx, batch in enumerate(dataloader):
             # extract data
             if isinstance(batch, dict):
-                real_a = batch['domain_a'].to(device)
-                real_b = batch['domain_b'].to(device)
+                real_a = batch["domain_a"].to(device)
+                real_b = batch["domain_b"].to(device)
             else:
                 real_a, real_b = batch
                 real_a = real_a.to(device)
@@ -239,8 +229,8 @@ def extract_attention_for_cases(
             _ = model.G_B2A(real_b)
             attention_b2a = {k: v.numpy() for k, v in extractor_b2a.attention_maps.items()}
 
-            results['attention_a2b'].append(attention_a2b)
-            results['attention_b2a'].append(attention_b2a)
+            results["attention_a2b"].append(attention_a2b)
+            results["attention_b2a"].append(attention_b2a)
 
             if (batch_idx + 1) % 5 == 0:
                 print(f"  processed {batch_idx + 1}/{len(dataloader)} cases")
@@ -253,12 +243,13 @@ def extract_attention_for_cases(
     print(f"  captured {len(results['attention_a2b'])} cases")
 
     # print summary of first case
-    if results['attention_a2b']:
+    if results["attention_a2b"]:
         print("\nattention map summary (first case, a2b):")
-        first_case = results['attention_a2b'][0]
+        first_case = results["attention_a2b"][0]
         for name, tensor in first_case.items():
-            print(f"  {name}: shape={tensor.shape}, "
-                  f"mean={tensor.mean():.4f}, std={tensor.std():.4f}")
+            print(
+                f"  {name}: shape={tensor.shape}, mean={tensor.mean():.4f}, std={tensor.std():.4f}"
+            )
 
     return results
 
@@ -270,23 +261,21 @@ def save_attention_results(results: Dict, output_dir: Path, category: str):
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f'attention_{category}.npz'
+    output_file = output_dir / f"attention_{category}.npz"
 
     # flatten nested structure for numpy savez
-    save_dict = {
-        'case_indices': results['case_indices']
-    }
+    save_dict = {"case_indices": results["case_indices"]}
 
     # save each case's attention maps
     for case_idx, (attn_a2b, attn_b2a) in enumerate(
-        zip(results['attention_a2b'], results['attention_b2a'])
+        zip(results["attention_a2b"], results["attention_b2a"])
     ):
         for name, tensor in attn_a2b.items():
-            key = f'case{case_idx}_a2b_{name}'
+            key = f"case{case_idx}_a2b_{name}"
             save_dict[key] = tensor
 
         for name, tensor in attn_b2a.items():
-            key = f'case{case_idx}_b2a_{name}'
+            key = f"case{case_idx}_b2a_{name}"
             save_dict[key] = tensor
 
     np.savez_compressed(output_file, **save_dict)
@@ -296,22 +285,38 @@ def save_attention_results(results: Dict, output_dir: Path, category: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='extract attention maps from model')
-    parser.add_argument('--cases', type=str,
-                       default='tools/inference/case_ids.json',
-                       help='path to case selection json')
-    parser.add_argument('--checkpoint', type=str,
-                       default='experiments/sa_cyclegan_25d_rtx6000_resume_20260108_002543/checkpoints/checkpoint_best.pth',
-                       help='path to model checkpoint')
-    parser.add_argument('--output_dir', type=str,
-                       default='results/inference',
-                       help='output directory for attention maps')
-    parser.add_argument('--device', type=str,
-                       default='cuda' if torch.cuda.is_available() else 'cpu',
-                       help='device to run extraction on')
-    parser.add_argument('--categories', type=str, nargs='+',
-                       default=['best', 'worst', 'median'],
-                       help='which case categories to process (subset for attention)')
+    parser = argparse.ArgumentParser(description="extract attention maps from model")
+    parser.add_argument(
+        "--cases",
+        type=str,
+        default="tools/inference/case_ids.json",
+        help="path to case selection json",
+    )
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default="experiments/sa_cyclegan_25d_rtx6000_resume_20260108_002543/checkpoints/checkpoint_best.pth",
+        help="path to model checkpoint",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="results/inference",
+        help="output directory for attention maps",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda" if torch.cuda.is_available() else "cpu",
+        help="device to run extraction on",
+    )
+    parser.add_argument(
+        "--categories",
+        type=str,
+        nargs="+",
+        default=["best", "worst", "median"],
+        help="which case categories to process (subset for attention)",
+    )
 
     args = parser.parse_args()
 
@@ -322,15 +327,15 @@ def main():
     output_dir = project_root / args.output_dir
 
     # check device
-    if args.device == 'cuda' and not torch.cuda.is_available():
+    if args.device == "cuda" and not torch.cuda.is_available():
         print("warning: cuda requested but not available, using cpu")
-        args.device = 'cpu'
+        args.device = "cpu"
 
     print(f"using device: {args.device}")
 
     # load case selections
     print(f"\nloading case selections from {cases_path}")
-    with open(cases_path, 'r') as f:
+    with open(cases_path, "r") as f:
         cases = json.load(f)
 
     # load model
@@ -343,32 +348,30 @@ def main():
             continue
 
         case_info = cases[category]
-        n_cases = len(case_info['indices'])
+        n_cases = len(case_info["indices"])
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"extracting attention for {category} cases")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"description: {case_info['description']}")
         print(f"number of cases: {n_cases}")
 
         # load test dataset
-        test_loader = load_test_dataset(config, case_info['indices'])
+        test_loader = load_test_dataset(config, case_info["indices"])
 
         # extract attention
-        results = extract_attention_for_cases(
-            model, test_loader, args.device, case_info
-        )
+        results = extract_attention_for_cases(model, test_loader, args.device, case_info)
 
         # save results
         save_attention_results(results, output_dir, category)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("attention extraction complete")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"results saved to: {output_dir}")
     print("\nnext step:")
     print("  generate figures: python tools/inference/generate_qualitative_figures.py")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

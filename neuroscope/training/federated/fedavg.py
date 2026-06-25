@@ -59,9 +59,7 @@ class FedAvgAggregator:
                     state[k] = v.clone()
             return state
 
-    def distribute_to_clients(
-        self, client_models: List[nn.Module]
-    ) -> None:
+    def distribute_to_clients(self, client_models: List[nn.Module]) -> None:
         """
         distribute global model weights to all clients.
 
@@ -116,18 +114,14 @@ class FedAvgAggregator:
                 aggregated_state[k] = torch.zeros_like(global_state[k])
                 for client, weight in zip(client_models, client_weights):
                     client_state = client.state_dict()
-                    aggregated_state[k] += weight * client_state[k].to(
-                        aggregated_state[k].device
-                    )
+                    aggregated_state[k] += weight * client_state[k].to(aggregated_state[k].device)
             else:
                 # keep global state for non-aggregated parameters
                 aggregated_state[k] = global_state[k]
 
         self.global_model.load_state_dict(aggregated_state)
 
-    def compute_model_divergence(
-        self, client_models: List[nn.Module]
-    ) -> Dict[str, float]:
+    def compute_model_divergence(self, client_models: List[nn.Module]) -> Dict[str, float]:
         """
         compute divergence between client models and global model.
 
@@ -244,9 +238,7 @@ class FederatedSimulator:
 
         # local training
         client_metrics = []
-        for i, (trainer, model) in enumerate(
-            zip(client_trainers, self.client_models)
-        ):
+        for i, (trainer, model) in enumerate(zip(client_trainers, self.client_models)):
             trainer.model = model
             metrics = {}
             for _ in range(self.local_epochs):

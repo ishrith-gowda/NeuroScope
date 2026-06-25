@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -134,9 +135,11 @@ def summarise_extension_a(patchnce: Dict[float, Dict], patchnce_test: Dict[float
     if not rows:
         return {"primary": None, "ablation": []}
     best_row = max(rows, key=lambda r: r["val_ssim"])
-    return {"primary": next((r for r in rows if r["lambda"] == 1.0), best_row),
-            "best_by_val_ssim": best_row,
-            "ablation": rows}
+    return {
+        "primary": next((r for r in rows if r["lambda"] == 1.0), best_row),
+        "best_by_val_ssim": best_row,
+        "ablation": rows,
+    }
 
 
 def summarise_extension_b(d: Dict) -> Dict:
@@ -191,7 +194,9 @@ def summarise_extension_d(d: Dict) -> Dict:
         "raw_b_to_a_dice": mean_fg(ds.get("raw_b_to_raw_a", {})),
         "harm_b_to_a_dice": mean_fg(ds.get("harm_b_to_harm_a", {})),
         "improvement_a_to_b_pct": float(ds["improvement"]["dice_mean_foreground_relative_pct"]),
-        "improvement_b_to_a_pct": float(ds["improvement_reverse"]["dice_mean_foreground_relative_pct"]),
+        "improvement_b_to_a_pct": float(
+            ds["improvement_reverse"]["dice_mean_foreground_relative_pct"]
+        ),
         "delta_a_to_b": float(ds["improvement"]["dice_mean_foreground_delta"]),
         "delta_b_to_a": float(ds["improvement_reverse"]["dice_mean_foreground_delta"]),
     }
@@ -227,8 +232,7 @@ def fig_cross_extension_overview(
 ) -> None:
     """one big multi-panel figure --- one panel per extension."""
     fig = plt.figure(figsize=(13.0, 10.0))
-    gs = fig.add_gridspec(3, 3, hspace=0.55, wspace=0.35,
-                          height_ratios=[1.0, 1.0, 1.0])
+    gs = fig.add_gridspec(3, 3, hspace=0.55, wspace=0.35, height_ratios=[1.0, 1.0, 1.0])
 
     # panel 1: extension a -- best val ssim per lambda
     ax = fig.add_subplot(gs[0, 0])
@@ -259,8 +263,7 @@ def fig_cross_extension_overview(
         ax.set_ylim(0.95, 1.0)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Mean Val SSIM")
-        ax.set_title("(b) Extension A: Validation Trajectories",
-                     color=EXT_COLORS["A"])
+        ax.set_title("(b) Extension A: Validation Trajectories", color=EXT_COLORS["A"])
         ax.legend(ncol=2, fontsize=8, loc="lower right")
 
     # panel 3: extension b -- compression rate-distortion-ish
@@ -272,22 +275,24 @@ def fig_cross_extension_overview(
         ax.set_xlim(0, len(bpe))
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Bits Per Element (Train)")
-        ax.set_title("(c) Extension B: Rate Trajectory",
-                     color=EXT_COLORS["B"])
+        ax.set_title("(c) Extension B: Rate Trajectory", color=EXT_COLORS["B"])
 
     # panel 4: extension b val ssim trajectory
     ax = fig.add_subplot(gs[1, 0])
     if c and c["history"]["val"].get("ssim_A2B"):
         ssim_a = np.asarray(c["history"]["val"]["ssim_A2B"])
         ssim_b = np.asarray(c["history"]["val"]["ssim_B2A"])
-        ax.plot(np.arange(len(ssim_a)), ssim_a, label="A$\\rightarrow$B",
-                color=EXT_COLORS["B"])
-        ax.plot(np.arange(len(ssim_b)), ssim_b, label="B$\\rightarrow$A",
-                color="#10B981", linestyle="--")
+        ax.plot(np.arange(len(ssim_a)), ssim_a, label="A$\\rightarrow$B", color=EXT_COLORS["B"])
+        ax.plot(
+            np.arange(len(ssim_b)),
+            ssim_b,
+            label="B$\\rightarrow$A",
+            color="#10B981",
+            linestyle="--",
+        )
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Validation SSIM")
-        ax.set_title("(d) Extension B: Reconstruction with Compression",
-                     color=EXT_COLORS["B"])
+        ax.set_title("(d) Extension B: Reconstruction with Compression", color=EXT_COLORS["B"])
         ax.legend(loc="lower right", fontsize=8)
 
     # panel 5: extension c training losses
@@ -295,17 +300,27 @@ def fig_cross_extension_overview(
     m = all_results.get("multi_domain")
     if m:
         epochs = np.arange(len(m["history"]["train"]["G_loss"]))
-        ax.plot(epochs, m["history"]["train"]["G_loss"], label="$\\mathcal{L}_G$",
-                color=EXT_COLORS["C"])
-        ax.plot(epochs, m["history"]["train"]["rec_loss"], label="$\\mathcal{L}_{rec}$",
-                color="#FB923C", linestyle="--")
-        ax.plot(epochs, m["history"]["train"]["cls_loss"], label="$\\mathcal{L}_{cls}$",
-                color="#FBBF24", linestyle=":")
+        ax.plot(
+            epochs, m["history"]["train"]["G_loss"], label="$\\mathcal{L}_G$", color=EXT_COLORS["C"]
+        )
+        ax.plot(
+            epochs,
+            m["history"]["train"]["rec_loss"],
+            label="$\\mathcal{L}_{rec}$",
+            color="#FB923C",
+            linestyle="--",
+        )
+        ax.plot(
+            epochs,
+            m["history"]["train"]["cls_loss"],
+            label="$\\mathcal{L}_{cls}$",
+            color="#FBBF24",
+            linestyle=":",
+        )
         ax.set_yscale("log")
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Loss (log scale)")
-        ax.set_title("(e) Extension C: Multi-Domain Training",
-                     color=EXT_COLORS["C"])
+        ax.set_title("(e) Extension C: Multi-Domain Training", color=EXT_COLORS["C"])
         ax.legend(loc="upper right", fontsize=8)
 
     # panel 6: extension d downstream dice deltas
@@ -313,18 +328,23 @@ def fig_cross_extension_overview(
     ds = all_results.get("downstream")
     if ds:
         labels = ["A$\\rightarrow$B", "B$\\rightarrow$A"]
-        deltas = [float(ds["improvement"]["dice_mean_foreground_relative_pct"]),
-                  float(ds["improvement_reverse"]["dice_mean_foreground_relative_pct"])]
+        deltas = [
+            float(ds["improvement"]["dice_mean_foreground_relative_pct"]),
+            float(ds["improvement_reverse"]["dice_mean_foreground_relative_pct"]),
+        ]
         bars = ax.bar(labels, deltas, color=EXT_COLORS["D"])
         for bar, val in zip(bars, deltas):
-            ax.text(bar.get_x() + bar.get_width() / 2,
-                    val + (0.5 if val >= 0 else -0.5),
-                    f"{val:+.1f}\\%", ha="center", fontsize=9,
-                    va="bottom" if val >= 0 else "top")
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                val + (0.5 if val >= 0 else -0.5),
+                f"{val:+.1f}\\%",
+                ha="center",
+                fontsize=9,
+                va="bottom" if val >= 0 else "top",
+            )
         ax.axhline(0, color="black", linewidth=0.8)
         ax.set_ylabel("Relative $\\Delta$ Dice (\\%)")
-        ax.set_title("(f) Extension D: Downstream Segmentation",
-                     color=EXT_COLORS["D"])
+        ax.set_title("(f) Extension D: Downstream Segmentation", color=EXT_COLORS["D"])
 
     # panel 7: extension e federated convergence
     ax = fig.add_subplot(gs[2, 0])
@@ -338,8 +358,7 @@ def fig_cross_extension_overview(
         ax.plot(rs, sb, "s--", color="#F87171", label="B$\\rightarrow$A")
         ax.set_xlabel("Federated Round")
         ax.set_ylabel("Global SSIM")
-        ax.set_title("(g) Extension E: FedAvg Convergence",
-                     color=EXT_COLORS["E"])
+        ax.set_title("(g) Extension E: FedAvg Convergence", color=EXT_COLORS["E"])
         ax.legend(loc="lower right", fontsize=8)
 
     # panel 8: extension e per-round wall time
@@ -349,8 +368,7 @@ def fig_cross_extension_overview(
         ax.plot(np.arange(len(times)), times, color=EXT_COLORS["E"], linewidth=1.6)
         ax.set_xlabel("Federated Round")
         ax.set_ylabel("Round Time (s)")
-        ax.set_title("(h) Extension E: Wall Time per Round",
-                     color=EXT_COLORS["E"])
+        ax.set_title("(h) Extension E: Wall Time per Round", color=EXT_COLORS["E"])
 
     # panel 9: cross-extension epoch-time bar
     ax = fig.add_subplot(gs[2, 2])
@@ -381,8 +399,7 @@ def fig_cross_extension_overview(
     ax.set_ylabel("Mean Epoch Time (s)")
     ax.set_title("(i) Per-Epoch Wall Time Comparison")
 
-    fig.suptitle("Journal Extension: Cross-Method Synthesis",
-                 fontsize=14, y=1.0)
+    fig.suptitle("Journal Extension: Cross-Method Synthesis", fontsize=14, y=1.0)
     fig.savefig(out_dir / "fig_cross_extension_overview.pdf")
     fig.savefig(out_dir / "fig_cross_extension_overview.png")
     plt.close(fig)
@@ -462,8 +479,9 @@ def fig_cross_extension_radar(summary: Dict, out_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(7.0, 6.0), subplot_kw=dict(polar=True))
     for label, vals in series.items():
         v = vals + vals[:1]
-        ax.plot(angles, v, label=f"Ext. {label}", color=EXT_COLORS.get(label, "black"),
-                linewidth=1.7)
+        ax.plot(
+            angles, v, label=f"Ext. {label}", color=EXT_COLORS.get(label, "black"), linewidth=1.7
+        )
         ax.fill(angles, v, color=EXT_COLORS.get(label, "black"), alpha=0.12)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(metrics)
@@ -471,16 +489,16 @@ def fig_cross_extension_radar(summary: Dict, out_dir: Path) -> None:
     ax.set_yticklabels(["0.25", "0.50", "0.75", "1.00"], fontsize=8)
     ax.set_ylim(0, 1)
     ax.legend(loc="upper right", bbox_to_anchor=(1.32, 1.05), fontsize=9)
-    ax.set_title("Cross-Extension Profile (Normalized Metrics)",
-                 fontsize=12, pad=18)
+    ax.set_title("Cross-Extension Profile (Normalized Metrics)", fontsize=12, pad=18)
     fig.tight_layout()
     fig.savefig(out_dir / "fig_cross_extension_radar.pdf")
     fig.savefig(out_dir / "fig_cross_extension_radar.png")
     plt.close(fig)
 
 
-def fig_cross_extension_progress(patchnce: Dict[float, Dict], all_results: Dict,
-                                  out_dir: Path) -> None:
+def fig_cross_extension_progress(
+    patchnce: Dict[float, Dict], all_results: Dict, out_dir: Path
+) -> None:
     """compact 2x2 multi-extension training-trajectory comparison."""
     fig, axes = plt.subplots(2, 2, figsize=(10.0, 6.5))
 
@@ -491,8 +509,7 @@ def fig_cross_extension_progress(patchnce: Dict[float, Dict], all_results: Dict,
             ssim_a = np.asarray(patchnce[l]["val"]["ssim_A2B"])
             ssim_b = np.asarray(patchnce[l]["val"]["ssim_B2A"])
             mean = (ssim_a + ssim_b) / 2.0
-            ax.plot(np.arange(len(mean)), mean, label=f"A, $\\lambda$={l}",
-                    alpha=0.85)
+            ax.plot(np.arange(len(mean)), mean, label=f"A, $\\lambda$={l}", alpha=0.85)
     ax.set_xlim(0, 200)
     ax.set_ylim(0.95, 1.0)
     ax.set_xlabel("Epoch")
@@ -506,10 +523,14 @@ def fig_cross_extension_progress(patchnce: Dict[float, Dict], all_results: Dict,
     if c and c["history"]["val"].get("ssim_A2B"):
         ssim_a = np.asarray(c["history"]["val"]["ssim_A2B"])
         ssim_b = np.asarray(c["history"]["val"]["ssim_B2A"])
-        ax.plot(np.arange(len(ssim_a)), ssim_a, color=EXT_COLORS["B"],
-                label="A$\\rightarrow$B")
-        ax.plot(np.arange(len(ssim_b)), ssim_b, color="#10B981", linestyle="--",
-                label="B$\\rightarrow$A")
+        ax.plot(np.arange(len(ssim_a)), ssim_a, color=EXT_COLORS["B"], label="A$\\rightarrow$B")
+        ax.plot(
+            np.arange(len(ssim_b)),
+            ssim_b,
+            color="#10B981",
+            linestyle="--",
+            label="B$\\rightarrow$A",
+        )
     ax.set_xlim(0, 200)
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Validation SSIM")
@@ -548,8 +569,7 @@ def fig_cross_extension_progress(patchnce: Dict[float, Dict], all_results: Dict,
     ax.set_title("(d) Extension E (Federated FedAvg) Convergence")
     ax.legend(loc="lower right", fontsize=8)
 
-    fig.suptitle("Cross-Extension Training/Convergence Trajectories",
-                 fontsize=12, y=1.0)
+    fig.suptitle("Cross-Extension Training/Convergence Trajectories", fontsize=12, y=1.0)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(out_dir / "fig_cross_extension_progress.pdf")
     fig.savefig(out_dir / "fig_cross_extension_progress.png")
@@ -586,66 +606,88 @@ def table_cross_extension(summary: Dict, out_dir: Path) -> None:
 
     rows = []
     if a:
-        rows.append({
-            "id": "A", "name": "PatchNCE Hybrid",
-            "config": f"$\\lambda_{{\\mathrm{{NCE}}}}$={a.get('lambda')}",
-            "metric": fmt(a.get("val_ssim"), 4),
-            "metric_name": "Mean Val SSIM",
-            "secondary": fmt(a.get("val_psnr"), 2) + " dB",
-            "epochs": "200",
-            "wall_time": fmt(hours(a.get("epoch_time_mean"), 200), 1) + " h",
-        })
+        rows.append(
+            {
+                "id": "A",
+                "name": "PatchNCE Hybrid",
+                "config": f"$\\lambda_{{\\mathrm{{NCE}}}}$={a.get('lambda')}",
+                "metric": fmt(a.get("val_ssim"), 4),
+                "metric_name": "Mean Val SSIM",
+                "secondary": fmt(a.get("val_psnr"), 2) + " dB",
+                "epochs": "200",
+                "wall_time": fmt(hours(a.get("epoch_time_mean"), 200), 1) + " h",
+            }
+        )
     if b:
-        rows.append({
-            "id": "B", "name": "Compression-Harmonization",
-            "config": f"BPE={fmt(b.get('bpe_final'), 2)}",
-            "metric": fmt(b.get("best_val_ssim"), 4),
-            "metric_name": "Best Val SSIM",
-            "secondary": fmt(b.get("final_val_psnr_A2B"), 2) + " dB",
-            "epochs": str(b.get("epochs", "--")),
-            "wall_time": fmt(hours(b.get("epoch_time_mean"), b.get("epochs")), 1) + " h",
-        })
+        rows.append(
+            {
+                "id": "B",
+                "name": "Compression-Harmonization",
+                "config": f"BPE={fmt(b.get('bpe_final'), 2)}",
+                "metric": fmt(b.get("best_val_ssim"), 4),
+                "metric_name": "Best Val SSIM",
+                "secondary": fmt(b.get("final_val_psnr_A2B"), 2) + " dB",
+                "epochs": str(b.get("epochs", "--")),
+                "wall_time": fmt(hours(b.get("epoch_time_mean"), b.get("epochs")), 1) + " h",
+            }
+        )
     if c:
-        rows.append({
-            "id": "C", "name": "Multi-Domain (N>2) AdaIN",
-            "config": "N=4 domains",
-            "metric": fmt(c.get("rec_loss_final"), 4),
-            "metric_name": "Final Rec Loss",
-            "secondary": "$\\mathcal{L}_{cls}$=" + fmt(c.get("cls_loss_final"), 4),
-            "epochs": str(c.get("epochs", "--")),
-            "wall_time": fmt(hours(c.get("epoch_time_mean"), c.get("epochs")), 1) + " h",
-        })
+        rows.append(
+            {
+                "id": "C",
+                "name": "Multi-Domain (N>2) AdaIN",
+                "config": "N=4 domains",
+                "metric": fmt(c.get("rec_loss_final"), 4),
+                "metric_name": "Final Rec Loss",
+                "secondary": "$\\mathcal{L}_{cls}$=" + fmt(c.get("cls_loss_final"), 4),
+                "epochs": str(c.get("epochs", "--")),
+                "wall_time": fmt(hours(c.get("epoch_time_mean"), c.get("epochs")), 1) + " h",
+            }
+        )
     if d:
-        rows.append({
-            "id": "D", "name": "Downstream Segmentation Transfer",
-            "config": "U-Net, BraTS$\\leftrightarrow$UPenn",
-            "metric": fmt(d.get("delta_a_to_b"), 4),
-            "metric_name": "$\\Delta$ Dice (A$\\rightarrow$B)",
-            "secondary": fmt(d.get("improvement_a_to_b_pct"), 2) + "\\% rel.",
-            "epochs": "--",
-            "wall_time": "--",
-        })
+        rows.append(
+            {
+                "id": "D",
+                "name": "Downstream Segmentation Transfer",
+                "config": "U-Net, BraTS$\\leftrightarrow$UPenn",
+                "metric": fmt(d.get("delta_a_to_b"), 4),
+                "metric_name": "$\\Delta$ Dice (A$\\rightarrow$B)",
+                "secondary": fmt(d.get("improvement_a_to_b_pct"), 2) + "\\% rel.",
+                "epochs": "--",
+                "wall_time": "--",
+            }
+        )
     if e:
-        rows.append({
-            "id": "E", "name": "Federated " + str(e.get("aggregation", "")).upper(),
-            "config": f"{e.get('n_rounds')} rounds, 2 clients",
-            "metric": fmt(e.get("best_ssim"), 4),
-            "metric_name": "Best Global SSIM",
-            "secondary": "Final A$\\rightarrow$B=" + fmt(e.get("final_global_ssim_A2B"), 4),
-            "epochs": str(e.get("n_rounds")),
-            "wall_time": fmt((e.get("final_round_time") or 0) * (e.get("n_rounds") or 0) / 3600, 1) + " h",
-        })
+        rows.append(
+            {
+                "id": "E",
+                "name": "Federated " + str(e.get("aggregation", "")).upper(),
+                "config": f"{e.get('n_rounds')} rounds, 2 clients",
+                "metric": fmt(e.get("best_ssim"), 4),
+                "metric_name": "Best Global SSIM",
+                "secondary": "Final A$\\rightarrow$B=" + fmt(e.get("final_global_ssim_A2B"), 4),
+                "epochs": str(e.get("n_rounds")),
+                "wall_time": fmt(
+                    (e.get("final_round_time") or 0) * (e.get("n_rounds") or 0) / 3600, 1
+                )
+                + " h",
+            }
+        )
 
     lines = []
     lines.append("\\begin{table*}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Synthesis of all five journal-extension contributions. "
-                 "SSIM values are reported on the standard 200-epoch protocol. "
-                 "Wall times use the deployment cluster (NVIDIA A100-PCIE-40GB).}")
+    lines.append(
+        "\\caption{Synthesis of all five journal-extension contributions. "
+        "SSIM values are reported on the standard 200-epoch protocol. "
+        "Wall times use the deployment cluster (NVIDIA A100-PCIE-40GB).}"
+    )
     lines.append("\\label{tab:cross_extension}")
     lines.append("\\begin{tabular}{clllllr}")
     lines.append("\\toprule")
-    lines.append("Ext. & Contribution & Configuration & Primary Metric & Secondary & Epochs / Rounds & Wall Time \\\\")
+    lines.append(
+        "Ext. & Contribution & Configuration & Primary Metric & Secondary & Epochs / Rounds & Wall Time \\\\"
+    )
     lines.append("\\midrule")
     for r in rows:
         lines.append(

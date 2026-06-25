@@ -7,12 +7,12 @@ from typing import Dict, Any, Optional
 
 class BaseConfig:
     """base configuration class for neuroscope."""
-    
+
     def __init__(self):
         """initialize base configuration."""
         # find project root (parent directory of neuroscope package)
         self.project_root = Path(__file__).resolve().parent.parent.parent.parent
-        
+
         # default paths
         self.paths = {
             "data_dir": self.project_root / "data",
@@ -25,7 +25,7 @@ class BaseConfig:
             "logs_dir": self.project_root / "logs",
             "mlruns_dir": self.project_root / "mlruns",
         }
-        
+
         # default preprocessing parameters
         self.preprocessing = {
             "n4_bias_correction": True,
@@ -36,7 +36,7 @@ class BaseConfig:
             "resampling_spacing": [1.0, 1.0, 1.0],
             "normalization_percentiles": [1, 99],
         }
-        
+
         # default model parameters
         self.model = {
             "dimensions": 3,  # 2d or 3d
@@ -46,7 +46,7 @@ class BaseConfig:
             "dropout_rate": 0.0,
             "use_instance_norm": True,
         }
-        
+
         # default training parameters
         self.training = {
             "batch_size": 4,
@@ -60,17 +60,17 @@ class BaseConfig:
             "patch_size": [96, 96, 96],
             "samples_per_volume": 8,
         }
-        
+
         # default evaluation parameters
         self.evaluation = {
             "metrics": ["ssim", "psnr", "mse", "mae"],
             "sample_count": 10,
             "batch_size": 4,
         }
-        
+
         # initialize from environment variables
         self._init_from_env()
-    
+
     def _init_from_env(self):
         """initialize configuration from environment variables."""
         # override paths from environment variables
@@ -78,11 +78,11 @@ class BaseConfig:
             env_key = f"NEUROSCOPE_{key.upper()}"
             if env_key in os.environ:
                 self.paths[key] = Path(os.environ[env_key])
-        
+
         # create directories if they don't exist
         for path in self.paths.values():
             os.makedirs(path, exist_ok=True)
-    
+
     def update(self, config_dict: Dict[str, Any]):
         """update configuration from dictionary."""
         for section, values in config_dict.items():
@@ -90,40 +90,47 @@ class BaseConfig:
                 getattr(self, section).update(values)
             else:
                 setattr(self, section, values)
-    
+
     def from_file(self, config_path: Path):
         """load configuration from file."""
         import json
-        
+
         with open(config_path, "r") as f:
             config_dict = json.load(f)
-        
+
         self.update(config_dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """convert configuration to dictionary."""
         config_dict = {}
-        
+
         # convert attributes to dictionary
         for attr in dir(self):
-            if not attr.startswith("_") and attr != "to_dict" and attr != "from_file" and attr != "update":
+            if (
+                not attr.startswith("_")
+                and attr != "to_dict"
+                and attr != "from_file"
+                and attr != "update"
+            ):
                 value = getattr(self, attr)
-                
+
                 # convert path objects to strings
                 if isinstance(value, dict):
-                    config_dict[attr] = {k: str(v) if isinstance(v, Path) else v for k, v in value.items()}
+                    config_dict[attr] = {
+                        k: str(v) if isinstance(v, Path) else v for k, v in value.items()
+                    }
                 else:
                     config_dict[attr] = str(value) if isinstance(value, Path) else value
-        
+
         return config_dict
-    
+
     def save(self, config_path: Optional[Path] = None):
         """save configuration to file."""
         import json
-        
+
         if config_path is None:
             config_path = self.project_root / "configs" / "config.json"
-        
+
         with open(config_path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 

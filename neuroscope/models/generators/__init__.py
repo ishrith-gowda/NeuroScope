@@ -66,46 +66,41 @@ CycleGANGenerator = ResNetGenerator
 
 __all__ = [
     # base
-    'BaseGenerator',
-    'EncoderDecoderGenerator',
-    'ResidualGenerator',
-    'MultiScaleGenerator',
-    'ConditionalGenerator',
-    'StyleGenerator',
-    
+    "BaseGenerator",
+    "EncoderDecoderGenerator",
+    "ResidualGenerator",
+    "MultiScaleGenerator",
+    "ConditionalGenerator",
+    "StyleGenerator",
     # encoders
-    'ConvEncoder',
-    'ResidualEncoder',
-    'DenseEncoder',
-    'MultiModalEncoder',
-    'HierarchicalEncoder',
-    
+    "ConvEncoder",
+    "ResidualEncoder",
+    "DenseEncoder",
+    "MultiModalEncoder",
+    "HierarchicalEncoder",
     # decoders
-    'ConvDecoder',
-    'ResidualDecoder',
-    'UNetDecoder',
-    'AttentionDecoder',
-    'ProgressiveDecoder',
-    'PixelShuffleDecoder',
-    
+    "ConvDecoder",
+    "ResidualDecoder",
+    "UNetDecoder",
+    "AttentionDecoder",
+    "ProgressiveDecoder",
+    "PixelShuffleDecoder",
     # resnet
-    'ResNetGenerator',
-    'ResNetGeneratorWithAttention',
-    'FastResNetGenerator',
-    'DeepResNetGenerator',
-    'CycleGANGenerator',
-    
+    "ResNetGenerator",
+    "ResNetGeneratorWithAttention",
+    "FastResNetGenerator",
+    "DeepResNetGenerator",
+    "CycleGANGenerator",
     # self-attention
-    'SAGenerator',
-    'SAEncoder',
-    'SABottleneck',
-    'SADecoder',
-    'MultiScaleSAGenerator',
-    'DenseSAGenerator',
-    
+    "SAGenerator",
+    "SAEncoder",
+    "SABottleneck",
+    "SADecoder",
+    "MultiScaleSAGenerator",
+    "DenseSAGenerator",
     # u-net
-    'UNetGenerator',
-    'AttentionUNetGenerator',
-    'ResUNetGenerator',
-    'UNetPlusPlusGenerator',
+    "UNetGenerator",
+    "AttentionUNetGenerator",
+    "ResUNetGenerator",
+    "UNetPlusPlusGenerator",
 ]

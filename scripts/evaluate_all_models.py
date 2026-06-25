@@ -39,15 +39,14 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 from tqdm import tqdm
 
 # suppress warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -55,28 +54,26 @@ logger = logging.getLogger(__name__)
 class MetricCalculator:
     """calculates various evaluation metrics for medical images."""
 
-    def __init__(self, device: str = 'cuda'):
+    def __init__(self, device: str = "cuda"):
         """
         initialize metric calculator.
 
         args:
             device: device for computation ('cuda' or 'cpu')
         """
-        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
 
         # load perceptual loss model (lpips)
         try:
             import lpips
-            self.lpips_model = lpips.LPIPS(net='vgg').to(self.device)
+
+            self.lpips_model = lpips.LPIPS(net="vgg").to(self.device)
         except ImportError:
             logger.warning("LPIPS not available. Install with: pip install lpips")
             self.lpips_model = None
 
     def calculate_ssim(
-        self,
-        image1: np.ndarray,
-        image2: np.ndarray,
-        data_range: Optional[float] = None
+        self, image1: np.ndarray, image2: np.ndarray, data_range: Optional[float] = None
     ) -> float:
         """
         calculate structural similarity index (ssim).
@@ -96,21 +93,14 @@ class MetricCalculator:
         if image1.ndim == 3:
             ssim_scores = []
             for i in range(image1.shape[2]):
-                score = ssim(
-                    image1[:, :, i],
-                    image2[:, :, i],
-                    data_range=data_range
-                )
+                score = ssim(image1[:, :, i], image2[:, :, i], data_range=data_range)
                 ssim_scores.append(score)
             return np.mean(ssim_scores)
         else:
             return ssim(image1, image2, data_range=data_range)
 
     def calculate_psnr(
-        self,
-        image1: np.ndarray,
-        image2: np.ndarray,
-        data_range: Optional[float] = None
+        self, image1: np.ndarray, image2: np.ndarray, data_range: Optional[float] = None
     ) -> float:
         """
         calculate peak signal-to-noise ratio (psnr).
@@ -153,11 +143,7 @@ class MetricCalculator:
             return 0.0
 
         # compute 2d histogram
-        hist_2d, _, _ = np.histogram2d(
-            img1_flat,
-            img2_flat,
-            bins=bins
-        )
+        hist_2d, _, _ = np.histogram2d(img1_flat, img2_flat, bins=bins)
 
         # normalize
         hist_2d = hist_2d / hist_2d.sum()
@@ -167,8 +153,12 @@ class MetricCalculator:
         hist_1d_img2 = hist_2d.sum(axis=0)
 
         # entropies
-        entropy_img1 = -np.sum(hist_1d_img1[hist_1d_img1 > 0] * np.log(hist_1d_img1[hist_1d_img1 > 0]))
-        entropy_img2 = -np.sum(hist_1d_img2[hist_1d_img2 > 0] * np.log(hist_1d_img2[hist_1d_img2 > 0]))
+        entropy_img1 = -np.sum(
+            hist_1d_img1[hist_1d_img1 > 0] * np.log(hist_1d_img1[hist_1d_img1 > 0])
+        )
+        entropy_img2 = -np.sum(
+            hist_1d_img2[hist_1d_img2 > 0] * np.log(hist_1d_img2[hist_1d_img2 > 0])
+        )
         joint_entropy = -np.sum(hist_2d[hist_2d > 0] * np.log(hist_2d[hist_2d > 0]))
 
         # normalized mutual information
@@ -176,11 +166,7 @@ class MetricCalculator:
 
         return nmi
 
-    def calculate_lpips(
-        self,
-        image1: np.ndarray,
-        image2: np.ndarray
-    ) -> float:
+    def calculate_lpips(self, image1: np.ndarray, image2: np.ndarray) -> float:
         """
         calculate learned perceptual image patch similarity (lpips).
 
@@ -219,7 +205,7 @@ class MetricCalculator:
         self,
         real_images: List[np.ndarray],
         generated_images: List[np.ndarray],
-        batch_size: int = 50
+        batch_size: int = 50,
     ) -> float:
         """
         calculate fréchet inception distance (fid).
@@ -244,13 +230,15 @@ class MetricCalculator:
             # remove final layer
             inception.fc = nn.Identity()
 
-            transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize(299),
-                transforms.CenterCrop(299),
-                transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-            ])
+            transform = transforms.Compose(
+                [
+                    transforms.ToPILImage(),
+                    transforms.Resize(299),
+                    transforms.CenterCrop(299),
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                ]
+            )
 
             def get_features(images):
                 features = []
@@ -262,7 +250,9 @@ class MetricCalculator:
                         img = np.repeat(img, 3, axis=-1)
 
                     # normalize to [0, 255]
-                    img = ((img - img.min()) / (img.max() - img.min() + 1e-8) * 255).astype(np.uint8)
+                    img = ((img - img.min()) / (img.max() - img.min() + 1e-8) * 255).astype(
+                        np.uint8
+                    )
 
                     # transform and extract features
                     img_tensor = transform(img).unsqueeze(0).to(self.device)
@@ -329,7 +319,7 @@ class ModelEvaluator:
         model_dir: Path,
         test_data_dir: Path,
         output_dir: Path,
-        device: str = 'cuda',
+        device: str = "cuda",
     ):
         """
         initialize evaluator.
@@ -345,7 +335,7 @@ class ModelEvaluator:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.metric_calculator = MetricCalculator(device)
 
     def load_model(self, checkpoint_path: Path):
@@ -360,10 +350,7 @@ class ModelEvaluator:
         return checkpoint
 
     def evaluate_model(
-        self,
-        model_name: str,
-        checkpoint_path: Path,
-        metrics: List[str] = None
+        self, model_name: str, checkpoint_path: Path, metrics: List[str] = None
     ) -> Dict:
         """
         evaluate a single model.
@@ -377,7 +364,7 @@ class ModelEvaluator:
             dictionary of evaluation results
         """
         if metrics is None:
-            metrics = ['ssim', 'psnr', 'nmi', 'lpips']
+            metrics = ["ssim", "psnr", "nmi", "lpips"]
 
         logger.info(f"\nEvaluating {model_name}...")
 
@@ -389,15 +376,15 @@ class ModelEvaluator:
         logger.info(f"Found {len(test_files)} test files")
 
         results = {
-            'model_name': model_name,
-            'checkpoint': str(checkpoint_path),
-            'n_samples': len(test_files),
-            'metrics': {}
+            "model_name": model_name,
+            "checkpoint": str(checkpoint_path),
+            "n_samples": len(test_files),
+            "metrics": {},
         }
 
         # initialize metric storage
         for metric in metrics:
-            results['metrics'][metric] = []
+            results["metrics"][metric] = []
 
         # evaluate on each test sample
         for test_file in tqdm(test_files, desc=f"Evaluating {model_name}"):
@@ -410,37 +397,36 @@ class ModelEvaluator:
             harmonized_data = test_data.copy()
 
             # calculate metrics
-            if 'ssim' in metrics:
+            if "ssim" in metrics:
                 ssim_score = self.metric_calculator.calculate_ssim(test_data, harmonized_data)
-                results['metrics']['ssim'].append(ssim_score)
+                results["metrics"]["ssim"].append(ssim_score)
 
-            if 'psnr' in metrics:
+            if "psnr" in metrics:
                 psnr_score = self.metric_calculator.calculate_psnr(test_data, harmonized_data)
-                results['metrics']['psnr'].append(psnr_score)
+                results["metrics"]["psnr"].append(psnr_score)
 
-            if 'nmi' in metrics:
+            if "nmi" in metrics:
                 nmi_score = self.metric_calculator.calculate_nmi(test_data, harmonized_data)
-                results['metrics']['nmi'].append(nmi_score)
+                results["metrics"]["nmi"].append(nmi_score)
 
-            if 'lpips' in metrics and test_data.ndim == 3:
+            if "lpips" in metrics and test_data.ndim == 3:
                 # calculate lpips on middle slice
                 mid_slice = test_data.shape[2] // 2
                 lpips_score = self.metric_calculator.calculate_lpips(
-                    test_data[:, :, mid_slice],
-                    harmonized_data[:, :, mid_slice]
+                    test_data[:, :, mid_slice], harmonized_data[:, :, mid_slice]
                 )
-                results['metrics']['lpips'].append(lpips_score)
+                results["metrics"]["lpips"].append(lpips_score)
 
         # calculate statistics
-        for metric in results['metrics']:
-            values = results['metrics'][metric]
-            results['metrics'][metric] = {
-                'mean': float(np.mean(values)),
-                'std': float(np.std(values)),
-                'median': float(np.median(values)),
-                'min': float(np.min(values)),
-                'max': float(np.max(values)),
-                'values': values,
+        for metric in results["metrics"]:
+            values = results["metrics"][metric]
+            results["metrics"][metric] = {
+                "mean": float(np.mean(values)),
+                "std": float(np.std(values)),
+                "median": float(np.median(values)),
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
+                "values": values,
             }
 
         return results
@@ -458,11 +444,11 @@ class ModelEvaluator:
         rows = []
 
         for result in results:
-            row = {'Model': result['model_name']}
+            row = {"Model": result["model_name"]}
 
-            for metric in result['metrics']:
-                row[f'{metric.upper()}_mean'] = result['metrics'][metric]['mean']
-                row[f'{metric.upper()}_std'] = result['metrics'][metric]['std']
+            for metric in result["metrics"]:
+                row[f"{metric.upper()}_mean"] = result["metrics"][metric]["mean"]
+                row[f"{metric.upper()}_std"] = result["metrics"][metric]["std"]
 
             rows.append(row)
 
@@ -472,45 +458,28 @@ class ModelEvaluator:
 
 def main():
     """main execution function."""
-    parser = argparse.ArgumentParser(
-        description='Evaluate all trained models'
+    parser = argparse.ArgumentParser(description="Evaluate all trained models")
+
+    parser.add_argument(
+        "--models-dir", type=str, required=True, help="Directory containing all model checkpoints"
+    )
+
+    parser.add_argument("--test-data", type=str, required=True, help="Test data directory")
+
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="Output directory for evaluation results"
     )
 
     parser.add_argument(
-        '--models-dir',
-        type=str,
-        required=True,
-        help='Directory containing all model checkpoints'
+        "--metrics",
+        nargs="+",
+        default=["ssim", "psnr", "nmi", "lpips"],
+        choices=["ssim", "psnr", "nmi", "lpips", "fid", "dice"],
+        help="Metrics to calculate",
     )
 
     parser.add_argument(
-        '--test-data',
-        type=str,
-        required=True,
-        help='Test data directory'
-    )
-
-    parser.add_argument(
-        '--output-dir',
-        type=str,
-        required=True,
-        help='Output directory for evaluation results'
-    )
-
-    parser.add_argument(
-        '--metrics',
-        nargs='+',
-        default=['ssim', 'psnr', 'nmi', 'lpips'],
-        choices=['ssim', 'psnr', 'nmi', 'lpips', 'fid', 'dice'],
-        help='Metrics to calculate'
-    )
-
-    parser.add_argument(
-        '--device',
-        type=str,
-        default='cuda',
-        choices=['cuda', 'cpu'],
-        help='Device for computation'
+        "--device", type=str, default="cuda", choices=["cuda", "cpu"], help="Device for computation"
     )
 
     args = parser.parse_args()
@@ -522,7 +491,7 @@ def main():
     # search for best_model.pth in subdirectories
     for model_dir in models_dir.iterdir():
         if model_dir.is_dir():
-            checkpoint_path = model_dir / 'checkpoints' / 'best_model.pth'
+            checkpoint_path = model_dir / "checkpoints" / "best_model.pth"
             if checkpoint_path.exists():
                 model_checkpoints[model_dir.name] = checkpoint_path
 
@@ -548,26 +517,26 @@ def main():
         all_results.append(results)
 
         # save individual results
-        result_file = Path(args.output_dir) / f'{model_name}_results.json'
-        with open(result_file, 'w') as f:
+        result_file = Path(args.output_dir) / f"{model_name}_results.json"
+        with open(result_file, "w") as f:
             json.dump(results, f, indent=2)
 
     # create comparison table
     comparison_df = evaluator.compare_models(all_results)
 
     # save comparison table
-    comparison_file = Path(args.output_dir) / 'model_comparison.csv'
+    comparison_file = Path(args.output_dir) / "model_comparison.csv"
     comparison_df.to_csv(comparison_file, index=False)
 
     # print comparison
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("Model Comparison:")
-    logger.info("="*80)
+    logger.info("=" * 80)
     print(comparison_df.to_string(index=False))
 
     # save all results
-    all_results_file = Path(args.output_dir) / 'all_results.json'
-    with open(all_results_file, 'w') as f:
+    all_results_file = Path(args.output_dir) / "all_results.json"
+    with open(all_results_file, "w") as f:
         json.dump(all_results, f, indent=2)
 
     logger.info(f"\nResults saved to {args.output_dir}")
@@ -575,5 +544,5 @@ def main():
     logger.info(f"All results: {all_results_file}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

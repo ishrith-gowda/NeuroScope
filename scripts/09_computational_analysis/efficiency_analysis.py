@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @dataclass
 class EfficiencyMetrics:
     """container for efficiency metrics."""
+
     method_name: str
     # timing metrics
     inference_time_per_slice_ms: float
@@ -58,6 +59,7 @@ def estimate_flops(model, input_shape: Tuple[int, ...]) -> float:
     try:
         from thop import profile
         import torch
+
         dummy_input = torch.randn(1, *input_shape)
         flops, _ = profile(model, inputs=(dummy_input,), verbose=False)
         return flops
@@ -69,11 +71,7 @@ def estimate_flops(model, input_shape: Tuple[int, ...]) -> float:
 
 
 def measure_inference_time(
-    model,
-    input_data: np.ndarray,
-    device: str = 'cuda',
-    n_warmup: int = 5,
-    n_trials: int = 20
+    model, input_data: np.ndarray, device: str = "cuda", n_warmup: int = 5, n_trials: int = 20
 ) -> Tuple[float, float]:
     """
     measure inference time with warmup.
@@ -107,20 +105,20 @@ def measure_inference_time(
     with torch.no_grad():
         for _ in range(n_warmup):
             _ = model(input_tensor)
-            if device == 'cuda':
+            if device == "cuda":
                 torch.cuda.synchronize()
 
     # measure
     times = []
     with torch.no_grad():
         for _ in range(n_trials):
-            if device == 'cuda':
+            if device == "cuda":
                 torch.cuda.synchronize()
 
             start = time.perf_counter()
             _ = model(input_tensor)
 
-            if device == 'cuda':
+            if device == "cuda":
                 torch.cuda.synchronize()
 
             end = time.perf_counter()
@@ -129,11 +127,7 @@ def measure_inference_time(
     return float(np.mean(times)), float(np.std(times))
 
 
-def measure_peak_memory(
-    model,
-    input_data: np.ndarray,
-    device: str = 'cuda'
-) -> float:
+def measure_peak_memory(model, input_data: np.ndarray, device: str = "cuda") -> float:
     """
     measure peak memory usage during inference.
 
@@ -147,7 +141,7 @@ def measure_peak_memory(
     """
     import torch
 
-    if device == 'cuda' and torch.cuda.is_available():
+    if device == "cuda" and torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
 
         model.eval()
@@ -161,12 +155,13 @@ def measure_peak_memory(
             _ = model(input_tensor)
             torch.cuda.synchronize()
 
-        peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 2)  # convert to mb
+        peak_memory = torch.cuda.max_memory_allocated() / (1024**2)  # convert to mb
         return float(peak_memory)
 
     else:
         # cpu memory measurement using tracemalloc
         import tracemalloc
+
         tracemalloc.start()
 
         model.eval()
@@ -180,7 +175,7 @@ def measure_peak_memory(
         _, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
 
-        return float(peak / (1024 ** 2))
+        return float(peak / (1024**2))
 
 
 def get_model_size(model) -> float:
@@ -199,7 +194,7 @@ def get_model_size(model) -> float:
 
     with tempfile.NamedTemporaryFile(delete=False) as f:
         torch.save(model.state_dict(), f.name)
-        size = os.path.getsize(f.name) / (1024 ** 2)
+        size = os.path.getsize(f.name) / (1024**2)
         os.unlink(f.name)
 
     return float(size)
@@ -209,9 +204,9 @@ def analyze_model_efficiency(
     model,
     input_shape: Tuple[int, ...],
     method_name: str,
-    device: str = 'cuda',
+    device: str = "cuda",
     n_slices_per_volume: int = 155,
-    n_test_samples: int = 100
+    n_test_samples: int = 100,
 ) -> EfficiencyMetrics:
     """
     comprehensive efficiency analysis for a model.
@@ -229,7 +224,7 @@ def analyze_model_efficiency(
     """
     import torch
 
-    print(f'[efficiency] analyzing {method_name}...')
+    print(f"[efficiency] analyzing {method_name}...")
 
     # create random input
     input_data = np.random.randn(*input_shape).astype(np.float32)
@@ -263,14 +258,12 @@ def analyze_model_efficiency(
         parameter_count=n_params,
         estimated_flops=flops,
         throughput_slices_per_sec=throughput_slices,
-        throughput_volumes_per_hour=throughput_volumes_hour
+        throughput_volumes_per_hour=throughput_volumes_hour,
     )
 
 
 def analyze_baseline_efficiency(
-    method_name: str,
-    input_shape: Tuple[int, ...],
-    n_samples: int = 100
+    method_name: str, input_shape: Tuple[int, ...], n_samples: int = 100
 ) -> Dict:
     """
     analyze efficiency of classical baseline methods.
@@ -284,13 +277,16 @@ def analyze_baseline_efficiency(
         efficiency metrics dictionary
     """
     # import baseline methods using path manipulation
-    baseline_path = Path(__file__).parent.parent / '08_additional_baselines'
+    baseline_path = Path(__file__).parent.parent / "08_additional_baselines"
     sys.path.insert(0, str(baseline_path))
     from baseline_methods import (
-        ZScoreNormalizer, HistogramMatcher, NyulNormalizer, WhiteStripeNormalizer
+        ZScoreNormalizer,
+        HistogramMatcher,
+        NyulNormalizer,
+        WhiteStripeNormalizer,
     )
 
-    print(f'[efficiency] analyzing {method_name}...')
+    print(f"[efficiency] analyzing {method_name}...")
 
     # create test data
     if len(input_shape) == 3:
@@ -299,20 +295,20 @@ def analyze_baseline_efficiency(
         test_data = np.random.randn(*input_shape).astype(np.float32)
 
     # initialize method
-    if method_name == 'zscore':
+    if method_name == "zscore":
         method = ZScoreNormalizer()
         process_func = lambda x: method.normalize(x)
-    elif method_name == 'histogram_matching':
+    elif method_name == "histogram_matching":
         method = HistogramMatcher()
         reference = np.random.randn(*test_data.shape).astype(np.float32)
         method.fit(reference)
         process_func = lambda x: method.transform(x)
-    elif method_name == 'nyul':
+    elif method_name == "nyul":
         method = NyulNormalizer()
         training_images = [np.random.randn(*test_data.shape).astype(np.float32) for _ in range(10)]
         method.learn_standard(training_images)
         process_func = lambda x: method.normalize(x)
-    elif method_name == 'whitestripe':
+    elif method_name == "whitestripe":
         method = WhiteStripeNormalizer()
         process_func = lambda x: method.normalize(x)
     else:
@@ -334,14 +330,14 @@ def analyze_baseline_efficiency(
     std_time = np.std(times)
 
     return {
-        'method_name': method_name,
-        'inference_time_per_slice_ms': float(mean_time),
-        'inference_time_std_ms': float(std_time),
-        'inference_time_per_volume_ms': float(mean_time * 155),
-        'throughput_slices_per_sec': float(1000.0 / mean_time) if mean_time > 0 else 0,
-        'peak_memory_mb': 0.0,  # negligible for classical methods
-        'model_size_mb': 0.0,
-        'parameter_count': 0
+        "method_name": method_name,
+        "inference_time_per_slice_ms": float(mean_time),
+        "inference_time_std_ms": float(std_time),
+        "inference_time_per_volume_ms": float(mean_time * 155),
+        "throughput_slices_per_sec": float(1000.0 / mean_time) if mean_time > 0 else 0,
+        "peak_memory_mb": 0.0,  # negligible for classical methods
+        "model_size_mb": 0.0,
+        "parameter_count": 0,
     }
 
 
@@ -365,13 +361,13 @@ method & time/slice & time/vol. & throughput & memory & params & size \\
 """
 
     for m in metrics_list:
-        name = m.get('method_name', 'Unknown')
-        time_slice = m.get('inference_time_per_slice_ms', 0)
-        time_vol = m.get('inference_time_per_volume_ms', 0) / 1000  # convert to seconds
-        throughput = m.get('throughput_volumes_per_hour', 0)
-        memory = m.get('peak_memory_mb', 0)
-        params = m.get('parameter_count', 0) / 1e6  # convert to millions
-        size = m.get('model_size_mb', 0)
+        name = m.get("method_name", "Unknown")
+        time_slice = m.get("inference_time_per_slice_ms", 0)
+        time_vol = m.get("inference_time_per_volume_ms", 0) / 1000  # convert to seconds
+        throughput = m.get("throughput_volumes_per_hour", 0)
+        memory = m.get("peak_memory_mb", 0)
+        params = m.get("parameter_count", 0) / 1e6  # convert to millions
+        size = m.get("model_size_mb", 0)
 
         latex += f"{name} & {time_slice:.2f} & {time_vol:.2f} & {throughput:.0f} & "
         latex += f"{memory:.1f} & {params:.2f} & {size:.1f} \\\\\n"
@@ -381,10 +377,10 @@ method & time/slice & time/vol. & throughput & memory & params & size \\
 \end{table}
 """
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write(latex)
 
-    print(f'[table] saved efficiency table to {output_path}')
+    print(f"[table] saved efficiency table to {output_path}")
 
 
 def plot_efficiency_comparison(metrics_list: List[Dict], output_dir: Path):
@@ -396,81 +392,104 @@ def plot_efficiency_comparison(metrics_list: List[Dict], output_dir: Path):
         output_dir: output directory
     """
     import matplotlib
-    matplotlib.use('Agg')
+
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.size': 10,
-        'axes.labelsize': 11,
-        'axes.titlesize': 12,
-        'figure.dpi': 300,
-        'savefig.dpi': 300,
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-    })
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.size": 10,
+            "axes.labelsize": 11,
+            "axes.titlesize": 12,
+            "figure.dpi": 300,
+            "savefig.dpi": 300,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+        }
+    )
 
-    methods = [m['method_name'] for m in metrics_list]
-    times = [m.get('inference_time_per_slice_ms', 0) for m in metrics_list]
-    throughputs = [m.get('throughput_volumes_per_hour', 0) for m in metrics_list]
-    memories = [m.get('peak_memory_mb', 0) for m in metrics_list]
+    methods = [m["method_name"] for m in metrics_list]
+    times = [m.get("inference_time_per_slice_ms", 0) for m in metrics_list]
+    throughputs = [m.get("throughput_volumes_per_hour", 0) for m in metrics_list]
+    memories = [m.get("peak_memory_mb", 0) for m in metrics_list]
 
     # create figure with subplots
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
     # inference time
     ax = axes[0]
-    colors = ['#2E86AB' if 'SA-CycleGAN' in m else '#A23B72' for m in methods]
-    bars = ax.bar(methods, times, color=colors, edgecolor='black', linewidth=0.5)
-    ax.set_ylabel('Inference Time (ms/slice)')
-    ax.set_title('(a) Inference Time per Slice')
-    ax.tick_params(axis='x', rotation=45)
+    colors = ["#2E86AB" if "SA-CycleGAN" in m else "#A23B72" for m in methods]
+    bars = ax.bar(methods, times, color=colors, edgecolor="black", linewidth=0.5)
+    ax.set_ylabel("Inference Time (ms/slice)")
+    ax.set_title("(a) Inference Time per Slice")
+    ax.tick_params(axis="x", rotation=45)
     for bar, t in zip(bars, times):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                f'{t:.1f}', ha='center', va='bottom', fontsize=8)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.5,
+            f"{t:.1f}",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
 
     # throughput
     ax = axes[1]
-    bars = ax.bar(methods, throughputs, color=colors, edgecolor='black', linewidth=0.5)
-    ax.set_ylabel('Throughput (volumes/hour)')
-    ax.set_title('(b) Processing Throughput')
-    ax.tick_params(axis='x', rotation=45)
+    bars = ax.bar(methods, throughputs, color=colors, edgecolor="black", linewidth=0.5)
+    ax.set_ylabel("Throughput (volumes/hour)")
+    ax.set_title("(b) Processing Throughput")
+    ax.tick_params(axis="x", rotation=45)
     for bar, t in zip(bars, throughputs):
         if t > 0:
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5,
-                    f'{t:.0f}', ha='center', va='bottom', fontsize=8)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 5,
+                f"{t:.0f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
 
     # memory
     ax = axes[2]
-    bars = ax.bar(methods, memories, color=colors, edgecolor='black', linewidth=0.5)
-    ax.set_ylabel('Peak Memory (MB)')
-    ax.set_title('(c) Peak GPU Memory Usage')
-    ax.tick_params(axis='x', rotation=45)
+    bars = ax.bar(methods, memories, color=colors, edgecolor="black", linewidth=0.5)
+    ax.set_ylabel("Peak Memory (MB)")
+    ax.set_title("(c) Peak GPU Memory Usage")
+    ax.tick_params(axis="x", rotation=45)
     for bar, m in zip(bars, memories):
         if m > 0:
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5,
-                    f'{m:.0f}', ha='center', va='bottom', fontsize=8)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 5,
+                f"{m:.0f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
 
     plt.tight_layout()
-    plt.savefig(output_dir / 'fig_efficiency_comparison.pdf', bbox_inches='tight')
-    plt.savefig(output_dir / 'fig_efficiency_comparison.png', bbox_inches='tight')
+    plt.savefig(output_dir / "fig_efficiency_comparison.pdf", bbox_inches="tight")
+    plt.savefig(output_dir / "fig_efficiency_comparison.png", bbox_inches="tight")
     plt.close()
 
-    print(f'[fig] saved efficiency comparison to {output_dir}')
+    print(f"[fig] saved efficiency comparison to {output_dir}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='computational efficiency analysis for harmonization methods'
+        description="computational efficiency analysis for harmonization methods"
     )
-    parser.add_argument('--model-path', type=str,
-                       help='path to trained model checkpoint')
-    parser.add_argument('--device', type=str, default='cuda',
-                       help='device for inference (cuda/cpu/mps)')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory for results')
-    parser.add_argument('--include-baselines', action='store_true',
-                       help='include baseline method analysis')
+    parser.add_argument("--model-path", type=str, help="path to trained model checkpoint")
+    parser.add_argument(
+        "--device", type=str, default="cuda", help="device for inference (cuda/cpu/mps)"
+    )
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="output directory for results"
+    )
+    parser.add_argument(
+        "--include-baselines", action="store_true", help="include baseline method analysis"
+    )
 
     args = parser.parse_args()
 
@@ -484,19 +503,20 @@ def main():
         try:
             import torch
             from neuroscope.models.architectures.sa_cyclegan_25d import (
-                SACycleGAN25D, SACycleGAN25DConfig
+                SACycleGAN25D,
+                SACycleGAN25DConfig,
             )
 
-            print('[efficiency] loading sa-cyclegan model...')
+            print("[efficiency] loading sa-cyclegan model...")
             config = SACycleGAN25DConfig()
             model = SACycleGAN25D(config)
 
-            checkpoint = torch.load(args.model_path, map_location='cpu', weights_only=False)
-            state_dict = checkpoint.get('model_state_dict', checkpoint)
+            checkpoint = torch.load(args.model_path, map_location="cpu", weights_only=False)
+            state_dict = checkpoint.get("model_state_dict", checkpoint)
             # handle dataparallel wrapper
             new_state_dict = {}
             for k, v in state_dict.items():
-                if k.startswith('module.'):
+                if k.startswith("module."):
                     new_state_dict[k[7:]] = v
                 else:
                     new_state_dict[k] = v
@@ -505,39 +525,39 @@ def main():
             # analyze efficiency
             input_shape = (12, 240, 240)  # 3 slices * 4 modalities
             metrics = analyze_model_efficiency(
-                model.generator_ab if hasattr(model, 'generator_ab') else model,
+                model.generator_ab if hasattr(model, "generator_ab") else model,
                 input_shape,
-                'SA-CycleGAN-2.5D',
-                args.device
+                "SA-CycleGAN-2.5D",
+                args.device,
             )
             all_metrics.append(asdict(metrics))
 
         except Exception as e:
-            print(f'[efficiency] error loading model: {e}')
+            print(f"[efficiency] error loading model: {e}")
 
     # analyze baseline methods
     if args.include_baselines:
         input_shape = (240, 240)
-        for method in ['zscore', 'histogram_matching', 'nyul', 'whitestripe']:
+        for method in ["zscore", "histogram_matching", "nyul", "whitestripe"]:
             try:
                 metrics = analyze_baseline_efficiency(method, input_shape)
                 all_metrics.append(metrics)
             except Exception as e:
-                print(f'[efficiency] error analyzing {method}: {e}')
+                print(f"[efficiency] error analyzing {method}: {e}")
 
     # save results
-    with open(output_dir / 'efficiency_results.json', 'w') as f:
+    with open(output_dir / "efficiency_results.json", "w") as f:
         json.dump(all_metrics, f, indent=2)
 
     # create comparison table and figures
     if all_metrics:
-        create_comparison_table(all_metrics, output_dir / 'table_efficiency.tex')
+        create_comparison_table(all_metrics, output_dir / "table_efficiency.tex")
         plot_efficiency_comparison(all_metrics, output_dir)
 
-    print('=' * 60)
-    print('[efficiency] analysis complete')
-    print(f'[efficiency] results saved to {output_dir}')
+    print("=" * 60)
+    print("[efficiency] analysis complete")
+    print(f"[efficiency] results saved to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

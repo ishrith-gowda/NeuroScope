@@ -35,8 +35,7 @@ from typing import Dict, List, Optional
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -82,131 +81,131 @@ class AblationStudyOrchestrator:
     def _define_ablations(self) -> Dict:
         """define all ablation configurations."""
         return {
-            'full_model': {
-                'description': 'Full SA-CycleGAN (all components)',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "full_model": {
+                "description": "Full SA-CycleGAN (all components)",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'no_attention': {
-                'description': 'Without self-attention',
-                'config': {
-                    'use_attention': False,
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "no_attention": {
+                "description": "Without self-attention",
+                "config": {
+                    "use_attention": False,
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'no_perceptual': {
-                'description': 'Without perceptual loss',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': False,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 0.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "no_perceptual": {
+                "description": "Without perceptual loss",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": False,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 0.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'no_tumor_loss': {
-                'description': 'Without tumor preservation loss',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': False,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 0.0,
-                    'lambda_anatomical': 1.0,
+            "no_tumor_loss": {
+                "description": "Without tumor preservation loss",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": False,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 0.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'no_anatomical_loss': {
-                'description': 'Without anatomical consistency loss',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': False,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 0.0,
+            "no_anatomical_loss": {
+                "description": "Without anatomical consistency loss",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": False,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 0.0,
                 },
             },
-            'cbam_attention': {
-                'description': 'Using CBAM instead of self-attention',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'cbam',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "cbam_attention": {
+                "description": "Using CBAM instead of self-attention",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "cbam",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'multihead_attention': {
-                'description': 'Using multi-head attention',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'multihead',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "multihead_attention": {
+                "description": "Using multi-head attention",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "multihead",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'fewer_blocks': {
-                'description': 'Fewer residual blocks (6 instead of 9)',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'n_residual_blocks': 6,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "fewer_blocks": {
+                "description": "Fewer residual blocks (6 instead of 9)",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "n_residual_blocks": 6,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
-            'more_blocks': {
-                'description': 'More residual blocks (12 instead of 9)',
-                'config': {
-                    'use_attention': True,
-                    'attention_type': 'self_attention',
-                    'use_perceptual_loss': True,
-                    'use_tumor_loss': True,
-                    'use_anatomical_loss': True,
-                    'n_residual_blocks': 12,
-                    'lambda_cycle': 10.0,
-                    'lambda_perceptual': 1.0,
-                    'lambda_tumor': 5.0,
-                    'lambda_anatomical': 1.0,
+            "more_blocks": {
+                "description": "More residual blocks (12 instead of 9)",
+                "config": {
+                    "use_attention": True,
+                    "attention_type": "self_attention",
+                    "use_perceptual_loss": True,
+                    "use_tumor_loss": True,
+                    "use_anatomical_loss": True,
+                    "n_residual_blocks": 12,
+                    "lambda_cycle": 10.0,
+                    "lambda_perceptual": 1.0,
+                    "lambda_tumor": 5.0,
+                    "lambda_anatomical": 1.0,
                 },
             },
         }
@@ -222,44 +221,49 @@ class AblationStudyOrchestrator:
         returns:
             results dictionary
         """
-        logger.info("\n" + "="*80)
+        logger.info("\n" + "=" * 80)
         logger.info(f"Running ablation: {name}")
         logger.info(f"Description: {self.ablations[name]['description']}")
-        logger.info("="*80 + "\n")
+        logger.info("=" * 80 + "\n")
 
         output_dir = self.output_dir / name
-        log_file = output_dir / 'training.log'
+        log_file = output_dir / "training.log"
 
         # build command
         # note: this assumes we have a configurable training script
         # you may need to adapt this based on your actual training script
         cmd = [
-            'python',
-            str(self.scripts_dir / 'train_sa_cyclegan_complete.py'),
-            '--dataset-a', str(self.data_dir / 'brats'),
-            '--dataset-b', str(self.data_dir / 'upenn_gbm'),
-            '--output-dir', str(output_dir),
-            '--epochs', str(self.epochs),
-            '--batch-size', str(self.batch_size),
-            '--mixed-precision',
+            "python",
+            str(self.scripts_dir / "train_sa_cyclegan_complete.py"),
+            "--dataset-a",
+            str(self.data_dir / "brats"),
+            "--dataset-b",
+            str(self.data_dir / "upenn_gbm"),
+            "--output-dir",
+            str(output_dir),
+            "--epochs",
+            str(self.epochs),
+            "--batch-size",
+            str(self.batch_size),
+            "--mixed-precision",
         ]
 
         # add configuration flags
         for key, value in config.items():
             if isinstance(value, bool):
                 if value:
-                    cmd.append(f'--{key.replace("_", "-")}')
+                    cmd.append(f"--{key.replace('_', '-')}")
             else:
-                cmd.extend([f'--{key.replace("_", "-")}', str(value)])
+                cmd.extend([f"--{key.replace('_', '-')}", str(value)])
 
         # set environment
         env = os.environ.copy()
-        env['CUDA_VISIBLE_DEVICES'] = str(self.gpu)
+        env["CUDA_VISIBLE_DEVICES"] = str(self.gpu)
 
         # save configuration
-        config_file = output_dir / 'ablation_config.json'
+        config_file = output_dir / "ablation_config.json"
         config_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f, indent=2)
 
         # run training
@@ -268,31 +272,26 @@ class AblationStudyOrchestrator:
         logger.info(f"Command: {' '.join(cmd)}")
         logger.info(f"Logging to: {log_file}\n")
 
-        with open(log_file, 'w') as f:
-            process = subprocess.Popen(
-                cmd,
-                stdout=f,
-                stderr=subprocess.STDOUT,
-                env=env
-            )
+        with open(log_file, "w") as f:
+            process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, env=env)
             process.wait()
 
         duration = time.time() - start_time
 
         # collect results
         result = {
-            'name': name,
-            'description': self.ablations[name]['description'],
-            'config': config,
-            'status': 'success' if process.returncode == 0 else 'failed',
-            'returncode': process.returncode,
-            'duration': duration,
-            'output_dir': str(output_dir),
-            'log_file': str(log_file),
+            "name": name,
+            "description": self.ablations[name]["description"],
+            "config": config,
+            "status": "success" if process.returncode == 0 else "failed",
+            "returncode": process.returncode,
+            "duration": duration,
+            "output_dir": str(output_dir),
+            "log_file": str(log_file),
         }
 
         if process.returncode == 0:
-            logger.info(f"+ Ablation '{name}' completed in {duration/3600:.2f} hours")
+            logger.info(f"+ Ablation '{name}' completed in {duration / 3600:.2f} hours")
         else:
             logger.error(f"✗ Ablation '{name}' failed!")
 
@@ -307,15 +306,15 @@ class AblationStudyOrchestrator:
         """
         self.start_time = time.time()
 
-        logger.info("\n" + "="*80)
+        logger.info("\n" + "=" * 80)
         logger.info("ABLATION STUDIES ORCHESTRATION")
-        logger.info("="*80)
+        logger.info("=" * 80)
         logger.info(f"Data directory: {self.data_dir}")
         logger.info(f"Output directory: {self.output_dir}")
         logger.info(f"Epochs: {self.epochs}")
         logger.info(f"Batch size: {self.batch_size}")
         logger.info(f"GPU: {self.gpu}")
-        logger.info("="*80 + "\n")
+        logger.info("=" * 80 + "\n")
 
         # determine which ablations to run
         if specific_ablations:
@@ -330,7 +329,7 @@ class AblationStudyOrchestrator:
 
         # run each ablation
         for name, ablation_info in ablations_to_run.items():
-            result = self.run_ablation(name, ablation_info['config'])
+            result = self.run_ablation(name, ablation_info["config"])
             self.results[name] = result
 
         # save results
@@ -341,35 +340,35 @@ class AblationStudyOrchestrator:
 
     def _save_results(self):
         """save ablation results to json."""
-        results_file = self.output_dir / 'ablation_results.json'
+        results_file = self.output_dir / "ablation_results.json"
 
         results_data = {
-            'start_time': self.start_time,
-            'end_time': time.time(),
-            'total_duration': time.time() - self.start_time,
-            'config': {
-                'data_dir': str(self.data_dir),
-                'epochs': self.epochs,
-                'batch_size': self.batch_size,
-                'gpu': self.gpu,
+            "start_time": self.start_time,
+            "end_time": time.time(),
+            "total_duration": time.time() - self.start_time,
+            "config": {
+                "data_dir": str(self.data_dir),
+                "epochs": self.epochs,
+                "batch_size": self.batch_size,
+                "gpu": self.gpu,
             },
-            'results': self.results,
+            "results": self.results,
         }
 
-        with open(results_file, 'w') as f:
+        with open(results_file, "w") as f:
             json.dump(results_data, f, indent=2)
 
         logger.info(f"\nResults saved to: {results_file}")
 
     def _print_summary(self):
         """print summary of ablation studies."""
-        logger.info("\n" + "="*80)
+        logger.info("\n" + "=" * 80)
         logger.info("ABLATION STUDIES SUMMARY")
-        logger.info("="*80)
+        logger.info("=" * 80)
 
         # count successes and failures
-        successes = sum(1 for r in self.results.values() if r['status'] == 'success')
-        failures = sum(1 for r in self.results.values() if r['status'] == 'failed')
+        successes = sum(1 for r in self.results.values() if r["status"] == "success")
+        failures = sum(1 for r in self.results.values() if r["status"] == "failed")
 
         logger.info(f"Total ablations: {len(self.results)}")
         logger.info(f"Successful: {successes}")
@@ -378,64 +377,43 @@ class AblationStudyOrchestrator:
 
         # list each ablation
         for name, result in self.results.items():
-            status_symbol = "+" if result['status'] == 'success' else "✗"
+            status_symbol = "+" if result["status"] == "success" else "✗"
             logger.info(f"{status_symbol} {name}")
             logger.info(f"   {result['description']}")
-            logger.info(f"   Duration: {result['duration']/3600:.2f} hours")
+            logger.info(f"   Duration: {result['duration'] / 3600:.2f} hours")
             logger.info(f"   Output: {result['output_dir']}")
             logger.info("")
 
         total_duration = time.time() - self.start_time
-        logger.info(f"Total time: {total_duration/3600:.2f} hours")
-        logger.info("="*80)
+        logger.info(f"Total time: {total_duration / 3600:.2f} hours")
+        logger.info("=" * 80)
 
 
 def main():
     """main execution function."""
-    parser = argparse.ArgumentParser(
-        description='Run ablation studies for SA-CycleGAN'
+    parser = argparse.ArgumentParser(description="Run ablation studies for SA-CycleGAN")
+
+    parser.add_argument(
+        "--data-dir", type=str, required=True, help="Directory with preprocessed data"
     )
 
     parser.add_argument(
-        '--data-dir',
-        type=str,
-        required=True,
-        help='Directory with preprocessed data'
+        "--output-dir", type=str, required=True, help="Output directory for ablation experiments"
     )
 
     parser.add_argument(
-        '--output-dir',
-        type=str,
-        required=True,
-        help='Output directory for ablation experiments'
-    )
-
-    parser.add_argument(
-        '--epochs',
+        "--epochs",
         type=int,
         default=100,
-        help='Number of training epochs (fewer than main experiment)'
+        help="Number of training epochs (fewer than main experiment)",
     )
 
-    parser.add_argument(
-        '--batch-size',
-        type=int,
-        default=4,
-        help='Batch size'
-    )
+    parser.add_argument("--batch-size", type=int, default=4, help="Batch size")
+
+    parser.add_argument("--gpu", type=int, default=0, help="GPU ID to use")
 
     parser.add_argument(
-        '--gpu',
-        type=int,
-        default=0,
-        help='GPU ID to use'
-    )
-
-    parser.add_argument(
-        '--ablations',
-        nargs='+',
-        default=None,
-        help='Specific ablations to run (default: all)'
+        "--ablations", nargs="+", default=None, help="Specific ablations to run (default: all)"
     )
 
     args = parser.parse_args()
@@ -453,5 +431,5 @@ def main():
     orchestrator.run_all_ablations(specific_ablations=args.ablations)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

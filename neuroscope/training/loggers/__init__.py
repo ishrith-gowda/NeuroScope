@@ -21,12 +21,12 @@ from .manager import LoggerManager
 
 
 __all__ = [
-    'TensorBoardLogger',
-    'CSVLogger',
-    'JSONLogger',
-    'MetricsAggregator',
-    'ConsoleLogger',
-    'Colors',
-    'colorize',
-    'LoggerManager',
+    "TensorBoardLogger",
+    "CSVLogger",
+    "JSONLogger",
+    "MetricsAggregator",
+    "ConsoleLogger",
+    "Colors",
+    "colorize",
+    "LoggerManager",
 ]

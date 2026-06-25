@@ -12,11 +12,11 @@ logger = get_logger(__name__)
 
 class MRIRegistration:
     """registration of mri volumes.
-    
+
     this class provides methods for performing registration between mri volumes
     using simpleitk, supporting rigid, affine, and deformable registration.
     """
-    
+
     def __init__(
         self,
         registration_type: str = "rigid",
@@ -31,7 +31,7 @@ class MRIRegistration:
         verbose: bool = False,
     ):
         """initialize mriregistration.
-        
+
         args:
             registration_type: type of registration ('rigid', 'affine', or 'deformable').
             metric: similarity metric ('mutual_information', 'mean_squares', etc.).
@@ -54,14 +54,14 @@ class MRIRegistration:
         self.smoothing_sigmas = smoothing_sigmas or [3, 2, 1, 0]
         self.final_interpolator = final_interpolator.lower()
         self.verbose = verbose
-        
+
         # validate parameters
         if self.registration_type not in ["rigid", "affine", "deformable"]:
             raise ValueError(
                 f"Invalid registration type: {self.registration_type}. "
                 "Must be one of 'rigid', 'affine', or 'deformable'."
             )
-    
+
     def register_volumes(
         self,
         fixed_image: np.ndarray,
@@ -70,13 +70,13 @@ class MRIRegistration:
         moving_mask: Optional[np.ndarray] = None,
     ) -> Tuple[np.ndarray, Any]:
         """register moving image to fixed image.
-        
+
         args:
             fixed_image: fixed (target) image as numpy array.
             moving_image: moving (source) image as numpy array.
             fixed_mask: optional mask for fixed image.
             moving_mask: optional mask for moving image.
-            
+
         returns:
             tuple of (registered_image, transform).
         """
@@ -84,23 +84,23 @@ class MRIRegistration:
             import SimpleITK as sitk
         except ImportError:
             raise ImportError("SimpleITK is required for MRIRegistration")
-        
+
         # convert numpy arrays to simpleitk images
         fixed_sitk = sitk.GetImageFromArray(fixed_image.astype(np.float32))
         moving_sitk = sitk.GetImageFromArray(moving_image.astype(np.float32))
-        
+
         # convert masks if provided
         fixed_mask_sitk = None
         moving_mask_sitk = None
-        
+
         if fixed_mask is not None:
             fixed_mask_sitk = sitk.GetImageFromArray(fixed_mask.astype(np.uint8))
         if moving_mask is not None:
             moving_mask_sitk = sitk.GetImageFromArray(moving_mask.astype(np.uint8))
-        
+
         # set up registration method
         registration_method = sitk.ImageRegistrationMethod()
-        
+
         # set similarity metric
         if self.metric == "mutual_information":
             registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=50)
@@ -111,7 +111,7 @@ class MRIRegistration:
         else:
             registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=50)
             logger.warning(f"Unknown metric: {self.metric}. Using mutual information.")
-        
+
         # set optimizer
         if self.optimizer == "gradient_descent":
             registration_method.SetOptimizerAsGradientDescent(
@@ -132,22 +132,22 @@ class MRIRegistration:
                 numberOfIterations=self.number_of_iterations,
             )
             logger.warning(f"Unknown optimizer: {self.optimizer}. Using gradient descent.")
-        
+
         # set sampling strategy
         registration_method.SetMetricSamplingStrategy(sitk.ImageRegistrationMethod.RANDOM)
         registration_method.SetMetricSamplingPercentage(self.sampling_percentage)
-        
+
         # set multi-resolution framework
         registration_method.SetShrinkFactorsPerLevel(self.shrink_factors)
         registration_method.SetSmoothingSigmasPerLevel(self.smoothing_sigmas)
         registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-        
+
         # set masks if provided
         if fixed_mask_sitk is not None:
             registration_method.SetMetricFixedMask(fixed_mask_sitk)
         if moving_mask_sitk is not None:
             registration_method.SetMetricMovingMask(moving_mask_sitk)
-        
+
         # initialize transform based on registration type
         initial_transform = None
         if self.registration_type == "rigid":
@@ -174,7 +174,7 @@ class MRIRegistration:
             )
             registration_method.SetInitialTransform(affine_transform)
             affine_transform = registration_method.Execute(fixed_sitk, moving_sitk)
-            
+
             # then perform deformable registration
             # reset registration method for bspline registration
             registration_method = sitk.ImageRegistrationMethod()
@@ -188,12 +188,12 @@ class MRIRegistration:
             registration_method.SetShrinkFactorsPerLevel(self.shrink_factors)
             registration_method.SetSmoothingSigmasPerLevel(self.smoothing_sigmas)
             registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
-            
+
             if fixed_mask_sitk is not None:
                 registration_method.SetMetricFixedMask(fixed_mask_sitk)
             if moving_mask_sitk is not None:
                 registration_method.SetMetricMovingMask(moving_mask_sitk)
-            
+
             # apply the affine transform to the moving image
             moving_sitk = sitk.Resample(
                 moving_sitk,
@@ -203,37 +203,39 @@ class MRIRegistration:
                 0.0,
                 moving_sitk.GetPixelID(),
             )
-            
+
             # set up the bspline transform
             transform_domain_mesh_size = [8] * moving_sitk.GetDimension()
             initial_transform = sitk.BSplineTransformInitializer(
                 fixed_sitk, transform_domain_mesh_size
             )
-        
+
         # set the initial transform
         if initial_transform is not None:
             registration_method.SetInitialTransform(initial_transform)
-        
+
         # set additional options
         if self.verbose:
             registration_method.AddCommand(sitk.sitkIterationEvent, self._registration_callback)
-        
+
         # perform registration
         transform = None
         try:
             transform = registration_method.Execute(fixed_sitk, moving_sitk)
-            logger.info(f"Registration complete. Final metric value: {registration_method.GetMetricValue()}")
+            logger.info(
+                f"Registration complete. Final metric value: {registration_method.GetMetricValue()}"
+            )
         except Exception as e:
             logger.error(f"Registration failed: {e}")
             return moving_image, None
-        
+
         # apply transform to the moving image
         interpolator = sitk.sitkLinear
         if self.final_interpolator == "nearest":
             interpolator = sitk.sitkNearestNeighbor
         elif self.final_interpolator == "bspline":
             interpolator = sitk.sitkBSpline
-        
+
         registered_sitk = sitk.Resample(
             moving_sitk,
             fixed_sitk,
@@ -242,12 +244,12 @@ class MRIRegistration:
             0.0,
             moving_sitk.GetPixelID(),
         )
-        
+
         # convert back to numpy array
         registered_image = sitk.GetArrayFromImage(registered_sitk)
-        
+
         return registered_image, transform
-    
+
     def apply_transform(
         self,
         moving_image: np.ndarray,
@@ -256,13 +258,13 @@ class MRIRegistration:
         interpolator: str = "linear",
     ) -> np.ndarray:
         """apply a transformation to a moving image.
-        
+
         args:
             moving_image: moving (source) image as numpy array.
             transform: transform to apply.
             reference_image: reference image for output dimensions.
             interpolator: interpolation method.
-            
+
         returns:
             transformed image.
         """
@@ -270,18 +272,18 @@ class MRIRegistration:
             import SimpleITK as sitk
         except ImportError:
             raise ImportError("SimpleITK is required for MRIRegistration")
-        
+
         # convert numpy arrays to simpleitk images
         moving_sitk = sitk.GetImageFromArray(moving_image.astype(np.float32))
         reference_sitk = sitk.GetImageFromArray(reference_image.astype(np.float32))
-        
+
         # set interpolator
         interp = sitk.sitkLinear
         if interpolator == "nearest":
             interp = sitk.sitkNearestNeighbor
         elif interpolator == "bspline":
             interp = sitk.sitkBSpline
-        
+
         # apply transform
         transformed_sitk = sitk.Resample(
             moving_sitk,
@@ -291,26 +293,26 @@ class MRIRegistration:
             0.0,
             moving_sitk.GetPixelID(),
         )
-        
+
         # convert back to numpy array
         transformed_image = sitk.GetArrayFromImage(transformed_sitk)
-        
+
         return transformed_image
-    
+
     def _registration_callback(self, filter):
         """callback for registration progress.
-        
+
         args:
             filter: simpleitk registration filter.
         """
         if not self.verbose:
             return
-        
+
         try:
             print(f"iteration: {filter.GetElapsedIterations()}, metric: {filter.GetMetricValue()}")
         except Exception:
             pass
-    
+
     def batch_register(
         self,
         fixed_path: Union[str, Path],
@@ -322,7 +324,7 @@ class MRIRegistration:
         save_transforms: bool = False,
     ) -> Dict[str, Dict[str, float]]:
         """batch registration of multiple volumes.
-        
+
         args:
             fixed_path: path to fixed (target) image or directory.
             moving_path: path to moving (source) image or directory.
@@ -331,37 +333,37 @@ class MRIRegistration:
             fixed_mask_path: optional path to fixed image mask or directory.
             moving_mask_path: optional path to moving image mask or directory.
             save_transforms: whether to save transforms.
-            
+
         returns:
             dictionary with registration metrics.
         """
         import glob
-        
+
         fixed_path = Path(fixed_path)
         moving_path = Path(moving_path)
         output_path = Path(output_path)
         os.makedirs(output_path, exist_ok=True)
-        
+
         # handle single file or directory
         if fixed_path.is_file() and moving_path.is_file():
             # single file registration
             fixed_files = [fixed_path]
             moving_files = [moving_path]
-            
+
             # load masks if provided
             fixed_mask = None
             if fixed_mask_path and Path(fixed_mask_path).is_file():
                 fixed_mask = self._load_volume(fixed_mask_path)
-            
+
             moving_mask = None
             if moving_mask_path and Path(moving_mask_path).is_file():
                 moving_mask = self._load_volume(moving_mask_path)
-            
+
         elif fixed_path.is_dir() and moving_path.is_dir():
             # directory-based registration
             fixed_files = sorted(glob.glob(str(fixed_path / file_pattern)))
             moving_files = sorted(glob.glob(str(moving_path / file_pattern)))
-            
+
             if len(fixed_files) != len(moving_files):
                 logger.warning(
                     f"Number of fixed files ({len(fixed_files)}) does not match "
@@ -369,7 +371,7 @@ class MRIRegistration:
                 )
         else:
             raise ValueError("Both fixed_path and moving_path must be files or directories")
-        
+
         # process each file pair
         results = {}
         for i, (fixed_file, moving_file) in enumerate(zip(fixed_files, moving_files)):
@@ -378,70 +380,72 @@ class MRIRegistration:
                 moving_name = Path(moving_file).name
                 output_file = output_path / f"registered_{moving_name}"
                 transform_file = output_path / f"transform_{moving_name}.txt"
-                
+
                 logger.info(f"Registering {moving_name} to {fixed_name}")
-                
+
                 # load images
                 fixed_image = self._load_volume(fixed_file)
                 moving_image = self._load_volume(moving_file)
-                
+
                 # load masks if directory-based
                 fixed_mask = None
                 moving_mask = None
-                
+
                 if fixed_mask_path and Path(fixed_mask_path).is_dir():
                     fixed_mask_file = Path(fixed_mask_path) / fixed_name
                     if fixed_mask_file.exists():
                         fixed_mask = self._load_volume(fixed_mask_file)
-                
+
                 if moving_mask_path and Path(moving_mask_path).is_dir():
                     moving_mask_file = Path(moving_mask_path) / moving_name
                     if moving_mask_file.exists():
                         moving_mask = self._load_volume(moving_mask_file)
-                
+
                 # register volumes
                 registered_image, transform = self.register_volumes(
                     fixed_image, moving_image, fixed_mask, moving_mask
                 )
-                
+
                 # save registered image
                 self._save_volume(registered_image, output_file, reference_file=fixed_file)
-                
+
                 # save transform if requested
                 if save_transforms and transform is not None:
                     try:
                         import SimpleITK as sitk
+
                         sitk.WriteTransform(transform, str(transform_file))
                     except Exception as e:
                         logger.error(f"Failed to save transform: {e}")
-                
+
                 # calculate metrics
                 metrics = self._calculate_metrics(fixed_image, moving_image, registered_image)
                 results[moving_name] = metrics
-                
+
                 logger.info(
                     f"Completed {moving_name}: "
                     f"Initial similarity: {metrics['initial_similarity']:.3f}, "
                     f"Final similarity: {metrics['final_similarity']:.3f}"
                 )
-                
+
             except Exception as e:
                 logger.error(f"Error processing {moving_file}: {e}")
-        
+
         return results
-    
+
     def _load_volume(self, file_path: Union[str, Path]) -> np.ndarray:
         """load a volume from file.
-        
+
         args:
             file_path: path to volume file.
-            
+
         returns:
             volume as numpy array.
         """
         if str(file_path).endswith(".nii") or str(file_path).endswith(".nii.gz"):
             try:
                 import nibabel as nib
+
                 nii_img = nib.load(str(file_path))
                 return np.asarray(nii_img.dataobj)
             except ImportError:
@@ -450,7 +454,7 @@ class MRIRegistration:
             return np.load(file_path)
         else:
             raise ValueError(f"Unsupported file format: {file_path}")
-    
+
     def _save_volume(
         self,
         volume: np.ndarray,
@@ -458,7 +462,7 @@ class MRIRegistration:
         reference_file: Optional[Union[str, Path]] = None,
     ):
         """save a volume to file.
-        
+
         args:
             volume: volume as numpy array.
             output_file: output file path.
@@ -467,33 +471,33 @@ class MRIRegistration:
         if str(output_file).endswith(".nii") or str(output_file).endswith(".nii.gz"):
             try:
                 import nibabel as nib
-                
+
                 # copy header information from reference file if available
                 if reference_file:
                     # load reference file
                     ref_img = nib.load(str(reference_file))
                     # create new image with reference header and affine
-                    affine = ref_img.affine if hasattr(ref_img, 'affine') else np.eye(4)
+                    affine = ref_img.affine if hasattr(ref_img, "affine") else np.eye(4)
                     new_img = nib.Nifti1Image(volume, affine)
                     # copy header if possible
-                    if hasattr(ref_img, 'header') and hasattr(new_img, 'header'):
+                    if hasattr(ref_img, "header") and hasattr(new_img, "header"):
                         for field in ref_img.header:
-                            if field != 'dim':  # don't copy dimensions
+                            if field != "dim":  # don't copy dimensions
                                 new_img.header[field] = ref_img.header[field]
                 else:
                     # create new nifti image
                     new_img = nib.Nifti1Image(volume, np.eye(4))
-                
+
                 # save to file
                 nib.save(new_img, str(output_file))
-                
+
             except ImportError:
                 raise ImportError("nibabel is required for saving NIfTI files")
         elif str(output_file).endswith(".npy"):
             np.save(output_file, volume)
         else:
             raise ValueError(f"Unsupported file format: {output_file}")
-    
+
     def _calculate_metrics(
         self,
         fixed_image: np.ndarray,
@@ -501,12 +505,12 @@ class MRIRegistration:
         registered_image: np.ndarray,
     ) -> Dict[str, float]:
         """calculate registration metrics.
-        
+
         args:
             fixed_image: fixed (target) image.
             original_moving_image: original moving (source) image before registration.
             registered_image: registered moving image.
-            
+
         returns:
             dictionary of metrics.
         """
@@ -514,42 +518,52 @@ class MRIRegistration:
         mean_image = (fixed_image + registered_image) / 2
         threshold = np.mean(mean_image) * 0.1
         mask = mean_image > threshold
-        
+
         # apply mask to images
         fixed_masked = fixed_image[mask]
-        original_moving_masked = original_moving_image[mask] if original_moving_image.shape == fixed_image.shape else None
+        original_moving_masked = (
+            original_moving_image[mask]
+            if original_moving_image.shape == fixed_image.shape
+            else None
+        )
         registered_masked = registered_image[mask]
-        
+
         # calculate metrics
         # mean squared error (lower is better)
         if original_moving_masked is not None:
             initial_mse = np.mean((fixed_masked - original_moving_masked) ** 2)
         else:
-            initial_mse = float('nan')
-        
+            initial_mse = float("nan")
+
         final_mse = np.mean((fixed_masked - registered_masked) ** 2)
-        
+
         # correlation coefficient (higher is better)
         if original_moving_masked is not None:
             initial_correlation = np.corrcoef(fixed_masked, original_moving_masked)[0, 1]
         else:
-            initial_correlation = float('nan')
-        
+            initial_correlation = float("nan")
+
         final_correlation = np.corrcoef(fixed_masked, registered_masked)[0, 1]
-        
+
         # mutual information (higher is better) - simplified approximation
         # for proper mi calculation, use sklearn or other libraries
         initial_similarity = initial_correlation
         final_similarity = final_correlation
-        
+
         return {
             "initial_mse": float(initial_mse),
             "final_mse": float(final_mse),
-            "mse_improvement": float(initial_mse - final_mse) if not np.isnan(initial_mse) else float('nan'),
+            "mse_improvement": float(initial_mse - final_mse)
+            if not np.isnan(initial_mse)
+            else float("nan"),
             "initial_correlation": float(initial_correlation),
             "final_correlation": float(final_correlation),
-            "correlation_improvement": float(final_correlation - initial_correlation) if not np.isnan(initial_correlation) else float('nan'),
+            "correlation_improvement": float(final_correlation - initial_correlation)
+            if not np.isnan(initial_correlation)
+            else float("nan"),
             "initial_similarity": float(initial_similarity),
             "final_similarity": float(final_similarity),
-            "similarity_improvement": float(final_similarity - initial_similarity) if not np.isnan(initial_similarity) else float('nan'),
+            "similarity_improvement": float(final_similarity - initial_similarity)
+            if not np.isnan(initial_similarity)
+            else float("nan"),
         }

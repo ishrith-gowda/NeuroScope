@@ -8,8 +8,4 @@ from . import plotters
 from . import montages
 from . import dashboards
 
-__all__ = [
-    "plotters",
-    "montages",
-    "dashboards"
-]
+__all__ = ["plotters", "montages", "dashboards"]

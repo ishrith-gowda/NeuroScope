@@ -61,9 +61,7 @@ class NoiseQuantize(nn.Module):
             init_scale: initial quantization step size
         """
         super().__init__()
-        self.scale = nn.Parameter(
-            torch.full((1, num_channels, 1, 1), init_scale)
-        )
+        self.scale = nn.Parameter(torch.full((1, num_channels, 1, 1), init_scale))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

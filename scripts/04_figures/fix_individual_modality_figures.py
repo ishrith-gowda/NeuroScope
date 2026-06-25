@@ -9,37 +9,42 @@ for flair sample 00 (broken placeholder), extracts from all_modalities pdf.
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from pathlib import Path
 from itertools import groupby
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import fitz  # pymupdf
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # publication-quality settings (matching all_modalities gold standard)
-plt.rcParams.update({
-    'text.usetex': True,
-    'font.family': 'serif',
-    'font.serif': ['Computer Modern Roman'],
-    'font.size': 12,
-    'axes.titlesize': 14,
-    'axes.labelsize': 14,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'legend.fontsize': 11,
-    'figure.titlesize': 18,
-    'figure.dpi': 300,
-    'savefig.dpi': 300,
-    'savefig.bbox': 'tight',
-    'savefig.pad_inches': 0.02,
-    'axes.grid': False,
-})
+plt.rcParams.update(
+    {
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "font.size": 12,
+        "axes.titlesize": 14,
+        "axes.labelsize": 14,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 11,
+        "figure.titlesize": 18,
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.02,
+        "axes.grid": False,
+    }
+)
 
 
 def render_pdf_to_array(pdf_path: Path, dpi: int = 300) -> np.ndarray:
@@ -125,7 +130,7 @@ def create_single_modality_figure(
     output_path: Path,
     modality: str,
     sample_idx: int,
-    dataset_idx: int = None
+    dataset_idx: int = None,
 ):
     """
     create a single modality figure using the same plt.subplots approach
@@ -143,20 +148,24 @@ def create_single_modality_figure(
 
     # column headers
     col_headers_a = [
-        r'Input A', r'$\rightarrow$B (Base)', r'$\rightarrow$B (Attn)',
-        r'Rec (Base)', r'Rec (Attn)', r'$|$Diff$|$ (Attn)'
+        r"Input A",
+        r"$\rightarrow$B (Base)",
+        r"$\rightarrow$B (Attn)",
+        r"Rec (Base)",
+        r"Rec (Attn)",
+        r"$|$Diff$|$ (Attn)",
     ]
 
     # row 1: a→b→a
     for c_idx, img in enumerate(images_row1):
         axes[0, c_idx].imshow(img)
         axes[0, c_idx].set_title(col_headers_a[c_idx], fontsize=12)
-        axes[0, c_idx].axis('off')
+        axes[0, c_idx].axis("off")
 
     # row label on first column using set_ylabel (stays tight to image)
-    axes[0, 0].set_ylabel(r'A$\rightarrow$B$\rightarrow$A',
-                           fontsize=12, fontweight='bold', rotation=90,
-                           labelpad=2)
+    axes[0, 0].set_ylabel(
+        r"A$\rightarrow$B$\rightarrow$A", fontsize=12, fontweight="bold", rotation=90, labelpad=2
+    )
     # re-enable just the y-axis label (axis('off') hides it)
     axes[0, 0].yaxis.set_visible(True)
     axes[0, 0].yaxis.label.set_visible(True)
@@ -165,23 +174,29 @@ def create_single_modality_figure(
     if images_row2 is not None:
         for c_idx, img in enumerate(images_row2):
             axes[1, c_idx].imshow(img)
-            axes[1, c_idx].axis('off')
+            axes[1, c_idx].axis("off")
 
-        axes[1, 0].set_ylabel(r'B$\rightarrow$A$\rightarrow$B',
-                               fontsize=12, fontweight='bold', rotation=90,
-                               labelpad=2)
+        axes[1, 0].set_ylabel(
+            r"B$\rightarrow$A$\rightarrow$B",
+            fontsize=12,
+            fontweight="bold",
+            rotation=90,
+            labelpad=2,
+        )
         axes[1, 0].yaxis.set_visible(True)
         axes[1, 0].yaxis.label.set_visible(True)
 
     # title
-    sample_label = f'Sample {dataset_idx}' if dataset_idx is not None else f'Sample {sample_idx}'
+    sample_label = f"Sample {dataset_idx}" if dataset_idx is not None else f"Sample {sample_idx}"
     fig.suptitle(
-        f'Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, {sample_label})',
-        fontsize=16, fontweight='bold', y=0.98 if n_rows == 2 else 1.02
+        f"Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, {sample_label})",
+        fontsize=16,
+        fontweight="bold",
+        y=0.98 if n_rows == 2 else 1.02,
     )
 
     plt.tight_layout(rect=[0.03, 0, 1, 0.96])
-    fig.savefig(str(output_path), format='pdf')
+    fig.savefig(str(output_path), format="pdf")
     plt.close(fig)
 
 
@@ -201,10 +216,7 @@ def is_placeholder_graph(pdf_path: Path) -> bool:
 
 
 def process_individual_modality_pdf(
-    pdf_path: Path,
-    output_path: Path,
-    modality: str,
-    sample_idx: int
+    pdf_path: Path, output_path: Path, modality: str, sample_idx: int
 ):
     """
     process an existing individual modality pdf and recreate it
@@ -229,18 +241,12 @@ def process_individual_modality_pdf(
     images_row1 = [subplots[(0, c)] for c in range(6)]
     images_row2 = [subplots[(1, c)] for c in range(6)]
 
-    create_single_modality_figure(
-        images_row1, images_row2, output_path, modality, sample_idx
-    )
+    create_single_modality_figure(images_row1, images_row2, output_path, modality, sample_idx)
     return True
 
 
 def process_from_original_png(
-    pdf_name: str,
-    output_path: Path,
-    modality: str,
-    sample_idx: int,
-    figures_dir: Path
+    pdf_name: str, output_path: Path, modality: str, sample_idx: int, figures_dir: Path
 ):
     """
     extract brain images from the original png committed in git history.
@@ -257,14 +263,23 @@ def process_from_original_png(
     import subprocess
     import tempfile
 
-    png_name = pdf_name.replace('.pdf', '.png')
+    png_name = pdf_name.replace(".pdf", ".png")
 
     # try to extract original png from git history
     try:
         result = subprocess.run(
-            ['git', 'log', '--all', '--format=%H', '-1', '--', f'figures/visual_examples/{png_name}'],
-            capture_output=True, text=True,
-            cwd=str(figures_dir.parent.parent)
+            [
+                "git",
+                "log",
+                "--all",
+                "--format=%H",
+                "-1",
+                "--",
+                f"figures/visual_examples/{png_name}",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(figures_dir.parent.parent),
         )
         commit_hash = result.stdout.strip()
         if not commit_hash:
@@ -272,19 +287,19 @@ def process_from_original_png(
             return False
 
         # extract the png to a temp file
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             tmp_path = tmp.name
 
         result = subprocess.run(
-            ['git', 'show', f'{commit_hash}:figures/visual_examples/{png_name}'],
+            ["git", "show", f"{commit_hash}:figures/visual_examples/{png_name}"],
             capture_output=True,
-            cwd=str(figures_dir.parent.parent)
+            cwd=str(figures_dir.parent.parent),
         )
         if result.returncode != 0:
             print(f"    failed to extract {png_name} from git")
             return False
 
-        with open(tmp_path, 'wb') as f:
+        with open(tmp_path, "wb") as f:
             f.write(result.stdout)
 
     except Exception as e:
@@ -293,7 +308,8 @@ def process_from_original_png(
 
     try:
         from PIL import Image
-        img = np.array(Image.open(tmp_path).convert('RGB'))
+
+        img = np.array(Image.open(tmp_path).convert("RGB"))
         os.unlink(tmp_path)
     except Exception as e:
         print(f"    failed to load png: {e}")
@@ -335,30 +351,28 @@ def process_from_original_png(
     subplots = {}
     for r_idx, (r_start, r_end) in enumerate(content_rows):
         for c_idx, (c_start, c_end) in enumerate(content_cols):
-            subplots[(r_idx, c_idx)] = img[r_start:r_end+1, c_start:c_end+1]
+            subplots[(r_idx, c_idx)] = img[r_start : r_end + 1, c_start : c_end + 1]
 
     # remap 4x3 to 2x6:
     # row 0 (a->b->a): (0,0), (0,1), (0,2), (1,0), (1,1), (1,2)
     # row 1 (b->a->b): (2,0), (2,1), (2,2), (3,0), (3,1), (3,2)
-    images_row1 = [subplots[(0,c)] for c in range(3)] + [subplots[(1,c)] for c in range(3)]
-    images_row2 = [subplots[(2,c)] for c in range(3)] + [subplots[(3,c)] for c in range(3)]
+    images_row1 = [subplots[(0, c)] for c in range(3)] + [subplots[(1, c)] for c in range(3)]
+    images_row2 = [subplots[(2, c)] for c in range(3)] + [subplots[(3, c)] for c in range(3)]
 
-    create_single_modality_figure(
-        images_row1, images_row2, output_path, modality, sample_idx
-    )
+    create_single_modality_figure(images_row1, images_row2, output_path, modality, sample_idx)
     return True
 
 
 def main():
-    figures_dir = Path(__file__).parent.parent.parent / 'figures' / 'visual_examples'
+    figures_dir = Path(__file__).parent.parent.parent / "figures" / "visual_examples"
 
-    modalities = ['T1', 'T1CE', 'T2', 'FLAIR']
+    modalities = ["T1", "T1CE", "T2", "FLAIR"]
     num_samples = 5  # samples 00-04
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("fixing individual modality figures")
     print(f"tight spacing matching all_modalities layout")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     success_count = 0
     total_count = 0
@@ -367,7 +381,7 @@ def main():
         print(f"\n--- sample {sample_idx:02d} ---")
         for modality in modalities:
             total_count += 1
-            pdf_name = f'visual_sample_{sample_idx:02d}_{modality}.pdf'
+            pdf_name = f"visual_sample_{sample_idx:02d}_{modality}.pdf"
             pdf_path = figures_dir / pdf_name
             output_path = pdf_path  # overwrite in place
 
@@ -376,9 +390,11 @@ def main():
                 continue
 
             # special case: flair sample 00 is a known broken placeholder
-            if modality == 'FLAIR' and sample_idx == 0:
+            if modality == "FLAIR" and sample_idx == 0:
                 print(f"  {pdf_name}: known broken placeholder, extracting from git png...")
-                if process_from_original_png(pdf_name, output_path, modality, sample_idx, figures_dir):
+                if process_from_original_png(
+                    pdf_name, output_path, modality, sample_idx, figures_dir
+                ):
                     success_count += 1
                     print(f"  ok: {pdf_name} (from original png in git)")
                 else:
@@ -388,7 +404,9 @@ def main():
             # check if this is a placeholder graph (safety check for other broken files)
             if is_placeholder_graph(pdf_path):
                 print(f"  {pdf_name} is a placeholder graph, extracting from git png...")
-                if process_from_original_png(pdf_name, output_path, modality, sample_idx, figures_dir):
+                if process_from_original_png(
+                    pdf_name, output_path, modality, sample_idx, figures_dir
+                ):
                     success_count += 1
                     print(f"  ok: {pdf_name} (from original png in git)")
                 else:
@@ -400,12 +418,12 @@ def main():
                 else:
                     print(f"  fail: {pdf_name}")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"completed: {success_count}/{total_count} figures fixed")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     return 0 if success_count == total_count else 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

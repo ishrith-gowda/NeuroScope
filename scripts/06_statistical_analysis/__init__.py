@@ -25,13 +25,13 @@ from .combat_comparison import (
 )
 
 __all__ = [
-    'BootstrapCI',
-    'EffectSizeCalculator',
-    'StatisticalTests',
-    'MultipleComparisonCorrection',
-    'HarmonizationStatistics',
-    'ComBatConfig',
-    'ComBatHarmonizer',
-    'harmonize_mri_with_combat',
-    'evaluate_combat_harmonization',
+    "BootstrapCI",
+    "EffectSizeCalculator",
+    "StatisticalTests",
+    "MultipleComparisonCorrection",
+    "HarmonizationStatistics",
+    "ComBatConfig",
+    "ComBatHarmonizer",
+    "harmonize_mri_with_combat",
+    "evaluate_combat_harmonization",
 ]

@@ -50,13 +50,9 @@ class FactorizedPrior(nn.Module):
             self.matrices.append(
                 nn.Parameter(torch.randn(num_channels, channels[i + 1], channels[i]))
             )
-            self.biases.append(
-                nn.Parameter(torch.randn(num_channels, channels[i + 1], 1))
-            )
+            self.biases.append(nn.Parameter(torch.randn(num_channels, channels[i + 1], 1)))
             if i < len(channels) - 2:
-                self.factors.append(
-                    nn.Parameter(torch.zeros(num_channels, channels[i + 1], 1))
-                )
+                self.factors.append(nn.Parameter(torch.zeros(num_channels, channels[i + 1], 1)))
 
         self._initialize_parameters()
 
@@ -150,9 +146,25 @@ class HyperpriorModel(nn.Module):
 
         # hyper-decoder: hyperprior latent -> scale parameters
         self.hyper_decoder = nn.Sequential(
-            nn.ConvTranspose2d(num_hyper_channels, num_hyper_channels, 3, stride=2, padding=1, output_padding=1, bias=False),
+            nn.ConvTranspose2d(
+                num_hyper_channels,
+                num_hyper_channels,
+                3,
+                stride=2,
+                padding=1,
+                output_padding=1,
+                bias=False,
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.ConvTranspose2d(num_hyper_channels, num_hyper_channels, 3, stride=2, padding=1, output_padding=1, bias=False),
+            nn.ConvTranspose2d(
+                num_hyper_channels,
+                num_hyper_channels,
+                3,
+                stride=2,
+                padding=1,
+                output_padding=1,
+                bias=False,
+            ),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(num_hyper_channels, num_channels, 3, padding=1),
             nn.Softplus(),  # scale must be positive
@@ -161,9 +173,7 @@ class HyperpriorModel(nn.Module):
         # factorized prior for the hyperprior latent itself
         self.hyper_prior = FactorizedPrior(num_hyper_channels)
 
-    def forward(
-        self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, y: torch.Tensor, y_hat: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         estimate bitrate of quantized latent using hyperprior.
 
@@ -189,9 +199,7 @@ class HyperpriorModel(nn.Module):
 
         # ensure sigma matches y_hat spatial dimensions
         if sigma.shape[2:] != y_hat.shape[2:]:
-            sigma = F.interpolate(
-                sigma, size=y_hat.shape[2:], mode="bilinear", align_corners=False
-            )
+            sigma = F.interpolate(sigma, size=y_hat.shape[2:], mode="bilinear", align_corners=False)
 
         # gaussian likelihood for primary latent
         # p(y_hat | sigma) = n(0, sigma^2) integrated over quantization bin

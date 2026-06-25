@@ -29,21 +29,19 @@ from .efficientnet import (
 
 __all__ = [
     # vgg
-    'VGG16Features',
-    'VGG19Features',
-    'VGGPerceptualExtractor',
-    'MultiLayerVGG',
-    
+    "VGG16Features",
+    "VGG19Features",
+    "VGGPerceptualExtractor",
+    "MultiLayerVGG",
     # resnet
-    'ResNet18Features',
-    'ResNet34Features',
-    'ResNet50Features',
-    'ResNetPerceptualExtractor',
-    'MultiScaleResNetFeatures',
-    
+    "ResNet18Features",
+    "ResNet34Features",
+    "ResNet50Features",
+    "ResNetPerceptualExtractor",
+    "MultiScaleResNetFeatures",
     # efficientnet
-    'EfficientNetB0Features',
-    'EfficientNetB4Features',
-    'EfficientNetFeatureExtractor',
-    'HybridFeatureExtractor',
+    "EfficientNetB0Features",
+    "EfficientNetB4Features",
+    "EfficientNetFeatureExtractor",
+    "HybridFeatureExtractor",
 ]

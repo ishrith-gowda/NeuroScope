@@ -53,8 +53,7 @@ class FedProxAggregator(FedAvgAggregator):
         called before distributing to clients each round.
         """
         self._global_params_snapshot = {
-            k: v.clone().detach()
-            for k, v in self.global_model.state_dict().items()
+            k: v.clone().detach() for k, v in self.global_model.state_dict().items()
         }
 
     def compute_proximal_loss(self, client_model: nn.Module) -> torch.Tensor:
@@ -67,9 +66,7 @@ class FedProxAggregator(FedAvgAggregator):
             proximal loss: (mu / 2) * sum(||w_local - w_global||^2)
         """
         if self._global_params_snapshot is None:
-            raise RuntimeError(
-                "must call snapshot_global_params() before computing proximal loss"
-            )
+            raise RuntimeError("must call snapshot_global_params() before computing proximal loss")
 
         prox_loss = torch.tensor(0.0, device=next(client_model.parameters()).device)
         for k, local_param in client_model.named_parameters():
@@ -109,10 +106,7 @@ class ScaffoldAggregator(FedAvgAggregator):
         self.n_clients = n_clients
 
         # control variates (one per client + global)
-        self.global_control = {
-            k: torch.zeros_like(v)
-            for k, v in global_model.state_dict().items()
-        }
+        self.global_control = {k: torch.zeros_like(v) for k, v in global_model.state_dict().items()}
         self.client_controls = [
             {k: torch.zeros_like(v) for k, v in global_model.state_dict().items()}
             for _ in range(n_clients)
@@ -158,16 +152,13 @@ class ScaffoldAggregator(FedAvgAggregator):
                 local_steps * learning_rate
             )
             new_ci = (
-                self.client_controls[client_idx][k].float()
-                - self.global_control[k].float()
-                + delta
+                self.client_controls[client_idx][k].float() - self.global_control[k].float() + delta
             )
 
             # update global control
             old_ci = self.client_controls[client_idx][k].float()
             self.global_control[k] = (
-                self.global_control[k].float()
-                + (new_ci - old_ci) / self.n_clients
+                self.global_control[k].float() + (new_ci - old_ci) / self.n_clients
             ).to(self.global_control[k].dtype)
 
             # update client control

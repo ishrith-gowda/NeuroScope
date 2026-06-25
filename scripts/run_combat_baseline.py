@@ -38,8 +38,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -73,9 +72,7 @@ class ComBatHarmonizer:
         self.stand_mean = None
 
     def _standardize_across_features(
-        self,
-        data: np.ndarray,
-        batch: np.ndarray
+        self, data: np.ndarray, batch: np.ndarray
     ) -> Tuple[np.ndarray, Dict]:
         """
         standardize data across features.
@@ -111,9 +108,9 @@ class ComBatHarmonizer:
             batch_data = data[batch_mask]
 
             batch_info[b] = {
-                'mean': np.mean(batch_data, axis=0),
-                'var': np.var(batch_data, axis=0, ddof=1),
-                'n_samples': np.sum(batch_mask),
+                "mean": np.mean(batch_data, axis=0),
+                "var": np.var(batch_data, axis=0, ddof=1),
+                "n_samples": np.sum(batch_mask),
             }
 
         return stand_mean, batch_info, grand_mean, var_pooled
@@ -122,13 +119,13 @@ class ComBatHarmonizer:
         """compute prior variance for gamma (location shift)."""
         m = np.mean(gamma_hat)
         s2 = np.var(gamma_hat, ddof=1)
-        return (2 * s2 + m ** 2) / s2
+        return (2 * s2 + m**2) / s2
 
     def _bprior(self, gamma_hat: np.ndarray) -> float:
         """compute prior mean for gamma."""
         m = np.mean(gamma_hat)
         s2 = np.var(gamma_hat, ddof=1)
-        return (m * s2 + m ** 3) / s2
+        return (m * s2 + m**3) / s2
 
     def _it_sol(
         self,
@@ -139,7 +136,7 @@ class ComBatHarmonizer:
         t2: float,
         a: float,
         b: float,
-        conv: float = 0.0001
+        conv: float = 0.0001,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         iteratively compute posterior estimates.
@@ -174,8 +171,7 @@ class ComBatHarmonizer:
 
             # check convergence
             change = max(
-                np.max(np.abs(g_new - g_old) / g_old),
-                np.max(np.abs(d_new - d_old) / d_old)
+                np.max(np.abs(g_new - g_old) / g_old), np.max(np.abs(d_new - d_old) / d_old)
             )
 
             g_old = g_new.copy()
@@ -189,23 +185,12 @@ class ComBatHarmonizer:
         return g_new, d_new
 
     def _postmean(
-        self,
-        g_hat: np.ndarray,
-        g_bar: float,
-        n: int,
-        d_star: np.ndarray,
-        t2: float
+        self, g_hat: np.ndarray, g_bar: float, n: int, d_star: np.ndarray, t2: float
     ) -> np.ndarray:
         """compute posterior mean for gamma."""
         return (t2 * n * g_hat + d_star * g_bar) / (t2 * n + d_star)
 
-    def _postvar(
-        self,
-        sum2: np.ndarray,
-        n: int,
-        a: float,
-        b: float
-    ) -> np.ndarray:
+    def _postvar(self, sum2: np.ndarray, n: int, a: float, b: float) -> np.ndarray:
         """compute posterior variance for delta."""
         return (0.5 * sum2 + b) / (n / 2.0 + a - 1.0)
 
@@ -229,8 +214,9 @@ class ComBatHarmonizer:
         logger.info("Fitting ComBat harmonization...")
 
         # standardize data
-        stand_mean, batch_info, grand_mean, var_pooled = \
-            self._standardize_across_features(data, batch)
+        stand_mean, batch_info, grand_mean, var_pooled = self._standardize_across_features(
+            data, batch
+        )
 
         n_batch = len(batch_info)
         n_features = data.shape[1]
@@ -241,8 +227,8 @@ class ComBatHarmonizer:
 
         for i, b in enumerate(batch_info.keys()):
             batch_data = data[batch == b]
-            gamma_hat[i] = batch_info[b]['mean'] - grand_mean
-            delta_hat[i] = batch_info[b]['var']
+            gamma_hat[i] = batch_info[b]["mean"] - grand_mean
+            delta_hat[i] = batch_info[b]["var"]
 
         # empirical bayes estimation
         if self.eb:
@@ -266,17 +252,21 @@ class ComBatHarmonizer:
                     gamma_star[:, j] = self._postmean(
                         gamma_hat[:, j],
                         g_bar,
-                        np.array([batch_info[b]['n_samples'] for b in batch_info.keys()]).mean(),
+                        np.array([batch_info[b]["n_samples"] for b in batch_info.keys()]).mean(),
                         delta_hat[:, j],
-                        t2
+                        t2,
                     )
 
                     delta_star[:, j] = self._postvar(
-                        np.array([batch_info[b]['var'][j] * batch_info[b]['n_samples']
-                                  for b in batch_info.keys()]),
-                        np.array([batch_info[b]['n_samples'] for b in batch_info.keys()]).mean(),
+                        np.array(
+                            [
+                                batch_info[b]["var"][j] * batch_info[b]["n_samples"]
+                                for b in batch_info.keys()
+                            ]
+                        ),
+                        np.array([batch_info[b]["n_samples"] for b in batch_info.keys()]).mean(),
                         a,
-                        b
+                        b,
                     )
                 else:
                     # non-parametric adjustment
@@ -294,12 +284,9 @@ class ComBatHarmonizer:
             batch_mask = batch == b
 
             # adjust location and scale
-            harmonized[batch_mask] = (
-                (data[batch_mask] - gamma_star[i]) /
-                np.sqrt(delta_star[i]) *
-                np.sqrt(var_pooled) +
-                grand_mean
-            )
+            harmonized[batch_mask] = (data[batch_mask] - gamma_star[i]) / np.sqrt(
+                delta_star[i]
+            ) * np.sqrt(var_pooled) + grand_mean
 
         return harmonized
 
@@ -338,9 +325,7 @@ class ComBatHarmonizer:
             all_affines.append(img.affine)
 
         # create batch labels
-        batch = np.array(
-            [0] * len(source_files) + [1] * len(target_files)
-        )
+        batch = np.array([0] * len(source_files) + [1] * len(target_files))
 
         # stack data
         data_matrix = np.stack(all_data, axis=0)
@@ -350,7 +335,7 @@ class ComBatHarmonizer:
 
         # save harmonized volumes
         output_dir.mkdir(parents=True, exist_ok=True)
-        stats = {'modality': modality, 'n_source': len(source_files), 'n_target': len(target_files)}
+        stats = {"modality": modality, "n_source": len(source_files), "n_target": len(target_files)}
 
         # get original shape from first volume
         original_shape = nib.load(str(all_files[0])).shape
@@ -362,10 +347,10 @@ class ComBatHarmonizer:
             # determine output path
             if i < len(source_files):
                 subject_id = filepath.parent.name
-                output_path = output_dir / 'source' / subject_id / f"{modality}_harmonized.nii.gz"
+                output_path = output_dir / "source" / subject_id / f"{modality}_harmonized.nii.gz"
             else:
                 subject_id = filepath.parent.name
-                output_path = output_dir / 'target' / subject_id / f"{modality}_harmonized.nii.gz"
+                output_path = output_dir / "target" / subject_id / f"{modality}_harmonized.nii.gz"
 
             # save
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -378,50 +363,28 @@ class ComBatHarmonizer:
 
 def main():
     """main execution function."""
-    parser = argparse.ArgumentParser(
-        description='Run ComBat harmonization baseline'
+    parser = argparse.ArgumentParser(description="Run ComBat harmonization baseline")
+
+    parser.add_argument("--source-dir", type=str, required=True, help="Source dataset directory")
+
+    parser.add_argument("--target-dir", type=str, required=True, help="Target dataset directory")
+
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="Output directory for harmonized data"
     )
 
     parser.add_argument(
-        '--source-dir',
-        type=str,
-        required=True,
-        help='Source dataset directory'
+        "--modalities",
+        nargs="+",
+        default=["T1", "T1CE", "T2", "FLAIR"],
+        help="MRI modalities to harmonize",
     )
 
     parser.add_argument(
-        '--target-dir',
-        type=str,
-        required=True,
-        help='Target dataset directory'
+        "--parametric", action="store_true", default=True, help="Use parametric adjustments"
     )
 
-    parser.add_argument(
-        '--output-dir',
-        type=str,
-        required=True,
-        help='Output directory for harmonized data'
-    )
-
-    parser.add_argument(
-        '--modalities',
-        nargs='+',
-        default=['T1', 'T1CE', 'T2', 'FLAIR'],
-        help='MRI modalities to harmonize'
-    )
-
-    parser.add_argument(
-        '--parametric',
-        action='store_true',
-        default=True,
-        help='Use parametric adjustments'
-    )
-
-    parser.add_argument(
-        '--no-eb',
-        action='store_true',
-        help='Disable Empirical Bayes estimation'
-    )
+    parser.add_argument("--no-eb", action="store_true", help="Disable Empirical Bayes estimation")
 
     args = parser.parse_args()
 
@@ -439,9 +402,9 @@ def main():
     all_stats = []
 
     for modality in args.modalities:
-        logger.info(f"\n{'='*80}")
+        logger.info(f"\n{'=' * 80}")
         logger.info(f"Processing {modality}")
-        logger.info(f"{'='*80}\n")
+        logger.info(f"{'=' * 80}\n")
 
         # find all files for this modality
         source_files = sorted(source_dir.rglob(f"*/{modality}.nii.gz"))
@@ -462,16 +425,16 @@ def main():
         all_stats.append(stats)
 
     # save statistics
-    stats_file = output_dir / 'combat_stats.json'
-    with open(stats_file, 'w') as f:
+    stats_file = output_dir / "combat_stats.json"
+    with open(stats_file, "w") as f:
         json.dump(all_stats, f, indent=2)
 
-    logger.info(f"\n{'='*80}")
+    logger.info(f"\n{'=' * 80}")
     logger.info("ComBat harmonization complete!")
     logger.info(f"Harmonized data saved to: {output_dir}")
     logger.info(f"Statistics saved to: {stats_file}")
-    logger.info(f"{'='*80}")
+    logger.info(f"{'=' * 80}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

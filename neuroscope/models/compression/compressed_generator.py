@@ -80,20 +80,22 @@ class CompressedSAGenerator25D(nn.Module):
             ngf=ngf,
         )
 
-        self.encoder = nn.ModuleList([
-            nn.Sequential(
-                nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 2),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 2),
-            ),
-            nn.Sequential(
-                nn.Conv2d(ngf * 2, ngf * 4, 3, stride=2, padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 4),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 4),
-            ),
-        ])
+        self.encoder = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
+                    nn.InstanceNorm2d(ngf * 2),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 2),
+                ),
+                nn.Sequential(
+                    nn.Conv2d(ngf * 2, ngf * 4, 3, stride=2, padding=1, bias=False),
+                    nn.InstanceNorm2d(ngf * 4),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 4),
+                ),
+            ]
+        )
 
         # === compression layer ===
         bottleneck_channels = ngf * 4  # 256 channels
@@ -141,25 +143,33 @@ class CompressedSAGenerator25D(nn.Module):
         self.global_attention = SelfAttention2D(ngf * 4, reduction=4)
 
         # === decoder (same as base sa-generator) ===
-        self.decoder = nn.ModuleList([
-            nn.Sequential(
-                nn.ConvTranspose2d(ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 2),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 2),
-            ),
-            nn.Sequential(
-                nn.ConvTranspose2d(ngf * 2, ngf, 3, stride=2, padding=1, output_padding=1, bias=False),
-                nn.InstanceNorm2d(ngf),
-                nn.ReLU(inplace=True),
-                CBAM(ngf),
-            ),
-        ])
+        self.decoder = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.ConvTranspose2d(
+                        ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False
+                    ),
+                    nn.InstanceNorm2d(ngf * 2),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 2),
+                ),
+                nn.Sequential(
+                    nn.ConvTranspose2d(
+                        ngf * 2, ngf, 3, stride=2, padding=1, output_padding=1, bias=False
+                    ),
+                    nn.InstanceNorm2d(ngf),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf),
+                ),
+            ]
+        )
 
-        self.skip_fuse = nn.ModuleList([
-            nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False),
-            nn.Conv2d(ngf * 2, ngf, 1, bias=False),
-        ])
+        self.skip_fuse = nn.ModuleList(
+            [
+                nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False),
+                nn.Conv2d(ngf * 2, ngf, 1, bias=False),
+            ]
+        )
 
         self.output = nn.Sequential(
             nn.ReflectionPad2d(3),
@@ -225,16 +235,12 @@ class CompressedSAGenerator25D(nn.Module):
         for i, dec in enumerate(self.decoder):
             z = dec(z)
             skip = self.skip_fuse[i](skips[-(i + 1)])
-            skip = F.interpolate(
-                skip, size=z.shape[2:], mode="bilinear", align_corners=False
-            )
+            skip = F.interpolate(skip, size=z.shape[2:], mode="bilinear", align_corners=False)
             z = z + skip
 
         return self.output(z)
 
-    def forward(
-        self, x: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         full forward pass: encode -> compress -> decode.
 
@@ -289,12 +295,8 @@ class CompressedSACycleGAN25D(nn.Module):
         self.config = config or SACycleGAN25DConfig()
 
         # compressed generators
-        self.G_A2B = CompressedSAGenerator25D(
-            self.config, entropy_model_type, num_hyper_channels
-        )
-        self.G_B2A = CompressedSAGenerator25D(
-            self.config, entropy_model_type, num_hyper_channels
-        )
+        self.G_A2B = CompressedSAGenerator25D(self.config, entropy_model_type, num_hyper_channels)
+        self.G_B2A = CompressedSAGenerator25D(self.config, entropy_model_type, num_hyper_channels)
 
         # discriminators (same as base -- operate on output images)
         from neuroscope.models.architectures.sa_cyclegan_25d import MultiScaleDiscriminator
@@ -316,9 +318,7 @@ class CompressedSACycleGAN25D(nn.Module):
             use_attention=self.config.use_disc_attention,
         )
 
-    def forward(
-        self, slices_A: torch.Tensor, slices_B: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, slices_A: torch.Tensor, slices_B: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
         training forward pass with compression.
 
@@ -394,7 +394,7 @@ if __name__ == "__main__":
     params = model.get_parameter_count()
     print(f"\ncompressed model parameters:")
     for k, v in params.items():
-        print(f"  {k}: {v:,} ({v/1e6:.2f}m)")
+        print(f"  {k}: {v:,} ({v / 1e6:.2f}m)")
 
     # test forward
     a = torch.randn(2, 12, 128, 128)

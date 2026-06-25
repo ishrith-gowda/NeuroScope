@@ -69,8 +69,9 @@ class FeatureExtractor(nn.Module):
 
         self.feature_dim = feature_dim
 
-    def _make_block(self, in_channels: int, out_channels: int,
-                   n_blocks: int, stride: int = 1) -> nn.Sequential:
+    def _make_block(
+        self, in_channels: int, out_channels: int, n_blocks: int, stride: int = 1
+    ) -> nn.Sequential:
         """create residual block."""
         layers = []
 
@@ -83,9 +84,9 @@ class FeatureExtractor(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _make_residual(self, in_channels: int, out_channels: int,
-                      stride: int) -> nn.Module:
+    def _make_residual(self, in_channels: int, out_channels: int, stride: int) -> nn.Module:
         """create single residual unit."""
+
         class ResidualBlock(nn.Module):
             def __init__(self, in_ch, out_ch, s):
                 super().__init__()
@@ -96,8 +97,7 @@ class FeatureExtractor(nn.Module):
 
                 if s != 1 or in_ch != out_ch:
                     self.shortcut = nn.Sequential(
-                        nn.Conv2d(in_ch, out_ch, 1, stride=s, bias=False),
-                        nn.InstanceNorm2d(out_ch)
+                        nn.Conv2d(in_ch, out_ch, 1, stride=s, bias=False), nn.InstanceNorm2d(out_ch)
                     )
                 else:
                     self.shortcut = nn.Identity()
@@ -127,18 +127,18 @@ class FeatureExtractor(nn.Module):
 
         x = self.conv1(x)
         x = self.conv2(x)
-        features['scale1'] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
+        features["scale1"] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
 
         x = self.conv3(x)
-        features['scale2'] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
+        features["scale2"] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
 
         x = self.conv4(x)
-        features['scale3'] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
+        features["scale3"] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
 
         x = self.conv5(x)
-        features['scale4'] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
+        features["scale4"] = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
 
-        features['final'] = self.fc(features['scale4'])
+        features["final"] = self.fc(features["scale4"])
 
         return features
 
@@ -151,10 +151,10 @@ class NiftiFeatureDataset(Dataset):
     def __init__(
         self,
         data_dir: Path,
-        modalities: List[str] = ['t1', 't1gd', 't2', 'flair'],
+        modalities: List[str] = ["t1", "t1gd", "t2", "flair"],
         slice_range: Tuple[int, int] = (50, 110),
         slice_stride: int = 5,
-        slice_size: Tuple[int, int] = (128, 128)
+        slice_size: Tuple[int, int] = (128, 128),
     ):
         self.data_dir = Path(data_dir)
         self.modalities = modalities
@@ -165,12 +165,12 @@ class NiftiFeatureDataset(Dataset):
         self.samples = []
         self._index_data()
 
-        print(f'[featuredata] indexed {len(self.samples)} slices from {self.data_dir}')
+        print(f"[featuredata] indexed {len(self.samples)} slices from {self.data_dir}")
 
     def _index_data(self):
         """index all slices."""
         if not self.data_dir.exists():
-            print(f'[warning] directory not found: {self.data_dir}')
+            print(f"[warning] directory not found: {self.data_dir}")
             return
 
         for subject_dir in sorted(self.data_dir.iterdir()):
@@ -180,9 +180,9 @@ class NiftiFeatureDataset(Dataset):
             # check modalities
             mod_files = {}
             for mod in self.modalities:
-                candidates = list(subject_dir.glob(f'*{mod}*.nii.gz'))
+                candidates = list(subject_dir.glob(f"*{mod}*.nii.gz"))
                 if not candidates:
-                    candidates = list(subject_dir.glob(f'{mod}.nii.gz'))
+                    candidates = list(subject_dir.glob(f"{mod}.nii.gz"))
                 if candidates:
                     mod_files[mod] = candidates[0]
 
@@ -191,6 +191,7 @@ class NiftiFeatureDataset(Dataset):
 
             # get shape
             import nibabel as nib
+
             first_mod = list(mod_files.values())[0]
             img = nib.load(str(first_mod))
             n_slices = img.shape[2]
@@ -212,9 +213,9 @@ class NiftiFeatureDataset(Dataset):
 
         channels = []
         for mod in self.modalities:
-            candidates = list(subject_dir.glob(f'*{mod}*.nii.gz'))
+            candidates = list(subject_dir.glob(f"*{mod}*.nii.gz"))
             if not candidates:
-                candidates = list(subject_dir.glob(f'{mod}.nii.gz'))
+                candidates = list(subject_dir.glob(f"{mod}.nii.gz"))
 
             img = nib.load(str(candidates[0]))
             vol = img.get_fdata()
@@ -241,7 +242,7 @@ def extract_features(
     model: nn.Module,
     data_loader: DataLoader,
     device: torch.device,
-    harmonization_model: Optional[nn.Module] = None
+    harmonization_model: Optional[nn.Module] = None,
 ) -> np.ndarray:
     """
     extract features from all samples.
@@ -252,7 +253,7 @@ def extract_features(
     all_features = []
 
     with torch.no_grad():
-        for inputs in tqdm(data_loader, desc='extracting features'):
+        for inputs in tqdm(data_loader, desc="extracting features"):
             inputs = inputs.to(device)
 
             if harmonization_model is not None:
@@ -265,9 +266,7 @@ def extract_features(
 
 
 def harmonize_batch(
-    inputs: torch.Tensor,
-    harmonization_model: nn.Module,
-    device: torch.device
+    inputs: torch.Tensor, harmonization_model: nn.Module, device: torch.device
 ) -> torch.Tensor:
     """apply harmonization to batch."""
     b, c, h, w = inputs.shape
@@ -288,10 +287,7 @@ def harmonize_batch(
     return harmonized
 
 
-def compute_fid(
-    features_a: np.ndarray,
-    features_b: np.ndarray
-) -> float:
+def compute_fid(features_a: np.ndarray, features_b: np.ndarray) -> float:
     """
     compute frechet inception distance between feature distributions.
 
@@ -328,10 +324,7 @@ def compute_fid(
 
 
 def compute_kid(
-    features_a: np.ndarray,
-    features_b: np.ndarray,
-    n_subsets: int = 100,
-    subset_size: int = 1000
+    features_a: np.ndarray, features_b: np.ndarray, n_subsets: int = 100, subset_size: int = 1000
 ) -> Tuple[float, float]:
     """
     compute kernel inception distance with polynomial kernel.
@@ -365,9 +358,11 @@ def compute_kid(
 
         # unbiased estimator
         m = actual_subset_size
-        mmd = (k_aa.sum() - np.trace(k_aa)) / (m * (m - 1)) + \
-              (k_bb.sum() - np.trace(k_bb)) / (m * (m - 1)) - \
-              2 * k_ab.mean()
+        mmd = (
+            (k_aa.sum() - np.trace(k_aa)) / (m * (m - 1))
+            + (k_bb.sum() - np.trace(k_bb)) / (m * (m - 1))
+            - 2 * k_ab.mean()
+        )
 
         kid_values.append(mmd)
 
@@ -375,10 +370,7 @@ def compute_kid(
 
 
 def compute_mmd(
-    features_a: np.ndarray,
-    features_b: np.ndarray,
-    kernel: str = 'rbf',
-    sigma: float = 1.0
+    features_a: np.ndarray, features_b: np.ndarray, kernel: str = "rbf", sigma: float = 1.0
 ) -> float:
     """
     compute maximum mean discrepancy between distributions.
@@ -392,15 +384,17 @@ def compute_mmd(
     fa = features_a[idx_a]
     fb = features_b[idx_b]
 
-    if kernel == 'rbf':
+    if kernel == "rbf":
+
         def k(x, y):
             diff = x[:, np.newaxis, :] - y[np.newaxis, :, :]
             return np.exp(-np.sum(diff**2, axis=2) / (2 * sigma**2))
-    elif kernel == 'linear':
+    elif kernel == "linear":
+
         def k(x, y):
             return np.dot(x, y.T)
     else:
-        raise ValueError(f'unknown kernel: {kernel}')
+        raise ValueError(f"unknown kernel: {kernel}")
 
     k_aa = k(fa, fa).mean()
     k_bb = k(fb, fb).mean()
@@ -411,9 +405,7 @@ def compute_mmd(
 
 
 def compute_sliced_wasserstein(
-    features_a: np.ndarray,
-    features_b: np.ndarray,
-    n_projections: int = 1000
+    features_a: np.ndarray, features_b: np.ndarray, n_projections: int = 1000
 ) -> float:
     """
     compute sliced wasserstein distance.
@@ -447,30 +439,27 @@ def compute_sliced_wasserstein(
     return float(swd / n_projections)
 
 
-def compute_distribution_metrics(
-    features_a: np.ndarray,
-    features_b: np.ndarray
-) -> Dict:
+def compute_distribution_metrics(features_a: np.ndarray, features_b: np.ndarray) -> Dict:
     """
     compute all distribution metrics.
     """
-    print('[metrics] computing fid...')
+    print("[metrics] computing fid...")
     fid = compute_fid(features_a, features_b)
 
-    print('[metrics] computing kid...')
+    print("[metrics] computing kid...")
     kid_mean, kid_std = compute_kid(features_a, features_b)
 
-    print('[metrics] computing mmd (rbf)...')
-    mmd_rbf = compute_mmd(features_a, features_b, kernel='rbf', sigma=1.0)
+    print("[metrics] computing mmd (rbf)...")
+    mmd_rbf = compute_mmd(features_a, features_b, kernel="rbf", sigma=1.0)
 
-    print('[metrics] computing mmd (linear)...')
-    mmd_linear = compute_mmd(features_a, features_b, kernel='linear')
+    print("[metrics] computing mmd (linear)...")
+    mmd_linear = compute_mmd(features_a, features_b, kernel="linear")
 
-    print('[metrics] computing sliced wasserstein...')
+    print("[metrics] computing sliced wasserstein...")
     swd = compute_sliced_wasserstein(features_a, features_b)
 
     # statistical tests
-    print('[metrics] computing statistical tests...')
+    print("[metrics] computing statistical tests...")
 
     # multivariate two-sample test using mmd
     # permutation test for significance
@@ -484,25 +473,23 @@ def compute_distribution_metrics(
         perm_idx = np.random.permutation(len(combined))
         perm_a = combined[perm_idx[:n_a]]
         perm_b = combined[perm_idx[n_a:]]
-        perm_mmds.append(compute_mmd(perm_a, perm_b, kernel='rbf', sigma=1.0))
+        perm_mmds.append(compute_mmd(perm_a, perm_b, kernel="rbf", sigma=1.0))
 
     p_value = (np.sum(np.array(perm_mmds) >= observed_mmd) + 1) / (n_perms + 1)
 
     return {
-        'fid': fid,
-        'kid_mean': kid_mean,
-        'kid_std': kid_std,
-        'mmd_rbf': mmd_rbf,
-        'mmd_linear': mmd_linear,
-        'sliced_wasserstein': swd,
-        'mmd_permutation_p_value': float(p_value),
+        "fid": fid,
+        "kid_mean": kid_mean,
+        "kid_std": kid_std,
+        "mmd_rbf": mmd_rbf,
+        "mmd_linear": mmd_linear,
+        "sliced_wasserstein": swd,
+        "mmd_permutation_p_value": float(p_value),
     }
 
 
 def compute_tsne_embedding(
-    features: np.ndarray,
-    perplexity: int = 30,
-    max_iter: int = 1000
+    features: np.ndarray, perplexity: int = 30, max_iter: int = 1000
 ) -> np.ndarray:
     """compute t-sne embedding."""
     max_samples = 3000
@@ -510,29 +497,32 @@ def compute_tsne_embedding(
         idx = np.random.choice(len(features), max_samples, replace=False)
         features = features[idx]
 
-    tsne = TSNE(n_components=2, perplexity=perplexity,
-                random_state=42, max_iter=max_iter)
+    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42, max_iter=max_iter)
     return tsne.fit_transform(features)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='feature distribution analysis for harmonization evaluation'
+        description="feature distribution analysis for harmonization evaluation"
     )
-    parser.add_argument('--domain-a-dir', type=str, required=True,
-                       help='path to domain a (brats) data')
-    parser.add_argument('--domain-b-dir', type=str, required=True,
-                       help='path to domain b (upenn) data')
-    parser.add_argument('--harmonization-model', type=str, default=None,
-                       help='path to harmonization model checkpoint')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory')
-    parser.add_argument('--batch-size', type=int, default=32,
-                       help='batch size for feature extraction')
-    parser.add_argument('--device', type=str, default='cuda',
-                       help='device')
-    parser.add_argument('--seed', type=int, default=42,
-                       help='random seed')
+    parser.add_argument(
+        "--domain-a-dir", type=str, required=True, help="path to domain a (brats) data"
+    )
+    parser.add_argument(
+        "--domain-b-dir", type=str, required=True, help="path to domain b (upenn) data"
+    )
+    parser.add_argument(
+        "--harmonization-model",
+        type=str,
+        default=None,
+        help="path to harmonization model checkpoint",
+    )
+    parser.add_argument("--output-dir", type=str, required=True, help="output directory")
+    parser.add_argument(
+        "--batch-size", type=int, default=32, help="batch size for feature extraction"
+    )
+    parser.add_argument("--device", type=str, default="cuda", help="device")
+    parser.add_argument("--seed", type=int, default=42, help="random seed")
 
     args = parser.parse_args()
 
@@ -542,28 +532,26 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
-    print(f'[featdist] using device: {device}')
+    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    print(f"[featdist] using device: {device}")
 
     # create datasets
-    print('[featdist] loading data...')
+    print("[featdist] loading data...")
     dataset_a = NiftiFeatureDataset(
         data_dir=args.domain_a_dir,
-        modalities=['t1', 't1gd', 't2', 'flair'],
+        modalities=["t1", "t1gd", "t2", "flair"],
         slice_range=(50, 110),
-        slice_stride=5
+        slice_stride=5,
     )
     dataset_b = NiftiFeatureDataset(
         data_dir=args.domain_b_dir,
-        modalities=['t1', 't1gd', 't2', 'flair'],
+        modalities=["t1", "t1gd", "t2", "flair"],
         slice_range=(50, 110),
-        slice_stride=5
+        slice_stride=5,
     )
 
-    loader_a = DataLoader(dataset_a, batch_size=args.batch_size,
-                         shuffle=False, num_workers=4)
-    loader_b = DataLoader(dataset_b, batch_size=args.batch_size,
-                         shuffle=False, num_workers=4)
+    loader_a = DataLoader(dataset_a, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    loader_b = DataLoader(dataset_b, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
     # create feature extractor
     feature_extractor = FeatureExtractor(in_channels=4, feature_dim=512)
@@ -571,39 +559,42 @@ def main():
     feature_extractor.eval()
 
     # extract raw features
-    print('[featdist] extracting raw features from domain a...')
+    print("[featdist] extracting raw features from domain a...")
     features_a_raw = extract_features(feature_extractor, loader_a, device)
 
-    print('[featdist] extracting raw features from domain b...')
+    print("[featdist] extracting raw features from domain b...")
     features_b_raw = extract_features(feature_extractor, loader_b, device)
 
-    print(f'[featdist] extracted {len(features_a_raw)} features from domain a')
-    print(f'[featdist] extracted {len(features_b_raw)} features from domain b')
+    print(f"[featdist] extracted {len(features_a_raw)} features from domain a")
+    print(f"[featdist] extracted {len(features_b_raw)} features from domain b")
 
     # compute raw metrics
-    print('[featdist] computing raw distribution metrics...')
+    print("[featdist] computing raw distribution metrics...")
     raw_metrics = compute_distribution_metrics(features_a_raw, features_b_raw)
 
     # load harmonization model if provided
     harmonized_metrics = None
     if args.harmonization_model:
-        print('[featdist] loading harmonization model...')
+        print("[featdist] loading harmonization model...")
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
+        from neuroscope.models.architectures.sa_cyclegan_25d import (
+            SACycleGAN25D,
+            SACycleGAN25DConfig,
+        )
 
         config = SACycleGAN25DConfig()
         harmonization_model = SACycleGAN25D(config)
         checkpoint = torch.load(args.harmonization_model, map_location=device, weights_only=False)
 
-        if 'G_A2B_state_dict' in checkpoint:
-            harmonization_model.G_A2B.load_state_dict(checkpoint['G_A2B_state_dict'])
-        elif 'model_state_dict' in checkpoint:
+        if "G_A2B_state_dict" in checkpoint:
+            harmonization_model.G_A2B.load_state_dict(checkpoint["G_A2B_state_dict"])
+        elif "model_state_dict" in checkpoint:
             # handle dataparallel wrapped models
-            state_dict = checkpoint['model_state_dict']
+            state_dict = checkpoint["model_state_dict"]
             new_state_dict = {}
             for k, v in state_dict.items():
                 # remove 'module.' prefix if present
-                if k.startswith('module.'):
+                if k.startswith("module."):
                     new_state_dict[k[7:]] = v
                 else:
                     new_state_dict[k] = v
@@ -613,18 +604,16 @@ def main():
         harmonization_model.eval()
 
         # extract harmonized features (harmonize a -> b, then compare with b)
-        print('[featdist] extracting harmonized features from domain a...')
+        print("[featdist] extracting harmonized features from domain a...")
         features_a_harmonized = extract_features(
             feature_extractor, loader_a, device, harmonization_model
         )
 
-        print('[featdist] computing harmonized distribution metrics...')
-        harmonized_metrics = compute_distribution_metrics(
-            features_a_harmonized, features_b_raw
-        )
+        print("[featdist] computing harmonized distribution metrics...")
+        harmonized_metrics = compute_distribution_metrics(features_a_harmonized, features_b_raw)
 
     # compute t-sne embeddings
-    print('[featdist] computing t-sne embeddings...')
+    print("[featdist] computing t-sne embeddings...")
 
     # combine features for visualization
     n_a = min(1500, len(features_a_raw))
@@ -645,59 +634,66 @@ def main():
 
     # save results
     results = {
-        'raw': raw_metrics,
-        'n_samples_a': len(features_a_raw),
-        'n_samples_b': len(features_b_raw),
+        "raw": raw_metrics,
+        "n_samples_a": len(features_a_raw),
+        "n_samples_b": len(features_b_raw),
     }
 
     if harmonized_metrics:
-        results['harmonized'] = harmonized_metrics
+        results["harmonized"] = harmonized_metrics
 
         # compute improvement (reduction is good)
-        results['improvement'] = {
-            'fid_reduction': raw_metrics['fid'] - harmonized_metrics['fid'],
-            'fid_reduction_percent': 100 * (raw_metrics['fid'] - harmonized_metrics['fid']) / raw_metrics['fid'],
-            'kid_reduction': raw_metrics['kid_mean'] - harmonized_metrics['kid_mean'],
-            'mmd_reduction': raw_metrics['mmd_rbf'] - harmonized_metrics['mmd_rbf'],
-            'swd_reduction': raw_metrics['sliced_wasserstein'] - harmonized_metrics['sliced_wasserstein'],
+        results["improvement"] = {
+            "fid_reduction": raw_metrics["fid"] - harmonized_metrics["fid"],
+            "fid_reduction_percent": 100
+            * (raw_metrics["fid"] - harmonized_metrics["fid"])
+            / raw_metrics["fid"],
+            "kid_reduction": raw_metrics["kid_mean"] - harmonized_metrics["kid_mean"],
+            "mmd_reduction": raw_metrics["mmd_rbf"] - harmonized_metrics["mmd_rbf"],
+            "swd_reduction": raw_metrics["sliced_wasserstein"]
+            - harmonized_metrics["sliced_wasserstein"],
         }
 
-    with open(output_dir / 'feature_distribution_results.json', 'w') as f:
+    with open(output_dir / "feature_distribution_results.json", "w") as f:
         json.dump(results, f, indent=2)
 
     # save embeddings
-    np.save(output_dir / 'tsne_raw.npy', tsne_raw)
-    np.save(output_dir / 'tsne_labels.npy', labels_raw)
-    np.save(output_dir / 'features_a_raw.npy', features_a_raw)
-    np.save(output_dir / 'features_b_raw.npy', features_b_raw)
+    np.save(output_dir / "tsne_raw.npy", tsne_raw)
+    np.save(output_dir / "tsne_labels.npy", labels_raw)
+    np.save(output_dir / "features_a_raw.npy", features_a_raw)
+    np.save(output_dir / "features_b_raw.npy", features_b_raw)
 
     if harmonized_metrics:
-        np.save(output_dir / 'tsne_harmonized.npy', tsne_harm)
-        np.save(output_dir / 'features_a_harmonized.npy', features_a_harmonized)
+        np.save(output_dir / "tsne_harmonized.npy", tsne_harm)
+        np.save(output_dir / "features_a_harmonized.npy", features_a_harmonized)
 
     # save feature extractor
-    torch.save(feature_extractor.state_dict(), output_dir / 'feature_extractor.pth')
+    torch.save(feature_extractor.state_dict(), output_dir / "feature_extractor.pth")
 
-    print('=' * 60)
-    print('[featdist] results summary:')
-    print(f'  raw fid: {raw_metrics["fid"]:.4f}')
-    print(f'  raw kid: {raw_metrics["kid_mean"]:.4f} +/- {raw_metrics["kid_std"]:.4f}')
-    print(f'  raw mmd (rbf): {raw_metrics["mmd_rbf"]:.4f}')
-    print(f'  raw sliced wasserstein: {raw_metrics["sliced_wasserstein"]:.4f}')
+    print("=" * 60)
+    print("[featdist] results summary:")
+    print(f"  raw fid: {raw_metrics['fid']:.4f}")
+    print(f"  raw kid: {raw_metrics['kid_mean']:.4f} +/- {raw_metrics['kid_std']:.4f}")
+    print(f"  raw mmd (rbf): {raw_metrics['mmd_rbf']:.4f}")
+    print(f"  raw sliced wasserstein: {raw_metrics['sliced_wasserstein']:.4f}")
 
     if harmonized_metrics:
         print()
-        print(f'  harmonized fid: {harmonized_metrics["fid"]:.4f}')
-        print(f'  harmonized kid: {harmonized_metrics["kid_mean"]:.4f} +/- {harmonized_metrics["kid_std"]:.4f}')
-        print(f'  harmonized mmd (rbf): {harmonized_metrics["mmd_rbf"]:.4f}')
-        print(f'  harmonized sliced wasserstein: {harmonized_metrics["sliced_wasserstein"]:.4f}')
+        print(f"  harmonized fid: {harmonized_metrics['fid']:.4f}")
+        print(
+            f"  harmonized kid: {harmonized_metrics['kid_mean']:.4f} +/- {harmonized_metrics['kid_std']:.4f}"
+        )
+        print(f"  harmonized mmd (rbf): {harmonized_metrics['mmd_rbf']:.4f}")
+        print(f"  harmonized sliced wasserstein: {harmonized_metrics['sliced_wasserstein']:.4f}")
         print()
-        print(f'  fid reduction: {results["improvement"]["fid_reduction"]:.4f} '
-              f'({results["improvement"]["fid_reduction_percent"]:.1f}%)')
+        print(
+            f"  fid reduction: {results['improvement']['fid_reduction']:.4f} "
+            f"({results['improvement']['fid_reduction_percent']:.1f}%)"
+        )
 
-    print('=' * 60)
-    print(f'[featdist] results saved to {output_dir}')
+    print("=" * 60)
+    print(f"[featdist] results saved to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

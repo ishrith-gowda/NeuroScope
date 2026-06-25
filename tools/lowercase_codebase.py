@@ -31,24 +31,27 @@ def lowercase_comments(line: str) -> str:
             in_single = not in_single
         elif ch == '"' and not in_single:
             in_double = not in_double
-        elif ch == '#' and not in_single and not in_double:
+        elif ch == "#" and not in_single and not in_double:
             # found comment start
             code_part = line[:i]
             comment_part = line[i:]
             # lowercase the comment text but preserve # and spacing
-            if comment_part.startswith('#'):
+            if comment_part.startswith("#"):
                 # preserve section dividers like # ====== or # ------
-                stripped = comment_part.lstrip('#').lstrip()
-                if stripped and all(c in '=-~*' for c in stripped.rstrip()):
+                stripped = comment_part.lstrip("#").lstrip()
+                if stripped and all(c in "=-~*" for c in stripped.rstrip()):
                     return line
                 # preserve shebang
-                if comment_part.startswith('#!'):
+                if comment_part.startswith("#!"):
                     return line
                 # preserve encoding declarations
-                if 'coding' in comment_part and (':' in comment_part or '=' in comment_part):
+                if "coding" in comment_part and (":" in comment_part or "=" in comment_part):
                     return line
                 # preserve noqa, type: ignore, fmt: directives
-                if any(d in comment_part.lower() for d in ['noqa', 'type: ignore', 'fmt:', 'pragma:', 'pylint:']):
+                if any(
+                    d in comment_part.lower()
+                    for d in ["noqa", "type: ignore", "fmt:", "pragma:", "pylint:"]
+                ):
                     return line
                 return code_part + comment_part.lower()
             return line
@@ -58,22 +61,22 @@ def lowercase_comments(line: str) -> str:
 def lowercase_docstring(text: str) -> str:
     """lowercase a docstring while preserving structure."""
     # preserve section dividers
-    lines = text.split('\n')
+    lines = text.split("\n")
     result = []
     for line in lines:
         stripped = line.strip()
         # preserve lines that are just dividers
-        if stripped and all(c in '=-~*' for c in stripped):
+        if stripped and all(c in "=-~*" for c in stripped):
             result.append(line)
         else:
             result.append(line.lower())
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 def process_file(filepath: str) -> bool:
     """process a single python file. returns true if modified."""
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
     except (UnicodeDecodeError, IOError):
         return False
@@ -104,45 +107,46 @@ def process_file(filepath: str) -> bool:
     )
 
     # step 2: lowercase comments
-    lines = content.split('\n')
+    lines = content.split("\n")
     new_lines = []
     for line in lines:
         new_lines.append(lowercase_comments(line))
-    content = '\n'.join(new_lines)
+    content = "\n".join(new_lines)
 
     # step 3: lowercase print() string arguments
     # match print("...") and print(f"...") patterns
     def lowercase_print_str(match):
         prefix = match.group(1)  # print( or print(f
-        quote = match.group(2)   # " or '
-        body = match.group(3)    # string content
+        quote = match.group(2)  # " or '
+        body = match.group(3)  # string content
         end_quote = match.group(4)
+
         # preserve f-string expressions {var_name}
         def lower_outside_braces(s):
             result = []
             depth = 0
             current = []
             for ch in s:
-                if ch == '{':
+                if ch == "{":
                     if depth == 0 and current:
-                        result.append(''.join(current).lower())
+                        result.append("".join(current).lower())
                         current = []
                     depth += 1
                     current.append(ch)
-                elif ch == '}':
+                elif ch == "}":
                     current.append(ch)
                     depth -= 1
                     if depth == 0:
-                        result.append(''.join(current))
+                        result.append("".join(current))
                         current = []
                 else:
                     current.append(ch)
             if current:
                 if depth > 0:
-                    result.append(''.join(current))
+                    result.append("".join(current))
                 else:
-                    result.append(''.join(current).lower())
-            return ''.join(result)
+                    result.append("".join(current).lower())
+            return "".join(result)
 
         lowered = lower_outside_braces(body)
         return prefix + quote + lowered + end_quote
@@ -161,7 +165,7 @@ def process_file(filepath: str) -> bool:
     )
 
     if content != original:
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
         return True
     return False

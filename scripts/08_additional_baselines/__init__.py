@@ -17,12 +17,12 @@ from .baseline_methods import (
 )
 
 __all__ = [
-    'NormalizationConfig',
-    'ZScoreNormalizer',
-    'IntensityRangeNormalizer',
-    'HistogramMatcher',
-    'NyulNormalizer',
-    'WhiteStripeNormalizer',
-    'apply_baseline_harmonization',
-    'evaluate_baseline_method',
+    "NormalizationConfig",
+    "ZScoreNormalizer",
+    "IntensityRangeNormalizer",
+    "HistogramMatcher",
+    "NyulNormalizer",
+    "WhiteStripeNormalizer",
+    "apply_baseline_harmonization",
+    "evaluate_baseline_method",
 ]

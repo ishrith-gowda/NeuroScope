@@ -206,20 +206,22 @@ class MultiDomainSAGenerator25D(nn.Module):
         )
 
         # downsampling encoder (shared)
-        self.encoder = nn.ModuleList([
-            nn.Sequential(
-                nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 2),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 2),
-            ),
-            nn.Sequential(
-                nn.Conv2d(ngf * 2, ngf * 4, 3, stride=2, padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 4),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 4),
-            ),
-        ])
+        self.encoder = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Conv2d(ngf, ngf * 2, 3, stride=2, padding=1, bias=False),
+                    nn.InstanceNorm2d(ngf * 2),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 2),
+                ),
+                nn.Sequential(
+                    nn.Conv2d(ngf * 2, ngf * 4, 3, stride=2, padding=1, bias=False),
+                    nn.InstanceNorm2d(ngf * 4),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 4),
+                ),
+            ]
+        )
 
         # adain bottleneck (domain-conditioned)
         self.bottleneck = nn.ModuleList()
@@ -237,25 +239,33 @@ class MultiDomainSAGenerator25D(nn.Module):
         self.global_attention = SelfAttention2D(ngf * 4, reduction=4)
 
         # upsampling decoder (shared)
-        self.decoder = nn.ModuleList([
-            nn.Sequential(
-                nn.ConvTranspose2d(ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False),
-                nn.InstanceNorm2d(ngf * 2),
-                nn.ReLU(inplace=True),
-                CBAM(ngf * 2),
-            ),
-            nn.Sequential(
-                nn.ConvTranspose2d(ngf * 2, ngf, 3, stride=2, padding=1, output_padding=1, bias=False),
-                nn.InstanceNorm2d(ngf),
-                nn.ReLU(inplace=True),
-                CBAM(ngf),
-            ),
-        ])
+        self.decoder = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.ConvTranspose2d(
+                        ngf * 4, ngf * 2, 3, stride=2, padding=1, output_padding=1, bias=False
+                    ),
+                    nn.InstanceNorm2d(ngf * 2),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf * 2),
+                ),
+                nn.Sequential(
+                    nn.ConvTranspose2d(
+                        ngf * 2, ngf, 3, stride=2, padding=1, output_padding=1, bias=False
+                    ),
+                    nn.InstanceNorm2d(ngf),
+                    nn.ReLU(inplace=True),
+                    CBAM(ngf),
+                ),
+            ]
+        )
 
-        self.skip_fuse = nn.ModuleList([
-            nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False),
-            nn.Conv2d(ngf * 2, ngf, 1, bias=False),
-        ])
+        self.skip_fuse = nn.ModuleList(
+            [
+                nn.Conv2d(ngf * 4, ngf * 2, 1, bias=False),
+                nn.Conv2d(ngf * 2, ngf, 1, bias=False),
+            ]
+        )
 
         self.output = nn.Sequential(
             nn.ReflectionPad2d(3),
@@ -263,9 +273,7 @@ class MultiDomainSAGenerator25D(nn.Module):
             nn.Tanh(),
         )
 
-    def forward(
-        self, x: torch.Tensor, target_domain: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, target_domain: torch.Tensor) -> torch.Tensor:
         """
         args:
             x: input tensor [b, 12, h, w]
@@ -292,9 +300,7 @@ class MultiDomainSAGenerator25D(nn.Module):
         for i, dec in enumerate(self.decoder):
             x = dec(x)
             skip = self.skip_fuse[i](skips[-(i + 1)])
-            skip = F.interpolate(
-                skip, size=x.shape[2:], mode="bilinear", align_corners=False
-            )
+            skip = F.interpolate(skip, size=x.shape[2:], mode="bilinear", align_corners=False)
             x = x + skip
 
         return self.output(x)
@@ -335,21 +341,25 @@ class MultiDomainDiscriminator(nn.Module):
         for i in range(1, n_layers):
             nf_prev = nf
             nf = min(nf * 2, 512)
-            layers.extend([
-                get_conv(nf_prev, nf, bias=False),
-                nn.InstanceNorm2d(nf),
-                nn.LeakyReLU(0.2, inplace=True),
-            ])
+            layers.extend(
+                [
+                    get_conv(nf_prev, nf, bias=False),
+                    nn.InstanceNorm2d(nf),
+                    nn.LeakyReLU(0.2, inplace=True),
+                ]
+            )
 
         layers.append(SelfAttention2D(nf))
 
         nf_prev = nf
         nf = min(nf * 2, 512)
-        layers.extend([
-            get_conv(nf_prev, nf, stride=1, bias=False),
-            nn.InstanceNorm2d(nf),
-            nn.LeakyReLU(0.2, inplace=True),
-        ])
+        layers.extend(
+            [
+                get_conv(nf_prev, nf, stride=1, bias=False),
+                nn.InstanceNorm2d(nf),
+                nn.LeakyReLU(0.2, inplace=True),
+            ]
+        )
 
         self.features = nn.Sequential(*layers)
 
@@ -365,9 +375,7 @@ class MultiDomainDiscriminator(nn.Module):
             nn.Linear(nf, n_domains),
         )
 
-    def forward(
-        self, x: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         args:
             x: input image [b, c, h, w]
@@ -460,7 +468,7 @@ if __name__ == "__main__":
     params = model.get_parameter_count()
     print(f"model parameters:")
     for k, v in params.items():
-        print(f"  {k}: {v:,} ({v/1e6:.2f}m)")
+        print(f"  {k}: {v:,} ({v / 1e6:.2f}m)")
 
     # test forward
     x = torch.randn(2, 12, 128, 128)

@@ -8,4 +8,4 @@ author: neuroscope research team
 
 from .sample_generator import SampleGenerator
 
-__all__ = ['SampleGenerator']
+__all__ = ["SampleGenerator"]

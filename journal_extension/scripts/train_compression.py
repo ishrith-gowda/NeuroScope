@@ -162,9 +162,7 @@ class CompressionTrainer:
 
         # tensorboard
         runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
-        self.writer = SummaryWriter(
-            log_dir=str(runs_dir / experiment_name)
-        )
+        self.writer = SummaryWriter(log_dir=str(runs_dir / experiment_name))
 
         # create compressed model
         self.model = CompressedSACycleGAN25D(
@@ -223,18 +221,15 @@ class CompressionTrainer:
                 self.opt_D, T_max=200, eta_min=min_lr
             )
         else:
+
             def lambda_rule(epoch, total_epochs=200):
                 decay_start = total_epochs // 2
                 if epoch < decay_start:
                     return 1.0
                 return 1.0 - (epoch - decay_start) / (total_epochs - decay_start + 1)
 
-            self.scheduler_G = optim.lr_scheduler.LambdaLR(
-                self.opt_G, lr_lambda=lambda_rule
-            )
-            self.scheduler_D = optim.lr_scheduler.LambdaLR(
-                self.opt_D, lr_lambda=lambda_rule
-            )
+            self.scheduler_G = optim.lr_scheduler.LambdaLR(self.opt_G, lr_lambda=lambda_rule)
+            self.scheduler_D = optim.lr_scheduler.LambdaLR(self.opt_D, lr_lambda=lambda_rule)
 
         # loss functions
         self.losses = CombinedLoss(
@@ -332,9 +327,7 @@ class CompressionTrainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_step(
-        self, batch: Dict[str, torch.Tensor], epoch: int
-    ) -> Dict[str, float]:
+    def train_step(self, batch: Dict[str, torch.Tensor], epoch: int) -> Dict[str, float]:
         """execute single training step with rate-distortion loss."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -413,7 +406,11 @@ class CompressionTrainer:
 
             # rate loss (bitrate from entropy model)
             total_bits = bits_A2B + bits_B2A + bits_rec_A + bits_rec_B
-            loss_rate = self.lambda_rate * total_bits if use_compression else torch.tensor(0.0, device=self.device)
+            loss_rate = (
+                self.lambda_rate * total_bits
+                if use_compression
+                else torch.tensor(0.0, device=self.device)
+            )
 
             # total generator loss
             loss_G = (
@@ -432,8 +429,7 @@ class CompressionTrainer:
         if self.gradient_clip_norm > 0:
             self.scaler_G.unscale_(self.opt_G)
             torch.nn.utils.clip_grad_norm_(
-                list(self.model.G_A2B.parameters())
-                + list(self.model.G_B2A.parameters()),
+                list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
                 self.gradient_clip_norm,
             )
 
@@ -524,11 +520,11 @@ class CompressionTrainer:
 
             pbar.set_postfix(
                 {
-                    "G": f'{losses["G_loss"]:.3f}',
-                    "D": f'{losses["D_loss"]:.3f}',
-                    "rate": f'{losses["rate_loss"]:.3f}',
-                    "bpe": f'{losses["bpe"]:.3f}',
-                    "cyc": f'{losses["cycle_A"] + losses["cycle_B"]:.3f}',
+                    "G": f"{losses['G_loss']:.3f}",
+                    "D": f"{losses['D_loss']:.3f}",
+                    "rate": f"{losses['rate_loss']:.3f}",
+                    "bpe": f"{losses['bpe']:.3f}",
+                    "cyc": f"{losses['cycle_A'] + losses['cycle_B']:.3f}",
                 }
             )
 
@@ -736,9 +732,7 @@ class CompressionTrainer:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="train harmonize-and-compress sa-cyclegan-2.5d"
-    )
+    parser = argparse.ArgumentParser(description="train harmonize-and-compress sa-cyclegan-2.5d")
 
     # config file
     parser.add_argument("--config", type=str, default=None, help="path to yaml config")
@@ -757,8 +751,9 @@ def parse_args():
     parser.add_argument("--num_workers", type=int, default=32)
 
     # compression
-    parser.add_argument("--entropy_model_type", type=str, default="factorized",
-                        choices=["factorized", "hyperprior"])
+    parser.add_argument(
+        "--entropy_model_type", type=str, default="factorized", choices=["factorized", "hyperprior"]
+    )
     parser.add_argument("--num_hyper_channels", type=int, default=128)
     parser.add_argument("--lambda_rate", type=float, default=0.01)
     parser.add_argument("--compression_warmup_epochs", type=int, default=20)

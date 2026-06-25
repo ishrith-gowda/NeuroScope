@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 @dataclass
 class ComBatConfig:
     """configuration for combat harmonization."""
+
     parametric: bool = True  # use parametric adjustments
     eb: bool = True  # use empirical bayes estimation
     mean_only: bool = False  # only adjust means (not variances)
@@ -59,9 +60,7 @@ class ComBatHarmonizer:
         self.fitted = False
 
     def _standardize_across_features(
-        self,
-        data: np.ndarray,
-        batch_labels: np.ndarray
+        self, data: np.ndarray, batch_labels: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         standardize data across features.
@@ -94,7 +93,7 @@ class ComBatHarmonizer:
             batch_data = data[mask]
             var_pooled += np.sum((batch_data - batch_means[batch]) ** 2, axis=0)
 
-        var_pooled /= (n_samples - n_batches)
+        var_pooled /= n_samples - n_batches
         var_pooled = np.maximum(var_pooled, 1e-10)  # prevent division by zero
 
         # standardize
@@ -103,9 +102,7 @@ class ComBatHarmonizer:
         return data_std, grand_mean, var_pooled
 
     def _compute_batch_effects(
-        self,
-        data_std: np.ndarray,
-        batch_labels: np.ndarray
+        self, data_std: np.ndarray, batch_labels: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         compute batch-specific location (gamma) and scale (delta) parameters.
@@ -127,10 +124,7 @@ class ComBatHarmonizer:
         return gamma_hat, delta_hat
 
     def _empirical_bayes_estimate(
-        self,
-        gamma_hat: np.ndarray,
-        delta_hat: np.ndarray,
-        batch_counts: Dict
+        self, gamma_hat: np.ndarray, delta_hat: np.ndarray, batch_counts: Dict
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         compute empirical bayes estimates for batch effects.
@@ -159,9 +153,8 @@ class ComBatHarmonizer:
             n_i = batch_counts[batch_list[i]]
 
             # posterior mean for gamma
-            gamma_star[i] = (
-                (n_i * tau_sq * gamma_hat[i] + delta_hat[i] * gamma_bar) /
-                (n_i * tau_sq + delta_hat[i] + 1e-10)
+            gamma_star[i] = (n_i * tau_sq * gamma_hat[i] + delta_hat[i] * gamma_bar) / (
+                n_i * tau_sq + delta_hat[i] + 1e-10
             )
 
             # posterior mean for delta (using moment matching)
@@ -169,18 +162,13 @@ class ComBatHarmonizer:
                 delta_star[i] = np.ones(n_features)
             else:
                 # simplified eb estimate
-                delta_star[i] = (
-                    (theta_bar + delta_hat[i] * (n_i - 1)) /
-                    (theta_bar / lambda_bar + n_i - 1 + 1e-10)
+                delta_star[i] = (theta_bar + delta_hat[i] * (n_i - 1)) / (
+                    theta_bar / lambda_bar + n_i - 1 + 1e-10
                 )
 
         return gamma_star, delta_star
 
-    def fit(
-        self,
-        data: np.ndarray,
-        batch_labels: np.ndarray
-    ) -> 'ComBatHarmonizer':
+    def fit(self, data: np.ndarray, batch_labels: np.ndarray) -> "ComBatHarmonizer":
         """
         fit combat model to data.
 
@@ -189,9 +177,7 @@ class ComBatHarmonizer:
             batch_labels: array of batch labels for each sample
         """
         # standardize
-        data_std, grand_mean, var_pooled = self._standardize_across_features(
-            data, batch_labels
-        )
+        data_std, grand_mean, var_pooled = self._standardize_across_features(data, batch_labels)
 
         # compute batch effects
         gamma_hat, delta_hat = self._compute_batch_effects(data_std, batch_labels)
@@ -216,19 +202,12 @@ class ComBatHarmonizer:
         self.delta_star = delta_star
         self.grand_mean = grand_mean
         self.var_pooled = var_pooled
-        self.batch_info = {
-            'unique_batches': list(unique_batches),
-            'batch_counts': batch_counts
-        }
+        self.batch_info = {"unique_batches": list(unique_batches), "batch_counts": batch_counts}
         self.fitted = True
 
         return self
 
-    def transform(
-        self,
-        data: np.ndarray,
-        batch_labels: np.ndarray
-    ) -> np.ndarray:
+    def transform(self, data: np.ndarray, batch_labels: np.ndarray) -> np.ndarray:
         """
         apply combat harmonization to data.
 
@@ -247,7 +226,7 @@ class ComBatHarmonizer:
 
         # apply batch corrections
         data_combat = np.zeros_like(data_std)
-        unique_batches = self.batch_info['unique_batches']
+        unique_batches = self.batch_info["unique_batches"]
 
         for i, batch in enumerate(unique_batches):
             mask = batch_labels == batch
@@ -260,9 +239,8 @@ class ComBatHarmonizer:
             if self.config.mean_only:
                 data_combat[mask] = batch_data - self.gamma_star[i]
             else:
-                data_combat[mask] = (
-                    (batch_data - self.gamma_star[i]) /
-                    np.sqrt(self.delta_star[i] + 1e-10)
+                data_combat[mask] = (batch_data - self.gamma_star[i]) / np.sqrt(
+                    self.delta_star[i] + 1e-10
                 )
 
         # transform back to original scale
@@ -270,19 +248,13 @@ class ComBatHarmonizer:
 
         return data_harmonized
 
-    def fit_transform(
-        self,
-        data: np.ndarray,
-        batch_labels: np.ndarray
-    ) -> np.ndarray:
+    def fit_transform(self, data: np.ndarray, batch_labels: np.ndarray) -> np.ndarray:
         """fit and transform in one step."""
         return self.fit(data, batch_labels).transform(data, batch_labels)
 
 
 def harmonize_mri_with_combat(
-    domain_a_data: np.ndarray,
-    domain_b_data: np.ndarray,
-    config: Optional[ComBatConfig] = None
+    domain_a_data: np.ndarray, domain_b_data: np.ndarray, config: Optional[ComBatConfig] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     harmonize two mri domains using combat.
@@ -299,9 +271,7 @@ def harmonize_mri_with_combat(
     combined_data = np.vstack([domain_a_data, domain_b_data])
 
     # create batch labels
-    batch_labels = np.array(
-        ['A'] * len(domain_a_data) + ['B'] * len(domain_b_data)
-    )
+    batch_labels = np.array(["A"] * len(domain_a_data) + ["B"] * len(domain_b_data))
 
     # fit and transform
     combat = ComBatHarmonizer(config)
@@ -316,22 +286,18 @@ def harmonize_mri_with_combat(
 
 
 def evaluate_combat_harmonization(
-    raw_features_a: np.ndarray,
-    raw_features_b: np.ndarray,
-    output_dir: Path
+    raw_features_a: np.ndarray, raw_features_b: np.ndarray, output_dir: Path
 ) -> Dict:
     """
     evaluate combat harmonization and compare with deep learning methods.
     """
-    print('[combat] fitting combat model...')
+    print("[combat] fitting combat model...")
 
     # apply combat
     config = ComBatConfig(parametric=True, eb=True)
-    harmonized_a, harmonized_b = harmonize_mri_with_combat(
-        raw_features_a, raw_features_b, config
-    )
+    harmonized_a, harmonized_b = harmonize_mri_with_combat(raw_features_a, raw_features_b, config)
 
-    print('[combat] computing metrics...')
+    print("[combat] computing metrics...")
 
     # compute distribution metrics before/after
     def compute_mmd(x, y, sigma=1.0):
@@ -372,77 +338,74 @@ def evaluate_combat_harmonization(
     combat_cosine = compute_cosine_sim(harmonized_a, harmonized_b)
 
     results = {
-        'raw': {
-            'mmd': float(raw_mmd),
-            'mean_difference': float(raw_mean_diff),
-            'cosine_similarity': float(raw_cosine)
+        "raw": {
+            "mmd": float(raw_mmd),
+            "mean_difference": float(raw_mean_diff),
+            "cosine_similarity": float(raw_cosine),
         },
-        'combat': {
-            'mmd': float(combat_mmd),
-            'mean_difference': float(combat_mean_diff),
-            'cosine_similarity': float(combat_cosine)
+        "combat": {
+            "mmd": float(combat_mmd),
+            "mean_difference": float(combat_mean_diff),
+            "cosine_similarity": float(combat_cosine),
         },
-        'improvement': {
-            'mmd_reduction': float(raw_mmd - combat_mmd),
-            'mmd_reduction_percent': float(100 * (raw_mmd - combat_mmd) / (raw_mmd + 1e-10)),
-            'mean_diff_reduction': float(raw_mean_diff - combat_mean_diff),
-            'cosine_improvement': float(combat_cosine - raw_cosine)
-        }
+        "improvement": {
+            "mmd_reduction": float(raw_mmd - combat_mmd),
+            "mmd_reduction_percent": float(100 * (raw_mmd - combat_mmd) / (raw_mmd + 1e-10)),
+            "mean_diff_reduction": float(raw_mean_diff - combat_mean_diff),
+            "cosine_improvement": float(combat_cosine - raw_cosine),
+        },
     }
 
     # save harmonized features
-    np.save(output_dir / 'combat_harmonized_a.npy', harmonized_a)
-    np.save(output_dir / 'combat_harmonized_b.npy', harmonized_b)
+    np.save(output_dir / "combat_harmonized_a.npy", harmonized_a)
+    np.save(output_dir / "combat_harmonized_b.npy", harmonized_b)
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='combat harmonization baseline comparison'
+    parser = argparse.ArgumentParser(description="combat harmonization baseline comparison")
+    parser.add_argument(
+        "--features-a", type=str, required=True, help="path to domain a features (npy file)"
     )
-    parser.add_argument('--features-a', type=str, required=True,
-                       help='path to domain a features (npy file)')
-    parser.add_argument('--features-b', type=str, required=True,
-                       help='path to domain b features (npy file)')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory')
-    parser.add_argument('--parametric', action='store_true', default=True,
-                       help='use parametric combat')
-    parser.add_argument('--no-eb', action='store_true',
-                       help='disable empirical bayes')
+    parser.add_argument(
+        "--features-b", type=str, required=True, help="path to domain b features (npy file)"
+    )
+    parser.add_argument("--output-dir", type=str, required=True, help="output directory")
+    parser.add_argument(
+        "--parametric", action="store_true", default=True, help="use parametric combat"
+    )
+    parser.add_argument("--no-eb", action="store_true", help="disable empirical bayes")
 
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print('[combat] loading features...')
+    print("[combat] loading features...")
     features_a = np.load(args.features_a)
     features_b = np.load(args.features_b)
 
-    print(f'[combat] domain a: {features_a.shape}')
-    print(f'[combat] domain b: {features_b.shape}')
+    print(f"[combat] domain a: {features_a.shape}")
+    print(f"[combat] domain b: {features_b.shape}")
 
     # run evaluation
-    results = evaluate_combat_harmonization(
-        features_a, features_b, output_dir
-    )
+    results = evaluate_combat_harmonization(features_a, features_b, output_dir)
 
     # save results
-    with open(output_dir / 'combat_results.json', 'w') as f:
+    with open(output_dir / "combat_results.json", "w") as f:
         json.dump(results, f, indent=2)
 
-    print('=' * 60)
-    print('[combat] results summary:')
+    print("=" * 60)
+    print("[combat] results summary:")
     print(f"  raw mmd: {results['raw']['mmd']:.6f}")
     print(f"  combat mmd: {results['combat']['mmd']:.6f}")
     print(f"  mmd reduction: {results['improvement']['mmd_reduction_percent']:.1f}%")
     print(f"  raw cosine: {results['raw']['cosine_similarity']:.4f}")
     print(f"  combat cosine: {results['combat']['cosine_similarity']:.4f}")
-    print('=' * 60)
-    print(f'[combat] results saved to {output_dir}')
+    print("=" * 60)
+    print(f"[combat] results saved to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

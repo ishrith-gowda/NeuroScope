@@ -8,4 +8,4 @@ author: neuroscope research team
 
 from .figure_generator import FigureGenerator
 
-__all__ = ['FigureGenerator']
+__all__ = ["FigureGenerator"]

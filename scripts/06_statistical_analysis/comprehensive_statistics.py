@@ -29,14 +29,21 @@ import warnings
 import numpy as np
 from scipy import stats
 from scipy.stats import (
-    ttest_rel, ttest_ind, wilcoxon, mannwhitneyu,
-    shapiro, levene, kruskal, f_oneway
+    ttest_rel,
+    ttest_ind,
+    wilcoxon,
+    mannwhitneyu,
+    shapiro,
+    levene,
+    kruskal,
+    f_oneway,
 )
 
 
 @dataclass
 class StatisticalResult:
     """container for statistical test results."""
+
     test_name: str
     statistic: float
     p_value: float
@@ -52,6 +59,7 @@ class StatisticalResult:
 @dataclass
 class BootstrapCI:
     """container for bootstrap confidence interval."""
+
     estimate: float
     ci_lower: float
     ci_upper: float
@@ -172,7 +180,7 @@ def bootstrap_ci(
     n_bootstrap: int = 10000,
     confidence_level: float = 0.95,
     method: str = "percentile",
-    random_state: int = 42
+    random_state: int = 42,
 ) -> BootstrapCI:
     """
     compute bootstrap confidence interval.
@@ -239,15 +247,12 @@ def bootstrap_ci(
         ci_upper=float(ci_upper),
         se=float(se),
         n_bootstrap=n_bootstrap,
-        method=method
+        method=method,
     )
 
 
 def paired_t_test(
-    x: np.ndarray,
-    y: np.ndarray,
-    alpha: float = 0.05,
-    alternative: str = "two-sided"
+    x: np.ndarray, y: np.ndarray, alpha: float = 0.05, alternative: str = "two-sided"
 ) -> StatisticalResult:
     """
     perform paired t-test with effect size and ci.
@@ -275,15 +280,12 @@ def paired_t_test(
         ci_upper=float(ci_upper),
         n_samples=n,
         interpretation=interpret_effect_size(g),
-        significant=p < alpha
+        significant=p < alpha,
     )
 
 
 def independent_t_test(
-    x: np.ndarray,
-    y: np.ndarray,
-    alpha: float = 0.05,
-    equal_var: bool = True
+    x: np.ndarray, y: np.ndarray, alpha: float = 0.05, equal_var: bool = True
 ) -> StatisticalResult:
     """
     perform independent samples t-test with effect size.
@@ -311,15 +313,11 @@ def independent_t_test(
         ci_upper=float(ci_upper),
         n_samples=n1 + n2,
         interpretation=interpret_effect_size(g),
-        significant=p < alpha
+        significant=p < alpha,
     )
 
 
-def wilcoxon_test(
-    x: np.ndarray,
-    y: np.ndarray,
-    alpha: float = 0.05
-) -> StatisticalResult:
+def wilcoxon_test(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> StatisticalResult:
     """
     perform wilcoxon signed-rank test (non-parametric paired test).
 
@@ -333,7 +331,7 @@ def wilcoxon_test(
     if np.sum(non_zero) < 10:
         warnings.warn("fewer than 10 non-zero differences for wilcoxon test")
 
-    stat, p = wilcoxon(x, y, alternative='two-sided')
+    stat, p = wilcoxon(x, y, alternative="two-sided")
 
     # effect size: r = z / sqrt(n)
     # approximate z from p-value
@@ -341,7 +339,7 @@ def wilcoxon_test(
     r = z / np.sqrt(n)
 
     # bootstrap ci for median difference
-    boot_ci = bootstrap_ci(diff, statistic_fn=np.median, method='bca')
+    boot_ci = bootstrap_ci(diff, statistic_fn=np.median, method="bca")
 
     return StatisticalResult(
         test_name="wilcoxon_signed_rank",
@@ -353,15 +351,11 @@ def wilcoxon_test(
         ci_upper=float(boot_ci.ci_upper),
         n_samples=n,
         interpretation=interpret_effect_size(r),
-        significant=p < alpha
+        significant=p < alpha,
     )
 
 
-def mann_whitney_test(
-    x: np.ndarray,
-    y: np.ndarray,
-    alpha: float = 0.05
-) -> StatisticalResult:
+def mann_whitney_test(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> StatisticalResult:
     """
     perform mann-whitney u test (non-parametric independent test).
 
@@ -369,7 +363,7 @@ def mann_whitney_test(
     """
     n1, n2 = len(x), len(y)
 
-    stat, p = mannwhitneyu(x, y, alternative='two-sided')
+    stat, p = mannwhitneyu(x, y, alternative="two-sided")
     r = compute_rank_biserial(stat, n1, n2)
 
     return StatisticalResult(
@@ -382,13 +376,12 @@ def mann_whitney_test(
         ci_upper=np.nan,
         n_samples=n1 + n2,
         interpretation=interpret_effect_size(r),
-        significant=p < alpha
+        significant=p < alpha,
     )
 
 
 def bonferroni_correction(
-    p_values: List[float],
-    alpha: float = 0.05
+    p_values: List[float], alpha: float = 0.05
 ) -> Tuple[List[float], List[bool]]:
     """
     apply bonferroni correction for multiple comparisons.
@@ -399,10 +392,7 @@ def bonferroni_correction(
     return adjusted_p, significant
 
 
-def holm_correction(
-    p_values: List[float],
-    alpha: float = 0.05
-) -> Tuple[List[float], List[bool]]:
+def holm_correction(p_values: List[float], alpha: float = 0.05) -> Tuple[List[float], List[bool]]:
     """
     apply holm-bonferroni step-down correction.
 
@@ -419,8 +409,7 @@ def holm_correction(
     # ensure monotonicity
     for i in range(1, n):
         adjusted_p[sorted_indices[i]] = max(
-            adjusted_p[sorted_indices[i]],
-            adjusted_p[sorted_indices[i - 1]]
+            adjusted_p[sorted_indices[i]], adjusted_p[sorted_indices[i - 1]]
         )
 
     significant = [p < alpha for p in adjusted_p]
@@ -428,8 +417,7 @@ def holm_correction(
 
 
 def benjamini_hochberg_correction(
-    p_values: List[float],
-    alpha: float = 0.05
+    p_values: List[float], alpha: float = 0.05
 ) -> Tuple[List[float], List[bool]]:
     """
     apply benjamini-hochberg fdr correction.
@@ -449,8 +437,7 @@ def benjamini_hochberg_correction(
     # ensure monotonicity (from largest to smallest)
     for i in range(n - 2, -1, -1):
         adjusted_p[sorted_indices[i]] = min(
-            adjusted_p[sorted_indices[i]],
-            adjusted_p[sorted_indices[i + 1]]
+            adjusted_p[sorted_indices[i]], adjusted_p[sorted_indices[i + 1]]
         )
 
     adjusted_p = np.minimum(adjusted_p, 1.0)
@@ -459,10 +446,7 @@ def benjamini_hochberg_correction(
 
 
 def select_test(
-    x: np.ndarray,
-    y: np.ndarray,
-    paired: bool = True,
-    alpha: float = 0.05
+    x: np.ndarray, y: np.ndarray, paired: bool = True, alpha: float = 0.05
 ) -> StatisticalResult:
     """
     automatically select appropriate statistical test based on data properties.
@@ -495,7 +479,7 @@ def compute_comprehensive_statistics(
     harmonized_metrics: Dict[str, np.ndarray],
     paired: bool = True,
     alpha: float = 0.05,
-    correction_method: str = "holm"
+    correction_method: str = "holm",
 ) -> Dict:
     """
     compute comprehensive statistics for all metrics.
@@ -503,10 +487,10 @@ def compute_comprehensive_statistics(
     returns detailed statistical analysis with effect sizes, cis, and corrections.
     """
     results = {
-        'comparisons': {},
-        'summary': {},
-        'correction_method': correction_method,
-        'alpha': alpha
+        "comparisons": {},
+        "summary": {},
+        "correction_method": correction_method,
+        "alpha": alpha,
     }
 
     p_values = []
@@ -531,29 +515,29 @@ def compute_comprehensive_statistics(
         test_result = select_test(raw, harm, paired=paired, alpha=alpha)
 
         # bootstrap cis for means
-        raw_ci = bootstrap_ci(raw, method='bca')
-        harm_ci = bootstrap_ci(harm, method='bca')
+        raw_ci = bootstrap_ci(raw, method="bca")
+        harm_ci = bootstrap_ci(harm, method="bca")
 
-        results['comparisons'][metric_name] = {
-            'raw': {
-                'mean': float(np.mean(raw)),
-                'std': float(np.std(raw)),
-                'ci_lower': raw_ci.ci_lower,
-                'ci_upper': raw_ci.ci_upper,
-                'n': len(raw)
+        results["comparisons"][metric_name] = {
+            "raw": {
+                "mean": float(np.mean(raw)),
+                "std": float(np.std(raw)),
+                "ci_lower": raw_ci.ci_lower,
+                "ci_upper": raw_ci.ci_upper,
+                "n": len(raw),
             },
-            'harmonized': {
-                'mean': float(np.mean(harm)),
-                'std': float(np.std(harm)),
-                'ci_lower': harm_ci.ci_lower,
-                'ci_upper': harm_ci.ci_upper,
-                'n': len(harm)
+            "harmonized": {
+                "mean": float(np.mean(harm)),
+                "std": float(np.std(harm)),
+                "ci_lower": harm_ci.ci_lower,
+                "ci_upper": harm_ci.ci_upper,
+                "n": len(harm),
             },
-            'test': asdict(test_result),
-            'improvement': float(np.mean(harm) - np.mean(raw)),
-            'improvement_percent': float(
+            "test": asdict(test_result),
+            "improvement": float(np.mean(harm) - np.mean(raw)),
+            "improvement_percent": float(
                 100 * (np.mean(harm) - np.mean(raw)) / (np.mean(raw) + 1e-10)
-            )
+            ),
         }
 
         p_values.append(test_result.p_value)
@@ -572,24 +556,21 @@ def compute_comprehensive_statistics(
 
     # update with corrected values
     for i, metric_name in enumerate(metric_names):
-        results['comparisons'][metric_name]['adjusted_p_value'] = adjusted_p[i]
-        results['comparisons'][metric_name]['significant_corrected'] = significant[i]
+        results["comparisons"][metric_name]["adjusted_p_value"] = adjusted_p[i]
+        results["comparisons"][metric_name]["significant_corrected"] = significant[i]
 
     # summary statistics
     n_significant = sum(significant)
     n_total = len(significant)
 
-    results['summary'] = {
-        'n_metrics': n_total,
-        'n_significant_uncorrected': sum(p < alpha for p in p_values),
-        'n_significant_corrected': n_significant,
-        'significant_metrics': [
-            metric_names[i] for i in range(len(significant)) if significant[i]
-        ],
-        'mean_effect_size': float(np.mean([
-            abs(results['comparisons'][m]['test']['effect_size'])
-            for m in metric_names
-        ])),
+    results["summary"] = {
+        "n_metrics": n_total,
+        "n_significant_uncorrected": sum(p < alpha for p in p_values),
+        "n_significant_corrected": n_significant,
+        "significant_metrics": [metric_names[i] for i in range(len(significant)) if significant[i]],
+        "mean_effect_size": float(
+            np.mean([abs(results["comparisons"][m]["test"]["effect_size"]) for m in metric_names])
+        ),
     }
 
     return results
@@ -601,35 +582,35 @@ def format_result_for_publication(result: Dict, metric_name: str) -> str:
 
     example: "ssim: 0.82 +/- 0.08 (95% ci: 0.79-0.85), t(95)=3.24, p=0.002, g=0.45"
     """
-    comp = result['comparisons'].get(metric_name, {})
+    comp = result["comparisons"].get(metric_name, {})
     if not comp:
         return ""
 
-    raw = comp['raw']
-    harm = comp['harmonized']
-    test = comp['test']
+    raw = comp["raw"]
+    harm = comp["harmonized"]
+    test = comp["test"]
 
     # format based on test type
-    test_name = test['test_name']
-    if 't_test' in test_name:
-        test_str = f"t({test['n_samples']-1})={test['statistic']:.2f}"
-    elif 'wilcoxon' in test_name:
+    test_name = test["test_name"]
+    if "t_test" in test_name:
+        test_str = f"t({test['n_samples'] - 1})={test['statistic']:.2f}"
+    elif "wilcoxon" in test_name:
         test_str = f"W={test['statistic']:.0f}"
-    elif 'mann_whitney' in test_name:
+    elif "mann_whitney" in test_name:
         test_str = f"U={test['statistic']:.0f}"
     else:
         test_str = f"stat={test['statistic']:.2f}"
 
     # format p-value
-    p = comp.get('adjusted_p_value', test['p_value'])
+    p = comp.get("adjusted_p_value", test["p_value"])
     if p < 0.001:
         p_str = "p<0.001"
     else:
         p_str = f"p={p:.3f}"
 
     # effect size
-    es_type = test['effect_size_type']
-    es = test['effect_size']
+    es_type = test["effect_size_type"]
+    es = test["effect_size"]
     es_str = f"{es_type}={es:.2f} ({test['interpretation']})"
 
     # significance marker
@@ -647,19 +628,25 @@ def format_result_for_publication(result: Dict, metric_name: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='comprehensive statistical analysis for harmonization evaluation'
+        description="comprehensive statistical analysis for harmonization evaluation"
     )
-    parser.add_argument('--results-dir', type=str, required=True,
-                       help='directory containing evaluation results')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory for statistical analysis')
-    parser.add_argument('--alpha', type=float, default=0.05,
-                       help='significance level')
-    parser.add_argument('--correction', type=str, default='holm',
-                       choices=['bonferroni', 'holm', 'bh', 'fdr', 'none'],
-                       help='multiple comparison correction method')
-    parser.add_argument('--n-bootstrap', type=int, default=10000,
-                       help='number of bootstrap samples')
+    parser.add_argument(
+        "--results-dir", type=str, required=True, help="directory containing evaluation results"
+    )
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="output directory for statistical analysis"
+    )
+    parser.add_argument("--alpha", type=float, default=0.05, help="significance level")
+    parser.add_argument(
+        "--correction",
+        type=str,
+        default="holm",
+        choices=["bonferroni", "holm", "bh", "fdr", "none"],
+        help="multiple comparison correction method",
+    )
+    parser.add_argument(
+        "--n-bootstrap", type=int, default=10000, help="number of bootstrap samples"
+    )
 
     args = parser.parse_args()
 
@@ -668,10 +655,12 @@ def main():
 
     results_dir = Path(args.results_dir)
 
-    print('[stats] loading evaluation results...')
+    print("[stats] loading evaluation results...")
 
     # load domain classification results
-    domain_results_path = results_dir / 'domain_classification' / 'domain_classification_results.json'
+    domain_results_path = (
+        results_dir / "domain_classification" / "domain_classification_results.json"
+    )
     if domain_results_path.exists():
         with open(domain_results_path) as f:
             domain_results = json.load(f)
@@ -679,7 +668,9 @@ def main():
         domain_results = None
 
     # load feature distribution results
-    feature_results_path = results_dir / 'feature_distribution' / 'feature_distribution_results.json'
+    feature_results_path = (
+        results_dir / "feature_distribution" / "feature_distribution_results.json"
+    )
     if feature_results_path.exists():
         with open(feature_results_path) as f:
             feature_results = json.load(f)
@@ -690,11 +681,11 @@ def main():
     all_stats = {}
 
     if domain_results:
-        print('[stats] analyzing domain classification results...')
+        print("[stats] analyzing domain classification results...")
 
         # extract metrics for statistical analysis
-        raw_acc = domain_results['raw']['accuracy']
-        harm_acc = domain_results.get('harmonized', {}).get('accuracy', None)
+        raw_acc = domain_results["raw"]["accuracy"]
+        harm_acc = domain_results.get("harmonized", {}).get("accuracy", None)
 
         if harm_acc:
             # compute reduction significance
@@ -712,53 +703,60 @@ def main():
             harm_sim = np.random.binomial(n_test, harm_acc, 10000) / n_test
             reduction_sim = raw_sim - harm_sim
 
-            reduction_ci = bootstrap_ci(reduction_sim, method='percentile')
+            reduction_ci = bootstrap_ci(reduction_sim, method="percentile")
 
-            all_stats['domain_classification'] = {
-                'raw_accuracy': raw_acc,
-                'harmonized_accuracy': harm_acc,
-                'accuracy_reduction': acc_reduction,
-                'reduction_ci_lower': reduction_ci.ci_lower,
-                'reduction_ci_upper': reduction_ci.ci_upper,
-                'reduction_se': reduction_ci.se,
-                'interpretation': 'harmonization significantly reduces domain discriminability'
-                                 if harm_acc < 0.6 else 'moderate domain reduction'
+            all_stats["domain_classification"] = {
+                "raw_accuracy": raw_acc,
+                "harmonized_accuracy": harm_acc,
+                "accuracy_reduction": acc_reduction,
+                "reduction_ci_lower": reduction_ci.ci_lower,
+                "reduction_ci_upper": reduction_ci.ci_upper,
+                "reduction_se": reduction_ci.se,
+                "interpretation": "harmonization significantly reduces domain discriminability"
+                if harm_acc < 0.6
+                else "moderate domain reduction",
             }
 
     if feature_results:
-        print('[stats] analyzing feature distribution results...')
+        print("[stats] analyzing feature distribution results...")
 
-        raw_feat = feature_results['raw']
-        harm_feat = feature_results.get('harmonized', {})
+        raw_feat = feature_results["raw"]
+        harm_feat = feature_results.get("harmonized", {})
 
         if harm_feat:
-            all_stats['feature_distribution'] = {
-                'raw': raw_feat,
-                'harmonized': harm_feat,
-                'fid_reduction': raw_feat['fid'] - harm_feat['fid'],
-                'fid_reduction_percent': 100 * (raw_feat['fid'] - harm_feat['fid']) / (raw_feat['fid'] + 1e-10),
-                'mmd_reduction': raw_feat['mmd_rbf'] - harm_feat['mmd_rbf'],
-                'mmd_reduction_percent': 100 * (raw_feat['mmd_rbf'] - harm_feat['mmd_rbf']) / (raw_feat['mmd_rbf'] + 1e-10),
+            all_stats["feature_distribution"] = {
+                "raw": raw_feat,
+                "harmonized": harm_feat,
+                "fid_reduction": raw_feat["fid"] - harm_feat["fid"],
+                "fid_reduction_percent": 100
+                * (raw_feat["fid"] - harm_feat["fid"])
+                / (raw_feat["fid"] + 1e-10),
+                "mmd_reduction": raw_feat["mmd_rbf"] - harm_feat["mmd_rbf"],
+                "mmd_reduction_percent": 100
+                * (raw_feat["mmd_rbf"] - harm_feat["mmd_rbf"])
+                / (raw_feat["mmd_rbf"] + 1e-10),
             }
 
     # save results
-    with open(output_dir / 'comprehensive_statistics.json', 'w') as f:
+    with open(output_dir / "comprehensive_statistics.json", "w") as f:
         json.dump(all_stats, f, indent=2)
 
-    print('=' * 60)
-    print('[stats] statistical analysis complete')
-    print('=' * 60)
+    print("=" * 60)
+    print("[stats] statistical analysis complete")
+    print("=" * 60)
 
-    if 'domain_classification' in all_stats:
-        dc = all_stats['domain_classification']
-        print('[domain classification]')
+    if "domain_classification" in all_stats:
+        dc = all_stats["domain_classification"]
+        print("[domain classification]")
         print(f"  raw accuracy: {dc['raw_accuracy']:.4f}")
         print(f"  harmonized accuracy: {dc['harmonized_accuracy']:.4f}")
-        print(f"  reduction: {dc['accuracy_reduction']:.4f} "
-              f"(95% ci: {dc['reduction_ci_lower']:.4f}-{dc['reduction_ci_upper']:.4f})")
+        print(
+            f"  reduction: {dc['accuracy_reduction']:.4f} "
+            f"(95% ci: {dc['reduction_ci_lower']:.4f}-{dc['reduction_ci_upper']:.4f})"
+        )
 
-    print(f'[stats] results saved to {output_dir}')
+    print(f"[stats] results saved to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -170,8 +170,9 @@ class BraTSSliceDataset(Dataset):
                     continue
                 self.samples.append((subj_dir, s))
 
-        print(f"  dataset: {len(self.samples)} slices from "
-              f"{len(subject_ids)} subjects in {data_dir}")
+        print(
+            f"  dataset: {len(self.samples)} slices from {len(subject_ids)} subjects in {data_dir}"
+        )
 
     def _has_required_files(self, subj_dir: Path) -> bool:
         """check if subject has all modalities and segmentation."""
@@ -211,8 +212,10 @@ class BraTSSliceDataset(Dataset):
                 tensor[c] = tensor[c] / vmax
         if self.image_size and tensor.shape[-2:] != tuple(self.image_size):
             tensor = F.interpolate(
-                tensor.unsqueeze(0), size=self.image_size,
-                mode="bilinear", align_corners=False,
+                tensor.unsqueeze(0),
+                size=self.image_size,
+                mode="bilinear",
+                align_corners=False,
             ).squeeze(0)
         return tensor
 
@@ -221,7 +224,9 @@ class BraTSSliceDataset(Dataset):
         tensor = torch.from_numpy(mask).long().unsqueeze(0).unsqueeze(0).float()
         if self.image_size and mask.shape != tuple(self.image_size):
             tensor = F.interpolate(
-                tensor, size=self.image_size, mode="nearest",
+                tensor,
+                size=self.image_size,
+                mode="nearest",
             )
         return tensor.squeeze(0).squeeze(0).long()
 
@@ -240,8 +245,8 @@ class BraTSSliceDataset(Dataset):
         seg_tensor = self._resize_mask(seg_slice)
 
         return {
-            "image": img_tensor,          # [4, h, w]
-            "mask": seg_tensor,            # [h, w] integer labels 0-3
+            "image": img_tensor,  # [4, h, w]
+            "mask": seg_tensor,  # [h, w] integer labels 0-3
             "subject": subj_dir.name,
             "slice_idx": slice_idx,
         }
@@ -451,9 +456,7 @@ def compute_dice_score(
     return dice_scores
 
 
-def compute_region_dice(
-    pred: torch.Tensor, target: torch.Tensor
-) -> Dict[str, float]:
+def compute_region_dice(pred: torch.Tensor, target: torch.Tensor) -> Dict[str, float]:
     """
     compute dice for brats-derived tumor regions (wt, tc, et).
 
@@ -484,9 +487,7 @@ def compute_region_dice(
     return region_dice
 
 
-def compute_hausdorff_95(
-    pred: np.ndarray, target: np.ndarray
-) -> float:
+def compute_hausdorff_95(pred: np.ndarray, target: np.ndarray) -> float:
     """
     compute 95th percentile hausdorff distance.
 
@@ -502,12 +503,8 @@ def compute_hausdorff_95(
         return float("inf")
 
     # compute surface distances
-    pred_boundary = pred ^ (
-        distance_transform_edt(pred) > 1
-    )
-    target_boundary = target ^ (
-        distance_transform_edt(target) > 1
-    )
+    pred_boundary = pred ^ (distance_transform_edt(pred) > 1)
+    target_boundary = target ^ (distance_transform_edt(target) > 1)
 
     dt_pred = distance_transform_edt(~pred_boundary)
     dt_target = distance_transform_edt(~target_boundary)
@@ -549,7 +546,10 @@ def generate_harmonized_data(
     returns:
         path to the harmonized output directory
     """
-    from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig, SAGenerator25D as GeneratorSA25D
+    from neuroscope.models.architectures.sa_cyclegan_25d import (
+        SACycleGAN25DConfig,
+        SAGenerator25D as GeneratorSA25D,
+    )
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -569,10 +569,18 @@ def generate_harmonized_data(
 
     if "global_model_state_dict" in checkpoint:
         # federated checkpoint: keys like G_A2B.encoder.0.0.weight
-        state_dict = {k[len(gen_prefix):]: v for k, v in checkpoint["global_model_state_dict"].items() if k.startswith(gen_prefix)}
+        state_dict = {
+            k[len(gen_prefix) :]: v
+            for k, v in checkpoint["global_model_state_dict"].items()
+            if k.startswith(gen_prefix)
+        }
     elif "model_state_dict" in checkpoint:
         # standard checkpoint: keys like G_A2B.encoder.0.0.weight
-        state_dict = {k[len(gen_prefix):]: v for k, v in checkpoint["model_state_dict"].items() if k.startswith(gen_prefix)}
+        state_dict = {
+            k[len(gen_prefix) :]: v
+            for k, v in checkpoint["model_state_dict"].items()
+            if k.startswith(gen_prefix)
+        }
     elif "generator_AB" in checkpoint or "generator_BA" in checkpoint:
         gen_key = "generator_AB" if direction == "a_to_b" else "generator_BA"
         state_dict = checkpoint[gen_key]
@@ -612,7 +620,7 @@ def generate_harmonized_data(
         with torch.no_grad():
             for s in range(1, n_slices - 1):
                 # build 2.5d input: 3 adjacent slices x 4 modalities = 12 channels
-                triplet = volume[:, :, :, s - 1:s + 2]  # [4, h, w, 3]
+                triplet = volume[:, :, :, s - 1 : s + 2]  # [4, h, w, 3]
                 triplet = np.transpose(triplet, (0, 3, 1, 2))  # [4, 3, h, w]
                 input_25d = triplet.reshape(-1, triplet.shape[2], triplet.shape[3])  # [12, h, w]
 
@@ -640,6 +648,7 @@ def generate_harmonized_data(
         seg_src = subj_dir / "seg.nii.gz"
         if seg_src.exists():
             import shutil
+
             shutil.copy2(str(seg_src), str(out_subj / "seg.nii.gz"))
 
     print(f"harmonized data saved to {output_path}")
@@ -738,9 +747,7 @@ class DownstreamEvaluator:
         model = UNet(in_channels=4, n_classes=self.n_classes).to(self.device)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.seg_lr)
         criterion = CombinedSegLoss()
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=self.seg_epochs
-        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.seg_epochs)
         scaler = GradScaler("cuda", enabled=self.use_amp)
 
         best_dice = 0.0
@@ -797,23 +804,28 @@ class DownstreamEvaluator:
                     best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
                 if (epoch + 1) % 10 == 0:
-                    print(f"    epoch {epoch + 1}/{self.seg_epochs} - "
-                          f"loss: {avg_loss:.4f} - val dice: {mean_dice:.4f}")
+                    print(
+                        f"    epoch {epoch + 1}/{self.seg_epochs} - "
+                        f"loss: {avg_loss:.4f} - val dice: {mean_dice:.4f}"
+                    )
             elif (epoch + 1) % 10 == 0:
                 print(f"    epoch {epoch + 1}/{self.seg_epochs} - loss: {avg_loss:.4f}")
 
             # save checkpoint
             if (epoch + 1) % 25 == 0:
                 ckpt_path = self.output_dir / f"{model_name}_epoch{epoch + 1}.pt"
-                torch.save({
-                    "epoch": epoch,
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "scheduler_state_dict": scheduler.state_dict(),
-                    "scaler_state_dict": scaler.state_dict(),
-                    "best_dice": best_dice,
-                    "history": history,
-                }, ckpt_path)
+                torch.save(
+                    {
+                        "epoch": epoch,
+                        "model_state_dict": model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "scheduler_state_dict": scheduler.state_dict(),
+                        "scaler_state_dict": scaler.state_dict(),
+                        "best_dice": best_dice,
+                        "history": history,
+                    },
+                    ckpt_path,
+                )
 
         if best_state is not None:
             model.load_state_dict(best_state)
@@ -951,7 +963,9 @@ class DownstreamEvaluator:
         # ---- condition 1: train on raw a, test on raw b ----
         print("\n[condition 1] train on raw site a, test on raw site b")
         train_loader_raw_a = self._make_loader(site_a_dir, train_a, shuffle=True)
-        test_loader_raw_b = self._make_loader(site_b_dir, test_b, shuffle=False, require_tumor=False)
+        test_loader_raw_b = self._make_loader(
+            site_b_dir, test_b, shuffle=False, require_tumor=False
+        )
 
         resume_raw = None
         if resume_path:
@@ -961,19 +975,27 @@ class DownstreamEvaluator:
 
         print("  training u-net on raw site a...")
         model_raw, hist_raw = self.train_segmentation(
-            train_loader_raw_a, model_name="raw_a_to_b", resume_path=resume_raw,
+            train_loader_raw_a,
+            model_name="raw_a_to_b",
+            resume_path=resume_raw,
         )
         print("  evaluating on raw site b...")
         results["raw_a_to_raw_b"] = self.evaluate_segmentation(model_raw, test_loader_raw_b)
-        print(f"  raw baseline dice (mean foreground): "
-              f"{results['raw_a_to_raw_b']['dice_mean_foreground_mean']:.4f}")
+        print(
+            f"  raw baseline dice (mean foreground): "
+            f"{results['raw_a_to_raw_b']['dice_mean_foreground_mean']:.4f}"
+        )
 
         # ---- condition 2: train on raw a, test on raw a (upper bound) ----
         print("\n[condition 2] train on raw site a, test on raw site a (within-site)")
-        test_loader_raw_a = self._make_loader(site_a_dir, test_a, shuffle=False, require_tumor=False)
+        test_loader_raw_a = self._make_loader(
+            site_a_dir, test_a, shuffle=False, require_tumor=False
+        )
         results["raw_a_to_raw_a"] = self.evaluate_segmentation(model_raw, test_loader_raw_a)
-        print(f"  within-site dice (mean foreground): "
-              f"{results['raw_a_to_raw_a']['dice_mean_foreground_mean']:.4f}")
+        print(
+            f"  within-site dice (mean foreground): "
+            f"{results['raw_a_to_raw_a']['dice_mean_foreground_mean']:.4f}"
+        )
 
         # ---- condition 3: train on harmonized a, test on harmonized b ----
         if harm_a_dir and harm_b_dir:
@@ -981,7 +1003,9 @@ class DownstreamEvaluator:
 
             # harmonized dirs use same subject ids, same seg labels
             train_loader_harm_a = self._make_loader(harm_a_dir, train_a, shuffle=True)
-            test_loader_harm_b = self._make_loader(harm_b_dir, test_b, shuffle=False, require_tumor=False)
+            test_loader_harm_b = self._make_loader(
+                harm_b_dir, test_b, shuffle=False, require_tumor=False
+            )
 
             resume_harm = None
             if resume_path:
@@ -991,19 +1015,27 @@ class DownstreamEvaluator:
 
             print("  training u-net on harmonized site a...")
             model_harm, hist_harm = self.train_segmentation(
-                train_loader_harm_a, model_name="harm_a_to_b", resume_path=resume_harm,
+                train_loader_harm_a,
+                model_name="harm_a_to_b",
+                resume_path=resume_harm,
             )
             print("  evaluating on harmonized site b...")
             results["harm_a_to_harm_b"] = self.evaluate_segmentation(model_harm, test_loader_harm_b)
-            print(f"  harmonized dice (mean foreground): "
-                  f"{results['harm_a_to_harm_b']['dice_mean_foreground_mean']:.4f}")
+            print(
+                f"  harmonized dice (mean foreground): "
+                f"{results['harm_a_to_harm_b']['dice_mean_foreground_mean']:.4f}"
+            )
 
             # ---- condition 4: train on harmonized a, test on harmonized a (within-site) ----
             print("\n[condition 4] train on harmonized site a, test on harmonized site a")
-            test_loader_harm_a = self._make_loader(harm_a_dir, test_a, shuffle=False, require_tumor=False)
+            test_loader_harm_a = self._make_loader(
+                harm_a_dir, test_a, shuffle=False, require_tumor=False
+            )
             results["harm_a_to_harm_a"] = self.evaluate_segmentation(model_harm, test_loader_harm_a)
-            print(f"  harmonized within-site dice (mean foreground): "
-                  f"{results['harm_a_to_harm_a']['dice_mean_foreground_mean']:.4f}")
+            print(
+                f"  harmonized within-site dice (mean foreground): "
+                f"{results['harm_a_to_harm_a']['dice_mean_foreground_mean']:.4f}"
+            )
 
             # compute improvement
             raw_dice = results["raw_a_to_raw_b"]["dice_mean_foreground_mean"]
@@ -1013,13 +1045,17 @@ class DownstreamEvaluator:
                 "dice_mean_foreground_delta": improvement,
                 "dice_mean_foreground_relative_pct": (improvement / max(raw_dice, 1e-8)) * 100,
             }
-            print(f"\n  harmonization improvement: {improvement:+.4f} "
-                  f"({results['improvement']['dice_mean_foreground_relative_pct']:+.1f}%)")
+            print(
+                f"\n  harmonization improvement: {improvement:+.4f} "
+                f"({results['improvement']['dice_mean_foreground_relative_pct']:+.1f}%)"
+            )
 
         # ---- reverse direction: train on b, test on a ----
         print("\n[condition 5] train on raw site b, test on raw site a (reverse)")
         train_loader_raw_b = self._make_loader(site_b_dir, train_b, shuffle=True)
-        test_loader_raw_a2 = self._make_loader(site_a_dir, test_a, shuffle=False, require_tumor=False)
+        test_loader_raw_a2 = self._make_loader(
+            site_a_dir, test_a, shuffle=False, require_tumor=False
+        )
 
         resume_rev = None
         if resume_path:
@@ -1029,17 +1065,23 @@ class DownstreamEvaluator:
 
         print("  training u-net on raw site b...")
         model_rev, hist_rev = self.train_segmentation(
-            train_loader_raw_b, model_name="raw_b_to_a", resume_path=resume_rev,
+            train_loader_raw_b,
+            model_name="raw_b_to_a",
+            resume_path=resume_rev,
         )
         print("  evaluating on raw site a...")
         results["raw_b_to_raw_a"] = self.evaluate_segmentation(model_rev, test_loader_raw_a2)
-        print(f"  reverse raw dice (mean foreground): "
-              f"{results['raw_b_to_raw_a']['dice_mean_foreground_mean']:.4f}")
+        print(
+            f"  reverse raw dice (mean foreground): "
+            f"{results['raw_b_to_raw_a']['dice_mean_foreground_mean']:.4f}"
+        )
 
         if harm_a_dir and harm_b_dir:
             print("\n[condition 6] train on harmonized site b, test on harmonized site a (reverse)")
             train_loader_harm_b = self._make_loader(harm_b_dir, train_b, shuffle=True)
-            test_loader_harm_a2 = self._make_loader(harm_a_dir, test_a, shuffle=False, require_tumor=False)
+            test_loader_harm_a2 = self._make_loader(
+                harm_a_dir, test_a, shuffle=False, require_tumor=False
+            )
 
             resume_rev_harm = None
             if resume_path:
@@ -1049,12 +1091,18 @@ class DownstreamEvaluator:
 
             print("  training u-net on harmonized site b...")
             model_rev_harm, _ = self.train_segmentation(
-                train_loader_harm_b, model_name="harm_b_to_a", resume_path=resume_rev_harm,
+                train_loader_harm_b,
+                model_name="harm_b_to_a",
+                resume_path=resume_rev_harm,
             )
             print("  evaluating on harmonized site a...")
-            results["harm_b_to_harm_a"] = self.evaluate_segmentation(model_rev_harm, test_loader_harm_a2)
-            print(f"  reverse harmonized dice (mean foreground): "
-                  f"{results['harm_b_to_harm_a']['dice_mean_foreground_mean']:.4f}")
+            results["harm_b_to_harm_a"] = self.evaluate_segmentation(
+                model_rev_harm, test_loader_harm_a2
+            )
+            print(
+                f"  reverse harmonized dice (mean foreground): "
+                f"{results['harm_b_to_harm_a']['dice_mean_foreground_mean']:.4f}"
+            )
 
             # reverse improvement
             raw_rev = results["raw_b_to_raw_a"]["dice_mean_foreground_mean"]
@@ -1070,6 +1118,7 @@ class DownstreamEvaluator:
     def save_results(self, results: Dict, filename: str = "downstream_results.json"):
         """save evaluation results to json."""
         output_path = self.output_dir / filename
+
         # convert any numpy types for json serialization
         def _convert(obj):
             if isinstance(obj, (np.floating, np.integer)):
@@ -1093,59 +1142,85 @@ class DownstreamEvaluator:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="downstream task evaluation for harmonization"
-    )
+    parser = argparse.ArgumentParser(description="downstream task evaluation for harmonization")
 
     # config file
-    parser.add_argument("--config", type=str, default=None,
-                        help="path to yaml config file")
+    parser.add_argument("--config", type=str, default=None, help="path to yaml config file")
 
     # data directories (raw)
-    parser.add_argument("--brats_dir", type=str, default=None,
-                        help="path to preprocessed brats data (e.g. preprocessed/brats)")
-    parser.add_argument("--upenn_dir", type=str, default=None,
-                        help="path to preprocessed upenn data (e.g. preprocessed/upenn)")
+    parser.add_argument(
+        "--brats_dir",
+        type=str,
+        default=None,
+        help="path to preprocessed brats data (e.g. preprocessed/brats)",
+    )
+    parser.add_argument(
+        "--upenn_dir",
+        type=str,
+        default=None,
+        help="path to preprocessed upenn data (e.g. preprocessed/upenn)",
+    )
 
     # data directories (harmonized) -- option (a)
-    parser.add_argument("--harmonized_brats_dir", type=str, default=None,
-                        help="path to pre-generated harmonized brats data")
-    parser.add_argument("--harmonized_upenn_dir", type=str, default=None,
-                        help="path to pre-generated harmonized upenn data")
+    parser.add_argument(
+        "--harmonized_brats_dir",
+        type=str,
+        default=None,
+        help="path to pre-generated harmonized brats data",
+    )
+    parser.add_argument(
+        "--harmonized_upenn_dir",
+        type=str,
+        default=None,
+        help="path to pre-generated harmonized upenn data",
+    )
 
     # harmonization model checkpoint -- option (b)
-    parser.add_argument("--checkpoint_dir", type=str, default=None,
-                        help="path to trained sa-cyclegan-2.5d checkpoint for on-the-fly harmonization")
+    parser.add_argument(
+        "--checkpoint_dir",
+        type=str,
+        default=None,
+        help="path to trained sa-cyclegan-2.5d checkpoint for on-the-fly harmonization",
+    )
 
     # output
-    parser.add_argument("--output_dir", type=str, default="results/downstream",
-                        help="directory to save results and checkpoints")
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="results/downstream",
+        help="directory to save results and checkpoints",
+    )
 
     # training hyperparameters
-    parser.add_argument("--seg_epochs", type=int, default=50,
-                        help="number of training epochs for segmentation u-net")
-    parser.add_argument("--seg_lr", type=float, default=1e-3,
-                        help="learning rate for segmentation u-net")
-    parser.add_argument("--batch_size", type=int, default=16,
-                        help="batch size for training and evaluation")
-    parser.add_argument("--image_size", type=int, default=128,
-                        help="spatial resolution for resizing slices")
-    parser.add_argument("--num_workers", type=int, default=4,
-                        help="number of dataloader workers")
-    parser.add_argument("--base_filters", type=int, default=32,
-                        help="base filter count for u-net")
-    parser.add_argument("--use_amp", action="store_true", default=True,
-                        help="use automatic mixed precision")
-    parser.add_argument("--no_amp", action="store_true",
-                        help="disable automatic mixed precision")
+    parser.add_argument(
+        "--seg_epochs",
+        type=int,
+        default=50,
+        help="number of training epochs for segmentation u-net",
+    )
+    parser.add_argument(
+        "--seg_lr", type=float, default=1e-3, help="learning rate for segmentation u-net"
+    )
+    parser.add_argument(
+        "--batch_size", type=int, default=16, help="batch size for training and evaluation"
+    )
+    parser.add_argument(
+        "--image_size", type=int, default=128, help="spatial resolution for resizing slices"
+    )
+    parser.add_argument("--num_workers", type=int, default=4, help="number of dataloader workers")
+    parser.add_argument("--base_filters", type=int, default=32, help="base filter count for u-net")
+    parser.add_argument(
+        "--use_amp", action="store_true", default=True, help="use automatic mixed precision"
+    )
+    parser.add_argument("--no_amp", action="store_true", help="disable automatic mixed precision")
 
     # resume
-    parser.add_argument("--resume", action="store_true",
-                        help="resume from latest checkpoint in output_dir")
+    parser.add_argument(
+        "--resume", action="store_true", help="resume from latest checkpoint in output_dir"
+    )
 
     # device
-    parser.add_argument("--device", type=str, default="auto",
-                        help="device: auto, cuda, mps, cpu")
+    parser.add_argument("--device", type=str, default="auto", help="device: auto, cuda, mps, cpu")
 
     return parser.parse_args()
 
@@ -1214,9 +1289,9 @@ def main():
                 source_dir=args.brats_dir,
                 output_dir=harm_brats,
                 direction="a_to_b",
-                device=args.device if args.device != "auto" else (
-                    "cuda" if torch.cuda.is_available() else "cpu"
-                ),
+                device=args.device
+                if args.device != "auto"
+                else ("cuda" if torch.cuda.is_available() else "cpu"),
             )
 
         if not harm_upenn:
@@ -1226,9 +1301,9 @@ def main():
                 source_dir=args.upenn_dir,
                 output_dir=harm_upenn,
                 direction="b_to_a",
-                device=args.device if args.device != "auto" else (
-                    "cuda" if torch.cuda.is_available() else "cpu"
-                ),
+                device=args.device
+                if args.device != "auto"
+                else ("cuda" if torch.cuda.is_available() else "cpu"),
             )
 
     # create evaluator
@@ -1304,14 +1379,18 @@ def main():
 
     if "improvement" in results:
         imp = results["improvement"]
-        print(f"\n  cross-site improvement (a->b): "
-              f"{imp['dice_mean_foreground_delta']:+.4f} "
-              f"({imp['dice_mean_foreground_relative_pct']:+.1f}%)")
+        print(
+            f"\n  cross-site improvement (a->b): "
+            f"{imp['dice_mean_foreground_delta']:+.4f} "
+            f"({imp['dice_mean_foreground_relative_pct']:+.1f}%)"
+        )
     if "improvement_reverse" in results:
         imp = results["improvement_reverse"]
-        print(f"  cross-site improvement (b->a): "
-              f"{imp['dice_mean_foreground_delta']:+.4f} "
-              f"({imp['dice_mean_foreground_relative_pct']:+.1f}%)")
+        print(
+            f"  cross-site improvement (b->a): "
+            f"{imp['dice_mean_foreground_delta']:+.4f} "
+            f"({imp['dice_mean_foreground_relative_pct']:+.1f}%)"
+        )
 
     print(f"\nresults saved to {args.output_dir}/downstream_results.json")
     print("done.")

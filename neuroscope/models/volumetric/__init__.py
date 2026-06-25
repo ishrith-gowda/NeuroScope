@@ -15,22 +15,22 @@ from .blocks_3d import (
     SelfAttention3D,
     ChannelAttention3D,
     SpatialAttention3D,
-    CBAM3D
+    CBAM3D,
 )
 from .cyclegan_3d import CycleGAN3D, SACycleGAN3D
 
 __all__ = [
-    'Generator3D',
-    'SAGenerator3D',
-    'Discriminator3D',
-    'MultiScaleDiscriminator3D',
-    'ResidualBlock3D',
-    'DownsampleBlock3D',
-    'UpsampleBlock3D',
-    'SelfAttention3D',
-    'ChannelAttention3D',
-    'SpatialAttention3D',
-    'CBAM3D',
-    'CycleGAN3D',
-    'SACycleGAN3D',
+    "Generator3D",
+    "SAGenerator3D",
+    "Discriminator3D",
+    "MultiScaleDiscriminator3D",
+    "ResidualBlock3D",
+    "DownsampleBlock3D",
+    "UpsampleBlock3D",
+    "SelfAttention3D",
+    "ChannelAttention3D",
+    "SpatialAttention3D",
+    "CBAM3D",
+    "CycleGAN3D",
+    "SACycleGAN3D",
 ]

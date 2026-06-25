@@ -11,7 +11,7 @@ from .volume_preprocessor import VolumePreprocessor, PREPROCESSING_FUNCTIONS
 
 __all__ = [
     "VolumeNormalization",
-    "DataAugmentation", 
+    "DataAugmentation",
     "VolumePreprocessor",
     "PREPROCESSING_FUNCTIONS",
 ]

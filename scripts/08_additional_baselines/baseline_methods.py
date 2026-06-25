@@ -25,6 +25,7 @@ from scipy import ndimage, stats, interpolate
 @dataclass
 class NormalizationConfig:
     """configuration for normalization methods."""
+
     percentile_low: float = 1.0
     percentile_high: float = 99.0
     n_bins: int = 256
@@ -184,12 +185,13 @@ class HistogramMatcher:
 
         # map source values through cdfs
         source_cdf_func = interpolate.interp1d(
-            source_bin_centers, source_cdf,
-            bounds_error=False, fill_value=(0, 1)
+            source_bin_centers, source_cdf, bounds_error=False, fill_value=(0, 1)
         )
         ref_cdf_inverse = interpolate.interp1d(
-            self.reference_cdf, ref_bin_centers,
-            bounds_error=False, fill_value=(ref_bin_centers[0], ref_bin_centers[-1])
+            self.reference_cdf,
+            ref_bin_centers,
+            bounds_error=False,
+            fill_value=(ref_bin_centers[0], ref_bin_centers[-1]),
         )
 
         # transform values
@@ -202,9 +204,13 @@ class HistogramMatcher:
 
         return result
 
-    def fit_transform(self, source: np.ndarray, reference: np.ndarray,
-                      source_mask: Optional[np.ndarray] = None,
-                      reference_mask: Optional[np.ndarray] = None) -> np.ndarray:
+    def fit_transform(
+        self,
+        source: np.ndarray,
+        reference: np.ndarray,
+        source_mask: Optional[np.ndarray] = None,
+        reference_mask: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
         """fit to reference and transform source in one step."""
         self.fit(reference, reference_mask)
         return self.transform(source, source_mask)
@@ -226,8 +232,7 @@ class NyulNormalizer:
         self.standard_landmarks = None
         self.percentiles = np.linspace(0, 100, n_landmarks)
 
-    def learn_standard(self, images: List[np.ndarray],
-                       masks: Optional[List[np.ndarray]] = None):
+    def learn_standard(self, images: List[np.ndarray], masks: Optional[List[np.ndarray]] = None):
         """
         learn standard histogram landmarks from training images.
 
@@ -275,9 +280,10 @@ class NyulNormalizer:
 
         # create piecewise linear mapping
         mapping = interpolate.interp1d(
-            source_landmarks, self.standard_landmarks,
+            source_landmarks,
+            self.standard_landmarks,
             bounds_error=False,
-            fill_value=(self.standard_landmarks[0], self.standard_landmarks[-1])
+            fill_value=(self.standard_landmarks[0], self.standard_landmarks[-1]),
         )
 
         # apply mapping
@@ -303,8 +309,7 @@ class WhiteStripeNormalizer:
     def __init__(self, peak_width: float = 0.05):
         self.peak_width = peak_width
 
-    def find_white_matter_peak(self, image: np.ndarray,
-                               mask: Optional[np.ndarray] = None) -> float:
+    def find_white_matter_peak(self, image: np.ndarray, mask: Optional[np.ndarray] = None) -> float:
         """
         find the white matter intensity peak.
 
@@ -359,7 +364,7 @@ class WhiteStripeNormalizer:
 def apply_baseline_harmonization(
     domain_a_images: List[np.ndarray],
     domain_b_images: List[np.ndarray],
-    method: str = 'histogram_matching'
+    method: str = "histogram_matching",
 ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
     """
     apply baseline harmonization method to two domains.
@@ -372,17 +377,17 @@ def apply_baseline_harmonization(
     returns:
         (harmonized_a, harmonized_b) tuple of lists
     """
-    if method == 'zscore':
+    if method == "zscore":
         normalizer = ZScoreNormalizer()
         harmonized_a = [normalizer.normalize(img) for img in domain_a_images]
         harmonized_b = [normalizer.normalize(img) for img in domain_b_images]
 
-    elif method == 'intensity_range':
+    elif method == "intensity_range":
         normalizer = IntensityRangeNormalizer()
         harmonized_a = [normalizer.normalize(img) for img in domain_a_images]
         harmonized_b = [normalizer.normalize(img) for img in domain_b_images]
 
-    elif method == 'histogram_matching':
+    elif method == "histogram_matching":
         # use domain a as reference
         matcher = HistogramMatcher()
         # compute average reference from domain a
@@ -391,14 +396,14 @@ def apply_baseline_harmonization(
         harmonized_a = domain_a_images  # reference domain unchanged
         harmonized_b = [matcher.transform(img) for img in domain_b_images]
 
-    elif method == 'nyul':
+    elif method == "nyul":
         normalizer = NyulNormalizer()
         all_images = domain_a_images + domain_b_images
         normalizer.learn_standard(all_images)
         harmonized_a = [normalizer.normalize(img) for img in domain_a_images]
         harmonized_b = [normalizer.normalize(img) for img in domain_b_images]
 
-    elif method == 'whitestripe':
+    elif method == "whitestripe":
         normalizer = WhiteStripeNormalizer()
         harmonized_a = [normalizer.normalize(img) for img in domain_a_images]
         harmonized_b = [normalizer.normalize(img) for img in domain_b_images]
@@ -410,9 +415,7 @@ def apply_baseline_harmonization(
 
 
 def evaluate_baseline_method(
-    domain_a_features: np.ndarray,
-    domain_b_features: np.ndarray,
-    method_name: str = 'baseline'
+    domain_a_features: np.ndarray, domain_b_features: np.ndarray, method_name: str = "baseline"
 ) -> Dict:
     """
     evaluate baseline method using same metrics as sa-cyclegan.
@@ -425,6 +428,7 @@ def evaluate_baseline_method(
     returns:
         evaluation metrics dictionary
     """
+
     def compute_mmd(x, y, sigma=1.0):
         """compute maximum mean discrepancy."""
         n_samples = min(500, len(x), len(y))
@@ -450,32 +454,34 @@ def evaluate_baseline_method(
 
     mmd = compute_mmd(domain_a_features, domain_b_features)
     cosine = compute_cosine_sim(domain_a_features, domain_b_features)
-    mean_diff = np.linalg.norm(np.mean(domain_a_features, axis=0) - np.mean(domain_b_features, axis=0))
+    mean_diff = np.linalg.norm(
+        np.mean(domain_a_features, axis=0) - np.mean(domain_b_features, axis=0)
+    )
 
     return {
-        'method': method_name,
-        'mmd': float(mmd),
-        'cosine_similarity': float(cosine),
-        'mean_difference': float(mean_diff)
+        "method": method_name,
+        "mmd": float(mmd),
+        "cosine_similarity": float(cosine),
+        "mean_difference": float(mean_diff),
     }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test baseline methods
-    print('[baselines] testing baseline methods...')
+    print("[baselines] testing baseline methods...")
 
     # create synthetic test images
     np.random.seed(42)
     domain_a = [np.random.rand(64, 64) * 100 + 50 for _ in range(5)]
     domain_b = [np.random.rand(64, 64) * 150 + 30 for _ in range(5)]  # different distribution
 
-    for method in ['zscore', 'intensity_range', 'histogram_matching', 'nyul', 'whitestripe']:
-        print(f'\n[baselines] testing {method}...')
+    for method in ["zscore", "intensity_range", "histogram_matching", "nyul", "whitestripe"]:
+        print(f"\n[baselines] testing {method}...")
         try:
             harm_a, harm_b = apply_baseline_harmonization(domain_a, domain_b, method)
-            print(f'  domain a: {len(harm_a)} images')
-            print(f'  domain b: {len(harm_b)} images')
-            print(f'  mean intensity a: {np.mean([img.mean() for img in harm_a]):.2f}')
-            print(f'  mean intensity b: {np.mean([img.mean() for img in harm_b]):.2f}')
+            print(f"  domain a: {len(harm_a)} images")
+            print(f"  domain b: {len(harm_b)} images")
+            print(f"  mean intensity a: {np.mean([img.mean() for img in harm_a]):.2f}")
+            print(f"  mean intensity b: {np.mean([img.mean() for img in harm_b]):.2f}")
         except Exception as e:
-            print(f'  error: {e}')
+            print(f"  error: {e}")

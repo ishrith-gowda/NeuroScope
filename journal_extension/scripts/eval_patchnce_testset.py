@@ -76,9 +76,9 @@ def compute_ssim_global(x: torch.Tensor, y: torch.Tensor) -> float:
     sigma_x = ((x_cpu - mu_x) ** 2).mean()
     sigma_y = ((y_cpu - mu_y) ** 2).mean()
     sigma_xy = ((x_cpu - mu_x) * (y_cpu - mu_y)).mean()
-    C1, C2 = 0.01 ** 2, 0.03 ** 2
+    C1, C2 = 0.01**2, 0.03**2
     num = (2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2)
-    den = (mu_x ** 2 + mu_y ** 2 + C1) * (sigma_x + sigma_y + C2)
+    den = (mu_x**2 + mu_y**2 + C1) * (sigma_x + sigma_y + C2)
     return float((num / den).item())
 
 
@@ -114,7 +114,9 @@ def compute_mae_torch(x: torch.Tensor, y: torch.Tensor) -> float:
     return float(np.mean(vals))
 
 
-def maximum_mean_discrepancy(x: np.ndarray, y: np.ndarray, sigmas=(0.5, 1.0, 2.0, 4.0, 8.0)) -> float:
+def maximum_mean_discrepancy(
+    x: np.ndarray, y: np.ndarray, sigmas=(0.5, 1.0, 2.0, 4.0, 8.0)
+) -> float:
     """compute squared mmd between two flat feature arrays with rbf kernel sum."""
     if len(x) > 1024:
         idx = np.random.choice(len(x), 1024, replace=False)
@@ -124,7 +126,11 @@ def maximum_mean_discrepancy(x: np.ndarray, y: np.ndarray, sigmas=(0.5, 1.0, 2.0
         y = y[idx]
 
     def rbf(a, b, s):
-        d = np.sum(a * a, axis=1, keepdims=True) - 2 * a @ b.T + np.sum(b * b, axis=1, keepdims=True).T
+        d = (
+            np.sum(a * a, axis=1, keepdims=True)
+            - 2 * a @ b.T
+            + np.sum(b * b, axis=1, keepdims=True).T
+        )
         return np.exp(-d / (2 * s * s))
 
     mmd2 = 0.0
@@ -243,10 +249,17 @@ def evaluate_checkpoint(
     mmd_a2b = maximum_mean_discrepancy(fake_b_features, real_b_features)
     mmd_b2a = maximum_mean_discrepancy(fake_a_features, real_a_features)
 
-    summary: Dict = {"label": label, "checkpoint": str(checkpoint_path), "n_slices": n_slices,
-                     "elapsed_seconds": elapsed, "throughput_slices_per_sec": throughput,
-                     "saved_epoch": saved_epoch, "saved_lambda_nce": saved_lambda,
-                     "mmd_A2B": mmd_a2b, "mmd_B2A": mmd_b2a}
+    summary: Dict = {
+        "label": label,
+        "checkpoint": str(checkpoint_path),
+        "n_slices": n_slices,
+        "elapsed_seconds": elapsed,
+        "throughput_slices_per_sec": throughput,
+        "saved_epoch": saved_epoch,
+        "saved_lambda_nce": saved_lambda,
+        "mmd_A2B": mmd_a2b,
+        "mmd_B2A": mmd_b2a,
+    }
 
     for key, vals in per_slice.items():
         a = np.asarray(vals, dtype=np.float64)
@@ -260,7 +273,9 @@ def evaluate_checkpoint(
     return summary
 
 
-def build_trainer(config_path: Path, brats_dir: str, upenn_dir: str, num_workers: int) -> HybridNCETrainer:
+def build_trainer(
+    config_path: Path, brats_dir: str, upenn_dir: str, num_workers: int
+) -> HybridNCETrainer:
     """instantiate trainer once and re-use across checkpoints."""
     with open(config_path) as f:
         cfg_dict = yaml.safe_load(f) or {}
@@ -294,11 +309,16 @@ def build_trainer(config_path: Path, brats_dir: str, upenn_dir: str, num_workers
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint_root", required=True,
-                        help="root dir containing patchnce_hybrid + patchnce_ablation_lambda* subdirs")
+    parser.add_argument(
+        "--checkpoint_root",
+        required=True,
+        help="root dir containing patchnce_hybrid + patchnce_ablation_lambda* subdirs",
+    )
     parser.add_argument("--brats_dir", required=True)
     parser.add_argument("--upenn_dir", required=True)
-    parser.add_argument("--config", default=None, help="path to patchnce_hybrid.yaml (defaults to repo path)")
+    parser.add_argument(
+        "--config", default=None, help="path to patchnce_hybrid.yaml (defaults to repo path)"
+    )
     parser.add_argument("--output_dir", required=True)
     parser.add_argument("--num_workers", type=int, default=8)
     return parser.parse_args()
@@ -312,18 +332,44 @@ def main():
 
     # canonical experiment-dir layout produced by train_hybrid_nce.py
     runs = [
-        ("lambda1.0", ckpt_root / "patchnce_hybrid" / "sa_cyclegan_25d_patchnce_hybrid"
-                       / "checkpoints" / "checkpoint_best.pth"),
-        ("lambda0.1", ckpt_root / "patchnce_ablation_lambda0.1" / "sa_cyclegan_25d_patchnce_hybrid"
-                       / "checkpoints" / "checkpoint_best.pth"),
-        ("lambda0.5", ckpt_root / "patchnce_ablation_lambda0.5" / "sa_cyclegan_25d_patchnce_hybrid"
-                       / "checkpoints" / "checkpoint_best.pth"),
-        ("lambda2.0", ckpt_root / "patchnce_ablation_lambda2.0" / "sa_cyclegan_25d_patchnce_hybrid"
-                       / "checkpoints" / "checkpoint_best.pth"),
+        (
+            "lambda1.0",
+            ckpt_root
+            / "patchnce_hybrid"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            "lambda0.1",
+            ckpt_root
+            / "patchnce_ablation_lambda0.1"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            "lambda0.5",
+            ckpt_root
+            / "patchnce_ablation_lambda0.5"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            "lambda2.0",
+            ckpt_root
+            / "patchnce_ablation_lambda2.0"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
     ]
 
-    config_path = Path(args.config) if args.config else (
-        Path(__file__).parent.parent / "configs" / "patchnce_hybrid.yaml"
+    config_path = (
+        Path(args.config)
+        if args.config
+        else (Path(__file__).parent.parent / "configs" / "patchnce_hybrid.yaml")
     )
 
     trainer = build_trainer(config_path, args.brats_dir, args.upenn_dir, args.num_workers)

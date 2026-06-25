@@ -154,21 +154,20 @@ class ComparisonTableGenerator:
         best_methods = {}
         for metric in metrics:
             direction = metric_directions.get(metric, "higher")
-            values = {
-                m: results[m][metric]["mean"]
-                for m in methods
-                if metric in results[m]
-            }
+            values = {m: results[m][metric]["mean"] for m in methods if metric in results[m]}
             if direction == "higher":
                 best_methods[metric] = max(values, key=values.get)
             else:
                 best_methods[metric] = min(values, key=values.get)
 
         # generate latex
-        header = " & ".join(["Method"] + [
-            f"{m}~$\\{'uparrow' if metric_directions.get(m, 'higher') == 'higher' else 'downarrow'}$"
-            for m in metrics
-        ])
+        header = " & ".join(
+            ["Method"]
+            + [
+                f"{m}~$\\{'uparrow' if metric_directions.get(m, 'higher') == 'higher' else 'downarrow'}$"
+                for m in metrics
+            ]
+        )
 
         rows = []
         for method in methods:
@@ -190,11 +189,11 @@ class ComparisonTableGenerator:
     bonferroni-corrected).}}
   \\label{{tab:method_comparison}}
   \\small
-  \\begin{{tabular}}{{l{'c' * n_metrics}}}
+  \\begin{{tabular}}{{l{"c" * n_metrics}}}
     \\toprule
     {header} \\\\
     \\midrule
-    {chr(10).join('    ' + r for r in rows)}
+    {chr(10).join("    " + r for r in rows)}
     \\bottomrule
   \\end{{tabular}}
 \\end{{table}}"""
@@ -226,9 +225,7 @@ class ComparisonTableGenerator:
             "classifier_acc": "lower",
         }
 
-        return self.generate_method_comparison(
-            results, metrics, directions, output_file
-        )
+        return self.generate_method_comparison(results, metrics, directions, output_file)
 
     def generate_rd_table(
         self,
@@ -246,9 +243,7 @@ class ComparisonTableGenerator:
             bpv = metrics.get("bits_per_voxel", 0)
             ssim = metrics.get("ssim", 0)
             psnr = metrics.get("psnr", 0)
-            rows.append(
-                f"    {config_name} & {bpv:.3f} & {ssim:.4f} & {psnr:.2f} \\\\"
-            )
+            rows.append(f"    {config_name} & {bpv:.3f} & {ssim:.4f} & {psnr:.2f} \\\\")
 
         table = f"""\\begin{{table}}[t]
   \\centering
@@ -317,8 +312,8 @@ class JournalEvaluator:
             dict with all statistical test results
         """
         # check normality
-        _, p_normal_base = stats.shapiro(baseline_metrics[:min(5000, len(baseline_metrics))])
-        _, p_normal_method = stats.shapiro(method_metrics[:min(5000, len(method_metrics))])
+        _, p_normal_base = stats.shapiro(baseline_metrics[: min(5000, len(baseline_metrics))])
+        _, p_normal_method = stats.shapiro(method_metrics[: min(5000, len(method_metrics))])
 
         results = {"method": method_name}
 
@@ -365,9 +360,7 @@ class JournalEvaluator:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="comprehensive evaluation for journal extension"
-    )
+    parser = argparse.ArgumentParser(description="comprehensive evaluation for journal extension")
     parser.add_argument("--results_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
     return parser.parse_args()

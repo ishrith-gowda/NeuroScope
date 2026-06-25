@@ -39,7 +39,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D, SACycleGAN25DConfig, create_model
+    SACycleGAN25D,
+    SACycleGAN25DConfig,
+    create_model,
 )
 from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
@@ -73,13 +75,13 @@ class ReplayBuffer:
 def setup_torch_performance():
     """configure torch for maximum gpu throughput."""
     # tf32 on ampere gpus (nvidia only, no-op on amd)
-    if hasattr(torch.backends, 'cuda'):
+    if hasattr(torch.backends, "cuda"):
         torch.backends.cuda.matmul.allow_tf32 = True
-    if hasattr(torch.backends, 'cudnn') and torch.backends.cudnn.is_available():
+    if hasattr(torch.backends, "cudnn") and torch.backends.cudnn.is_available():
         torch.backends.cudnn.allow_tf32 = True
         torch.backends.cudnn.benchmark = True
     # enable flash sdp for efficient attention (rocm 6.0+ on mi100)
-    if hasattr(torch.backends.cuda, 'enable_flash_sdp'):
+    if hasattr(torch.backends.cuda, "enable_flash_sdp"):
         torch.backends.cuda.enable_flash_sdp(True)
     # disable debug profiling for max speed
     torch.autograd.set_detect_anomaly(False)
@@ -134,6 +136,7 @@ class HybridNCETrainer:
 
         # determinism: seed everything that matters
         import random as _random
+
         _random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -182,8 +185,10 @@ class HybridNCETrainer:
         if self.use_multi_gpu:
             print(f"multi-gpu: {self.num_gpus} gpus (dataparallel)")
         elif self.num_gpus > 1 and torch.version.hip:
-            print(f"single-gpu mode: {self.num_gpus} gpus detected but dataparallel "
-                  f"disabled on rocm (miopen deadlock)")
+            print(
+                f"single-gpu mode: {self.num_gpus} gpus detected but dataparallel "
+                f"disabled on rocm (miopen deadlock)"
+            )
         print(f"experiment: {experiment_name}")
         print(f"lambda_nce: {lambda_nce}")
         print(f"nce_temperature: {nce_temperature}")
@@ -281,18 +286,15 @@ class HybridNCETrainer:
         else:
             # linear decay after 50%
             total_ep = self.epochs
+
             def lambda_rule(epoch, total_epochs=total_ep):
                 decay_start = total_epochs // 2
                 if epoch < decay_start:
                     return 1.0
                 return 1.0 - (epoch - decay_start) / (total_epochs - decay_start + 1)
 
-            self.scheduler_G = optim.lr_scheduler.LambdaLR(
-                self.opt_G, lr_lambda=lambda_rule
-            )
-            self.scheduler_D = optim.lr_scheduler.LambdaLR(
-                self.opt_D, lr_lambda=lambda_rule
-            )
+            self.scheduler_G = optim.lr_scheduler.LambdaLR(self.opt_G, lr_lambda=lambda_rule)
+            self.scheduler_D = optim.lr_scheduler.LambdaLR(self.opt_D, lr_lambda=lambda_rule)
 
         # loss functions (cycle, identity, ssim, gradient)
         self.losses = CombinedLoss(
@@ -589,10 +591,10 @@ class HybridNCETrainer:
 
             pbar.set_postfix(
                 {
-                    "G": f'{losses["G_loss"]:.3f}',
-                    "D": f'{losses["D_loss"]:.3f}',
-                    "nce": f'{losses["nce_total"]:.3f}',
-                    "cyc": f'{losses["cycle_A"] + losses["cycle_B"]:.3f}',
+                    "G": f"{losses['G_loss']:.3f}",
+                    "D": f"{losses['D_loss']:.3f}",
+                    "nce": f"{losses['nce_total']:.3f}",
+                    "cyc": f"{losses['cycle_A'] + losses['cycle_B']:.3f}",
                 }
             )
 
@@ -800,9 +802,7 @@ class HybridNCETrainer:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="train sa-cyclegan-2.5d with patchnce hybrid loss"
-    )
+    parser = argparse.ArgumentParser(description="train sa-cyclegan-2.5d with patchnce hybrid loss")
 
     # config file
     parser.add_argument("--config", type=str, default=None, help="path to yaml config")
@@ -835,12 +835,18 @@ def parse_args():
     parser.add_argument("--experiment_name", type=str, default=None)
 
     # determinism + extension d task-aware loss
-    parser.add_argument("--seed", type=int, default=42,
-                        help="random seed for reproducibility")
-    parser.add_argument("--task_aware_loss", action="store_true",
-                        help="use brain-mask-weighted cycle loss (extension d follow-up)")
-    parser.add_argument("--mask_weight_foreground", type=float, default=4.0,
-                        help="multiplicative weight applied to foreground voxels in cycle loss")
+    parser.add_argument("--seed", type=int, default=42, help="random seed for reproducibility")
+    parser.add_argument(
+        "--task_aware_loss",
+        action="store_true",
+        help="use brain-mask-weighted cycle loss (extension d follow-up)",
+    )
+    parser.add_argument(
+        "--mask_weight_foreground",
+        type=float,
+        default=4.0,
+        help="multiplicative weight applied to foreground voxels in cycle loss",
+    )
 
     return parser.parse_args()
 

@@ -46,7 +46,10 @@ from skimage.metrics import peak_signal_noise_ratio as psnr_func
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
-from neuroscope.models.architectures.baseline_cyclegan_25d import BaselineCycleGAN25D, BaselineCycleGAN25DConfig
+from neuroscope.models.architectures.baseline_cyclegan_25d import (
+    BaselineCycleGAN25D,
+    BaselineCycleGAN25DConfig,
+)
 from neuroscope.data.datasets.dataset_25d import create_dataloaders
 
 
@@ -62,7 +65,7 @@ class AblationStudy:
         brats_dir: str,
         upenn_dir: str,
         output_dir: str,
-        device: str = 'cuda',
+        device: str = "cuda",
         batch_size: int = 16,
         num_workers: int = 4,
     ):
@@ -73,7 +76,7 @@ class AblationStudy:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -82,16 +85,12 @@ class AblationStudy:
         print(f"[ablation] attention checkpoint: {self.attention_path}")
 
         # modality names for per-channel analysis
-        self.modalities = ['T1', 'T1CE', 'T2', 'FLAIR']
+        self.modalities = ["T1", "T1CE", "T2", "FLAIR"]
 
     def load_baseline_model(self) -> Tuple[nn.Module, int]:
         """load baseline cyclegan model."""
         print("[ablation] loading baseline model...")
-        checkpoint = torch.load(
-            self.baseline_path,
-            map_location=self.device,
-            weights_only=False
-        )
+        checkpoint = torch.load(self.baseline_path, map_location=self.device, weights_only=False)
 
         config = BaselineCycleGAN25DConfig(
             ngf=64,
@@ -102,13 +101,13 @@ class AblationStudy:
         model = BaselineCycleGAN25D(config)
 
         # handle dataparallel state dict - components were individually wrapped
-        state_dict = checkpoint['model_state_dict']
+        state_dict = checkpoint["model_state_dict"]
         new_state_dict = {}
         for k, v in state_dict.items():
             # remove .module. from component-level wrapping (e.g., g_a2b.module.xxx -> g_a2b.xxx)
-            new_key = k.replace('.module.', '.')
+            new_key = k.replace(".module.", ".")
             # also handle if whole model was wrapped
-            if new_key.startswith('module.'):
+            if new_key.startswith("module."):
                 new_key = new_key[7:]
             new_state_dict[new_key] = v
 
@@ -116,7 +115,7 @@ class AblationStudy:
         model = model.to(self.device)
         model.eval()
 
-        epoch = checkpoint.get('epoch', 100)
+        epoch = checkpoint.get("epoch", 100)
         print(f"[ablation] baseline loaded: epoch {epoch}")
 
         return model, epoch
@@ -124,11 +123,7 @@ class AblationStudy:
     def load_attention_model(self) -> Tuple[nn.Module, int]:
         """load sa-cyclegan model with attention."""
         print("[ablation] loading attention model...")
-        checkpoint = torch.load(
-            self.attention_path,
-            map_location=self.device,
-            weights_only=False
-        )
+        checkpoint = torch.load(self.attention_path, map_location=self.device, weights_only=False)
 
         config = SACycleGAN25DConfig(
             ngf=64,
@@ -139,13 +134,13 @@ class AblationStudy:
         model = SACycleGAN25D(config)
 
         # handle dataparallel state dict - components were individually wrapped
-        state_dict = checkpoint['model_state_dict']
+        state_dict = checkpoint["model_state_dict"]
         new_state_dict = {}
         for k, v in state_dict.items():
             # remove .module. from component-level wrapping (e.g., g_a2b.module.xxx -> g_a2b.xxx)
-            new_key = k.replace('.module.', '.')
+            new_key = k.replace(".module.", ".")
             # also handle if whole model was wrapped
-            if new_key.startswith('module.'):
+            if new_key.startswith("module."):
                 new_key = new_key[7:]
             new_state_dict[new_key] = v
 
@@ -153,7 +148,7 @@ class AblationStudy:
         model = model.to(self.device)
         model.eval()
 
-        epoch = checkpoint.get('epoch', 100)
+        epoch = checkpoint.get("epoch", 100)
         print(f"[ablation] attention model loaded: epoch {epoch}")
 
         return model, epoch
@@ -213,18 +208,18 @@ class AblationStudy:
         identity_B_np = identity_B.cpu().numpy()
 
         metrics = {
-            'cycle_ssim_A': [],
-            'cycle_ssim_B': [],
-            'cycle_psnr_A': [],
-            'cycle_psnr_B': [],
-            'identity_ssim_A': [],
-            'identity_ssim_B': [],
+            "cycle_ssim_A": [],
+            "cycle_ssim_B": [],
+            "cycle_psnr_A": [],
+            "cycle_psnr_B": [],
+            "identity_ssim_A": [],
+            "identity_ssim_B": [],
         }
 
         # per-modality metrics
         for m_idx, modality in enumerate(self.modalities):
-            metrics[f'cycle_ssim_A_{modality}'] = []
-            metrics[f'cycle_ssim_B_{modality}'] = []
+            metrics[f"cycle_ssim_A_{modality}"] = []
+            metrics[f"cycle_ssim_B_{modality}"] = []
 
         # compute metrics for each sample in batch
         for i in range(center_A_np.shape[0]):
@@ -233,30 +228,40 @@ class AblationStudy:
                 ssim_A = ssim_func(
                     center_A_np[i, c],
                     rec_A_np[i, c],
-                    data_range=center_A_np[i, c].max() - center_A_np[i, c].min()
+                    data_range=center_A_np[i, c].max() - center_A_np[i, c].min(),
                 )
                 ssim_B = ssim_func(
                     center_B_np[i, c],
                     rec_B_np[i, c],
-                    data_range=center_B_np[i, c].max() - center_B_np[i, c].min()
+                    data_range=center_B_np[i, c].max() - center_B_np[i, c].min(),
                 )
-                metrics[f'cycle_ssim_A_{self.modalities[c]}'].append(ssim_A)
-                metrics[f'cycle_ssim_B_{self.modalities[c]}'].append(ssim_B)
+                metrics[f"cycle_ssim_A_{self.modalities[c]}"].append(ssim_A)
+                metrics[f"cycle_ssim_B_{self.modalities[c]}"].append(ssim_B)
 
             # overall cycle ssim (mean across modalities)
-            cycle_ssim_A = np.mean([
-                ssim_func(center_A_np[i, c], rec_A_np[i, c],
-                         data_range=center_A_np[i, c].max() - center_A_np[i, c].min())
-                for c in range(4)
-            ])
-            cycle_ssim_B = np.mean([
-                ssim_func(center_B_np[i, c], rec_B_np[i, c],
-                         data_range=center_B_np[i, c].max() - center_B_np[i, c].min())
-                for c in range(4)
-            ])
+            cycle_ssim_A = np.mean(
+                [
+                    ssim_func(
+                        center_A_np[i, c],
+                        rec_A_np[i, c],
+                        data_range=center_A_np[i, c].max() - center_A_np[i, c].min(),
+                    )
+                    for c in range(4)
+                ]
+            )
+            cycle_ssim_B = np.mean(
+                [
+                    ssim_func(
+                        center_B_np[i, c],
+                        rec_B_np[i, c],
+                        data_range=center_B_np[i, c].max() - center_B_np[i, c].min(),
+                    )
+                    for c in range(4)
+                ]
+            )
 
-            metrics['cycle_ssim_A'].append(cycle_ssim_A)
-            metrics['cycle_ssim_B'].append(cycle_ssim_B)
+            metrics["cycle_ssim_A"].append(cycle_ssim_A)
+            metrics["cycle_ssim_B"].append(cycle_ssim_B)
 
             # cycle psnr
             mse_A = np.mean((center_A_np[i] - rec_A_np[i]) ** 2)
@@ -264,23 +269,33 @@ class AblationStudy:
             psnr_A = 10 * np.log10(1.0 / (mse_A + 1e-10))
             psnr_B = 10 * np.log10(1.0 / (mse_B + 1e-10))
 
-            metrics['cycle_psnr_A'].append(psnr_A)
-            metrics['cycle_psnr_B'].append(psnr_B)
+            metrics["cycle_psnr_A"].append(psnr_A)
+            metrics["cycle_psnr_B"].append(psnr_B)
 
             # identity ssim
-            identity_ssim_A = np.mean([
-                ssim_func(center_A_np[i, c], identity_A_np[i, c],
-                         data_range=center_A_np[i, c].max() - center_A_np[i, c].min())
-                for c in range(4)
-            ])
-            identity_ssim_B = np.mean([
-                ssim_func(center_B_np[i, c], identity_B_np[i, c],
-                         data_range=center_B_np[i, c].max() - center_B_np[i, c].min())
-                for c in range(4)
-            ])
+            identity_ssim_A = np.mean(
+                [
+                    ssim_func(
+                        center_A_np[i, c],
+                        identity_A_np[i, c],
+                        data_range=center_A_np[i, c].max() - center_A_np[i, c].min(),
+                    )
+                    for c in range(4)
+                ]
+            )
+            identity_ssim_B = np.mean(
+                [
+                    ssim_func(
+                        center_B_np[i, c],
+                        identity_B_np[i, c],
+                        data_range=center_B_np[i, c].max() - center_B_np[i, c].min(),
+                    )
+                    for c in range(4)
+                ]
+            )
 
-            metrics['identity_ssim_A'].append(identity_ssim_A)
-            metrics['identity_ssim_B'].append(identity_ssim_B)
+            metrics["identity_ssim_A"].append(identity_ssim_A)
+            metrics["identity_ssim_B"].append(identity_ssim_B)
 
         return metrics
 
@@ -294,26 +309,26 @@ class AblationStudy:
         print(f"[ablation] evaluating {model_name}...")
 
         all_metrics = {
-            'cycle_ssim_A': [],
-            'cycle_ssim_B': [],
-            'cycle_psnr_A': [],
-            'cycle_psnr_B': [],
-            'identity_ssim_A': [],
-            'identity_ssim_B': [],
+            "cycle_ssim_A": [],
+            "cycle_ssim_B": [],
+            "cycle_psnr_A": [],
+            "cycle_psnr_B": [],
+            "identity_ssim_A": [],
+            "identity_ssim_B": [],
         }
 
         # per-modality metrics
         for modality in self.modalities:
-            all_metrics[f'cycle_ssim_A_{modality}'] = []
-            all_metrics[f'cycle_ssim_B_{modality}'] = []
+            all_metrics[f"cycle_ssim_A_{modality}"] = []
+            all_metrics[f"cycle_ssim_B_{modality}"] = []
 
         model.eval()
         with torch.no_grad():
             for batch in tqdm(test_loader, desc=f"evaluating {model_name}"):
-                real_A = batch['A'].to(self.device)
-                real_B = batch['B'].to(self.device)
-                center_A = batch['A_center'].to(self.device)
-                center_B = batch['B_center'].to(self.device)
+                real_A = batch["A"].to(self.device)
+                real_B = batch["B"].to(self.device)
+                center_A = batch["A_center"].to(self.device)
+                center_B = batch["B_center"].to(self.device)
 
                 batch_metrics = self.compute_cycle_metrics(
                     model, real_A, real_B, center_A, center_B
@@ -327,22 +342,18 @@ class AblationStudy:
         for key, values in all_metrics.items():
             values = np.array(values)
             summary[key] = {
-                'mean': float(np.mean(values)),
-                'std': float(np.std(values)),
-                'median': float(np.median(values)),
-                'min': float(np.min(values)),
-                'max': float(np.max(values)),
-                'n': len(values),
+                "mean": float(np.mean(values)),
+                "std": float(np.std(values)),
+                "median": float(np.median(values)),
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
+                "n": len(values),
             }
-            summary[f'{key}_values'] = values.tolist()
+            summary[f"{key}_values"] = values.tolist()
 
         return summary
 
-    def compute_statistical_tests(
-        self,
-        baseline_results: Dict,
-        attention_results: Dict
-    ) -> Dict:
+    def compute_statistical_tests(self, baseline_results: Dict, attention_results: Dict) -> Dict:
         """
         compute statistical significance tests between models.
 
@@ -354,19 +365,22 @@ class AblationStudy:
         stats_results = {}
 
         metrics_to_test = [
-            'cycle_ssim_A', 'cycle_ssim_B',
-            'cycle_psnr_A', 'cycle_psnr_B',
-            'identity_ssim_A', 'identity_ssim_B',
+            "cycle_ssim_A",
+            "cycle_ssim_B",
+            "cycle_psnr_A",
+            "cycle_psnr_B",
+            "identity_ssim_A",
+            "identity_ssim_B",
         ]
 
         # add per-modality metrics
         for modality in self.modalities:
-            metrics_to_test.append(f'cycle_ssim_A_{modality}')
-            metrics_to_test.append(f'cycle_ssim_B_{modality}')
+            metrics_to_test.append(f"cycle_ssim_A_{modality}")
+            metrics_to_test.append(f"cycle_ssim_B_{modality}")
 
         for metric in metrics_to_test:
-            baseline_vals = np.array(baseline_results[f'{metric}_values'])
-            attention_vals = np.array(attention_results[f'{metric}_values'])
+            baseline_vals = np.array(baseline_results[f"{metric}_values"])
+            attention_vals = np.array(attention_results[f"{metric}_values"])
 
             # paired t-test
             t_stat, p_value = stats.ttest_rel(attention_vals, baseline_vals)
@@ -386,18 +400,18 @@ class AblationStudy:
             improvement_pct = ((attention_mean - baseline_mean) / baseline_mean) * 100
 
             stats_results[metric] = {
-                'baseline_mean': float(baseline_mean),
-                'baseline_std': float(np.std(baseline_vals)),
-                'attention_mean': float(attention_mean),
-                'attention_std': float(np.std(attention_vals)),
-                'difference': float(attention_mean - baseline_mean),
-                'improvement_pct': float(improvement_pct),
-                't_statistic': float(t_stat),
-                'p_value': float(p_value),
-                'cohens_d': float(cohens_d),
-                'ci_95_low': float(ci_low),
-                'ci_95_high': float(ci_high),
-                'significant': bool(p_value < 0.05),
+                "baseline_mean": float(baseline_mean),
+                "baseline_std": float(np.std(baseline_vals)),
+                "attention_mean": float(attention_mean),
+                "attention_std": float(np.std(attention_vals)),
+                "difference": float(attention_mean - baseline_mean),
+                "improvement_pct": float(improvement_pct),
+                "t_statistic": float(t_stat),
+                "p_value": float(p_value),
+                "cohens_d": float(cohens_d),
+                "ci_95_low": float(ci_low),
+                "ci_95_high": float(ci_high),
+                "significant": bool(p_value < 0.05),
             }
 
         return stats_results
@@ -416,46 +430,50 @@ class AblationStudy:
         ]
 
         main_metrics = [
-            ('cycle_ssim_A', 'Cycle SSIM (A)'),
-            ('cycle_ssim_B', 'Cycle SSIM (B)'),
-            ('cycle_psnr_A', 'Cycle PSNR (A)'),
-            ('cycle_psnr_B', 'Cycle PSNR (B)'),
-            ('identity_ssim_A', 'Identity SSIM (A)'),
-            ('identity_ssim_B', 'Identity SSIM (B)'),
+            ("cycle_ssim_A", "Cycle SSIM (A)"),
+            ("cycle_ssim_B", "Cycle SSIM (B)"),
+            ("cycle_psnr_A", "Cycle PSNR (A)"),
+            ("cycle_psnr_B", "Cycle PSNR (B)"),
+            ("identity_ssim_A", "Identity SSIM (A)"),
+            ("identity_ssim_B", "Identity SSIM (B)"),
         ]
 
         for key, name in main_metrics:
             r = stats_results[key]
-            sig = r'$^{*}$' if r['significant'] else ''
+            sig = r"$^{*}$" if r["significant"] else ""
             lines.append(
                 f"{name} & {r['baseline_mean']:.4f}$\\pm${r['baseline_std']:.4f} & "
                 f"{r['attention_mean']:.4f}$\\pm${r['attention_std']:.4f} & "
                 f"{r['difference']:+.4f}{sig} & {r['p_value']:.4f} & {r['cohens_d']:.3f} \\\\"
             )
 
-        lines.extend([
-            r"\midrule",
-            r"\multicolumn{6}{l}{\textit{Per-Modality Cycle SSIM (A$\rightarrow$B$\rightarrow$A)}} \\",
-        ])
+        lines.extend(
+            [
+                r"\midrule",
+                r"\multicolumn{6}{l}{\textit{Per-Modality Cycle SSIM (A$\rightarrow$B$\rightarrow$A)}} \\",
+            ]
+        )
 
         for modality in self.modalities:
-            key = f'cycle_ssim_A_{modality}'
+            key = f"cycle_ssim_A_{modality}"
             r = stats_results[key]
-            sig = r'$^{*}$' if r['significant'] else ''
+            sig = r"$^{*}$" if r["significant"] else ""
             lines.append(
                 f"\\quad {modality} & {r['baseline_mean']:.4f} & "
                 f"{r['attention_mean']:.4f} & "
                 f"{r['difference']:+.4f}{sig} & {r['p_value']:.4f} & {r['cohens_d']:.3f} \\\\"
             )
 
-        lines.extend([
-            r"\bottomrule",
-            r"\multicolumn{6}{l}{\footnotesize $^{*}$ Significant at $p < 0.05$} \\",
-            r"\end{tabular}",
-            r"\end{table}",
-        ])
+        lines.extend(
+            [
+                r"\bottomrule",
+                r"\multicolumn{6}{l}{\footnotesize $^{*}$ Significant at $p < 0.05$} \\",
+                r"\end{tabular}",
+                r"\end{table}",
+            ]
+        )
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def run(self):
         """run complete ablation study."""
@@ -485,24 +503,28 @@ class AblationStudy:
 
         # save detailed results
         results = {
-            'timestamp': timestamp,
-            'baseline_checkpoint': str(self.baseline_path),
-            'attention_checkpoint': str(self.attention_path),
-            'baseline_epoch': baseline_epoch,
-            'attention_epoch': attention_epoch,
-            'baseline_results': {k: v for k, v in baseline_results.items() if not k.endswith('_values')},
-            'attention_results': {k: v for k, v in attention_results.items() if not k.endswith('_values')},
-            'statistical_tests': stats_results,
+            "timestamp": timestamp,
+            "baseline_checkpoint": str(self.baseline_path),
+            "attention_checkpoint": str(self.attention_path),
+            "baseline_epoch": baseline_epoch,
+            "attention_epoch": attention_epoch,
+            "baseline_results": {
+                k: v for k, v in baseline_results.items() if not k.endswith("_values")
+            },
+            "attention_results": {
+                k: v for k, v in attention_results.items() if not k.endswith("_values")
+            },
+            "statistical_tests": stats_results,
         }
 
         results_path = self.output_dir / f"ablation_results_{timestamp}.json"
-        with open(results_path, 'w') as f:
+        with open(results_path, "w") as f:
             json.dump(results, f, indent=2)
         print(f"[ablation] results saved to: {results_path}")
 
         # save latex table
         latex_path = self.output_dir / f"ablation_table_{timestamp}.tex"
-        with open(latex_path, 'w') as f:
+        with open(latex_path, "w") as f:
             f.write(latex_table)
         print(f"[ablation] latex table saved to: {latex_path}")
 
@@ -513,49 +535,61 @@ class AblationStudy:
         print(f"\n{'metric':<25} {'baseline':>12} {'attention':>12} {'diff':>10} {'p-value':>10}")
         print("-" * 70)
 
-        for metric in ['cycle_ssim_A', 'cycle_ssim_B', 'cycle_psnr_A', 'cycle_psnr_B']:
+        for metric in ["cycle_ssim_A", "cycle_ssim_B", "cycle_psnr_A", "cycle_psnr_B"]:
             r = stats_results[metric]
-            sig = '*' if r['significant'] else ''
-            print(f"{metric:<25} {r['baseline_mean']:>12.4f} {r['attention_mean']:>12.4f} "
-                  f"{r['difference']:>+10.4f}{sig} {r['p_value']:>10.4f}")
+            sig = "*" if r["significant"] else ""
+            print(
+                f"{metric:<25} {r['baseline_mean']:>12.4f} {r['attention_mean']:>12.4f} "
+                f"{r['difference']:>+10.4f}{sig} {r['p_value']:>10.4f}"
+            )
 
         print("\n" + "=" * 60)
         print("per-modality cycle ssim (a->b->a)")
         print("=" * 60)
         for modality in self.modalities:
-            r = stats_results[f'cycle_ssim_A_{modality}']
-            sig = '*' if r['significant'] else ''
-            print(f"{modality:<10} baseline: {r['baseline_mean']:.4f}  attention: {r['attention_mean']:.4f}  "
-                  f"diff: {r['difference']:+.4f}{sig}")
+            r = stats_results[f"cycle_ssim_A_{modality}"]
+            sig = "*" if r["significant"] else ""
+            print(
+                f"{modality:<10} baseline: {r['baseline_mean']:.4f}  attention: {r['attention_mean']:.4f}  "
+                f"diff: {r['difference']:+.4f}{sig}"
+            )
 
         return results
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='ablation study comparing baseline and attention cyclegan',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="ablation study comparing baseline and attention cyclegan",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument('--baseline-checkpoint', type=str, required=True,
-                        help='path to baseline cyclegan checkpoint')
-    parser.add_argument('--attention-checkpoint', type=str, required=True,
-                        help='path to sa-cyclegan checkpoint')
-    parser.add_argument('--brats-dir', type=str,
-                        default='/home/cc/neuroscope/preprocessed/brats',
-                        help='path to brats data')
-    parser.add_argument('--upenn-dir', type=str,
-                        default='/home/cc/neuroscope/preprocessed/upenn',
-                        help='path to upenn data')
-    parser.add_argument('--output-dir', type=str,
-                        default='./results/ablation',
-                        help='output directory for results')
-    parser.add_argument('--batch-size', type=int, default=16,
-                        help='batch size for evaluation')
-    parser.add_argument('--num-workers', type=int, default=4,
-                        help='number of data loader workers')
-    parser.add_argument('--device', type=str, default='cuda',
-                        help='device for computation')
+    parser.add_argument(
+        "--baseline-checkpoint",
+        type=str,
+        required=True,
+        help="path to baseline cyclegan checkpoint",
+    )
+    parser.add_argument(
+        "--attention-checkpoint", type=str, required=True, help="path to sa-cyclegan checkpoint"
+    )
+    parser.add_argument(
+        "--brats-dir",
+        type=str,
+        default="/home/cc/neuroscope/preprocessed/brats",
+        help="path to brats data",
+    )
+    parser.add_argument(
+        "--upenn-dir",
+        type=str,
+        default="/home/cc/neuroscope/preprocessed/upenn",
+        help="path to upenn data",
+    )
+    parser.add_argument(
+        "--output-dir", type=str, default="./results/ablation", help="output directory for results"
+    )
+    parser.add_argument("--batch-size", type=int, default=16, help="batch size for evaluation")
+    parser.add_argument("--num-workers", type=int, default=4, help="number of data loader workers")
+    parser.add_argument("--device", type=str, default="cuda", help="device for computation")
 
     args = parser.parse_args()
 
@@ -573,5 +607,5 @@ def main():
     study.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

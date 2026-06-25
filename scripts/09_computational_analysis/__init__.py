@@ -17,12 +17,12 @@ from .efficiency_analysis import (
 )
 
 __all__ = [
-    'EfficiencyMetrics',
-    'count_parameters',
-    'estimate_flops',
-    'measure_inference_time',
-    'measure_peak_memory',
-    'get_model_size',
-    'analyze_model_efficiency',
-    'analyze_baseline_efficiency',
+    "EfficiencyMetrics",
+    "count_parameters",
+    "estimate_flops",
+    "measure_inference_time",
+    "measure_peak_memory",
+    "get_model_size",
+    "analyze_model_efficiency",
+    "analyze_baseline_efficiency",
 ]

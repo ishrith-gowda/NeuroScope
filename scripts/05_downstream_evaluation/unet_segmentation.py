@@ -38,7 +38,7 @@ class ConvBlock(nn.Module):
         out_channels: int,
         kernel_size: int = 3,
         padding: int = 1,
-        use_residual: bool = True
+        use_residual: bool = True,
     ):
         super().__init__()
 
@@ -112,7 +112,7 @@ class UpBlock(nn.Module):
 
         # handle size mismatch
         if x.shape != skip.shape:
-            x = F.interpolate(x, size=skip.shape[2:], mode='bilinear', align_corners=True)
+            x = F.interpolate(x, size=skip.shape[2:], mode="bilinear", align_corners=True)
 
         if self.use_attention:
             skip = self.attention(skip, x)
@@ -131,19 +131,15 @@ class AttentionGate(nn.Module):
         super().__init__()
 
         self.W_g = nn.Sequential(
-            nn.Conv2d(in_channels_g, inter_channels, 1),
-            nn.InstanceNorm2d(inter_channels)
+            nn.Conv2d(in_channels_g, inter_channels, 1), nn.InstanceNorm2d(inter_channels)
         )
 
         self.W_x = nn.Sequential(
-            nn.Conv2d(in_channels_x, inter_channels, 1),
-            nn.InstanceNorm2d(inter_channels)
+            nn.Conv2d(in_channels_x, inter_channels, 1), nn.InstanceNorm2d(inter_channels)
         )
 
         self.psi = nn.Sequential(
-            nn.Conv2d(inter_channels, 1, 1),
-            nn.InstanceNorm2d(1),
-            nn.Sigmoid()
+            nn.Conv2d(inter_channels, 1, 1), nn.InstanceNorm2d(1), nn.Sigmoid()
         )
 
         self.relu = nn.ReLU(inplace=True)
@@ -154,7 +150,7 @@ class AttentionGate(nn.Module):
 
         # handle size mismatch
         if g1.shape[2:] != x1.shape[2:]:
-            g1 = F.interpolate(g1, size=x1.shape[2:], mode='bilinear', align_corners=True)
+            g1 = F.interpolate(g1, size=x1.shape[2:], mode="bilinear", align_corners=True)
 
         psi = self.relu(g1 + x1)
         psi = self.psi(psi)
@@ -180,7 +176,7 @@ class UNet2D(nn.Module):
         n_classes: int = 4,
         base_filters: int = 32,
         use_attention: bool = False,
-        deep_supervision: bool = False
+        deep_supervision: bool = False,
     ):
         super().__init__()
 
@@ -241,9 +237,9 @@ class UNet2D(nn.Module):
 
         if self.deep_supervision:
             # upsample deep supervision outputs to match final size
-            ds4 = F.interpolate(ds4, size=out.shape[2:], mode='bilinear', align_corners=True)
-            ds3 = F.interpolate(ds3, size=out.shape[2:], mode='bilinear', align_corners=True)
-            ds2 = F.interpolate(ds2, size=out.shape[2:], mode='bilinear', align_corners=True)
+            ds4 = F.interpolate(ds4, size=out.shape[2:], mode="bilinear", align_corners=True)
+            ds3 = F.interpolate(ds3, size=out.shape[2:], mode="bilinear", align_corners=True)
+            ds2 = F.interpolate(ds2, size=out.shape[2:], mode="bilinear", align_corners=True)
             return out, ds4, ds3, ds2
 
         return out
@@ -256,7 +252,7 @@ class DiceLoss(nn.Module):
     supports both binary and multi-class segmentation.
     """
 
-    def __init__(self, smooth: float = 1e-5, reduction: str = 'mean'):
+    def __init__(self, smooth: float = 1e-5, reduction: str = "mean"):
         super().__init__()
         self.smooth = smooth
         self.reduction = reduction
@@ -293,9 +289,9 @@ class DiceLoss(nn.Module):
         # average across classes (excluding background if needed)
         dice_loss = 1 - dice.mean(dim=1)
 
-        if self.reduction == 'mean':
+        if self.reduction == "mean":
             return dice_loss.mean()
-        elif self.reduction == 'sum':
+        elif self.reduction == "sum":
             return dice_loss.sum()
         else:
             return dice_loss
@@ -320,10 +316,7 @@ class CombinedLoss(nn.Module):
 
 
 def compute_dice_score(
-    pred: torch.Tensor,
-    target: torch.Tensor,
-    n_classes: int,
-    smooth: float = 1e-5
+    pred: torch.Tensor, target: torch.Tensor, n_classes: int, smooth: float = 1e-5
 ) -> torch.Tensor:
     """
     compute dice score per class.
@@ -356,9 +349,7 @@ def compute_dice_score(
 
 
 def compute_hausdorff_distance(
-    pred: torch.Tensor,
-    target: torch.Tensor,
-    percentile: float = 95
+    pred: torch.Tensor, target: torch.Tensor, percentile: float = 95
 ) -> float:
     """
     compute hausdorff distance at given percentile.
@@ -378,7 +369,7 @@ def compute_hausdorff_distance(
 
     # handle empty masks
     if not pred_np.any() or not target_np.any():
-        return float('inf')
+        return float("inf")
 
     # compute distance transforms
     pred_dist = distance_transform_edt(~pred_np)
@@ -389,7 +380,7 @@ def compute_hausdorff_distance(
     target_boundary = target_np ^ ndimage.binary_erosion(target_np)
 
     if not pred_boundary.any() or not target_boundary.any():
-        return float('inf')
+        return float("inf")
 
     # distances
     dist_pred_to_target = target_dist[pred_boundary]
@@ -397,7 +388,9 @@ def compute_hausdorff_distance(
 
     # hausdorff at percentile
     hd_pred = np.percentile(dist_pred_to_target, percentile) if len(dist_pred_to_target) > 0 else 0
-    hd_target = np.percentile(dist_target_to_pred, percentile) if len(dist_target_to_pred) > 0 else 0
+    hd_target = (
+        np.percentile(dist_target_to_pred, percentile) if len(dist_target_to_pred) > 0 else 0
+    )
 
     return max(hd_pred, hd_target)
 
@@ -407,13 +400,13 @@ from scipy import ndimage
 import numpy as np
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test model
     model = UNet2D(in_channels=4, n_classes=4, base_filters=32, use_attention=True)
 
     x = torch.randn(2, 4, 128, 128)
     y = model(x)
 
-    print(f'input shape: {x.shape}')
-    print(f'output shape: {y.shape}')
-    print(f'parameters: {sum(p.numel() for p in model.parameters()):,}')
+    print(f"input shape: {x.shape}")
+    print(f"output shape: {y.shape}")
+    print(f"parameters: {sum(p.numel() for p in model.parameters()):,}")

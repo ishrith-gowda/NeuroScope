@@ -48,9 +48,7 @@ def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
             payload = json.load(f)
         per_slice = payload.get("per_slice", {})
         out[lam] = {
-            m: np.asarray(per_slice.get(m, []), dtype=np.float64)
-            for m in METRICS
-            if m in per_slice
+            m: np.asarray(per_slice.get(m, []), dtype=np.float64) for m in METRICS if m in per_slice
         }
     return out
 
@@ -89,22 +87,24 @@ def pairwise_compare(per_slice: Dict[float, Dict[str, np.ndarray]]) -> List[Dict
             t_stat, t_p = stats.ttest_rel(a, b)
             d = cohens_d(a, b)
             ci_lo, ci_hi = bootstrap_ci(a - b)
-            results.append({
-                "metric": metric,
-                "lambda_a": la,
-                "lambda_b": lb,
-                "n": len(a),
-                "mean_a": float(a.mean()),
-                "mean_b": float(b.mean()),
-                "mean_diff": float((a - b).mean()),
-                "wilcoxon_stat": float(w_stat),
-                "wilcoxon_p": float(w_p),
-                "ttest_stat": float(t_stat),
-                "ttest_p": float(t_p),
-                "cohens_d": d,
-                "ci95_lower": ci_lo,
-                "ci95_upper": ci_hi,
-            })
+            results.append(
+                {
+                    "metric": metric,
+                    "lambda_a": la,
+                    "lambda_b": lb,
+                    "n": len(a),
+                    "mean_a": float(a.mean()),
+                    "mean_b": float(b.mean()),
+                    "mean_diff": float((a - b).mean()),
+                    "wilcoxon_stat": float(w_stat),
+                    "wilcoxon_p": float(w_p),
+                    "ttest_stat": float(t_stat),
+                    "ttest_p": float(t_p),
+                    "cohens_d": d,
+                    "ci95_lower": ci_lo,
+                    "ci95_upper": ci_hi,
+                }
+            )
     return results
 
 
@@ -134,15 +134,19 @@ def write_latex(rows: List[Dict], out_path: Path) -> None:
     lines = []
     lines.append("\\begin{table*}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Pairwise statistical comparison across $\\lambda_{\\mathrm{NCE}}$ "
-                 "values on the held-out test set (5{,}265 slices). "
-                 "Wilcoxon signed-rank $p$-values are reported with Bonferroni correction across "
-                 "the six pairs per metric ($\\alpha_{\\mathrm{adj}}{=}0.0083$). "
-                 "Significant differences are marked $\\dagger$.}")
+    lines.append(
+        "\\caption{Pairwise statistical comparison across $\\lambda_{\\mathrm{NCE}}$ "
+        "values on the held-out test set (5{,}265 slices). "
+        "Wilcoxon signed-rank $p$-values are reported with Bonferroni correction across "
+        "the six pairs per metric ($\\alpha_{\\mathrm{adj}}{=}0.0083$). "
+        "Significant differences are marked $\\dagger$.}"
+    )
     lines.append("\\label{tab:patchnce_pairwise_significance}")
     lines.append("\\begin{tabular}{l l c c c c c}")
     lines.append("\\toprule")
-    lines.append("Metric & Pair & Mean A & Mean B & $\\Delta$ Mean & Cohen's $d$ & Wilcoxon $p$ \\\\")
+    lines.append(
+        "Metric & Pair & Mean A & Mean B & $\\Delta$ Mean & Cohen's $d$ & Wilcoxon $p$ \\\\"
+    )
     lines.append("\\midrule")
     for metric_key, metric_name in primary_metrics:
         for r in rows:

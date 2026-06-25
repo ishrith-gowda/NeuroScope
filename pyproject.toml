@@ -126,6 +126,11 @@ exclude = [
     "preprocessed_registered",
     "arxiv",
     "*.egg-info",
+    # known-broken legacy files (genuine syntax errors; superseded by the
+    # journal_extension/ pipeline). flagged for deletion/repair; excluded so
+    # tooling runs cleanly on the rest of the tree.
+    "scripts/05_downstream_evaluation/downstream_evaluation.py",
+    "scripts/train_sa_cyclegan_complete.py",
 ]
 
 [tool.ruff.lint]

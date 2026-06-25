@@ -27,8 +27,7 @@ import json
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -37,42 +36,42 @@ class DatasetDownloader:
     """handles downloading and organizing medical imaging datasets."""
 
     DATASET_INFO = {
-        'ixi': {
-            'name': 'IXI Dataset',
-            'description': '600+ T1, T2, PD, MRA, DTI scans from 3 London hospitals',
-            'url': 'https://brain-development.org/ixi-dataset/',
-            'size': '~70GB',
-            'download_method': 'manual',  # requires registration
-            'modalities': ['T1', 'T2', 'PD', 'MRA', 'DTI'],
-            'subjects': 600,
+        "ixi": {
+            "name": "IXI Dataset",
+            "description": "600+ T1, T2, PD, MRA, DTI scans from 3 London hospitals",
+            "url": "https://brain-development.org/ixi-dataset/",
+            "size": "~70GB",
+            "download_method": "manual",  # requires registration
+            "modalities": ["T1", "T2", "PD", "MRA", "DTI"],
+            "subjects": 600,
         },
-        'oasis3': {
-            'name': 'OASIS-3',
-            'description': 'Longitudinal neuroimaging, clinical, and cognitive dataset',
-            'url': 'https://www.oasis-brains.org/',
-            'size': '~2TB (full), ~100GB (subset)',
-            'download_method': 'aws',  # available via aws s3
-            'modalities': ['T1', 'T2', 'FLAIR', 'ASL', 'SWI'],
-            'subjects': 1098,
+        "oasis3": {
+            "name": "OASIS-3",
+            "description": "Longitudinal neuroimaging, clinical, and cognitive dataset",
+            "url": "https://www.oasis-brains.org/",
+            "size": "~2TB (full), ~100GB (subset)",
+            "download_method": "aws",  # available via aws s3
+            "modalities": ["T1", "T2", "FLAIR", "ASL", "SWI"],
+            "subjects": 1098,
         },
-        'brats': {
-            'name': 'BraTS (TCGA-GBM)',
-            'description': 'Brain Tumor Segmentation Challenge data',
-            'url': 'https://www.med.upenn.edu/cbica/brats2021/',
-            'size': '~10GB',
-            'download_method': 'registration',  # requires synapse registration
-            'modalities': ['T1', 'T1CE', 'T2', 'FLAIR'],
-            'subjects': '~500',
+        "brats": {
+            "name": "BraTS (TCGA-GBM)",
+            "description": "Brain Tumor Segmentation Challenge data",
+            "url": "https://www.med.upenn.edu/cbica/brats2021/",
+            "size": "~10GB",
+            "download_method": "registration",  # requires synapse registration
+            "modalities": ["T1", "T1CE", "T2", "FLAIR"],
+            "subjects": "~500",
         },
-        'upenn_gbm': {
-            'name': 'UPenn-GBM',
-            'description': 'University of Pennsylvania Glioblastoma dataset',
-            'url': 'https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642',
-            'size': '~50GB',
-            'download_method': 'nbia',  # nbia data retriever
-            'modalities': ['T1', 'T1CE', 'T2', 'FLAIR'],
-            'subjects': 630,
-        }
+        "upenn_gbm": {
+            "name": "UPenn-GBM",
+            "description": "University of Pennsylvania Glioblastoma dataset",
+            "url": "https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642",
+            "size": "~50GB",
+            "download_method": "nbia",  # nbia data retriever
+            "modalities": ["T1", "T1CE", "T2", "FLAIR"],
+            "subjects": 630,
+        },
     }
 
     def __init__(self, output_dir: Path):
@@ -91,7 +90,7 @@ class DatasetDownloader:
             logger.error(f"Unknown dataset: {dataset}")
             return
 
-        logger.info(f"\n{'='*80}")
+        logger.info(f"\n{'=' * 80}")
         logger.info(f"Dataset: {info['name']}")
         logger.info(f"Description: {info['description']}")
         logger.info(f"URL: {info['url']}")
@@ -99,7 +98,7 @@ class DatasetDownloader:
         logger.info(f"Modalities: {', '.join(info['modalities'])}")
         logger.info(f"Subjects: {info['subjects']}")
         logger.info(f"Download Method: {info['download_method']}")
-        logger.info(f"{'='*80}\n")
+        logger.info(f"{'=' * 80}\n")
 
     def download_ixi(self):
         """download ixi dataset.
@@ -108,9 +107,9 @@ class DatasetDownloader:
         this function provides instructions.
         """
         logger.info("Downloading IXI Dataset...")
-        self.print_dataset_info('ixi')
+        self.print_dataset_info("ixi")
 
-        output_path = self.output_dir / 'ixi'
+        output_path = self.output_dir / "ixi"
         output_path.mkdir(parents=True, exist_ok=True)
 
         instructions = """
@@ -141,8 +140,8 @@ class DatasetDownloader:
         logger.info(instructions.format(output_path=output_path))
 
         # create a readme with instructions
-        readme_path = output_path / 'DOWNLOAD_INSTRUCTIONS.md'
-        with open(readme_path, 'w') as f:
+        readme_path = output_path / "DOWNLOAD_INSTRUCTIONS.md"
+        with open(readme_path, "w") as f:
             f.write(instructions.format(output_path=output_path))
 
         logger.info(f"Instructions saved to: {readme_path}")
@@ -154,21 +153,21 @@ class DatasetDownloader:
             subset: if true, download only t1-weighted images (smaller subset)
         """
         logger.info("Downloading OASIS-3 Dataset...")
-        self.print_dataset_info('oasis3')
+        self.print_dataset_info("oasis3")
 
-        output_path = self.output_dir / 'oasis3'
+        output_path = self.output_dir / "oasis3"
         output_path.mkdir(parents=True, exist_ok=True)
 
         # check if aws cli is installed
         try:
-            subprocess.run(['aws', '--version'], capture_output=True, check=True)
+            subprocess.run(["aws", "--version"], capture_output=True, check=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.error("AWS CLI not installed. Install with: pip install awscli")
             logger.error("Then configure with: aws configure")
             return
 
         # oasis-3 is available as aws open data
-        bucket = 's3://openneuro/ds004513'  # example - actual bucket may differ
+        bucket = "s3://openneuro/ds004513"  # example - actual bucket may differ
 
         if subset:
             logger.info("Downloading T1-weighted subset (~100GB)...")
@@ -195,9 +194,9 @@ class DatasetDownloader:
         note: requires synapse registration.
         """
         logger.info("Downloading BraTS Dataset...")
-        self.print_dataset_info('brats')
+        self.print_dataset_info("brats")
 
-        output_path = self.output_dir / 'brats'
+        output_path = self.output_dir / "brats"
         output_path.mkdir(parents=True, exist_ok=True)
 
         instructions = """
@@ -238,8 +237,8 @@ class DatasetDownloader:
 
         logger.info(instructions.format(output_path=output_path))
 
-        readme_path = output_path / 'DOWNLOAD_INSTRUCTIONS.md'
-        with open(readme_path, 'w') as f:
+        readme_path = output_path / "DOWNLOAD_INSTRUCTIONS.md"
+        with open(readme_path, "w") as f:
             f.write(instructions.format(output_path=output_path))
 
         logger.info(f"Instructions saved to: {readme_path}")
@@ -250,9 +249,9 @@ class DatasetDownloader:
         note: requires nbia data retriever.
         """
         logger.info("Downloading UPenn-GBM Dataset...")
-        self.print_dataset_info('upenn_gbm')
+        self.print_dataset_info("upenn_gbm")
 
-        output_path = self.output_dir / 'upenn_gbm'
+        output_path = self.output_dir / "upenn_gbm"
         output_path.mkdir(parents=True, exist_ok=True)
 
         instructions = """
@@ -279,15 +278,15 @@ class DatasetDownloader:
 
         logger.info(instructions.format(output_path=output_path))
 
-        readme_path = output_path / 'DOWNLOAD_INSTRUCTIONS.md'
-        with open(readme_path, 'w') as f:
+        readme_path = output_path / "DOWNLOAD_INSTRUCTIONS.md"
+        with open(readme_path, "w") as f:
             f.write(instructions.format(output_path=output_path))
 
         logger.info(f"Instructions saved to: {readme_path}")
 
     def create_download_script_summary(self, datasets: List[str]):
         """create a summary document of all datasets to download."""
-        summary_path = self.output_dir / 'DATASETS_SUMMARY.md'
+        summary_path = self.output_dir / "DATASETS_SUMMARY.md"
 
         content = """# neuroscope datasets summary
 
@@ -299,14 +298,14 @@ this document summarizes all datasets used in the neuroscope project.
             info = self.DATASET_INFO.get(dataset.lower(), {})
             if info:
                 content += f"""
-## {info.get('name', dataset)}
+## {info.get("name", dataset)}
 
-- **description**: {info.get('description', 'n/a')}
-- **url**: {info.get('url', 'n/a')}
-- **size**: {info.get('size', 'n/a')}
-- **modalities**: {', '.join(info.get('modalities', []))}
-- **subjects**: {info.get('subjects', 'n/a')}
-- **download method**: {info.get('download_method', 'n/a')}
+- **description**: {info.get("description", "n/a")}
+- **url**: {info.get("url", "n/a")}
+- **size**: {info.get("size", "n/a")}
+- **modalities**: {", ".join(info.get("modalities", []))}
+- **subjects**: {info.get("subjects", "n/a")}
+- **download method**: {info.get("download_method", "n/a")}
 
 ---
 """
@@ -348,7 +347,7 @@ python scripts/preprocess_all_datasets.py \\
 this will create a unified dataset structure suitable for training.
 """
 
-        with open(summary_path, 'w') as f:
+        with open(summary_path, "w") as f:
             f.write(content)
 
         logger.info(f"\n+ Dataset summary created: {summary_path}")
@@ -357,7 +356,7 @@ this will create a unified dataset structure suitable for training.
 def main():
     """main execution function."""
     parser = argparse.ArgumentParser(
-        description='Download neuroimaging datasets for NeuroScope',
+        description="Download neuroimaging datasets for NeuroScope",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 examples:
@@ -369,41 +368,38 @@ examples:
 
     # get info for all datasets
     python scripts/download_datasets.py --info-only
-        """
+        """,
     )
 
     parser.add_argument(
-        '--datasets',
-        nargs='+',
-        choices=['ixi', 'oasis3', 'brats', 'upenn_gbm', 'all'],
-        default=['all'],
-        help='Datasets to download'
+        "--datasets",
+        nargs="+",
+        choices=["ixi", "oasis3", "brats", "upenn_gbm", "all"],
+        default=["all"],
+        help="Datasets to download",
     )
 
     parser.add_argument(
-        '--output-dir',
-        type=str,
-        default='./data/raw',
-        help='Output directory for datasets'
+        "--output-dir", type=str, default="./data/raw", help="Output directory for datasets"
     )
 
     parser.add_argument(
-        '--oasis-subset',
-        action='store_true',
-        help='Download only OASIS-3 T1 subset (~100GB vs ~2TB)'
+        "--oasis-subset",
+        action="store_true",
+        help="Download only OASIS-3 T1 subset (~100GB vs ~2TB)",
     )
 
     parser.add_argument(
-        '--info-only',
-        action='store_true',
-        help='Only print dataset information without downloading'
+        "--info-only",
+        action="store_true",
+        help="Only print dataset information without downloading",
     )
 
     args = parser.parse_args()
 
     # handle 'all' option
-    if 'all' in args.datasets:
-        args.datasets = ['ixi', 'oasis3', 'brats', 'upenn_gbm']
+    if "all" in args.datasets:
+        args.datasets = ["ixi", "oasis3", "brats", "upenn_gbm"]
 
     # initialize downloader
     downloader = DatasetDownloader(Path(args.output_dir))
@@ -419,24 +415,24 @@ examples:
     logger.info(f"Datasets selected: {', '.join(args.datasets)}\n")
 
     for dataset in args.datasets:
-        if dataset == 'ixi':
+        if dataset == "ixi":
             downloader.download_ixi()
-        elif dataset == 'oasis3':
+        elif dataset == "oasis3":
             downloader.download_oasis3(subset=args.oasis_subset)
-        elif dataset == 'brats':
+        elif dataset == "brats":
             downloader.download_brats()
-        elif dataset == 'upenn_gbm':
+        elif dataset == "upenn_gbm":
             downloader.download_upenn_gbm()
 
     # create summary document
     downloader.create_download_script_summary(args.datasets)
 
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("Dataset download setup complete!")
     logger.info(f"Follow the instructions in {args.output_dir}/*/DOWNLOAD_INSTRUCTIONS.md")
     logger.info(f"See {args.output_dir}/DATASETS_SUMMARY.md for overview")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

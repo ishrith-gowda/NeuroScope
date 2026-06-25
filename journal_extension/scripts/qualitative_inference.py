@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,7 +44,9 @@ MODALITY_NAMES: List[str] = ["FLAIR", "T1", "T1ce", "T2"]
 LAMBDA_VALUES: List[float] = [0.1, 0.5, 1.0, 2.0]
 
 
-def build_trainer(config_path: Path, brats_dir: str, upenn_dir: str, num_workers: int) -> HybridNCETrainer:
+def build_trainer(
+    config_path: Path, brats_dir: str, upenn_dir: str, num_workers: int
+) -> HybridNCETrainer:
     with open(config_path) as f:
         cfg_dict = yaml.safe_load(f) or {}
 
@@ -100,13 +103,15 @@ def collect_cases(trainer: HybridNCETrainer, num_cases: int) -> List[Dict]:
         if batch_idx in indices_seen:
             continue
         indices_seen.add(batch_idx)
-        cases.append({
-            "batch_idx": batch_idx,
-            "real_A": batch["A"][idx_in_batch].cpu(),
-            "real_B": batch["B"][idx_in_batch].cpu(),
-            "center_A": batch["A_center"][idx_in_batch].cpu(),
-            "center_B": batch["B_center"][idx_in_batch].cpu(),
-        })
+        cases.append(
+            {
+                "batch_idx": batch_idx,
+                "real_A": batch["A"][idx_in_batch].cpu(),
+                "real_B": batch["B"][idx_in_batch].cpu(),
+                "center_A": batch["A_center"][idx_in_batch].cpu(),
+                "center_B": batch["B_center"][idx_in_batch].cpu(),
+            }
+        )
         # skip ahead a bit so cases aren't all from the front
         for _ in range(max(1, len(trainer.test_loader) // (target + 1))):
             try:
@@ -126,24 +131,32 @@ def run_translations(trainer: HybridNCETrainer, cases: List[Dict]) -> List[Dict]
         fake_b = trainer.model.G_A2B(real_a)
         fake_a = trainer.model.G_B2A(real_b)
 
-        fake_b_3 = (fake_b.unsqueeze(2).repeat(1, 1, 3, 1, 1)
-                    .view(fake_b.size(0), -1, fake_b.size(2), fake_b.size(3)))
-        fake_a_3 = (fake_a.unsqueeze(2).repeat(1, 1, 3, 1, 1)
-                    .view(fake_a.size(0), -1, fake_a.size(2), fake_a.size(3)))
+        fake_b_3 = (
+            fake_b.unsqueeze(2)
+            .repeat(1, 1, 3, 1, 1)
+            .view(fake_b.size(0), -1, fake_b.size(2), fake_b.size(3))
+        )
+        fake_a_3 = (
+            fake_a.unsqueeze(2)
+            .repeat(1, 1, 3, 1, 1)
+            .view(fake_a.size(0), -1, fake_a.size(2), fake_a.size(3))
+        )
         rec_a = trainer.model.G_B2A(fake_b_3)
         rec_b = trainer.model.G_A2B(fake_a_3)
 
-        out.append({
-            "batch_idx": case["batch_idx"],
-            "real_A": case["real_A"].numpy(),
-            "real_B": case["real_B"].numpy(),
-            "center_A": case["center_A"].numpy(),
-            "center_B": case["center_B"].numpy(),
-            "fake_B": fake_b.squeeze(0).cpu().numpy(),
-            "fake_A": fake_a.squeeze(0).cpu().numpy(),
-            "rec_A": rec_a.squeeze(0).cpu().numpy(),
-            "rec_B": rec_b.squeeze(0).cpu().numpy(),
-        })
+        out.append(
+            {
+                "batch_idx": case["batch_idx"],
+                "real_A": case["real_A"].numpy(),
+                "real_B": case["real_B"].numpy(),
+                "center_A": case["center_A"].numpy(),
+                "center_B": case["center_B"].numpy(),
+                "fake_B": fake_b.squeeze(0).cpu().numpy(),
+                "fake_A": fake_a.squeeze(0).cpu().numpy(),
+                "rec_A": rec_a.squeeze(0).cpu().numpy(),
+                "rec_B": rec_b.squeeze(0).cpu().numpy(),
+            }
+        )
     return out
 
 
@@ -155,8 +168,7 @@ def normalise(arr: np.ndarray) -> np.ndarray:
     return (arr - lo) / (hi - lo)
 
 
-def render_grid(per_lambda: Dict[float, List[Dict]], modality_index: int,
-                out_path: Path) -> None:
+def render_grid(per_lambda: Dict[float, List[Dict]], modality_index: int, out_path: Path) -> None:
     """render figure: rows = case, columns = sequence per lambda."""
     if not per_lambda:
         return
@@ -168,8 +180,7 @@ def render_grid(per_lambda: Dict[float, List[Dict]], modality_index: int,
     cols_per_lambda = 4
     fig_w = 0.85 * cols_per_lambda * len(lambdas) + 1.5
     fig_h = 2.0 * n_cases + 0.6
-    fig, axes = plt.subplots(n_cases, cols_per_lambda * len(lambdas),
-                             figsize=(fig_w, fig_h))
+    fig, axes = plt.subplots(n_cases, cols_per_lambda * len(lambdas), figsize=(fig_w, fig_h))
     if n_cases == 1:
         axes = np.array([axes])
 
@@ -182,25 +193,29 @@ def render_grid(per_lambda: Dict[float, List[Dict]], modality_index: int,
             diff = np.abs(real_a - fake_b)
 
             base = li * cols_per_lambda
-            for j, (img, ttl, cmap) in enumerate([
-                (real_a, "Real A", "gray"),
-                (fake_b, "Fake B", "gray"),
-                (real_b, "Real B", "gray"),
-                (diff, "$|\\,$Real A $-$ Fake B$\\,|$", "magma"),
-            ]):
+            for j, (img, ttl, cmap) in enumerate(
+                [
+                    (real_a, "Real A", "gray"),
+                    (fake_b, "Fake B", "gray"),
+                    (real_b, "Real B", "gray"),
+                    (diff, "$|\\,$Real A $-$ Fake B$\\,|$", "magma"),
+                ]
+            ):
                 ax = axes[c, base + j]
                 ax.imshow(img, cmap=cmap, vmin=0, vmax=1)
-                ax.set_xticks([]); ax.set_yticks([])
+                ax.set_xticks([])
+                ax.set_yticks([])
                 if c == 0:
                     if j == 0:
                         ax.set_title(f"$\\lambda$={lam}\n{ttl}", fontsize=8)
                     else:
                         ax.set_title(ttl, fontsize=8)
                 if j == 0:
-                    ax.set_ylabel(f"Case {c+1}", fontsize=8)
+                    ax.set_ylabel(f"Case {c + 1}", fontsize=8)
 
-    fig.suptitle(f"Qualitative Translation -- Modality {MODALITY_NAMES[modality_index]}",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        f"Qualitative Translation -- Modality {MODALITY_NAMES[modality_index]}", fontsize=12, y=1.02
+    )
     fig.tight_layout()
     fig.savefig(str(out_path) + ".pdf")
     fig.savefig(str(out_path) + ".png")
@@ -215,8 +230,12 @@ def parse_args():
     parser.add_argument("--config", default=None)
     parser.add_argument("--output_dir", required=True)
     parser.add_argument("--num_cases", type=int, default=4)
-    parser.add_argument("--modality_index", type=int, default=1,
-                        help="which channel to display in the figure (0-3, default T1=1)")
+    parser.add_argument(
+        "--modality_index",
+        type=int,
+        default=1,
+        help="which channel to display in the figure (0-3, default T1=1)",
+    )
     parser.add_argument("--num_workers", type=int, default=8)
     return parser.parse_args()
 
@@ -228,18 +247,44 @@ def main():
     ckpt_root = Path(args.checkpoint_root)
 
     runs: List[Tuple[float, Path]] = [
-        (1.0, ckpt_root / "patchnce_hybrid" / "sa_cyclegan_25d_patchnce_hybrid"
-              / "checkpoints" / "checkpoint_best.pth"),
-        (0.1, ckpt_root / "patchnce_ablation_lambda0.1" / "sa_cyclegan_25d_patchnce_hybrid"
-              / "checkpoints" / "checkpoint_best.pth"),
-        (0.5, ckpt_root / "patchnce_ablation_lambda0.5" / "sa_cyclegan_25d_patchnce_hybrid"
-              / "checkpoints" / "checkpoint_best.pth"),
-        (2.0, ckpt_root / "patchnce_ablation_lambda2.0" / "sa_cyclegan_25d_patchnce_hybrid"
-              / "checkpoints" / "checkpoint_best.pth"),
+        (
+            1.0,
+            ckpt_root
+            / "patchnce_hybrid"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            0.1,
+            ckpt_root
+            / "patchnce_ablation_lambda0.1"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            0.5,
+            ckpt_root
+            / "patchnce_ablation_lambda0.5"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
+        (
+            2.0,
+            ckpt_root
+            / "patchnce_ablation_lambda2.0"
+            / "sa_cyclegan_25d_patchnce_hybrid"
+            / "checkpoints"
+            / "checkpoint_best.pth",
+        ),
     ]
 
-    config_path = Path(args.config) if args.config else (
-        Path(__file__).parent.parent / "configs" / "patchnce_hybrid.yaml"
+    config_path = (
+        Path(args.config)
+        if args.config
+        else (Path(__file__).parent.parent / "configs" / "patchnce_hybrid.yaml")
     )
     trainer = build_trainer(config_path, args.brats_dir, args.upenn_dir, args.num_workers)
 
@@ -253,13 +298,15 @@ def main():
         spread = max(1, len(trainer.test_loader) // max(args.num_cases, 1))
         if batch_idx % spread != 0:
             continue
-        cases.append({
-            "batch_idx": batch_idx,
-            "real_A": batch["A"][0].cpu(),
-            "real_B": batch["B"][0].cpu(),
-            "center_A": batch["A_center"][0].cpu(),
-            "center_B": batch["B_center"][0].cpu(),
-        })
+        cases.append(
+            {
+                "batch_idx": batch_idx,
+                "real_A": batch["A"][0].cpu(),
+                "real_B": batch["B"][0].cpu(),
+                "center_A": batch["A_center"][0].cpu(),
+                "center_B": batch["B_center"][0].cpu(),
+            }
+        )
     print(f"collected {len(cases)} cases")
 
     per_lambda: Dict[float, List[Dict]] = {}
@@ -268,7 +315,9 @@ def main():
             print(f"[lambda={lam}] missing checkpoint, skipping.")
             continue
         epoch_loaded = load_checkpoint_into(trainer, ckpt_path)
-        print(f"[lambda={lam}] loaded epoch={epoch_loaded}, running inference on {len(cases)} cases")
+        print(
+            f"[lambda={lam}] loaded epoch={epoch_loaded}, running inference on {len(cases)} cases"
+        )
         per_lambda[lam] = run_translations(trainer, cases)
 
     # save raw arrays for later figure remixes
@@ -281,20 +330,28 @@ def main():
     arrays_dict: Dict[str, np.ndarray] = {}
     for lam, val_list in per_lambda.items():
         for i, val in enumerate(val_list):
-            for key in ("real_A", "real_B", "center_A", "center_B",
-                       "fake_B", "fake_A", "rec_A", "rec_B"):
+            for key in (
+                "real_A",
+                "real_B",
+                "center_A",
+                "center_B",
+                "fake_B",
+                "fake_A",
+                "rec_A",
+                "rec_B",
+            ):
                 arrays_dict[f"lambda{lam}_case{i}_{key}"] = np.asarray(val[key])
     np.savez_compressed(out_dir / "qualitative_arrays.npz", **arrays_dict)
     (out_dir / "qualitative_meta.json").write_text(json.dumps(payload, indent=2))
 
     # render the figure for the requested modality
-    render_grid(per_lambda, args.modality_index,
-                out_dir / "fig_patchnce_qualitative")
+    render_grid(per_lambda, args.modality_index, out_dir / "fig_patchnce_qualitative")
 
     # render figures for all modalities for completeness
     for m in range(4):
-        render_grid(per_lambda, m,
-                    out_dir / f"fig_patchnce_qualitative_modality{m}_{MODALITY_NAMES[m]}")
+        render_grid(
+            per_lambda, m, out_dir / f"fig_patchnce_qualitative_modality{m}_{MODALITY_NAMES[m]}"
+        )
 
     print(f"done. wrote arrays + figures to {out_dir}")
 

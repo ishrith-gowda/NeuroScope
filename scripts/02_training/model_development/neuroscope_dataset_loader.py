@@ -125,25 +125,25 @@ class DomainSliceDataset(data.Dataset):
         depth = vols.shape[1]
         z = random.randint(0, depth - 1)
         slice4 = vols[:, z, :, :]
-        
+
         # convert to tensor and validate
         tensor = torch.from_numpy(slice4).float()
-        
+
         # validate tensor values
         if not torch.isfinite(tensor).all():
             logging.warning("Non-finite values detected in slice, cleaning...")
             tensor = torch.nan_to_num(tensor, nan=0.0, posinf=tensor.max(), neginf=tensor.min())
-        
+
         # ensure input is in [0,1] range (preprocessing should have done this, but safety check)
         tensor = clamp_unit(tensor)
-        
+
         # convert to [-1,1] for cyclegan
         tensor = to_minus1_1(tensor)
-        
+
         # apply transforms if specified
         if self.transforms:
             tensor = self.transforms(tensor)
-            
+
         return tensor
 
 

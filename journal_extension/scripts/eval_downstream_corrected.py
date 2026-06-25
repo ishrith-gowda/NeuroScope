@@ -188,7 +188,7 @@ def main():
         f"  within-site upper bounds: brats {results['A_on_rawA'][FG]:.4f}, "
         f"upenn {results['B_on_rawB'][FG]:.4f}"
     )
-    print(f"saved -> {out/'downstream_corrected.json'}")
+    print(f"saved -> {out / 'downstream_corrected.json'}")
 
 
 if __name__ == "__main__":

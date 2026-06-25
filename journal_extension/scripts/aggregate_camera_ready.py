@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -100,7 +101,8 @@ def fig_ext_a_seeds(repo_root: Path, out_dir: Path) -> None:
         ssim_b = np.asarray(hist["val"]["ssim_B2A"])
         mean = (ssim_a + ssim_b) / 2.0
         axes[0].plot(np.arange(len(mean)), mean, label=label)
-    axes[0].set_xlabel("Epoch"); axes[0].set_ylabel("Mean Validation SSIM")
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Mean Validation SSIM")
     axes[0].set_title("(a) Per-Seed Validation SSIM, $\\lambda_{\\mathrm{NCE}}=0.5$")
     axes[0].legend(loc="lower right", fontsize=8)
     axes[0].set_ylim(0.95, 1.0)
@@ -111,7 +113,8 @@ def fig_ext_a_seeds(repo_root: Path, out_dir: Path) -> None:
         ssim_a = np.asarray(hist["val"]["ssim_A2B"])
         ssim_b = np.asarray(hist["val"]["ssim_B2A"])
         mean = float(((ssim_a + ssim_b) / 2.0).max())
-        means.append(mean); labels.append(label)
+        means.append(mean)
+        labels.append(label)
     axes[1].bar(range(len(means)), means, color="#2563EB")
     axes[1].set_xticks(range(len(labels)))
     axes[1].set_xticklabels(labels, rotation=15, ha="right")
@@ -121,8 +124,9 @@ def fig_ext_a_seeds(repo_root: Path, out_dir: Path) -> None:
     for i, v in enumerate(means):
         axes[1].text(i, v + 0.0005, f"{v:.4f}", ha="center", fontsize=8)
 
-    fig.suptitle("Extension A: Multi-Seed Robustness for $\\lambda_{\\mathrm{NCE}}=0.5$",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        "Extension A: Multi-Seed Robustness for $\\lambda_{\\mathrm{NCE}}=0.5$", fontsize=12, y=1.02
+    )
     fig.tight_layout()
     fig.savefig(out_dir / "fig_ext_a_seeds.pdf")
     fig.savefig(out_dir / "fig_ext_a_seeds.png")
@@ -143,13 +147,24 @@ def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
     if legacy_c.get("history", {}).get("train", {}).get("bpe"):
         bpe_final = float(legacy_c["history"]["train"]["bpe"][-1])
         ssim = float(legacy_c.get("best_val_ssim", 0.0))
-        psnr = (float(legacy_c["history"]["val"]["psnr_A2B"][-1])
-                + float(legacy_c["history"]["val"]["psnr_B2A"][-1])) / 2.0 \
-            if legacy_c["history"]["val"].get("psnr_A2B") else None
-        points.append({
-            "lambda_rate": 0.01, "bpe": bpe_final, "ssim": ssim, "psnr": psnr,
-            "source": "previous (200 epochs)",
-        })
+        psnr = (
+            (
+                float(legacy_c["history"]["val"]["psnr_A2B"][-1])
+                + float(legacy_c["history"]["val"]["psnr_B2A"][-1])
+            )
+            / 2.0
+            if legacy_c["history"]["val"].get("psnr_A2B")
+            else None
+        )
+        points.append(
+            {
+                "lambda_rate": 0.01,
+                "bpe": bpe_final,
+                "ssim": ssim,
+                "psnr": psnr,
+                "source": "previous (200 epochs)",
+            }
+        )
 
     sweep_dir = repo_root / "journal_extension" / "results" / "camera_ready"
     for h_path in sorted(sweep_dir.glob("compression_lambda_rate_*_history.json")):
@@ -160,16 +175,24 @@ def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
         val = h.get("history", {}).get("val", {})
         bpe_final = float(train.get("bpe", [np.nan])[-1]) if train.get("bpe") else float("nan")
         ssim = float(h.get("best_val_ssim", 0.0))
-        psnr = ((float(val["psnr_A2B"][-1]) + float(val["psnr_B2A"][-1])) / 2.0
-                if val.get("psnr_A2B") else None)
+        psnr = (
+            (float(val["psnr_A2B"][-1]) + float(val["psnr_B2A"][-1])) / 2.0
+            if val.get("psnr_A2B")
+            else None
+        )
         try:
             lam = float(h_path.stem.split("_")[-2])
         except Exception:
             lam = float("nan")
-        points.append({
-            "lambda_rate": lam, "bpe": bpe_final, "ssim": ssim, "psnr": psnr,
-            "source": "new (50 epochs)",
-        })
+        points.append(
+            {
+                "lambda_rate": lam,
+                "bpe": bpe_final,
+                "ssim": ssim,
+                "psnr": psnr,
+                "source": "new (50 epochs)",
+            }
+        )
 
     if not points:
         print("ext b: no compression runs available.")
@@ -185,9 +208,13 @@ def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
 
     axes[0].plot(bpes, ssims, "o-", color="#059669")
     for p in points:
-        axes[0].annotate(f"$\\lambda$={p['lambda_rate']:.3f}",
-                         (p["bpe"], p["ssim"]),
-                         textcoords="offset points", xytext=(5, 5), fontsize=7)
+        axes[0].annotate(
+            f"$\\lambda$={p['lambda_rate']:.3f}",
+            (p["bpe"], p["ssim"]),
+            textcoords="offset points",
+            xytext=(5, 5),
+            fontsize=7,
+        )
     axes[0].set_xlabel("Bits Per Element (BPE)")
     axes[0].set_ylabel("Best Val SSIM")
     axes[0].set_title("(a) Rate vs SSIM")
@@ -201,8 +228,7 @@ def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
         axes[1].set_title("(b) Rate vs PSNR")
         axes[1].grid(True, alpha=0.3)
 
-    fig.suptitle("Extension B: Rate-Distortion Curve",
-                 fontsize=12, y=1.02)
+    fig.suptitle("Extension B: Rate-Distortion Curve", fontsize=12, y=1.02)
     fig.tight_layout()
     fig.savefig(out_dir / "fig_ext_b_rate_distortion.pdf")
     fig.savefig(out_dir / "fig_ext_b_rate_distortion.png")
@@ -212,14 +238,15 @@ def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
     lines = []
     lines.append("\\begin{table}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Extension B rate-distortion sweep over $\\lambda_{\\mathrm{rate}}$. "
-                 "Lower BPE means smaller compressed code; higher SSIM/PSNR means better "
-                 "reconstruction quality at that rate.}")
+    lines.append(
+        "\\caption{Extension B rate-distortion sweep over $\\lambda_{\\mathrm{rate}}$. "
+        "Lower BPE means smaller compressed code; higher SSIM/PSNR means better "
+        "reconstruction quality at that rate.}"
+    )
     lines.append("\\label{tab:ext_b_rd}")
     lines.append("\\begin{tabular}{cccccl}")
     lines.append("\\toprule")
-    lines.append("$\\lambda_{\\mathrm{rate}}$ & BPE & Val SSIM & Val PSNR & "
-                 "Source \\\\")
+    lines.append("$\\lambda_{\\mathrm{rate}}$ & BPE & Val SSIM & Val PSNR & Source \\\\")
     lines.append("\\midrule")
     for p in points:
         psnr_str = f"{p['psnr']:.2f}" if p["psnr"] is not None else "--"
@@ -244,12 +271,10 @@ def fig_ext_c_matrix(repo_root: Path, out_dir: Path) -> None:
         print("ext c: matrix inference outputs not found.")
         return
     for f in src.glob("fig_multidomain_matrix_modality*.pdf"):
-        target = out_dir / f.name.replace("fig_multidomain_matrix",
-                                          "fig_ext_c_matrix")
+        target = out_dir / f.name.replace("fig_multidomain_matrix", "fig_ext_c_matrix")
         target.write_bytes(f.read_bytes())
     for f in src.glob("fig_multidomain_matrix_modality*.png"):
-        target = out_dir / f.name.replace("fig_multidomain_matrix",
-                                          "fig_ext_c_matrix")
+        target = out_dir / f.name.replace("fig_multidomain_matrix", "fig_ext_c_matrix")
         target.write_bytes(f.read_bytes())
 
 
@@ -264,28 +289,39 @@ def fig_ext_d_taskaware(repo_root: Path, out_dir: Path) -> None:
     if not legacy_d:
         return
 
-    new_path = repo_root / "journal_extension" / "results" / "camera_ready" / "downstream_taskaware.json"
+    new_path = (
+        repo_root / "journal_extension" / "results" / "camera_ready" / "downstream_taskaware.json"
+    )
     new_d = json.load(open(new_path)) if new_path.exists() else {}
 
     a2b_old = float(legacy_d["improvement"]["dice_mean_foreground_relative_pct"])
     b2a_old = float(legacy_d["improvement_reverse"]["dice_mean_foreground_relative_pct"])
 
-    a2b_new = (float(new_d["improvement"]["dice_mean_foreground_relative_pct"])
-               if new_d.get("improvement") else None)
-    b2a_new = (float(new_d["improvement_reverse"]["dice_mean_foreground_relative_pct"])
-               if new_d.get("improvement_reverse") else None)
+    a2b_new = (
+        float(new_d["improvement"]["dice_mean_foreground_relative_pct"])
+        if new_d.get("improvement")
+        else None
+    )
+    b2a_new = (
+        float(new_d["improvement_reverse"]["dice_mean_foreground_relative_pct"])
+        if new_d.get("improvement_reverse")
+        else None
+    )
 
     fig, ax = plt.subplots(figsize=(7, 3.6))
     labels = ["A$\\rightarrow$B", "B$\\rightarrow$A"]
     x = np.arange(len(labels))
     width = 0.36
     old = [a2b_old, b2a_old]
-    new = [a2b_new if a2b_new is not None else float("nan"),
-           b2a_new if b2a_new is not None else float("nan")]
+    new = [
+        a2b_new if a2b_new is not None else float("nan"),
+        b2a_new if b2a_new is not None else float("nan"),
+    ]
     ax.bar(x - width / 2, old, width, color="#9CA3AF", label="Vanilla harmonization")
     ax.bar(x + width / 2, new, width, color="#2563EB", label="Task-aware harmonization (new)")
     ax.axhline(0, color="black", linewidth=0.7)
-    ax.set_xticks(x); ax.set_xticklabels(labels)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
     ax.set_ylabel("Relative $\\Delta$ Dice (\\%)")
     ax.set_title("Extension D: Task-Aware vs Vanilla Harmonization Effect on Cross-Site Dice")
     ax.legend()
