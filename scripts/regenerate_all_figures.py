@@ -90,7 +90,7 @@ def main():
 
     print("\n" + "=" * 70)
     print("comprehensive figure regeneration")
-    print(f"project: neuroscope - sa-cyclegan for mri harmonization")
+    print("project: neuroscope - sa-cyclegan for mri harmonization")
     print("=" * 70)
 
     for script_path, description in scripts:

@@ -25,12 +25,10 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
-import pandas as pd
-from scipy import stats
 from tqdm import tqdm
 
 # add project root to path
@@ -73,7 +71,7 @@ class ComBatHarmonizer:
 
     def _standardize_across_features(
         self, data: np.ndarray, batch: np.ndarray
-    ) -> Tuple[np.ndarray, Dict]:
+    ) -> tuple[np.ndarray, dict]:
         """
         standardize data across features.
 
@@ -85,7 +83,7 @@ class ComBatHarmonizer:
             standardized data and standardization parameters
         """
         n_batch = len(np.unique(batch))
-        n_samples, n_features = data.shape
+        n_samples, _n_features = data.shape
 
         # calculate batch-specific means and variances
         batch_design = np.zeros((n_samples, n_batch))
@@ -137,7 +135,7 @@ class ComBatHarmonizer:
         a: float,
         b: float,
         conv: float = 0.0001,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         iteratively compute posterior estimates.
 
@@ -214,7 +212,7 @@ class ComBatHarmonizer:
         logger.info("Fitting ComBat harmonization...")
 
         # standardize data
-        stand_mean, batch_info, grand_mean, var_pooled = self._standardize_across_features(
+        _stand_mean, batch_info, grand_mean, var_pooled = self._standardize_across_features(
             data, batch
         )
 
@@ -226,7 +224,7 @@ class ComBatHarmonizer:
         delta_hat = np.zeros((n_batch, n_features))
 
         for i, b in enumerate(batch_info.keys()):
-            batch_data = data[batch == b]
+            data[batch == b]
             gamma_hat[i] = batch_info[b]["mean"] - grand_mean
             delta_hat[i] = batch_info[b]["var"]
 
@@ -252,7 +250,7 @@ class ComBatHarmonizer:
                     gamma_star[:, j] = self._postmean(
                         gamma_hat[:, j],
                         g_bar,
-                        np.array([batch_info[b]["n_samples"] for b in batch_info.keys()]).mean(),
+                        np.array([batch_info[b]["n_samples"] for b in batch_info]).mean(),
                         delta_hat[:, j],
                         t2,
                     )
@@ -261,10 +259,10 @@ class ComBatHarmonizer:
                         np.array(
                             [
                                 batch_info[b]["var"][j] * batch_info[b]["n_samples"]
-                                for b in batch_info.keys()
+                                for b in batch_info
                             ]
                         ),
-                        np.array([batch_info[b]["n_samples"] for b in batch_info.keys()]).mean(),
+                        np.array([batch_info[b]["n_samples"] for b in batch_info]).mean(),
                         a,
                         b,
                     )
@@ -292,11 +290,11 @@ class ComBatHarmonizer:
 
     def harmonize_volumes(
         self,
-        source_files: List[Path],
-        target_files: List[Path],
+        source_files: list[Path],
+        target_files: list[Path],
         output_dir: Path,
         modality: str,
-    ) -> Dict:
+    ) -> dict:
         """
         harmonize a set of volumetric mri scans.
 

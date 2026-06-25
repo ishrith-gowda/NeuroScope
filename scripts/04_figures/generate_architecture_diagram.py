@@ -6,12 +6,11 @@ creates publication-quality neural network architecture visualization
 showing the generator, discriminator, and attention mechanisms.
 """
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle, Circle
-import matplotlib.lines as mlines
-import numpy as np
 from pathlib import Path
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 # publication-quality settings
 plt.rcParams.update(
@@ -278,7 +277,12 @@ def create_full_cyclegan_diagram(output_dir: Path):
         "",
         xy=(4, 4.3),
         xytext=(7.5, 4.4),
-        arrowprops=dict(arrowstyle="->", color="#1976D2", lw=1.5, connectionstyle="arc3,rad=-0.3"),
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "#1976D2",
+            "lw": 1.5,
+            "connectionstyle": "arc3,rad=-0.3",
+        },
     )
     ax.text(5.75, 3.9, "Cycle A", fontsize=8, color="#1976D2", ha="center")
 
@@ -287,7 +291,12 @@ def create_full_cyclegan_diagram(output_dir: Path):
         "",
         xy=(4, 2.7),
         xytext=(7.5, 2.6),
-        arrowprops=dict(arrowstyle="->", color="#E64A19", lw=1.5, connectionstyle="arc3,rad=0.3"),
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "#E64A19",
+            "lw": 1.5,
+            "connectionstyle": "arc3,rad=0.3",
+        },
     )
     ax.text(5.75, 3.1, "Cycle B", fontsize=8, color="#E64A19", ha="center")
 

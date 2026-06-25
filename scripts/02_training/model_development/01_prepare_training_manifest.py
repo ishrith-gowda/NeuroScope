@@ -1,11 +1,10 @@
 import argparse
+import datetime
 import json
 import logging
 import sys
 import time
-import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import SimpleITK as sitk
 
@@ -27,14 +26,14 @@ def setup_logging(verbose: bool):
     )
 
 
-def list_subjects_for_split(metadata_path: Path, split: str) -> Dict[str, List[str]]:
+def list_subjects_for_split(metadata_path: Path, split: str) -> dict[str, list[str]]:
     logging.info(f"Loading subjects for split: {split} from {metadata_path}")
     start_time = time.time()
 
-    with open(metadata_path, "r") as f:
+    with open(metadata_path) as f:
         meta = json.load(f)
 
-    out: Dict[str, List[str]] = {"brats": [], "upenn": []}
+    out: dict[str, list[str]] = {"brats": [], "upenn": []}
     for section in ("brats", "upenn"):
         for sid, info in meta.get(section, {}).get("valid_subjects", {}).items():
             if info.get("split") == split:
@@ -47,7 +46,7 @@ def list_subjects_for_split(metadata_path: Path, split: str) -> Dict[str, List[s
     return out
 
 
-def verify_modalities_and_depth(preprocessed_dir: Path, section: str, sid: str) -> Tuple[bool, int]:
+def verify_modalities_and_depth(preprocessed_dir: Path, section: str, sid: str) -> tuple[bool, int]:
     subj_dir = preprocessed_dir / section / sid
     required = ("t1.nii.gz", "t1gd.nii.gz", "t2.nii.gz", "flair.nii.gz")
     logging.debug(f"Verifying subject {section}/{sid} in {subj_dir}")
@@ -86,7 +85,7 @@ def verify_modalities_and_depth(preprocessed_dir: Path, section: str, sid: str) 
         return False, 0
 
 
-def build_manifest(splits: List[str], verbose: bool = False) -> Dict:
+def build_manifest(splits: list[str], verbose: bool = False) -> dict:
     start_time = time.time()
     setup_logging(verbose)
     logging.info(f"Starting manifest build for splits: {', '.join(splits)}")
@@ -133,7 +132,7 @@ def build_manifest(splits: List[str], verbose: bool = False) -> Dict:
                 current_time = time.time()
                 if i % 10 == 0 or current_time - last_update_time >= 5:
                     progress_pct = (processed_count / total_to_process) * 100
-                    elapsed = current_time - start_time
+                    current_time - start_time
                     logging.info(
                         f"Progress: {processed_count}/{total_to_process} ({progress_pct:.1f}%) - Processing {section}/{sid} ({i + 1}/{section_total})"
                     )
@@ -175,7 +174,7 @@ def build_manifest(splits: List[str], verbose: bool = False) -> Dict:
     return manifest
 
 
-def write_manifest_files(manifest: Dict) -> Tuple[Path, Path]:
+def write_manifest_files(manifest: dict) -> tuple[Path, Path]:
     logging.info("Writing manifest files...")
     start_time = time.time()
 
@@ -220,7 +219,7 @@ def main():
     args = parse_args()
 
     # show start message with timestamp
-    print(f"=== neuroscope training manifest preparation ===")
+    print("=== neuroscope training manifest preparation ===")
     print(f"start time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     splits = [s.strip() for s in args.splits.split(",") if s.strip()]
@@ -232,7 +231,7 @@ def main():
     total_time = time.time() - start_time
     minutes, seconds = divmod(total_time, 60)
 
-    print(f"\n=== processing complete ===")
+    print("\n=== processing complete ===")
     print(f"total time: {int(minutes)} minutes {seconds:.2f} seconds")
     print(f"full manifest: {full_path}")
     print(f"summary manifest: {summary_path}")

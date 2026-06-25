@@ -4,14 +4,12 @@ this module provides comprehensive unit tests for the normalization
 and preprocessing functionality.
 """
 
-import pytest
 import numpy as np
-import torch
-from pathlib import Path
+import pytest
 
 from neuroscope.preprocessing.normalization import (
-    VolumeNormalization,
     DataAugmentation,
+    VolumeNormalization,
     VolumePreprocessor,
 )
 

@@ -14,10 +14,11 @@ these losses address the limitations of standard l1/l2 reconstruction
 losses by capturing perceptual and structural similarity.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional, Dict, Tuple
 import torchvision.models as models
 
 
@@ -33,9 +34,11 @@ class VGGFeatureExtractor(nn.Module):
 
     def __init__(
         self,
-        layers: List[int] = [3, 8, 17, 26],  # relu1_2, relu2_2, relu3_4, relu4_4
+        layers: Optional[list[int]] = None,  # relu1_2, relu2_2, relu3_4, relu4_4
         requires_grad: bool = False,
     ):
+        if layers is None:
+            layers = [3, 8, 17, 26]
         super().__init__()
 
         vgg = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1)
@@ -74,7 +77,7 @@ class VGGFeatureExtractor(nn.Module):
 
         return x
 
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         extract features from multiple vgg layers.
 
@@ -114,10 +117,12 @@ class PerceptualLoss(nn.Module):
 
     def __init__(
         self,
-        layers: List[int] = [3, 8, 17, 26],
-        weights: Optional[List[float]] = None,
+        layers: Optional[list[int]] = None,
+        weights: Optional[list[float]] = None,
         criterion: str = "l1",
     ):
+        if layers is None:
+            layers = [3, 8, 17, 26]
         super().__init__()
 
         self.vgg = VGGFeatureExtractor(layers=layers)
@@ -145,7 +150,7 @@ class PerceptualLoss(nn.Module):
         y_features = self.vgg(y)
 
         loss = 0.0
-        for i, (name, weight) in enumerate(zip(self.vgg.layer_names, self.weights)):
+        for _i, (name, weight) in enumerate(zip(self.vgg.layer_names, self.weights)):
             loss += weight * self.criterion(x_features[name], y_features[name])
 
         return loss
@@ -196,7 +201,7 @@ class PatchNCELoss(nn.Module):
 
         # sample patch locations
         N = H * W
-        if N > self.num_patches:
+        if self.num_patches < N:
             indices = torch.randperm(N, device=feat_q.device)[: self.num_patches]
             feat_q = feat_q[:, :, indices]  # (b, c, num_patches)
             feat_k = feat_k[:, :, indices]  # (b, c, num_patches)
@@ -241,7 +246,7 @@ class MultiScaleSSIMLoss(nn.Module):
         weights: per-scale weights
     """
 
-    def __init__(self, scales: int = 3, weights: Optional[List[float]] = None):
+    def __init__(self, scales: int = 3, weights: Optional[list[float]] = None):
         super().__init__()
 
         self.scales = scales
@@ -334,9 +339,9 @@ class GradientCorrelationLoss(nn.Module):
         self.register_buffer("sobel_x", sobel_x.view(1, 1, 3, 3))
         self.register_buffer("sobel_y", sobel_y.view(1, 1, 3, 3))
 
-    def _compute_gradients(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _compute_gradients(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """compute image gradients using sobel operators."""
-        B, C, H, W = x.shape
+        _B, C, _H, _W = x.shape
 
         # apply sobel to each channel
         grad_x = []
@@ -496,7 +501,7 @@ class CombinedAdvancedLoss(nn.Module):
         target: torch.Tensor,
         features_gen: Optional[torch.Tensor] = None,
         features_tar: Optional[torch.Tensor] = None,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         compute all loss terms.
 

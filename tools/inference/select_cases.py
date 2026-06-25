@@ -9,21 +9,22 @@ usage:
     python select_cases.py --output case_ids.json
 """
 
-import json
-import numpy as np
 import argparse
+import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Optional
+
+import numpy as np
 
 
-def load_evaluation_results(eval_path: Path) -> Dict:
+def load_evaluation_results(eval_path: Path) -> dict:
     """load evaluation results with aggregate statistics"""
-    with open(eval_path, "r") as f:
+    with open(eval_path) as f:
         data = json.load(f)
     return data
 
 
-def load_test_data_info(data_dir: Path) -> Dict:
+def load_test_data_info(data_dir: Path) -> dict:
     """
     load test dataset information to get sample indices
 
@@ -41,8 +42,8 @@ def load_test_data_info(data_dir: Path) -> Dict:
         return None
 
     # get all sample files
-    samples_a = sorted(list(domain_a_dir.glob("*.npy")))
-    samples_b = sorted(list(domain_b_dir.glob("*.npy")))
+    samples_a = sorted(domain_a_dir.glob("*.npy"))
+    samples_b = sorted(domain_b_dir.glob("*.npy"))
 
     return {
         "domain_a_samples": [str(s) for s in samples_a],
@@ -51,7 +52,7 @@ def load_test_data_info(data_dir: Path) -> Dict:
     }
 
 
-def simulate_metric_distributions(metrics: Dict, n_samples: int) -> Dict[str, np.ndarray]:
+def simulate_metric_distributions(metrics: dict, n_samples: int) -> dict[str, np.ndarray]:
     """
     simulate per-sample metric distributions from aggregate statistics
     using gaussian approximation for selection purposes
@@ -79,19 +80,19 @@ def simulate_metric_distributions(metrics: Dict, n_samples: int) -> Dict[str, np
     return simulated
 
 
-def select_best_cases(metrics: np.ndarray, n: int = 5) -> List[int]:
+def select_best_cases(metrics: np.ndarray, n: int = 5) -> list[int]:
     """select top n cases by metric value (higher is better)"""
     indices = np.argsort(metrics)[::-1][:n]
     return indices.tolist()
 
 
-def select_worst_cases(metrics: np.ndarray, n: int = 5) -> List[int]:
+def select_worst_cases(metrics: np.ndarray, n: int = 5) -> list[int]:
     """select bottom n cases by metric value (lower is worse)"""
     indices = np.argsort(metrics)[:n]
     return indices.tolist()
 
 
-def select_median_cases(metrics: np.ndarray, n: int = 3) -> List[int]:
+def select_median_cases(metrics: np.ndarray, n: int = 3) -> list[int]:
     """select n cases around median"""
     sorted_indices = np.argsort(metrics)
     median_idx = len(metrics) // 2
@@ -102,7 +103,7 @@ def select_median_cases(metrics: np.ndarray, n: int = 3) -> List[int]:
 
 def select_interesting_cases(
     ssim: np.ndarray, psnr: np.ndarray, lpips: np.ndarray, n: int = 5
-) -> List[int]:
+) -> list[int]:
     """
     select interesting cases showing metric disagreement
 
@@ -136,7 +137,9 @@ def select_interesting_cases(
     return interesting
 
 
-def select_random_cases(n_samples: int, n: int = 10, avoid: List[int] = None) -> List[int]:
+def select_random_cases(
+    n_samples: int, n: int = 10, avoid: Optional[list[int]] = None
+) -> list[int]:
     """select random cases avoiding already selected indices"""
     if avoid is None:
         avoid = []
@@ -194,7 +197,7 @@ def main():
     print(f"test set size: {n_samples} samples")
 
     # try to load test data info
-    data_info = load_test_data_info(data_dir)
+    load_test_data_info(data_dir)
 
     # simulate metric distributions for both directions
     print("\nsimulating metric distributions from aggregate statistics...")
@@ -202,7 +205,7 @@ def main():
     print("run evaluation with per-sample metric logging enabled.")
 
     metrics_a2b_sim = simulate_metric_distributions(eval_data["a2b"], n_samples)
-    metrics_b2a_sim = simulate_metric_distributions(eval_data["b2a"], n_samples)
+    simulate_metric_distributions(eval_data["b2a"], n_samples)
 
     # select cases based on a2b direction (primary translation)
     ssim_a2b = metrics_a2b_sim["ssim"]
@@ -281,7 +284,7 @@ def main():
             "psnr_a2b": [float(psnr_a2b[i]) for i in random_indices],
             "description": f"{args.n_random} random representative cases",
         },
-        "all_indices": sorted(list(set(all_selected + random_indices))),
+        "all_indices": sorted(set(all_selected + random_indices)),
     }
 
     # save to json

@@ -9,16 +9,16 @@ import argparse
 import json
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+from neuroscope.core.logging import get_logger, setup_logging
 from neuroscope.preprocessing import MRIRegistration
-from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():

@@ -5,14 +5,13 @@ publication-quality visualization for medical imaging,
 training curves, and statistical results.
 """
 
-from typing import Optional, Dict, List, Tuple, Union, Any
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.colors import Normalize
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from typing import Optional, Union
 
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # set publication-quality defaults
 plt.rcParams.update(
@@ -37,15 +36,15 @@ plt.rcParams.update(
 
 def plot_slice(
     data: np.ndarray,
-    slice_idx: int = None,
+    slice_idx: Optional[int] = None,
     axis: int = 2,
-    title: str = None,
+    title: Optional[str] = None,
     cmap: str = "gray",
-    vmin: float = None,
-    vmax: float = None,
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
     colorbar: bool = True,
     ax: plt.Axes = None,
-    figsize: Tuple[int, int] = (6, 6),
+    figsize: tuple[int, int] = (6, 6),
 ) -> plt.Figure:
     """
     plot a single slice from 3d volume.
@@ -96,13 +95,13 @@ def plot_slice(
 
 
 def plot_slice_comparison(
-    images: List[np.ndarray],
-    labels: List[str],
-    slice_idx: int = None,
+    images: list[np.ndarray],
+    labels: list[str],
+    slice_idx: Optional[int] = None,
     axis: int = 2,
     cmap: str = "gray",
-    figsize: Tuple[int, int] = None,
-    suptitle: str = None,
+    figsize: Optional[tuple[int, int]] = None,
+    suptitle: Optional[str] = None,
 ) -> plt.Figure:
     """
     compare multiple images side by side.
@@ -161,8 +160,8 @@ def plot_montage(
     n_slices: int = 9,
     axis: int = 2,
     cmap: str = "gray",
-    figsize: Tuple[int, int] = (12, 12),
-    title: str = None,
+    figsize: tuple[int, int] = (12, 12),
+    title: Optional[str] = None,
 ) -> plt.Figure:
     """
     create montage of slices from volume.
@@ -188,7 +187,7 @@ def plot_montage(
 
     vmin, vmax = np.percentile(volume, [1, 99])
 
-    for i, (ax, idx) in enumerate(zip(axes, slice_indices)):
+    for _i, (ax, idx) in enumerate(zip(axes, slice_indices)):
         if axis == 0:
             slice_data = volume[idx, :, :]
         elif axis == 1:
@@ -217,12 +216,12 @@ def plot_montage(
 def plot_difference_map(
     original: np.ndarray,
     modified: np.ndarray,
-    slice_idx: int = None,
+    slice_idx: Optional[int] = None,
     axis: int = 2,
     cmap: str = "RdBu_r",
     symmetric: bool = True,
-    figsize: Tuple[int, int] = (15, 4),
-    title: str = None,
+    figsize: tuple[int, int] = (15, 4),
+    title: Optional[str] = None,
 ) -> plt.Figure:
     """
     plot original, modified, and difference map.
@@ -295,12 +294,12 @@ def plot_difference_map(
 def plot_attention_overlay(
     image: np.ndarray,
     attention: np.ndarray,
-    slice_idx: int = None,
+    slice_idx: Optional[int] = None,
     axis: int = 2,
     alpha: float = 0.5,
     cmap: str = "jet",
-    figsize: Tuple[int, int] = (6, 6),
-    title: str = None,
+    figsize: tuple[int, int] = (6, 6),
+    title: Optional[str] = None,
 ) -> plt.Figure:
     """
     overlay attention map on image.
@@ -356,9 +355,9 @@ def plot_attention_overlay(
 
 
 def plot_training_curves(
-    history: Dict[str, List[float]],
-    metrics: List[str] = None,
-    figsize: Tuple[int, int] = (12, 4),
+    history: dict[str, list[float]],
+    metrics: Optional[list[str]] = None,
+    figsize: tuple[int, int] = (12, 4),
     title: str = "Training Curves",
 ) -> plt.Figure:
     """
@@ -399,9 +398,9 @@ def plot_training_curves(
 
 def plot_loss_landscape(
     losses: np.ndarray,
-    x_range: Tuple[float, float] = (-1, 1),
-    y_range: Tuple[float, float] = (-1, 1),
-    figsize: Tuple[int, int] = (8, 6),
+    x_range: tuple[float, float] = (-1, 1),
+    y_range: tuple[float, float] = (-1, 1),
+    figsize: tuple[int, int] = (8, 6),
     title: str = "Loss Landscape",
 ) -> plt.Figure:
     """
@@ -440,12 +439,12 @@ def plot_loss_landscape(
 
 
 def plot_box_comparison(
-    data: Dict[str, List[float]],
+    data: dict[str, list[float]],
     xlabel: str = "Method",
     ylabel: str = "Score",
-    title: str = None,
-    figsize: Tuple[int, int] = (10, 6),
-    colors: List[str] = None,
+    title: Optional[str] = None,
+    figsize: tuple[int, int] = (10, 6),
+    colors: Optional[list[str]] = None,
 ) -> plt.Figure:
     """
     box plot comparison of methods.
@@ -487,11 +486,11 @@ def plot_box_comparison(
 
 
 def plot_violin_comparison(
-    data: Dict[str, List[float]],
+    data: dict[str, list[float]],
     xlabel: str = "Method",
     ylabel: str = "Score",
-    title: str = None,
-    figsize: Tuple[int, int] = (10, 6),
+    title: Optional[str] = None,
+    figsize: tuple[int, int] = (10, 6),
 ) -> plt.Figure:
     """
     violin plot comparison.
@@ -512,7 +511,7 @@ def plot_violin_comparison(
     values = [data[m] for m in methods]
     positions = range(1, len(methods) + 1)
 
-    parts = ax.violinplot(values, positions, showmeans=True, showmedians=True)
+    ax.violinplot(values, positions, showmeans=True, showmedians=True)
 
     ax.set_xticks(positions)
     ax.set_xticklabels(methods)
@@ -529,10 +528,10 @@ def plot_violin_comparison(
 
 
 def plot_confidence_intervals(
-    data: Dict[str, Tuple[float, float, float]],
+    data: dict[str, tuple[float, float, float]],
     xlabel: str = "Value",
     title: str = "Confidence Intervals",
-    figsize: Tuple[int, int] = (10, 6),
+    figsize: tuple[int, int] = (10, 6),
 ) -> plt.Figure:
     """
     plot confidence intervals.
@@ -578,9 +577,9 @@ def plot_confidence_intervals(
 
 
 def plot_effect_size_forest(
-    effects: Dict[str, Tuple[float, float, float]],
+    effects: dict[str, tuple[float, float, float]],
     title: str = "Effect Size Forest Plot",
-    figsize: Tuple[int, int] = (10, 8),
+    figsize: tuple[int, int] = (10, 8),
 ) -> plt.Figure:
     """
     forest plot for effect sizes.
@@ -639,10 +638,10 @@ def plot_effect_size_forest(
 def create_figure_grid(
     n_rows: int,
     n_cols: int,
-    figsize: Tuple[int, int] = None,
-    width_ratios: List[float] = None,
-    height_ratios: List[float] = None,
-) -> Tuple[plt.Figure, np.ndarray]:
+    figsize: Optional[tuple[int, int]] = None,
+    width_ratios: Optional[list[float]] = None,
+    height_ratios: Optional[list[float]] = None,
+) -> tuple[plt.Figure, np.ndarray]:
     """
     create figure grid for publication.
 
@@ -679,7 +678,7 @@ def create_figure_grid(
 
 
 def save_publication_figure(
-    fig: plt.Figure, path: Union[str, Path], formats: List[str] = None, dpi: int = 300
+    fig: plt.Figure, path: Union[str, Path], formats: Optional[list[str]] = None, dpi: int = 300
 ):
     """
     save figure in multiple formats for publication.

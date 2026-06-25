@@ -5,12 +5,11 @@ yaml-based configuration with schema validation
 and hierarchical merging.
 """
 
-from typing import Dict, Any, List, Optional, Union, Type, TypeVar
-from dataclasses import dataclass, field, asdict
-from pathlib import Path
 import copy
 import json
-
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Optional, TypeVar, Union
 
 T = TypeVar("T")
 
@@ -38,7 +37,7 @@ class ModelConfig:
     in_channels: int = 4
     out_channels: int = 4
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -52,7 +51,7 @@ class DataConfig:
     data_root: str = "./preprocessed"
 
     # preprocessing
-    crop_size: List[int] = field(default_factory=lambda: [128, 128, 128])
+    crop_size: list[int] = field(default_factory=lambda: [128, 128, 128])
     normalize: bool = True
     augment: bool = True
 
@@ -67,7 +66,7 @@ class DataConfig:
     val_ratio: float = 0.15
     test_ratio: float = 0.15
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -88,12 +87,12 @@ class LossConfig:
     # perceptual
     use_perceptual: bool = True
     perceptual_weight: float = 1.0
-    perceptual_layers: List[str] = field(default_factory=lambda: ["relu1_2", "relu2_2", "relu3_4"])
+    perceptual_layers: list[str] = field(default_factory=lambda: ["relu1_2", "relu2_2", "relu3_4"])
 
     # contrastive (patchnce)
     use_contrastive: bool = True
     contrastive_weight: float = 1.0
-    nce_layers: List[int] = field(default_factory=lambda: [0, 4, 8, 12, 16])
+    nce_layers: list[int] = field(default_factory=lambda: [0, 4, 8, 12, 16])
 
     # tumor preservation
     use_tumor_preservation: bool = True
@@ -103,7 +102,7 @@ class LossConfig:
     use_ssim: bool = True
     ssim_weight: float = 1.0
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -113,11 +112,11 @@ class OptimizerConfig:
 
     # generator
     generator_lr: float = 2e-4
-    generator_betas: List[float] = field(default_factory=lambda: [0.5, 0.999])
+    generator_betas: list[float] = field(default_factory=lambda: [0.5, 0.999])
 
     # discriminator
     discriminator_lr: float = 2e-4
-    discriminator_betas: List[float] = field(default_factory=lambda: [0.5, 0.999])
+    discriminator_betas: list[float] = field(default_factory=lambda: [0.5, 0.999])
 
     # weight decay
     weight_decay: float = 0.0
@@ -127,7 +126,7 @@ class OptimizerConfig:
     warmup_epochs: int = 5
     min_lr: float = 1e-6
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -169,7 +168,7 @@ class TrainingConfig:
     seed: int = 42
     deterministic: bool = False
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -192,7 +191,7 @@ class EvaluationConfig:
     save_predictions: bool = True
     generate_report: bool = True
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
@@ -210,7 +209,7 @@ class ExperimentConfig:
     training: TrainingConfig = field(default_factory=TrainingConfig)
     evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "name": self.name,
             "description": self.description,
@@ -230,15 +229,15 @@ class ConfigManager:
     supports yaml files with hierarchical inheritance.
     """
 
-    def __init__(self, config_dir: Union[str, Path] = None):
+    def __init__(self, config_dir: Optional[Union[str, Path]] = None):
         """
         args:
             config_dir: directory containing config files
         """
         self.config_dir = Path(config_dir) if config_dir else None
-        self._loaded_configs: Dict[str, Dict] = {}
+        self._loaded_configs: dict[str, dict] = {}
 
-    def load_yaml(self, path: Union[str, Path]) -> Dict:
+    def load_yaml(self, path: Union[str, Path]) -> dict:
         """
         load yaml configuration file.
 
@@ -252,7 +251,7 @@ class ConfigManager:
 
         path = Path(path)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             config = yaml.safe_load(f) or {}
 
         # handle inheritance
@@ -266,7 +265,7 @@ class ConfigManager:
 
         return config
 
-    def _deep_merge(self, base: Dict, override: Dict) -> Dict:
+    def _deep_merge(self, base: dict, override: dict) -> dict:
         """
         deep merge two dictionaries.
 
@@ -287,7 +286,7 @@ class ConfigManager:
 
         return result
 
-    def dict_to_config(self, config_dict: Dict, config_class: Type[T] = ExperimentConfig) -> T:
+    def dict_to_config(self, config_dict: dict, config_class: type[T] = ExperimentConfig) -> T:
         """
         convert dictionary to config dataclass.
 
@@ -316,7 +315,7 @@ class ConfigManager:
 
         return self._dict_to_dataclass(config_dict, config_class)
 
-    def _dict_to_dataclass(self, data: Dict, cls: Type[T]) -> T:
+    def _dict_to_dataclass(self, data: dict, cls: type[T]) -> T:
         """convert dict to dataclass instance."""
         import dataclasses
 
@@ -339,7 +338,7 @@ class ConfigManager:
         return self.dict_to_config(config_dict)
 
     def save_config(
-        self, config: Union[ExperimentConfig, Dict], path: Union[str, Path], format: str = "yaml"
+        self, config: Union[ExperimentConfig, dict], path: Union[str, Path], format: str = "yaml"
     ):
         """
         save configuration to file.
@@ -364,7 +363,7 @@ class ConfigManager:
             with open(path, "w") as f:
                 json.dump(config, f, indent=2)
 
-    def validate_config(self, config: ExperimentConfig) -> List[str]:
+    def validate_config(self, config: ExperimentConfig) -> list[str]:
         """
         validate configuration.
 
@@ -416,7 +415,7 @@ def load_config(path: Union[str, Path]) -> ExperimentConfig:
     return manager.load_config(path)
 
 
-def save_config(config: Union[ExperimentConfig, Dict], path: Union[str, Path]):
+def save_config(config: Union[ExperimentConfig, dict], path: Union[str, Path]):
     """convenience function to save config."""
     manager = ConfigManager()
     manager.save_config(config, path)

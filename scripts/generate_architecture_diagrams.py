@@ -4,12 +4,11 @@ advanced architecture visualization for sa-cyclegan
 generates detailed architecture diagrams for publication
 """
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Circle, Rectangle
-from matplotlib.collections import PatchCollection
-import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 # publication-quality settings
 plt.rcParams.update(
@@ -119,8 +118,6 @@ def generate_generator_architecture():
         create_arrow(ax, (res_x[i] + 0.8, 4), (res_x[i + 1], 4))
 
     # decoder
-    dec_x = [15.2, 16.0]
-    dec_labels = ["Up↑\n128ch", "Up↑\n64ch"]
     create_arrow(ax, (15, 4), (15.2, 4))
 
     # output block
@@ -145,7 +142,7 @@ def generate_generator_architecture():
         "",
         xy=(8.2, 5.8),
         xytext=(8.2, 6.8),
-        arrowprops=dict(arrowstyle="->", color=COLORS["attention"], lw=2),
+        arrowprops={"arrowstyle": "->", "color": COLORS["attention"], "lw": 2},
     )
     ax.text(
         8.2, 7.1, "Self-Attention\nCaptures global context", ha="center", fontsize=8, style="italic"
@@ -201,7 +198,12 @@ def generate_attention_mechanism():
         "",
         xy=(11.5, 3.8),
         xytext=(1.5, 3.8),
-        arrowprops=dict(arrowstyle="->", color="gray", lw=1.5, connectionstyle="arc3,rad=-0.2"),
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "gray",
+            "lw": 1.5,
+            "connectionstyle": "arc3,rad=-0.2",
+        },
     )
     ax.text(6.5, 5.5, "Residual Connection", fontsize=8, ha="center", style="italic", color="gray")
 
@@ -219,7 +221,6 @@ def generate_attention_mechanism():
 
 def generate_loss_landscape_3d():
     """generate 3d loss landscape visualization"""
-    from mpl_toolkits.mplot3d import Axes3D
 
     fig = plt.figure(figsize=(12, 5))
 
@@ -368,7 +369,7 @@ def generate_training_pipeline():
     # cycle arrows
     create_arrow(ax, (8.5, 7), (8.5, 5.7))
     ax.annotate(
-        "", xy=(3, 5.5), xytext=(7, 5.1), arrowprops=dict(arrowstyle="->", color="gray", lw=2)
+        "", xy=(3, 5.5), xytext=(7, 5.1), arrowprops={"arrowstyle": "->", "color": "gray", "lw": 2}
     )
 
     # loss functions box

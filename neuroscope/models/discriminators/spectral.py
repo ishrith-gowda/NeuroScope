@@ -5,10 +5,11 @@ discriminators with spectral normalization for improved
 training stability.
 """
 
+from typing import Optional, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple, Union
 from torch.nn.utils import spectral_norm
 
 from .base import BaseDiscriminator
@@ -77,7 +78,7 @@ class SNResNetDiscriminator(BaseDiscriminator):
         self.blocks = nn.ModuleList()
         in_ch = ndf
 
-        for i in range(n_blocks):
+        for _i in range(n_blocks):
             out_ch = min(in_ch * 2, 512)
             self.blocks.append(SNResBlock(in_ch, out_ch, downsample=True))
             in_ch = out_ch
@@ -92,7 +93,7 @@ class SNResNetDiscriminator(BaseDiscriminator):
 
     def forward(
         self, x: torch.Tensor, return_features: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """forward pass with optional feature return."""
         x = self.initial(x)
 
@@ -223,7 +224,7 @@ class SNMultiScaleDiscriminator(BaseDiscriminator):
                 )
             )
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """forward pass at multiple scales."""
         outputs = []
         current = x
@@ -273,7 +274,7 @@ class SNSelfAttentionDiscriminator(BaseDiscriminator):
 
     def forward(
         self, x: torch.Tensor, return_attention: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         """forward pass with optional attention map return."""
         attention_map = None
 
@@ -318,7 +319,7 @@ class SNSelfAttention(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_attention: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         B, C, H, W = x.size()
 
         query = self.query(x).view(B, -1, H * W).permute(0, 2, 1)

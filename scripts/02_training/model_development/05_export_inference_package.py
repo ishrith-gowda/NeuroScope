@@ -1,9 +1,8 @@
 import argparse
 import logging
 import os
-import torch
-from pathlib import Path
 
+import torch
 from train_cyclegan import ResNetGenerator
 
 
@@ -45,8 +44,6 @@ with torch.no_grad():
 
 
 def parse_args():
-    import argparse
-
     ap = argparse.ArgumentParser(description="Export full-model checkpoint for inference")
     ap.add_argument(
         "--ckpt", type=str, required=True, help="Path to generator weights (.pth or full ckpt)"

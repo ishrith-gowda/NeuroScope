@@ -5,10 +5,11 @@ discriminators that operate at multiple scales for
 multi-resolution adversarial training.
 """
 
+from typing import Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple, Union
 
 from .base import BaseDiscriminator, MultiScaleDiscriminatorBase
 from .patch import NLayerPatchDiscriminator
@@ -51,7 +52,7 @@ class MultiScaleDiscriminator(MultiScaleDiscriminatorBase):
 
     def forward(
         self, x: torch.Tensor, return_features: bool = False
-    ) -> Union[List[torch.Tensor], Tuple[List[torch.Tensor], List[List[torch.Tensor]]]]:
+    ) -> Union[list[torch.Tensor], tuple[list[torch.Tensor], list[list[torch.Tensor]]]]:
         """
         forward pass at multiple scales.
 
@@ -134,7 +135,7 @@ class PyramidDiscriminator(BaseDiscriminator):
 
             in_ch = out_ch
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """forward pass returning outputs at each pyramid level."""
         # extract features at each level
         features = []
@@ -208,7 +209,7 @@ class SharedEncoderMultiScaleDiscriminator(BaseDiscriminator):
             layer_idx = min(i + 2, 4)  # start from layer 2
             self.output_heads.append(nn.Conv2d(channels_per_scale[layer_idx], 1, 4, padding=1))
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """forward pass with shared encoder."""
         outputs = []
         intermediate_features = []
@@ -262,7 +263,7 @@ class AdaptiveMultiScaleDiscriminator(BaseDiscriminator):
 
     def forward(
         self, x: torch.Tensor, return_weighted: bool = False
-    ) -> Union[List[torch.Tensor], torch.Tensor]:
+    ) -> Union[list[torch.Tensor], torch.Tensor]:
         """
         forward pass.
 
@@ -333,7 +334,7 @@ class ProgressiveMultiScaleDiscriminator(BaseDiscriminator):
         self.active_scales = min(n_scales, self.max_scales)
         self.alpha.fill_(alpha)
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """forward pass with active scales only."""
         outputs = []
         current_input = x
@@ -379,7 +380,7 @@ class DualScaleDiscriminator(BaseDiscriminator):
             in_channels=in_channels, ndf=ndf // 2, n_layers=local_layers, norm_type="instance"
         )
 
-    def forward(self, x: torch.Tensor, patch_size: int = 64) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_size: int = 64) -> tuple[torch.Tensor, torch.Tensor]:
         """
         forward pass.
 
@@ -394,10 +395,10 @@ class DualScaleDiscriminator(BaseDiscriminator):
         global_out = self.global_disc(x)
 
         # local (random patches)
-        B, C, H, W = x.size()
+        B, _C, H, W = x.size()
 
         # sample random patches
-        if H > patch_size and W > patch_size:
+        if patch_size < H and patch_size < W:
             h_start = torch.randint(0, H - patch_size, (B,))
             w_start = torch.randint(0, W - patch_size, (B,))
 

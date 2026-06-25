@@ -8,17 +8,18 @@ usage:
     python generate_qualitative_figures.py --inference_dir results/inference
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 # add project root
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from scripts.figures.latex_figure_config import COLORS, save_figure
+from scripts.figures.latex_figure_config import save_figure
 
 
 def load_inference_results(inference_dir: Path, category: str):
@@ -484,7 +485,7 @@ def main():
     if attention_data is not None and best_data is not None:
         # find spatial attention maps
         spatial_attention_keys = [
-            k for k in attention_data.keys() if "spatial" in k.lower() and "case0" in k
+            k for k in attention_data if "spatial" in k.lower() and "case0" in k
         ]
 
         if spatial_attention_keys:

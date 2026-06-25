@@ -17,10 +17,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from latex_figure_config import FIGURE_SIZES, COLORS, save_figure
+import matplotlib.pyplot as plt
+from latex_figure_config import save_figure
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "figures/main"
@@ -80,7 +79,7 @@ def generate_architecture_comparison():
                 "",
                 xy=(2.5, block["y"] - 0.4),
                 xytext=(2.5, block["y"] - 0.6),
-                arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
+                arrowprops={"arrowstyle": "->", "lw": 1.5, "color": "black"},
             )
 
     ax.text(
@@ -89,7 +88,7 @@ def generate_architecture_comparison():
         r"Parameters: 33.88M",
         ha="center",
         fontsize=10,
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.4),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.4},
     )
 
     # sa-cyclegan (right)
@@ -143,7 +142,7 @@ def generate_architecture_comparison():
                 "",
                 xy=(2.5, block["y"] - 0.3),
                 xytext=(2.5, block["y"] - 0.45),
-                arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
+                arrowprops={"arrowstyle": "->", "lw": 1.5, "color": "black"},
             )
 
     ax.text(
@@ -152,7 +151,7 @@ def generate_architecture_comparison():
         r"Parameters: 35.1M (+3.6\%)",
         ha="center",
         fontsize=10,
-        bbox=dict(boxstyle="round", facecolor="lightgreen", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "lightgreen", "alpha": 0.5},
     )
 
     # legend
@@ -232,7 +231,7 @@ def generate_attention_mechanism_diagram():
                 "",
                 xy=(3, block["y"] - 0.4),
                 xytext=(3, block["y"] - 0.7),
-                arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
+                arrowprops={"arrowstyle": "->", "lw": 1.5, "color": "black"},
             )
 
     ax.text(0.5, 5.5, r"$\otimes$", fontsize=18, ha="center", va="center")
@@ -280,7 +279,7 @@ def generate_attention_mechanism_diagram():
             "",
             xy=(x_pos, sa_y + 0.3),
             xytext=(x_pos, 6.5),
-            arrowprops=dict(arrowstyle="->", lw=1, color="black"),
+            arrowprops={"arrowstyle": "->", "lw": 1, "color": "black"},
         )
 
     sa_y = 4
@@ -302,7 +301,7 @@ def generate_attention_mechanism_diagram():
             "",
             xy=(3, sa_y + 0.4),
             xytext=(x_pos, sa_y + 0.8),
-            arrowprops=dict(arrowstyle="->", lw=1, color="black"),
+            arrowprops={"arrowstyle": "->", "lw": 1, "color": "black"},
         )
 
     sa_y = 2.5
@@ -310,7 +309,7 @@ def generate_attention_mechanism_diagram():
         "",
         xy=(3, sa_y + 0.5),
         xytext=(3, 3.6),
-        arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 1.5, "color": "black"},
     )
     rect = mpatches.FancyBboxPatch(
         (1.5, sa_y - 0.3),
@@ -369,7 +368,7 @@ def generate_parameter_breakdown():
     sizes = [11.68, 11.68, 5.87, 5.87]
     colors_list = [c_gen_ab, c_gen_ba, c_disc_a, c_disc_b]
 
-    wedges, texts, autotexts = ax.pie(
+    _wedges, _texts, autotexts = ax.pie(
         sizes,
         labels=components,
         colors=colors_list,
@@ -420,7 +419,7 @@ def generate_parameter_breakdown():
         ha="right",
         va="bottom",
         fontsize=10,
-        bbox=dict(boxstyle="round", facecolor="#D4ECD0", alpha=0.6),
+        bbox={"boxstyle": "round", "facecolor": "#D4ECD0", "alpha": 0.6},
     )
 
     fig.suptitle(r"\textbf{Model Complexity Analysis}", fontsize=15, y=0.97)
@@ -493,7 +492,7 @@ def generate_cyclegan_workflow():
         "",
         xy=(4, gen_ab_y),
         xytext=(2.5, a_y - 0.5),
-        arrowprops=dict(arrowstyle="->", lw=2, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 2, "color": "black"},
     )
 
     # fake b
@@ -516,7 +515,7 @@ def generate_cyclegan_workflow():
         "",
         xy=(7, fake_b_y),
         xytext=(6, gen_ab_y),
-        arrowprops=dict(arrowstyle="->", lw=2, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 2, "color": "black"},
     )
 
     # generator b→a
@@ -539,7 +538,7 @@ def generate_cyclegan_workflow():
         "",
         xy=(5, gen_ba_y + 0.4),
         xytext=(7.75, fake_b_y - 0.4),
-        arrowprops=dict(arrowstyle="->", lw=2, color="red"),
+        arrowprops={"arrowstyle": "->", "lw": 2, "color": "red"},
     )
     ax.text(6.5, 5.3, "Cycle", fontsize=9, color="red", ha="center")
 
@@ -563,7 +562,7 @@ def generate_cyclegan_workflow():
         "",
         xy=(3, rec_a_y),
         xytext=(4, gen_ba_y),
-        arrowprops=dict(arrowstyle="->", lw=2, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 2, "color": "black"},
     )
 
     # discriminators
@@ -586,13 +585,13 @@ def generate_cyclegan_workflow():
         "",
         xy=(1.5, disc_a_y + 0.35),
         xytext=(2, a_y - 0.5),
-        arrowprops=dict(arrowstyle="->", lw=1, color="green"),
+        arrowprops={"arrowstyle": "->", "lw": 1, "color": "green"},
     )
     ax.annotate(
         "",
         xy=(1.5, disc_a_y + 0.35),
         xytext=(2.25, rec_a_y - 0.4),
-        arrowprops=dict(arrowstyle="->", lw=1, color="red", linestyle="--"),
+        arrowprops={"arrowstyle": "->", "lw": 1, "color": "red", "linestyle": "--"},
     )
 
     # losses
@@ -610,7 +609,7 @@ def generate_cyclegan_workflow():
             loss,
             ha="left",
             fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.2", facecolor="lightyellow", alpha=0.5),
+            bbox={"boxstyle": "round,pad=0.2", "facecolor": "lightyellow", "alpha": 0.5},
         )
 
     # total loss
@@ -620,7 +619,7 @@ def generate_cyclegan_workflow():
         r"$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{GAN}} + \lambda_{\text{cycle}} \mathcal{L}_{\text{cycle}} + \lambda_{\text{identity}} \mathcal{L}_{\text{identity}} + \lambda_{\text{SSIM}} \mathcal{L}_{\text{SSIM}}$",
         ha="center",
         fontsize=10,
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#E0ECFF", alpha=0.5),
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "#E0ECFF", "alpha": 0.5},
     )
     save_figure(fig, "fig15_cyclegan_workflow", OUTPUT_DIR)
     plt.close()

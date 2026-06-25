@@ -5,14 +5,16 @@ with various normalization and augmentation steps.
 """
 
 import os
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import numpy as np
 import torch
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
 
 from neuroscope.core.logging import get_logger
-from .volume_normalization import VolumeNormalization
+
 from .data_augmentation import DataAugmentation
+from .volume_normalization import VolumeNormalization
 
 logger = get_logger(__name__)
 
@@ -22,7 +24,7 @@ class VolumePreprocessor:
 
     def __init__(
         self,
-        preprocessing_steps: List[Tuple[str, Dict[str, Any]]] = None,
+        preprocessing_steps: Optional[list[tuple[str, dict[str, Any]]]] = None,
     ):
         """initialize volumepreprocessor.
 
@@ -32,7 +34,7 @@ class VolumePreprocessor:
         """
         self.preprocessing_steps = preprocessing_steps or []
 
-    def add_step(self, step_name: str, parameters: Dict[str, Any] = None):
+    def add_step(self, step_name: str, parameters: Optional[dict[str, Any]] = None):
         """add a preprocessing step.
 
         args:
@@ -133,7 +135,7 @@ class VolumePreprocessor:
         output_dir: Union[str, Path],
         file_pattern: str = "*.nii.gz",
         mask_dir: Optional[Union[str, Path]] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """batch process multiple volumes.
 
         args:

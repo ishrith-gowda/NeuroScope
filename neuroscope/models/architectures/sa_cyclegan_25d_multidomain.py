@@ -18,19 +18,17 @@ reference:
     adaptive instance normalization", iccv 2017.
 """
 
+from dataclasses import dataclass
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, List, Dict
-from dataclasses import dataclass
-import math
 
 from neuroscope.models.architectures.sa_cyclegan_25d import (
+    CBAM,
     SACycleGAN25DConfig,
     SelfAttention2D,
-    ChannelAttention,
-    SpatialAttention,
-    CBAM,
 )
 
 
@@ -338,7 +336,7 @@ class MultiDomainDiscriminator(nn.Module):
         ]
 
         nf = ndf
-        for i in range(1, n_layers):
+        for _i in range(1, n_layers):
             nf_prev = nf
             nf = min(nf * 2, 512)
             layers.extend(
@@ -375,7 +373,7 @@ class MultiDomainDiscriminator(nn.Module):
             nn.Linear(nf, n_domains),
         )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         args:
             x: input image [b, c, h, w]
@@ -420,7 +418,7 @@ class MultiDomainSACycleGAN25D(nn.Module):
         x: torch.Tensor,
         source_domain: torch.Tensor,
         target_domain: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         training forward pass.
 
@@ -451,7 +449,7 @@ class MultiDomainSACycleGAN25D(nn.Module):
             "idt": idt,
         }
 
-    def get_parameter_count(self) -> Dict[str, int]:
+    def get_parameter_count(self) -> dict[str, int]:
         return {
             "generator": sum(p.numel() for p in self.generator.parameters()),
             "discriminator": sum(p.numel() for p in self.discriminator.parameters()),
@@ -466,7 +464,7 @@ if __name__ == "__main__":
     model = MultiDomainSACycleGAN25D(config)
 
     params = model.get_parameter_count()
-    print(f"model parameters:")
+    print("model parameters:")
     for k, v in params.items():
         print(f"  {k}: {v:,} ({v / 1e6:.2f}m)")
 
@@ -476,13 +474,13 @@ if __name__ == "__main__":
     tgt = torch.tensor([2, 3])
 
     results = model(x, src, tgt)
-    print(f"\nforward pass:")
+    print("\nforward pass:")
     for k, v in results.items():
         print(f"  {k}: {v.shape}")
 
     # test discriminator
     adv, cls = model.discriminator(results["fake"])
-    print(f"\ndiscriminator:")
+    print("\ndiscriminator:")
     print(f"  adv: {adv.shape}")
     print(f"  cls: {cls.shape}")
 

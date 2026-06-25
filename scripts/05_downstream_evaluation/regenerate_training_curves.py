@@ -46,7 +46,7 @@ def main():
     # regenerate figure with improved styling
     output_path = output_dir / "fig_training_curves.pdf"
 
-    print(f"[regenerate] generating improved training curves figure...")
+    print("[regenerate] generating improved training curves figure...")
     plot_training_curves(history, output_path)
 
     print(f"[regenerate] ✓ saved improved figure to {output_path}")

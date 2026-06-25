@@ -1,11 +1,12 @@
 """utilities for working with paired mri volumes."""
 
-from pathlib import Path
 import json
 import os
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import numpy as np
 import torch
-from typing import Dict, List, Optional, Tuple, Union, Any
 
 from neuroscope.core.logging import get_logger
 
@@ -84,7 +85,7 @@ class MRIPairLoader:
         """return number of paired samples."""
         return len(self.domain_a_files)
 
-    def load_pair(self, index: int) -> Tuple[np.ndarray, np.ndarray, str]:
+    def load_pair(self, index: int) -> tuple[np.ndarray, np.ndarray, str]:
         """load a pair of volumes by index.
 
         args:
@@ -124,7 +125,7 @@ class MRIPairLoader:
         # return volumes and filename (for reference)
         return a_volume, b_volume, os.path.basename(a_file)
 
-    def load_domain_a(self, index: int) -> Tuple[np.ndarray, str]:
+    def load_domain_a(self, index: int) -> tuple[np.ndarray, str]:
         """load a volume from domain a.
 
         args:
@@ -153,7 +154,7 @@ class MRIPairLoader:
         # return volume and filename (for reference)
         return a_volume, os.path.basename(a_file)
 
-    def load_domain_b(self, index: int) -> Tuple[np.ndarray, str]:
+    def load_domain_b(self, index: int) -> tuple[np.ndarray, str]:
         """load a volume from domain b.
 
         args:
@@ -264,7 +265,7 @@ class MRIPairDataset(torch.utils.data.Dataset):
         """return number of paired samples."""
         return len(self.loader)
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """get a paired sample by index.
 
         args:
@@ -311,7 +312,7 @@ def create_paired_dataset_splits(
     file_pattern: str = "*.nii.gz",
     paired: bool = True,
     seed: int = 42,
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """create train/val/test splits for paired dataset.
 
     args:
@@ -349,7 +350,7 @@ def create_paired_dataset_splits(
 
     if paired:
         # find common filenames
-        common_filenames = sorted(list(set(a_filenames).intersection(set(b_filenames))))
+        common_filenames = sorted(set(a_filenames).intersection(set(b_filenames)))
 
         if not common_filenames:
             logger.warning(
@@ -364,7 +365,7 @@ def create_paired_dataset_splits(
         total = len(common_filenames)
         train_size = int(total * train_ratio)
         val_size = int(total * val_ratio)
-        test_size = total - train_size - val_size
+        total - train_size - val_size
 
         # create splits
         train_files = common_filenames[:train_size]
@@ -380,13 +381,13 @@ def create_paired_dataset_splits(
         total_a = len(a_filenames)
         train_size_a = int(total_a * train_ratio)
         val_size_a = int(total_a * val_ratio)
-        test_size_a = total_a - train_size_a - val_size_a
+        total_a - train_size_a - val_size_a
 
         # calculate split sizes for domain b
         total_b = len(b_filenames)
         train_size_b = int(total_b * train_ratio)
         val_size_b = int(total_b * val_ratio)
-        test_size_b = total_b - train_size_b - val_size_b
+        total_b - train_size_b - val_size_b
 
         # create splits for domain a
         train_files_a = a_filenames[:train_size_a]

@@ -14,20 +14,17 @@ tests cover:
 
 import pytest
 import torch
-import torch.nn as nn
-from typing import Tuple
-
 from src.models.losses.volumetric import (
-    VolumetricSSIM,
-    VolumetricMultiScaleSSIM,
+    AnatomicalConsistencyLoss,
+    CombinedVolumetricLoss,
+    TissuePreservationLoss,
     VolumetricCycleConsistencyLoss,
     VolumetricGradientLoss,
-    VolumetricPerceptualLoss,
-    AnatomicalConsistencyLoss,
-    TissuePreservationLoss,
-    VolumetricNCELoss,
     VolumetricIdentityLoss,
-    CombinedVolumetricLoss,
+    VolumetricMultiScaleSSIM,
+    VolumetricNCELoss,
+    VolumetricPerceptualLoss,
+    VolumetricSSIM,
 )
 
 

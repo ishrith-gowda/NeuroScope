@@ -5,9 +5,10 @@ regenerate fig_tsne_visualization.pdf with improved publication-quality styling.
 converts to full latex rendering with professional typography and colors.
 """
 
-import numpy as np
 import sys
 from pathlib import Path
+
+import numpy as np
 
 # add scripts to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -70,7 +71,7 @@ def main():
     # regenerate figure with improved styling
     output_path = output_dir / "fig_tsne_visualization.pdf"
 
-    print(f"[regenerate] generating improved t-sne visualization figure...")
+    print("[regenerate] generating improved t-sne visualization figure...")
     plot_tsne_visualization(tsne_raw, labels, tsne_harm, output_path)
 
     print(f"[regenerate] ✓ saved improved figure to {output_path}")

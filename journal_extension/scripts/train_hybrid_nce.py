@@ -14,36 +14,32 @@ usage:
     python train_hybrid_nce.py --lambda_nce 1.0 --nce_temperature 0.07
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.nn.parallel import DataParallel
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
 import numpy as np
+import torch
+import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
+from torch.nn.parallel import DataParallel
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D,
     SACycleGAN25DConfig,
     create_model,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 from neuroscope.models.losses.patchnce import MultiLayerPatchNCELoss
 
@@ -113,7 +109,7 @@ class HybridNCETrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         # patchnce hyperparameters
         lambda_nce: float = 1.0,
         nce_num_patches: int = 256,
@@ -342,7 +338,7 @@ class HybridNCETrainer:
     def _save_config(self, init_args: dict):
         """save experiment configuration."""
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "lambda_nce": self.lambda_nce,
                 "scheduler_type": self.scheduler_type,
@@ -385,7 +381,7 @@ class HybridNCETrainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """execute single training step with hybrid nce + cycle loss."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -554,7 +550,7 @@ class HybridNCETrainer:
             "nce_total": loss_nce.item(),
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
         self.nce_loss_A2B.train()
@@ -576,7 +572,7 @@ class HybridNCETrainer:
             leave=True,
         )
 
-        for batch_idx, batch in enumerate(pbar):
+        for _batch_idx, batch in enumerate(pbar):
             losses = self.train_step(batch)
 
             for key in epoch_losses:
@@ -605,7 +601,7 @@ class HybridNCETrainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """validate the model."""
         self.model.eval()
 
@@ -860,9 +856,7 @@ def main():
             cfg = yaml.safe_load(f)
         # override args with config values
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     # create model config

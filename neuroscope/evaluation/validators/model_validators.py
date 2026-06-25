@@ -5,11 +5,11 @@ cross-validation and validation frameworks for
 robust model evaluation.
 """
 
-from typing import Optional, Dict, List, Tuple, Any, Callable
-from dataclasses import dataclass, field
-from pathlib import Path
-import numpy as np
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any, Callable, Optional
+
+import numpy as np
 
 
 @dataclass
@@ -17,12 +17,12 @@ class ValidationResult:
     """result from validation run."""
 
     fold: int
-    train_metrics: Dict[str, float]
-    val_metrics: Dict[str, float]
-    test_metrics: Optional[Dict[str, float]] = None
+    train_metrics: dict[str, float]
+    val_metrics: dict[str, float]
+    test_metrics: Optional[dict[str, float]] = None
     best_epoch: int = 0
     training_time: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -30,9 +30,9 @@ class ValidationSummary:
     """summary of all validation folds."""
 
     n_folds: int
-    metric_means: Dict[str, float]
-    metric_stds: Dict[str, float]
-    fold_results: List[ValidationResult]
+    metric_means: dict[str, float]
+    metric_stds: dict[str, float]
+    fold_results: list[ValidationResult]
     best_fold: int = 0
 
     def get_summary_string(self) -> str:
@@ -51,7 +51,7 @@ class BaseValidator(ABC):
     """base class for validators."""
 
     @abstractmethod
-    def get_splits(self, data_indices: np.ndarray) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def get_splits(self, data_indices: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
         """
         get train/validation splits.
 
@@ -109,7 +109,7 @@ class CrossValidator(BaseValidator):
 
     def get_splits(
         self, data_indices: np.ndarray, labels: np.ndarray = None
-    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
         """
         get k-fold splits.
 
@@ -147,7 +147,7 @@ class CrossValidator(BaseValidator):
 
     def _stratified_splits(
         self, indices: np.ndarray, labels: np.ndarray
-    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
         """create stratified splits."""
         unique_labels = np.unique(labels)
 
@@ -157,7 +157,7 @@ class CrossValidator(BaseValidator):
         # split each group
         splits = [(np.array([], dtype=int), np.array([], dtype=int)) for _ in range(self.n_folds)]
 
-        for label, group_indices in label_indices.items():
+        for _label, group_indices in label_indices.items():
             group_splits = CrossValidator(
                 n_folds=self.n_folds,
                 shuffle=self.shuffle,
@@ -219,7 +219,7 @@ class CrossValidator(BaseValidator):
         # aggregate results
         return self._aggregate_results(fold_results)
 
-    def _aggregate_results(self, fold_results: List[ValidationResult]) -> ValidationSummary:
+    def _aggregate_results(self, fold_results: list[ValidationResult]) -> ValidationSummary:
         """aggregate fold results."""
         all_metrics = {}
 
@@ -233,7 +233,7 @@ class CrossValidator(BaseValidator):
         metric_stds = {k: float(np.std(v)) for k, v in all_metrics.items()}
 
         # find best fold (highest mean metric)
-        primary_metric = list(all_metrics.keys())[0]
+        primary_metric = next(iter(all_metrics.keys()))
         best_fold = int(np.argmax(all_metrics[primary_metric]))
 
         return ValidationSummary(
@@ -271,13 +271,13 @@ class HoldoutValidator(BaseValidator):
         self.shuffle = shuffle
         self.random_state = random_state
 
-    def get_splits(self, data_indices: np.ndarray) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def get_splits(self, data_indices: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
         """get train/val split."""
         return [self.get_train_val_test_split(data_indices)[:2]]
 
     def get_train_val_test_split(
         self, data_indices: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         get train/validation/test split.
 
@@ -341,7 +341,7 @@ class HoldoutValidator(BaseValidator):
         return ValidationSummary(
             n_folds=1,
             metric_means=val_metrics,
-            metric_stds={k: 0.0 for k in val_metrics.keys()},
+            metric_stds=dict.fromkeys(val_metrics.keys(), 0.0),
             fold_results=[result],
             best_fold=0,
         )
@@ -354,7 +354,7 @@ class TemporalValidator(BaseValidator):
     time-based splitting for temporal data.
     """
 
-    def __init__(self, n_splits: int = 5, gap: int = 0, test_size: int = None):
+    def __init__(self, n_splits: int = 5, gap: int = 0, test_size: Optional[int] = None):
         """
         args:
             n_splits: number of splits
@@ -367,7 +367,7 @@ class TemporalValidator(BaseValidator):
 
     def get_splits(
         self, data_indices: np.ndarray, timestamps: np.ndarray = None
-    ) -> List[Tuple[np.ndarray, np.ndarray]]:
+    ) -> list[tuple[np.ndarray, np.ndarray]]:
         """
         get temporal splits.
 

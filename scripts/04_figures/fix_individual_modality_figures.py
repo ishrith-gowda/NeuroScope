@@ -7,22 +7,24 @@ and recreates them with tight spacing matching all_modalities figures.
 for flair sample 00 (broken placeholder), extracts from all_modalities pdf.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from pathlib import Path
-from itertools import groupby
 import warnings
+from itertools import groupby
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
 import fitz  # pymupdf
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
+from typing import Optional
+
 import matplotlib.pyplot as plt
 
 # publication-quality settings (matching all_modalities gold standard)
@@ -130,7 +132,7 @@ def create_single_modality_figure(
     output_path: Path,
     modality: str,
     sample_idx: int,
-    dataset_idx: int = None,
+    dataset_idx: Optional[int] = None,
 ):
     """
     create a single modality figure using the same plt.subplots approach
@@ -208,7 +210,7 @@ def is_placeholder_graph(pdf_path: Path) -> bool:
     # brain image pdfs have significant dark pixel areas (black backgrounds)
     dark_pixel_ratio = np.mean(gray < 50)
     # also check for very bright axis lines typical of matplotlib graphs
-    very_bright_ratio = np.mean(gray > 250)
+    np.mean(gray > 250)
 
     # placeholder graphs: few dark pixels, lots of white background
     # brain images: >10% dark pixels from black backgrounds
@@ -319,7 +321,7 @@ def process_from_original_png(
 
     # detect content regions using dark pixel ratio (brain images on black backgrounds)
     gray = np.mean(img, axis=2)
-    h, w = gray.shape
+    _h, _w = gray.shape
 
     def find_content_regions(dark_ratio_profile, min_width=100, threshold=0.1):
         in_content = False
@@ -371,7 +373,7 @@ def main():
 
     print(f"\n{'=' * 70}")
     print("fixing individual modality figures")
-    print(f"tight spacing matching all_modalities layout")
+    print("tight spacing matching all_modalities layout")
     print(f"{'=' * 70}\n")
 
     success_count = 0

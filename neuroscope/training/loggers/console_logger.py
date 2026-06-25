@@ -6,10 +6,9 @@ beautiful, informative console output for training progress.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
-import sys
 import time
+from datetime import datetime
+from typing import Any, Optional
 
 
 class Colors:
@@ -137,7 +136,7 @@ class ConsoleLogger:
 """
         self._write(banner)
 
-    def print_config(self, config: Dict[str, Any]):
+    def print_config(self, config: dict[str, Any]):
         """print configuration summary."""
         if self.verbose < 2:
             return
@@ -198,7 +197,7 @@ class ConsoleLogger:
                 f"{self._color('epochs', Colors.GREEN)}\n"
             )
 
-    def on_training_end(self, final_metrics: Optional[Dict[str, float]] = None):
+    def on_training_end(self, final_metrics: Optional[dict[str, float]] = None):
         """called at the end of training."""
         total_time = time.time() - self._start_time if self._start_time else 0
 
@@ -207,7 +206,7 @@ class ConsoleLogger:
         self._write(f"  total time: {self._format_time(total_time)}")
 
         if final_metrics:
-            self._write(f"  final metrics:")
+            self._write("  final metrics:")
             for name, value in final_metrics.items():
                 self._write(f"    {self._format_metric(name, value)}")
 
@@ -228,8 +227,8 @@ class ConsoleLogger:
     def on_epoch_end(
         self,
         epoch: int,
-        train_metrics: Dict[str, float],
-        val_metrics: Optional[Dict[str, float]] = None,
+        train_metrics: dict[str, float],
+        val_metrics: Optional[dict[str, float]] = None,
         lr: Optional[float] = None,
     ):
         """called at the end of each epoch."""
@@ -270,7 +269,7 @@ class ConsoleLogger:
         self,
         batch: int,
         total_batches: int,
-        metrics: Dict[str, float],
+        metrics: dict[str, float],
         samples_per_sec: Optional[float] = None,
     ):
         """called at the end of each batch (for verbose >= 3)."""
@@ -294,7 +293,7 @@ class ConsoleLogger:
     # =========================================================================
 
     def log_checkpoint(
-        self, path: str, is_best: bool = False, metrics: Optional[Dict[str, float]] = None
+        self, path: str, is_best: bool = False, metrics: Optional[dict[str, float]] = None
     ):
         """log checkpoint save."""
         if self.verbose < 1:
@@ -357,7 +356,7 @@ class ConsoleLogger:
     # =========================================================================
 
     def print_metrics_table(
-        self, metrics: Dict[str, Dict[str, float]], title: str = "Metrics Summary"
+        self, metrics: dict[str, dict[str, float]], title: str = "Metrics Summary"
     ):
         """
         print a formatted metrics table.
@@ -376,11 +375,11 @@ class ConsoleLogger:
         all_cols = set()
         for row_metrics in metrics.values():
             all_cols.update(row_metrics.keys())
-        cols = sorted(list(all_cols))
+        cols = sorted(all_cols)
 
         # calculate column widths
         col_width = max(12, max(len(c) for c in cols) + 2)
-        row_width = max(12, max(len(r) for r in metrics.keys()) + 2)
+        row_width = max(12, max(len(r) for r in metrics) + 2)
 
         # print title
         self._write(f"\n{self._color(title, Colors.BOLD)}")

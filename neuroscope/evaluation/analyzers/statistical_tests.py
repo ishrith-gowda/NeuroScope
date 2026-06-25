@@ -5,19 +5,20 @@ comprehensive statistical testing and analysis
 for medical image harmonization evaluation.
 """
 
-from typing import Optional, Dict, List, Tuple, Union
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Optional
+
 import numpy as np
 from scipy import stats
 from scipy.stats import (
-    ttest_rel,
-    ttest_ind,
-    wilcoxon,
-    mannwhitneyu,
     f_oneway,
     kruskal,
-    shapiro,
     levene,
+    mannwhitneyu,
+    shapiro,
+    ttest_ind,
+    ttest_rel,
+    wilcoxon,
 )
 
 
@@ -28,7 +29,7 @@ class TestResult:
     statistic: float
     p_value: float
     effect_size: Optional[float] = None
-    confidence_interval: Optional[Tuple[float, float]] = None
+    confidence_interval: Optional[tuple[float, float]] = None
     test_name: str = ""
     significant: bool = False
     alpha: float = 0.05
@@ -385,8 +386,8 @@ def interpret_effect_size(d: float, method: str = "cohens_d") -> str:
 
 
 def bonferroni_correction(
-    p_values: List[float], alpha: float = 0.05
-) -> Tuple[List[float], List[bool]]:
+    p_values: list[float], alpha: float = 0.05
+) -> tuple[list[float], list[bool]]:
     """
     bonferroni correction for multiple comparisons.
 
@@ -405,8 +406,8 @@ def bonferroni_correction(
 
 
 def benjamini_hochberg(
-    p_values: List[float], alpha: float = 0.05
-) -> Tuple[List[float], List[bool]]:
+    p_values: list[float], alpha: float = 0.05
+) -> tuple[list[float], list[bool]]:
     """
     benjamini-hochberg procedure for fdr control.
 
@@ -485,11 +486,14 @@ class StatisticalAnalysis:
             alpha: significance level for all tests
         """
         self.alpha = alpha
-        self.results: Dict[str, TestResult] = {}
+        self.results: dict[str, TestResult] = {}
 
     def compare_methods(
-        self, method_results: Dict[str, np.ndarray], baseline: str = None, paired: bool = True
-    ) -> Dict[str, TestResult]:
+        self,
+        method_results: dict[str, np.ndarray],
+        baseline: Optional[str] = None,
+        paired: bool = True,
+    ) -> dict[str, TestResult]:
         """
         compare multiple methods against baseline.
 
@@ -546,7 +550,7 @@ class StatisticalAnalysis:
         self.results.update(comparisons)
         return comparisons
 
-    def compute_summary_statistics(self, data: np.ndarray) -> Dict[str, float]:
+    def compute_summary_statistics(self, data: np.ndarray) -> dict[str, float]:
         """
         compute summary statistics.
 
@@ -568,7 +572,7 @@ class StatisticalAnalysis:
             "n": len(data),
         }
 
-    def generate_report(self) -> Dict:
+    def generate_report(self) -> dict:
         """generate comprehensive statistical report."""
         report = {"alpha": self.alpha, "tests": {}}
 

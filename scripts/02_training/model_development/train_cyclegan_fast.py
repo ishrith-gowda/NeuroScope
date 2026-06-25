@@ -9,23 +9,20 @@ optimizations for speed:
 4. real-time output with proper flushing
 """
 
-import os
-import sys
 import argparse
-import logging
 import itertools
 import json
+import os
 import random
 from datetime import datetime
 from pathlib import Path
 
-import torch
-from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader
-from torchvision.utils import save_image, make_grid
-import torch.nn.functional as F
 import numpy as np
 import SimpleITK as sitk
+import torch
+from torch import nn, optim
+from torch.utils.data import DataLoader, Dataset
+from torchvision.utils import save_image
 
 # force unbuffered output
 os.environ["PYTHONUNBUFFERED"] = "1"
@@ -70,7 +67,7 @@ class CachedSliceDataset(Dataset):
         modalities = ["t1.nii.gz", "t1gd.nii.gz", "t2.nii.gz", "flair.nii.gz"]
 
         # load metadata
-        with open(meta_json, "r") as f:
+        with open(meta_json) as f:
             meta = json.load(f)
 
         # get valid_subjects for this section
@@ -401,7 +398,7 @@ def train(args):
     for epoch in range(1, args.n_epochs + 1):
         epoch_start = datetime.now()
 
-        epoch_losses = {k: 0.0 for k in loss_history.keys()}
+        epoch_losses = dict.fromkeys(loss_history.keys(), 0.0)
         n_batches = 0
 
         iter_A = iter(loader_A)

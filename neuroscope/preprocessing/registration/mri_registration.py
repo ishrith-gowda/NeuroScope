@@ -1,9 +1,11 @@
 """registration utilities for mri volumes."""
 
+import contextlib
 import os
-import numpy as np
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Any, Optional, Union
+
+import numpy as np
 
 from neuroscope.core.logging import get_logger
 
@@ -25,8 +27,8 @@ class MRIRegistration:
         sampling_percentage: float = 0.1,
         learning_rate: float = 0.1,
         number_of_iterations: int = 100,
-        shrink_factors: Optional[List[int]] = None,
-        smoothing_sigmas: Optional[List[float]] = None,
+        shrink_factors: Optional[list[int]] = None,
+        smoothing_sigmas: Optional[list[float]] = None,
         final_interpolator: str = "linear",
         verbose: bool = False,
     ):
@@ -68,7 +70,7 @@ class MRIRegistration:
         moving_image: np.ndarray,
         fixed_mask: Optional[np.ndarray] = None,
         moving_mask: Optional[np.ndarray] = None,
-    ) -> Tuple[np.ndarray, Any]:
+    ) -> tuple[np.ndarray, Any]:
         """register moving image to fixed image.
 
         args:
@@ -308,10 +310,8 @@ class MRIRegistration:
         if not self.verbose:
             return
 
-        try:
+        with contextlib.suppress(Exception):
             print(f"iteration: {filter.GetElapsedIterations()}, metric: {filter.GetMetricValue()}")
-        except Exception:
-            pass
 
     def batch_register(
         self,
@@ -322,7 +322,7 @@ class MRIRegistration:
         fixed_mask_path: Optional[Union[str, Path]] = None,
         moving_mask_path: Optional[Union[str, Path]] = None,
         save_transforms: bool = False,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> dict[str, dict[str, float]]:
         """batch registration of multiple volumes.
 
         args:
@@ -374,7 +374,7 @@ class MRIRegistration:
 
         # process each file pair
         results = {}
-        for i, (fixed_file, moving_file) in enumerate(zip(fixed_files, moving_files)):
+        for _i, (fixed_file, moving_file) in enumerate(zip(fixed_files, moving_files)):
             try:
                 fixed_name = Path(fixed_file).name
                 moving_name = Path(moving_file).name
@@ -503,7 +503,7 @@ class MRIRegistration:
         fixed_image: np.ndarray,
         original_moving_image: np.ndarray,
         registered_image: np.ndarray,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """calculate registration metrics.
 
         args:

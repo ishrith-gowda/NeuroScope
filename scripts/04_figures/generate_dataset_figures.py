@@ -18,11 +18,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import json
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from latex_figure_config import FIGURE_SIZES, COLORS, save_figure
+import matplotlib.pyplot as plt
+from latex_figure_config import save_figure
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 EVAL_PATH = PROJECT_ROOT / "results/evaluation/evaluation_results.json"
@@ -75,7 +73,7 @@ def generate_dataset_statistics_figure():
         transform=ax.transAxes,
         ha="center",
         va="top",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.3),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.3},
         fontsize=10,
     )
 
@@ -107,7 +105,7 @@ def generate_dataset_statistics_figure():
         ax.text(
             bar.get_x() + bar.get_width() / 2.0,
             height,
-            f"{val:,}\n({pct:.1f}\%)",
+            f"{val:,}\n({pct:.1f}\\%)",
             ha="center",
             va="bottom",
             fontsize=10,
@@ -200,7 +198,7 @@ def generate_preprocessing_pipeline_figure():
                 "",
                 xy=(2.5, stage["y"] - 0.4),
                 xytext=(2.5, stage["y"] - 0.7),
-                arrowprops=dict(arrowstyle="->", lw=2, color="black"),
+                arrowprops={"arrowstyle": "->", "lw": 2, "color": "black"},
             )
 
     # add details on the right
@@ -222,7 +220,7 @@ def generate_preprocessing_pipeline_figure():
             ha="left",
             va="center",
             fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.3),
+            bbox={"boxstyle": "round,pad=0.3", "facecolor": "lightgray", "alpha": 0.3},
         )
 
     # add data shape evolution
@@ -232,7 +230,7 @@ def generate_preprocessing_pipeline_figure():
         r"$[H, W, D, 4]$",
         ha="center",
         fontsize=11,
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="black"),
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "black"},
     )
     ax.text(
         8.5,
@@ -240,7 +238,7 @@ def generate_preprocessing_pipeline_figure():
         r"$[D-2, 4, 3, H, W]$",
         ha="center",
         fontsize=11,
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="black"),
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "black"},
     )
     ax.text(
         8.5,
@@ -248,7 +246,7 @@ def generate_preprocessing_pipeline_figure():
         r"$[B, 12, H, W]$",
         ha="center",
         fontsize=11,
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="black"),
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "black"},
     )
 
     plt.tight_layout()
@@ -297,7 +295,7 @@ def generate_25d_processing_figure():
         r"Input: 3 slices $\times$ 4 modalities = 12 channels",
         ha="center",
         fontsize=11,
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#D6C4E0", alpha=0.4),
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "#D6C4E0", "alpha": 0.4},
     )
 
     # arrow to generator
@@ -305,7 +303,7 @@ def generate_25d_processing_figure():
         "",
         xy=(5, input_y + 0.5),
         xytext=(4, input_y + 0.5),
-        arrowprops=dict(arrowstyle="->", lw=3, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 3, "color": "black"},
     )
 
     # generator box - teal green
@@ -336,7 +334,7 @@ def generate_25d_processing_figure():
         "",
         xy=(8, input_y + 0.5),
         xytext=(7.2, input_y + 0.5),
-        arrowprops=dict(arrowstyle="->", lw=3, color="black"),
+        arrowprops={"arrowstyle": "->", "lw": 3, "color": "black"},
     )
 
     # output: center slice - terracotta
@@ -360,7 +358,7 @@ def generate_25d_processing_figure():
         r"Output: 1 slice $\times$ 4 modalities",
         ha="center",
         fontsize=11,
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#C1E1C1", alpha=0.4),
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "#C1E1C1", "alpha": 0.4},
     )
 
     # add advantage boxes at bottom
@@ -384,7 +382,7 @@ def generate_25d_processing_figure():
         r"Input: $[B, 12, H, W]$",
         ha="left",
         fontsize=10,
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="gray"),
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "gray"},
     )
     ax.text(
         10.5,
@@ -392,7 +390,7 @@ def generate_25d_processing_figure():
         r"Output: $[B, 4, H, W]$",
         ha="left",
         fontsize=10,
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="gray"),
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "gray"},
     )
 
     plt.tight_layout()

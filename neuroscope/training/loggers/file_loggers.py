@@ -6,12 +6,12 @@ file-based logging for metrics export and reproducibility.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, Any, List, Union
-from pathlib import Path
-from datetime import datetime
 import csv
 import json
 import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 
 
 class CSVLogger:
@@ -46,7 +46,7 @@ class CSVLogger:
         self.flush_every = flush_every
         self._write_count = 0
 
-        self._columns: Optional[List[str]] = None
+        self._columns: Optional[list[str]] = None
         self._file = None
         self._writer = None
         self._lock = threading.Lock()
@@ -54,7 +54,7 @@ class CSVLogger:
         if not append and self.filepath.exists():
             self.filepath.unlink()
 
-    def _initialize_file(self, columns: List[str]):
+    def _initialize_file(self, columns: list[str]):
         """initialize the csv file with headers."""
         mode = "a" if self.append and self.filepath.exists() else "w"
         self._file = open(self.filepath, mode, newline="", buffering=1)
@@ -65,7 +65,7 @@ class CSVLogger:
 
         self._columns = columns
 
-    def log(self, metrics: Dict[str, Any], step: Optional[int] = None, epoch: Optional[int] = None):
+    def log(self, metrics: dict[str, Any], step: Optional[int] = None, epoch: Optional[int] = None):
         """
         log metrics to csv.
 
@@ -103,8 +103,8 @@ class CSVLogger:
     def log_epoch(
         self,
         epoch: int,
-        train_metrics: Dict[str, float],
-        val_metrics: Optional[Dict[str, float]] = None,
+        train_metrics: dict[str, float],
+        val_metrics: Optional[dict[str, float]] = None,
         lr: Optional[float] = None,
     ):
         """
@@ -199,12 +199,12 @@ class JSONLogger:
         # load existing log if present
         if self.filepath.exists():
             try:
-                with open(self.filepath, "r") as f:
+                with open(self.filepath) as f:
                     self._log = json.load(f)
             except json.JSONDecodeError:
                 pass  # start fresh if file is corrupted
 
-    def log_config(self, config: Dict[str, Any]):
+    def log_config(self, config: dict[str, Any]):
         """
         log training configuration.
 
@@ -215,7 +215,7 @@ class JSONLogger:
             self._log["config"] = self._serialize(config)
             self._save()
 
-    def log_metadata(self, metadata: Dict[str, Any]):
+    def log_metadata(self, metadata: dict[str, Any]):
         """
         log additional metadata.
 
@@ -226,7 +226,7 @@ class JSONLogger:
             self._log["metadata"].update(self._serialize(metadata))
             self._save()
 
-    def log_train_step(self, step: int, metrics: Dict[str, float], epoch: Optional[int] = None):
+    def log_train_step(self, step: int, metrics: dict[str, float], epoch: Optional[int] = None):
         """
         log a training step.
 
@@ -245,7 +245,7 @@ class JSONLogger:
             # don't save every step (too slow)
             # save is done on epoch end or explicitly
 
-    def log_validation(self, epoch: int, metrics: Dict[str, float]):
+    def log_validation(self, epoch: int, metrics: dict[str, float]):
         """
         log validation results.
 
@@ -261,8 +261,8 @@ class JSONLogger:
     def log_epoch(
         self,
         epoch: int,
-        train_metrics: Dict[str, float],
-        val_metrics: Optional[Dict[str, float]] = None,
+        train_metrics: dict[str, float],
+        val_metrics: Optional[dict[str, float]] = None,
         lr: Optional[float] = None,
         time_elapsed: Optional[float] = None,
     ):
@@ -299,7 +299,7 @@ class JSONLogger:
         epoch: int,
         path: str,
         is_best: bool = False,
-        metrics: Optional[Dict[str, float]] = None,
+        metrics: Optional[dict[str, float]] = None,
     ):
         """
         log checkpoint save event.
@@ -323,7 +323,7 @@ class JSONLogger:
             self._log["checkpoints"].append(entry)
             self._save()
 
-    def log_event(self, event_type: str, message: str, data: Optional[Dict[str, Any]] = None):
+    def log_event(self, event_type: str, message: str, data: Optional[dict[str, Any]] = None):
         """
         log a training event.
 
@@ -344,11 +344,11 @@ class JSONLogger:
             self._log["events"].append(entry)
             self._save()
 
-    def get_history(self, key: str = "epochs") -> List[Dict]:
+    def get_history(self, key: str = "epochs") -> list[dict]:
         """get training history."""
         return self._log["history"].get(key, [])
 
-    def get_best_checkpoint(self) -> Optional[Dict]:
+    def get_best_checkpoint(self) -> Optional[dict]:
         """get the best checkpoint entry."""
         best_checkpoints = [c for c in self._log["checkpoints"] if c.get("is_best")]
         return best_checkpoints[-1] if best_checkpoints else None
@@ -415,10 +415,10 @@ class MetricsAggregator:
     """
 
     def __init__(self):
-        self._values: Dict[str, List[float]] = {}
-        self._counts: Dict[str, int] = {}
+        self._values: dict[str, list[float]] = {}
+        self._counts: dict[str, int] = {}
 
-    def update(self, metrics: Dict[str, float], batch_size: int = 1):
+    def update(self, metrics: dict[str, float], batch_size: int = 1):
         """
         update with new batch metrics.
 
@@ -439,11 +439,11 @@ class MetricsAggregator:
             return 0.0
         return sum(self._values[key]) / len(self._values[key])
 
-    def get_averages(self) -> Dict[str, float]:
+    def get_averages(self) -> dict[str, float]:
         """get all average values."""
         return {key: self.get_average(key) for key in self._values}
 
-    def get_values(self, key: str) -> List[float]:
+    def get_values(self, key: str) -> list[float]:
         """get all values for a metric."""
         return self._values.get(key, [])
 

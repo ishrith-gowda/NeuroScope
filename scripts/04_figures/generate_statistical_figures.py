@@ -9,14 +9,12 @@ to collect individual metric arrays - see tools/inference/ scripts.
 """
 
 import json
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
-from scipy import stats
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 # import latex configuration
-from latex_figure_config import COLORS, save_figure, get_figure_size
 
 # setup paths
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -26,7 +24,7 @@ OUTPUT_DIR = PROJECT_ROOT / "figures/main"
 
 def load_evaluation_data():
     """load and structure evaluation results for analysis"""
-    with open(EVAL_PATH, "r") as f:
+    with open(EVAL_PATH) as f:
         data = json.load(f)
 
     # extract aggregate statistics for both directions
@@ -69,7 +67,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
         ("mse", "MSE", False),
     ]
 
-    for idx, (key, name, higher_better) in enumerate(metric_info):
+    for idx, (key, name, _higher_better) in enumerate(metric_info):
         ax = axes[idx]
 
         mean_a2b = metrics_a2b[key]["mean"]
@@ -82,7 +80,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
         stds = [std_a2b, std_b2a]
         colors = [c_a2b, c_b2a]
 
-        bars = ax.bar(
+        ax.bar(
             x,
             means,
             width=0.5,
@@ -109,7 +107,7 @@ def generate_comprehensive_comparison(metrics_a2b, metrics_b2a, fid_scores):
     fid_vals = [fid_scores["a2b"], fid_scores["b2a"]]
     colors = [c_a2b, c_b2a]
 
-    bars = ax.bar(x, fid_vals, width=0.5, alpha=0.8, color=colors, edgecolor="black", linewidth=0.7)
+    ax.bar(x, fid_vals, width=0.5, alpha=0.8, color=colors, edgecolor="black", linewidth=0.7)
 
     ax.set_xticks(x)
     ax.set_xlim(-0.4, 1.1)
@@ -383,7 +381,7 @@ def generate_statistical_summary_table():
 
     latex table with all metrics and statistics
     """
-    with open(EVAL_PATH, "r") as f:
+    with open(EVAL_PATH) as f:
         data = json.load(f)
 
     output_path = OUTPUT_DIR.parent / "tables" / "table3_statistical_summary.tex"
@@ -509,7 +507,7 @@ def generate_effect_size_analysis(metrics_a2b, metrics_b2a, n_samples):
     ax.grid(True, alpha=0.3, axis="x")
     ax.set_axisbelow(True)
 
-    for i, (bar, d) in enumerate(zip(bars, cohens_d)):
+    for _i, (bar, d) in enumerate(zip(bars, cohens_d)):
         width = bar.get_width()
         ax.text(
             width + 0.05 if width > 0 else width - 0.05,

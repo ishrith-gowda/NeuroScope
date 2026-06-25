@@ -10,13 +10,14 @@ produces publication-quality figures for:
 """
 
 import json
-import numpy as np
+
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 # publication style
 plt.rcParams.update(
@@ -256,7 +257,7 @@ def fig_downstream_segmentation(data, out_dir):
 
     x = np.arange(len(conditions))
     labels = list(conditions.keys())
-    raw_colors = [
+    [
         COLORS["primary"],
         COLORS["secondary"],
         COLORS["primary"],
@@ -276,7 +277,7 @@ def fig_downstream_segmentation(data, out_dir):
     for i, (metric, label) in enumerate(zip(metrics, metric_labels)):
         ax = axes[i]
         values = [cond_data[metric] for cond_data in conditions.values()]
-        bars = ax.bar(x, values, color=bar_colors, width=0.7, edgecolor="white", linewidth=0.5)
+        ax.bar(x, values, color=bar_colors, width=0.7, edgecolor="white", linewidth=0.5)
         ax.set_ylabel(label)
         ax.set_xticks(x)
         ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=7)
@@ -362,7 +363,7 @@ def fig_experiment_summary(data, out_dir):
     fed = data["federated"]
     comp = data["compression"]
     md = data["multi_domain"]
-    ds = data["downstream"]
+    data["downstream"]
 
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
@@ -388,7 +389,7 @@ def fig_experiment_summary(data, out_dir):
         xy=(rounds[-1], ssim_avg[-1]),
         xytext=(-60, -20),
         textcoords="offset points",
-        arrowprops=dict(arrowstyle="->", color=COLORS["gray"]),
+        arrowprops={"arrowstyle": "->", "color": COLORS["gray"]},
         fontsize=8,
         color=COLORS["primary"],
     )

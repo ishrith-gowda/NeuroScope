@@ -5,9 +5,10 @@ compare experiments and generate publication-ready
 reports and visualizations.
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Optional
+
 import numpy as np
 
 
@@ -19,7 +20,7 @@ class ExperimentAnalyzer:
     and publication-ready reports.
     """
 
-    def __init__(self, experiments: Dict[str, Dict]):
+    def __init__(self, experiments: dict[str, dict]):
         """
         args:
             experiments: dict of experiment name -> results
@@ -27,7 +28,7 @@ class ExperimentAnalyzer:
         self.experiments = experiments
         self.metrics = ["ssim", "psnr", "fid", "lpips"]
 
-    def compute_statistics(self) -> Dict:
+    def compute_statistics(self) -> dict:
         """
         compute statistics for all experiments.
 
@@ -58,7 +59,7 @@ class ExperimentAnalyzer:
 
     def rank_experiments(
         self, metric: str = "ssim", higher_is_better: bool = True
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """
         rank experiments by metric.
 
@@ -82,7 +83,7 @@ class ExperimentAnalyzer:
         rankings.sort(key=lambda x: x[1], reverse=higher_is_better)
         return rankings
 
-    def compute_improvements(self, baseline_name: str) -> Dict[str, Dict[str, float]]:
+    def compute_improvements(self, baseline_name: str) -> dict[str, dict[str, float]]:
         """
         compute improvements over baseline.
 
@@ -127,7 +128,9 @@ class ExperimentAnalyzer:
 
         return improvements
 
-    def generate_comparison_table(self, metrics: List[str] = None, format: str = "latex") -> str:
+    def generate_comparison_table(
+        self, metrics: Optional[list[str]] = None, format: str = "latex"
+    ) -> str:
         """
         generate comparison table.
 
@@ -148,7 +151,7 @@ class ExperimentAnalyzer:
         else:
             return self._csv_table(stats, metrics)
 
-    def _latex_table(self, stats: Dict, metrics: List[str]) -> str:
+    def _latex_table(self, stats: dict, metrics: list[str]) -> str:
         """generate latex table."""
         lines = [
             "\\begin{table}[htbp]",
@@ -180,7 +183,7 @@ class ExperimentAnalyzer:
 
         return "\n".join(lines)
 
-    def _markdown_table(self, stats: Dict, metrics: List[str]) -> str:
+    def _markdown_table(self, stats: dict, metrics: list[str]) -> str:
         """generate markdown table."""
         lines = [
             "| Method | " + " | ".join(m.upper() for m in metrics) + " |",
@@ -203,7 +206,7 @@ class ExperimentAnalyzer:
 
         return "\n".join(lines)
 
-    def _csv_table(self, stats: Dict, metrics: List[str]) -> str:
+    def _csv_table(self, stats: dict, metrics: list[str]) -> str:
         """generate csv table."""
         lines = ["Method," + ",".join(metrics)]
 
@@ -223,7 +226,7 @@ class ExperimentAnalyzer:
         return "\n".join(lines)
 
 
-def compare_experiments(experiment_dirs: List[Path], output_dir: Path) -> Dict:
+def compare_experiments(experiment_dirs: list[Path], output_dir: Path) -> dict:
     """
     compare multiple experiments.
 
@@ -239,7 +242,7 @@ def compare_experiments(experiment_dirs: List[Path], output_dir: Path) -> Dict:
     for exp_dir in experiment_dirs:
         results_file = exp_dir / "results" / "final_results.json"
         if results_file.exists():
-            with open(results_file, "r") as f:
+            with open(results_file) as f:
                 experiments[exp_dir.name] = json.load(f)
 
     analyzer = ExperimentAnalyzer(experiments)
@@ -272,7 +275,7 @@ def compare_experiments(experiment_dirs: List[Path], output_dir: Path) -> Dict:
 
 
 def generate_comparison_report(
-    experiments: Dict[str, Dict], output_path: Path, baseline_name: str = "baseline"
+    experiments: dict[str, dict], output_path: Path, baseline_name: str = "baseline"
 ) -> str:
     """
     generate comprehensive comparison report.
@@ -287,7 +290,7 @@ def generate_comparison_report(
     """
     analyzer = ExperimentAnalyzer(experiments)
 
-    stats = analyzer.compute_statistics()
+    analyzer.compute_statistics()
     improvements = analyzer.compute_improvements(baseline_name)
 
     lines = [

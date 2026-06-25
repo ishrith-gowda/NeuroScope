@@ -12,28 +12,25 @@ key improvements over v1:
 8. progressive training with warmup
 """
 
-import os
-import sys
 import argparse
-import logging
 import itertools
 import json
+import logging
+import os
 import random
+import sys
 from datetime import datetime
-from collections import deque
 
-import torch
-from torch import nn, optim
-from torch.utils.tensorboard import SummaryWriter
-from torchvision.utils import save_image, make_grid
-import torch.nn.functional as F
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-
 import seaborn as sns
-import matplotlib as mpl
-
+import torch
+import torch.nn.functional as F
 from neuroscope_dataset_loader import get_cycle_domain_loaders
+from torch import nn, optim
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid, save_image
 
 # styling
 sns.set_theme(style="whitegrid")
@@ -47,8 +44,8 @@ def configure_logging():
     # force unbuffered output for real-time logging
     import functools
 
-    print = functools.partial(
-        __builtins__["print"] if isinstance(__builtins__, dict) else getattr(__builtins__, "print"),
+    functools.partial(
+        __builtins__["print"] if isinstance(__builtins__, dict) else __builtins__.print,
         flush=True,
     )
 
@@ -307,7 +304,7 @@ def sample_images(step, G_A2B, G_B2A, loaders, output_dir, tb_writer=None):
 
 
 def plot_loss_graph(loss_history, save_path, tb_writer=None):
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    _fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
     # generator losses
     ax = axes[0, 0]
@@ -475,7 +472,7 @@ def train(args, device: torch.device):
             except StopIteration:
                 break
 
-            batch_size = real_A.size(0)
+            real_A.size(0)
 
             # labels with smoothing
             pred_shape = D_A(real_A).shape

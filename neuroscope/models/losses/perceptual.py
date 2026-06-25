@@ -4,11 +4,12 @@ perceptual loss functions.
 computes losses in feature space of pretrained networks.
 """
 
+from collections import OrderedDict
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Dict, Optional, Tuple
-from collections import OrderedDict
 
 
 class VGGFeatureExtractor(nn.Module):
@@ -65,14 +66,16 @@ class VGGFeatureExtractor(nn.Module):
 
     def __init__(
         self,
-        layer_ids: List[int] = [3, 8, 15, 22],  # relu1_2, relu2_2, relu3_3, relu4_3
+        layer_ids: Optional[list[int]] = None,  # relu1_2, relu2_2, relu3_3, relu4_3
         use_input_norm: bool = True,
         requires_grad: bool = False,
     ):
+        if layer_ids is None:
+            layer_ids = [3, 8, 15, 22]
         super().__init__()
 
         try:
-            from torchvision.models import vgg19, VGG19_Weights
+            from torchvision.models import VGG19_Weights, vgg19
 
             vgg = vgg19(weights=VGG19_Weights.IMAGENET1K_V1).features
         except ImportError:
@@ -99,7 +102,7 @@ class VGGFeatureExtractor(nn.Module):
         self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
         self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         """
         extract features from specified layers.
 
@@ -144,7 +147,10 @@ class PerceptualLoss(nn.Module):
     """
 
     def __init__(
-        self, layer_weights: Dict[int, float] = None, loss_type: str = "l1", normalize: bool = True
+        self,
+        layer_weights: Optional[dict[int, float]] = None,
+        loss_type: str = "l1",
+        normalize: bool = True,
     ):
         super().__init__()
 
@@ -213,7 +219,6 @@ class LPIPSLoss(nn.Module):
         )
 
         # channel dimensions for each layer
-        channels = [64, 128, 256, 512, 512]
 
         # learned linear layers (simplified - in practice, load pretrained weights)
         self.linear_layers = nn.ModuleDict(
@@ -246,7 +251,7 @@ class LPIPSLoss(nn.Module):
 
         total_loss = 0.0
 
-        for layer_id in self.linear_layers.keys():
+        for layer_id in self.linear_layers:
             pred_feat = pred_features[int(layer_id)]
             target_feat = target_features[int(layer_id)]
 
@@ -269,8 +274,8 @@ class StyleLoss(nn.Module):
 
     def __init__(
         self,
-        feature_layers: List[str] = ["relu1_2", "relu2_2", "relu3_3", "relu4_3"],
-        weights: Optional[List[float]] = None,
+        feature_layers: Optional[list[str]] = None,
+        weights: Optional[list[float]] = None,
         normalize: bool = True,
     ):
         """
@@ -281,6 +286,8 @@ class StyleLoss(nn.Module):
             weights: weights for each layer
             normalize: whether to normalize gram matrices
         """
+        if feature_layers is None:
+            feature_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3"]
         super().__init__()
         self.feature_extractor = VGGFeatureExtractor(feature_layers)
         self.weights = weights or [1.0] * len(feature_layers)
@@ -330,8 +337,8 @@ class ContentStyleLoss(nn.Module):
         self,
         content_weight: float = 1.0,
         style_weight: float = 1e-2,
-        content_layers: List[str] = ["relu3_3"],
-        style_layers: List[str] = ["relu1_2", "relu2_2", "relu3_3", "relu4_3"],
+        content_layers: Optional[list[str]] = None,
+        style_layers: Optional[list[str]] = None,
     ):
         """
         initialize combined content-style loss.
@@ -342,6 +349,10 @@ class ContentStyleLoss(nn.Module):
             content_layers: vgg layers for content
             style_layers: vgg layers for style
         """
+        if style_layers is None:
+            style_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3"]
+        if content_layers is None:
+            content_layers = ["relu3_3"]
         super().__init__()
         self.content_weight = content_weight
         self.style_weight = style_weight
@@ -350,7 +361,7 @@ class ContentStyleLoss(nn.Module):
 
     def forward(
         self, pred: torch.Tensor, target: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         compute combined content and style loss.
 

@@ -5,13 +5,13 @@ execute training and evaluation experiments with
 full reproducibility and logging.
 """
 
-from typing import Dict, List, Optional, Any, Union
-from pathlib import Path
-from datetime import datetime
 import json
 import random
-import numpy as np
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -75,10 +75,9 @@ class ExperimentRunner:
 
     def setup(self):
         """initialize all components."""
-        from ..utils import ExperimentLogger, load_config
-        from ..models import build_generator, build_discriminator
         from ..data import create_dataloaders
         from ..training import HarmonizationTrainer
+        from ..utils import ExperimentLogger
 
         # logger
         self.logger = ExperimentLogger(
@@ -120,9 +119,9 @@ class ExperimentRunner:
 
         self.logger.log("Experiment setup complete")
 
-    def _build_models(self) -> Dict[str, nn.Module]:
+    def _build_models(self) -> dict[str, nn.Module]:
         """build all model components."""
-        from ..models import SAGenerator, MultiScaleDiscriminator
+        from ..models import MultiScaleDiscriminator, SAGenerator
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -177,7 +176,7 @@ class ExperimentRunner:
 
         self.logger.log(f"Resumed from epoch {checkpoint.get('epoch', 0)}")
 
-    def run(self) -> Dict:
+    def run(self) -> dict:
         """
         run the complete experiment.
 
@@ -229,9 +228,9 @@ class ExperimentRunner:
         path = self.run_dir / "checkpoints" / f"checkpoint_{epoch:04d}.pth"
         torch.save(checkpoint, path)
 
-    def _final_evaluation(self) -> Dict:
+    def _final_evaluation(self) -> dict:
         """run final evaluation."""
-        from ..evaluation import MetricCalculator, StatisticalTester
+        from ..evaluation import MetricCalculator
 
         results = {}
 
@@ -245,7 +244,7 @@ class ExperimentRunner:
 
         return results
 
-    def _save_results(self, results: Dict):
+    def _save_results(self, results: dict):
         """save final results."""
         path = self.run_dir / "results" / "final_results.json"
         with open(path, "w") as f:
@@ -259,7 +258,7 @@ class AblationRunner:
     systematically evaluates component contributions.
     """
 
-    def __init__(self, base_config: Any, ablation_configs: List[str], output_dir: Union[str, Path]):
+    def __init__(self, base_config: Any, ablation_configs: list[str], output_dir: Union[str, Path]):
         """
         args:
             base_config: base experiment configuration
@@ -271,9 +270,9 @@ class AblationRunner:
         self.output_dir = Path(output_dir) / "ablation_study"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.results: Dict[str, Dict] = {}
+        self.results: dict[str, dict] = {}
 
-    def run(self) -> Dict:
+    def run(self) -> dict:
         """
         run all ablation experiments.
 
@@ -334,22 +333,21 @@ class BaselineRunner:
         self.output_dir = Path(output_dir) / "baseline_comparison"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.results: Dict[str, Dict] = {}
+        self.results: dict[str, dict] = {}
 
-    def run_combat(self) -> Dict:
+    def run_combat(self) -> dict:
         """run combat harmonization baseline."""
-        from ..evaluation import MetricCalculator
 
         # combat implementation would go here
         # this is a placeholder for the actual implementation
 
         return {"method": "combat", "ssim": 0.92, "psnr": 27.5}
 
-    def run_histogram_matching(self) -> Dict:
+    def run_histogram_matching(self) -> dict:
         """run histogram matching baseline."""
         return {"method": "histogram_matching", "ssim": 0.89, "psnr": 25.3}
 
-    def run_all(self) -> Dict:
+    def run_all(self) -> dict:
         """run all baseline methods."""
         self.results["combat"] = self.run_combat()
         self.results["histogram_matching"] = self.run_histogram_matching()

@@ -1,15 +1,14 @@
-import os
 import json
-import random
 import logging
-from typing import Dict, List, Tuple, Optional
+import os
+import random
+from typing import Optional
 
 import numpy as np
+import SimpleITK as sitk
 import torch
 import torch.utils.data as data
 import torchvision.transforms as T
-import SimpleITK as sitk
-
 
 # public constants
 MRI_MODALITIES = ("t1.nii.gz", "t1gd.nii.gz", "t2.nii.gz", "flair.nii.gz")
@@ -54,7 +53,7 @@ class DomainSliceDataset(data.Dataset):
         metadata_json: str,
         section: str,
         split: str = "train",
-        modalities: Tuple[str, ...] = MRI_MODALITIES,
+        modalities: tuple[str, ...] = MRI_MODALITIES,
         slices_per_subject: int = 1,
         transforms: Optional[torch.nn.Module] = None,
         min_modalities_required: int = 4,
@@ -67,9 +66,9 @@ class DomainSliceDataset(data.Dataset):
         self.modalities = modalities
         self.transforms = transforms
         self.slices_per_subject = max(1, slices_per_subject)
-        self.items: List[Tuple[str, Dict[str, str]]] = []  # (subject_id, modality->path)
+        self.items: list[tuple[str, dict[str, str]]] = []  # (subject_id, modality->path)
 
-        with open(metadata_json, "r") as f:
+        with open(metadata_json) as f:
             meta = json.load(f)
 
         if section not in meta:
@@ -110,8 +109,8 @@ class DomainSliceDataset(data.Dataset):
         return len(self.items) * self.slices_per_subject
 
     def _load_subject_volume(self, idx_subject: int) -> np.ndarray:
-        sid, modality_paths = self.items[idx_subject]
-        vols: List[np.ndarray] = []
+        _sid, modality_paths = self.items[idx_subject]
+        vols: list[np.ndarray] = []
         for mod in self.modalities:
             p = modality_paths.get(mod)
             img = sitk.ReadImage(p)

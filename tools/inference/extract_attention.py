@@ -10,21 +10,22 @@ usage:
     python extract_attention.py --cases case_ids.json --checkpoint path/to/checkpoint.pth
 """
 
-import json
-import torch
-import numpy as np
 import argparse
-from pathlib import Path
-from typing import Dict, List, Tuple
+import json
 import sys
+from pathlib import Path
+
+import numpy as np
+import torch
 
 # add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from neuroscope.models.cyclegan_25d import CycleGAN25D
-from neuroscope.data.brats_dataset import BraTSDataset
 from torch.utils.data import DataLoader, Subset
+
+from neuroscope.data.brats_dataset import BraTSDataset
+from neuroscope.models.cyclegan_25d import CycleGAN25D
 
 
 class AttentionExtractor:
@@ -110,7 +111,7 @@ class AttentionExtractor:
             hook.remove()
         self.hooks = []
 
-    def get_attention_summary(self) -> Dict:
+    def get_attention_summary(self) -> dict:
         """get summary of captured attention maps"""
         summary = {}
         for name, tensor in self.attention_maps.items():
@@ -157,7 +158,7 @@ def load_model(checkpoint_path: Path, device: str = "cuda") -> CycleGAN25D:
     return model, config
 
 
-def load_test_dataset(config, case_indices: List[int]) -> DataLoader:
+def load_test_dataset(config, case_indices: list[int]) -> DataLoader:
     """load test dataset with case filtering"""
     print("loading test dataset...")
 
@@ -175,15 +176,15 @@ def load_test_dataset(config, case_indices: List[int]) -> DataLoader:
         batch_size=1,
         shuffle=False,
         num_workers=0,
-        pin_memory=True if torch.cuda.is_available() else False,
+        pin_memory=bool(torch.cuda.is_available()),
     )
 
     return test_loader
 
 
 def extract_attention_for_cases(
-    model: CycleGAN25D, dataloader: DataLoader, device: str, case_info: Dict
-) -> Dict:
+    model: CycleGAN25D, dataloader: DataLoader, device: str, case_info: dict
+) -> dict:
     """
     extract attention maps for selected cases
 
@@ -239,7 +240,7 @@ def extract_attention_for_cases(
     extractor_a2b.remove_hooks()
     extractor_b2a.remove_hooks()
 
-    print(f"\nattention extraction complete")
+    print("\nattention extraction complete")
     print(f"  captured {len(results['attention_a2b'])} cases")
 
     # print summary of first case
@@ -254,7 +255,7 @@ def extract_attention_for_cases(
     return results
 
 
-def save_attention_results(results: Dict, output_dir: Path, category: str):
+def save_attention_results(results: dict, output_dir: Path, category: str):
     """save attention extraction results"""
     if results is None:
         print("no attention maps to save")
@@ -335,7 +336,7 @@ def main():
 
     # load case selections
     print(f"\nloading case selections from {cases_path}")
-    with open(cases_path, "r") as f:
+    with open(cases_path) as f:
         cases = json.load(f)
 
     # load model

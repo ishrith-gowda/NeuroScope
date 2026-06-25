@@ -4,10 +4,11 @@ adversarial loss functions for gan training.
 this module provides various adversarial loss formulations.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Union
 
 
 class VanillaGANLoss(nn.Module):
@@ -171,7 +172,7 @@ class MultiScaleGANLoss(nn.Module):
         weights: weights for each scale (uniform if none)
     """
 
-    def __init__(self, loss_type: str = "lsgan", weights: List[float] = None):
+    def __init__(self, loss_type: str = "lsgan", weights: Optional[list[float]] = None):
         super().__init__()
 
         if loss_type == "lsgan":
@@ -186,7 +187,7 @@ class MultiScaleGANLoss(nn.Module):
         self.weights = weights
 
     def discriminator_loss(
-        self, real_preds: List[torch.Tensor], fake_preds: List[torch.Tensor]
+        self, real_preds: list[torch.Tensor], fake_preds: list[torch.Tensor]
     ) -> torch.Tensor:
         """compute multi-scale discriminator loss."""
         weights = self.weights or [1.0] * len(real_preds)
@@ -197,7 +198,7 @@ class MultiScaleGANLoss(nn.Module):
 
         return total_loss / sum(weights)
 
-    def generator_loss(self, fake_preds: List[torch.Tensor]) -> torch.Tensor:
+    def generator_loss(self, fake_preds: list[torch.Tensor]) -> torch.Tensor:
         """compute multi-scale generator loss."""
         weights = self.weights or [1.0] * len(fake_preds)
 

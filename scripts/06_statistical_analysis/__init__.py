@@ -9,29 +9,28 @@ provides comprehensive statistical validation for mri harmonization:
 - publication-ready figures and tables
 """
 
-from .comprehensive_statistics import (
-    BootstrapCI,
-    EffectSizeCalculator,
-    StatisticalTests,
-    MultipleComparisonCorrection,
-    HarmonizationStatistics,
-)
-
 from .combat_comparison import (
     ComBatConfig,
     ComBatHarmonizer,
-    harmonize_mri_with_combat,
     evaluate_combat_harmonization,
+    harmonize_mri_with_combat,
+)
+from .comprehensive_statistics import (
+    BootstrapCI,
+    EffectSizeCalculator,
+    HarmonizationStatistics,
+    MultipleComparisonCorrection,
+    StatisticalTests,
 )
 
 __all__ = [
     "BootstrapCI",
-    "EffectSizeCalculator",
-    "StatisticalTests",
-    "MultipleComparisonCorrection",
-    "HarmonizationStatistics",
     "ComBatConfig",
     "ComBatHarmonizer",
-    "harmonize_mri_with_combat",
+    "EffectSizeCalculator",
+    "HarmonizationStatistics",
+    "MultipleComparisonCorrection",
+    "StatisticalTests",
     "evaluate_combat_harmonization",
+    "harmonize_mri_with_combat",
 ]

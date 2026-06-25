@@ -10,7 +10,6 @@ usage:
     raw_brats_dir = paths['raw_brats_root']
 """
 
-import os
 from pathlib import Path
 
 

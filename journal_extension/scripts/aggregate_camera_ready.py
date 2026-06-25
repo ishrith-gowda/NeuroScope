@@ -22,14 +22,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-
 
 PUB_STYLE = {
     "font.family": "serif",
@@ -47,23 +45,23 @@ PUB_STYLE = {
 # ---------------------------------------------------------------------------
 
 
-def load_history(path: Path) -> Dict:
+def load_history(path: Path) -> dict:
     if not path.exists():
         return {}
     with open(path) as f:
         return json.load(f)
 
 
-def discover_seed_runs(exp_root: Path) -> List[Path]:
+def discover_seed_runs(exp_root: Path) -> list[Path]:
     return sorted(exp_root.glob("patchnce_lambda0.5_seed*_100epochs"))
 
 
-def discover_compression_runs(exp_root: Path) -> List[Path]:
+def discover_compression_runs(exp_root: Path) -> list[Path]:
     return sorted(exp_root.glob("compression_lambda_rate_*"))
 
 
-def discover_federated_runs(exp_root: Path) -> Dict[str, Path]:
-    out: Dict[str, Path] = {}
+def discover_federated_runs(exp_root: Path) -> dict[str, Path]:
+    out: dict[str, Path] = {}
     for strat in ("fedavg", "fedprox", "scaffold"):
         cand = list(exp_root.glob(f"federated_{strat}*"))
         if cand:
@@ -78,7 +76,7 @@ def discover_federated_runs(exp_root: Path) -> Dict[str, Path]:
 
 def fig_ext_a_seeds(repo_root: Path, out_dir: Path) -> None:
     """combine the existing seed=42 lambda=0.5 run with any new seeds."""
-    histories: Dict[str, Dict] = {}
+    histories: dict[str, dict] = {}
 
     primary = repo_root / "journal_extension" / "results" / "patchnce" / "lambda0.5_history.json"
     h = load_history(primary)
@@ -140,7 +138,7 @@ def fig_ext_a_seeds(repo_root: Path, out_dir: Path) -> None:
 
 def fig_ext_b_rate_distortion(repo_root: Path, out_dir: Path) -> None:
     """rate-distortion curve from the lambda_rate sweep + existing point."""
-    points: List[Dict] = []
+    points: list[dict] = []
 
     legacy = json.load(open(repo_root / "journal_extension" / "results" / "all_results.json"))
     legacy_c = legacy.get("compression", {})
@@ -340,7 +338,7 @@ def fig_ext_e_federated_compare(repo_root: Path, out_dir: Path) -> None:
     legacy = json.load(open(repo_root / "journal_extension" / "results" / "all_results.json"))
     fed_legacy = legacy.get("federated", {})
 
-    series: Dict[str, Dict] = {}
+    series: dict[str, dict] = {}
     if fed_legacy.get("history", {}).get("global_metrics"):
         series["FedAvg (legacy 40r)"] = fed_legacy["history"]
 

@@ -23,18 +23,17 @@ references:
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from scipy import linalg, stats
+from scipy import linalg
 from sklearn.manifold import TSNE
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 # add parent directory to path
@@ -121,7 +120,7 @@ class FeatureExtractor(nn.Module):
         x = self.fc(x)
         return x
 
-    def extract_multiscale(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def extract_multiscale(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """extract features at multiple scales."""
         features = {}
 
@@ -151,11 +150,13 @@ class NiftiFeatureDataset(Dataset):
     def __init__(
         self,
         data_dir: Path,
-        modalities: List[str] = ["t1", "t1gd", "t2", "flair"],
-        slice_range: Tuple[int, int] = (50, 110),
+        modalities: Optional[list[str]] = None,
+        slice_range: tuple[int, int] = (50, 110),
         slice_stride: int = 5,
-        slice_size: Tuple[int, int] = (128, 128),
+        slice_size: tuple[int, int] = (128, 128),
     ):
+        if modalities is None:
+            modalities = ["t1", "t1gd", "t2", "flair"]
         self.data_dir = Path(data_dir)
         self.modalities = modalities
         self.slice_range = slice_range
@@ -192,7 +193,7 @@ class NiftiFeatureDataset(Dataset):
             # get shape
             import nibabel as nib
 
-            first_mod = list(mod_files.values())[0]
+            first_mod = next(iter(mod_files.values()))
             img = nib.load(str(first_mod))
             n_slices = img.shape[2]
 
@@ -325,7 +326,7 @@ def compute_fid(features_a: np.ndarray, features_b: np.ndarray) -> float:
 
 def compute_kid(
     features_a: np.ndarray, features_b: np.ndarray, n_subsets: int = 100, subset_size: int = 1000
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     compute kernel inception distance with polynomial kernel.
 
@@ -439,7 +440,7 @@ def compute_sliced_wasserstein(
     return float(swd / n_projections)
 
 
-def compute_distribution_metrics(features_a: np.ndarray, features_b: np.ndarray) -> Dict:
+def compute_distribution_metrics(features_a: np.ndarray, features_b: np.ndarray) -> dict:
     """
     compute all distribution metrics.
     """

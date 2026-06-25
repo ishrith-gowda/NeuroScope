@@ -8,11 +8,8 @@ image-to-image translation.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple
 
 from ..blocks.residual import ResidualBlock
-from ..attention.self_attention import SelfAttention2d
-from ..attention.spatial_attention import CBAM
 from .base import BaseGenerator
 
 
@@ -525,7 +522,7 @@ class UNetPlusPlusGenerator(BaseGenerator):
                     )
 
                 # concatenate all
-                combined = torch.cat(prev_outputs + [up_output], dim=1)
+                combined = torch.cat([*prev_outputs, up_output], dim=1)
                 outputs[f"x_{i}_{j}"] = self.conv[f"x_{i}_{j}"](combined)
 
         # collect final outputs from top row

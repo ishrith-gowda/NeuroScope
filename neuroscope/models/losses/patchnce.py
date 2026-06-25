@@ -14,7 +14,6 @@ reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional, Tuple
 
 
 class MLPProjectionHead(nn.Module):
@@ -93,7 +92,7 @@ class PatchNCELoss(nn.Module):
         returns:
             scalar infonce loss
         """
-        b, n, c = feat_q.shape
+        b, n, _c = feat_q.shape
 
         # positive logits: dot product at corresponding locations
         l_pos = (feat_q * feat_k).sum(dim=-1, keepdim=True)  # (b, n, 1)
@@ -139,7 +138,7 @@ class MultiLayerPatchNCELoss(nn.Module):
 
     def __init__(
         self,
-        layer_channels: List[int],
+        layer_channels: list[int],
         projection_dim: int = 256,
         num_patches: int = 256,
         temperature: float = 0.07,
@@ -170,7 +169,7 @@ class MultiLayerPatchNCELoss(nn.Module):
         self,
         feat: torch.Tensor,
         num_patches: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         sample spatial locations from a feature map.
 
@@ -197,8 +196,8 @@ class MultiLayerPatchNCELoss(nn.Module):
 
     def forward(
         self,
-        query_feats: List[torch.Tensor],
-        key_feats: List[torch.Tensor],
+        query_feats: list[torch.Tensor],
+        key_feats: list[torch.Tensor],
     ) -> torch.Tensor:
         """
         compute multi-layer patchnce loss.
@@ -219,7 +218,7 @@ class MultiLayerPatchNCELoss(nn.Module):
         total_loss = 0.0
         n_layers = len(self.mlp_heads)
 
-        for i, (feat_q, feat_k, mlp) in enumerate(zip(query_feats, key_feats, self.mlp_heads)):
+        for _i, (feat_q, feat_k, mlp) in enumerate(zip(query_feats, key_feats, self.mlp_heads)):
             # sample corresponding patch locations from both feature maps
             b, c, h, w = feat_q.shape
             n = h * w

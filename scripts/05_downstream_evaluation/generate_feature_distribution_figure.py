@@ -7,10 +7,10 @@ with proper latex rendering.
 """
 
 import json
-import numpy as np
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -68,7 +68,7 @@ def create_feature_distribution_figure(results: dict, output_path: Path):
         ax.set_box_aspect(1)
 
     raw = results["raw"]
-    harmonized = results.get("harmonized", None)
+    harmonized = results.get("harmonized")
 
     metrics = ["fid", "kid_mean", "mmd_rbf", "sliced_wasserstein"]
     metric_labels = ["FID", "KID", "MMD (RBF)", "SWD"]

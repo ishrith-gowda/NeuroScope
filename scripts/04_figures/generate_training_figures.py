@@ -18,9 +18,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import json
-import numpy as np
+
 import matplotlib.pyplot as plt
-from latex_figure_config import FIGURE_SIZES, COLORS, save_figure
+import numpy as np
+from latex_figure_config import save_figure
 
 # load training history
 PROJECT_ROOT = Path(__file__).parent.parent.parent

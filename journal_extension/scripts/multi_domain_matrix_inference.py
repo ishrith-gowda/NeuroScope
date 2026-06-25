@@ -21,7 +21,6 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
 
@@ -71,8 +70,8 @@ def main():
     # try to import the multi-domain trainer module to fetch model class
     try:
         from journal_extension.scripts.train_multi_domain import (  # type: ignore
-            MultiDomainTrainer,
             MultiDomainConfig,
+            MultiDomainTrainer,
         )
     except Exception as e:
         print(f"could not import multi-domain trainer: {e}")
@@ -115,7 +114,7 @@ def main():
     trainer.model.eval()
 
     # collect a few sample cases (one volume per source domain)
-    cases: List[Dict] = []
+    cases: list[dict] = []
     seen_domains = set()
     with torch.no_grad():
         for batch in trainer.train_loader:
@@ -135,8 +134,8 @@ def main():
             if len(cases) >= n_domains:
                 break
 
-    matrix_metrics: Dict[str, Dict] = {}
-    matrix_arrays: Dict[str, np.ndarray] = {}
+    matrix_metrics: dict[str, dict] = {}
+    matrix_arrays: dict[str, np.ndarray] = {}
 
     with torch.no_grad():
         for case_i, case in enumerate(cases):

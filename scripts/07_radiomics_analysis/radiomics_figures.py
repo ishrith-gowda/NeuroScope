@@ -11,18 +11,15 @@ generates comprehensive visualizations:
 
 import argparse
 import json
-import numpy as np
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 from scipy import stats
-
 
 # publication style settings
 plt.rcParams.update(
@@ -62,7 +59,7 @@ CATEGORY_COLORS = {
 
 
 def plot_correlation_heatmap(
-    preservation_results: Dict,
+    preservation_results: dict,
     output_path: Path,
     title: str = "Feature Preservation Correlation Matrix",
 ):
@@ -181,7 +178,7 @@ def plot_correlation_heatmap(
 
 
 def plot_preservation_by_category(
-    preservation_results: Dict, output_path: Path, method_name: str = "SA-CycleGAN-2.5D"
+    preservation_results: dict, output_path: Path, method_name: str = "SA-CycleGAN-2.5D"
 ):
     """
     plot bar chart of preservation metrics by feature category.
@@ -294,7 +291,7 @@ def plot_preservation_by_category(
 def plot_bland_altman(
     original: np.ndarray,
     harmonized: np.ndarray,
-    feature_names: List[str],
+    feature_names: list[str],
     output_path: Path,
     n_features_to_plot: int = 4,
 ):
@@ -408,7 +405,7 @@ def plot_bland_altman(
 def plot_preservation_scatter(
     original: np.ndarray,
     harmonized: np.ndarray,
-    feature_names: List[str],
+    feature_names: list[str],
     output_path: Path,
     n_features_to_plot: int = 4,
 ):
@@ -514,7 +511,7 @@ def plot_preservation_scatter(
 
 
 def plot_comprehensive_summary(
-    results: Dict, output_path: Path, method_name: str = "SA-CycleGAN-2.5D"
+    results: dict, output_path: Path, method_name: str = "SA-CycleGAN-2.5D"
 ):
     """
     create comprehensive summary figure for radiomics preservation.
@@ -591,7 +588,7 @@ def plot_comprehensive_summary(
     ax3 = fig.add_subplot(gs[0, 2])
     per_category = results.get("per_category", {})
     if per_category:
-        categories = [c for c in per_category.keys() if per_category[c]["n_features"] > 0]
+        categories = [c for c in per_category if per_category[c]["n_features"] > 0]
         cat_cccs = [per_category[c]["mean_ccc"] for c in categories]
         cat_labels = [c.replace("_", "\n").title() for c in categories]
         cat_colors = [CATEGORY_COLORS.get(c, COLORS["neutral"]) for c in categories]
@@ -715,7 +712,7 @@ while improving cross-domain feature alignment, supporting clinical validity.
         fontsize=10,
         verticalalignment="top",
         fontfamily="monospace",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
 
     plt.savefig(output_path, format="pdf", bbox_inches="tight")
@@ -725,7 +722,7 @@ while improving cross-domain feature alignment, supporting clinical validity.
     print(f"[fig] saved comprehensive summary to {output_path}")
 
 
-def create_latex_table(results: Dict, output_path: Path):
+def create_latex_table(results: dict, output_path: Path):
     """
     create latex table for radiomics preservation results.
 
@@ -734,8 +731,8 @@ def create_latex_table(results: Dict, output_path: Path):
         output_path: path to save table
     """
     overall = results.get("overall", {})
-    domain_a = results.get("domain_a_preservation", {}).get("overall", {})
-    domain_b = results.get("domain_b_preservation", {}).get("overall", {})
+    results.get("domain_a_preservation", {}).get("overall", {})
+    results.get("domain_b_preservation", {}).get("overall", {})
     per_category = results.get("per_category", {})
 
     latex = r"""\begin{table}[htbp]

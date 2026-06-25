@@ -8,16 +8,14 @@ improved long-range dependency modeling.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Dict, Tuple
 
-from ..blocks.residual import ResidualBlock, DenseResidualBlock
 from ..attention.self_attention import (
-    SelfAttention2d,
-    MultiScaleSelfAttention,
     EfficientSelfAttention,
+    MultiScaleSelfAttention,
+    SelfAttention2d,
 )
-from ..attention.channel_attention import SqueezeExcitation
 from ..attention.spatial_attention import CBAM
+from ..blocks.residual import DenseResidualBlock, ResidualBlock
 from .base import BaseGenerator
 
 
@@ -127,7 +125,7 @@ class SAGenerator(BaseGenerator):
 
         return output
 
-    def get_feature_maps(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def get_feature_maps(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """get intermediate feature maps for visualization."""
         features = {}
 
@@ -170,7 +168,7 @@ class SAEncoder(nn.Module):
         self.attention_blocks = nn.ModuleList()
 
         mult = 1
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             in_ch = in_channels * mult
             out_ch = in_channels * mult * 2
 
@@ -197,7 +195,7 @@ class SAEncoder(nn.Module):
 
             mult *= 2
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """forward pass returning encoded features and skip connections."""
         skip_features = []
 
@@ -305,7 +303,7 @@ class SADecoder(nn.Module):
 
             self.attention_blocks.append(attn)
 
-    def forward(self, x: torch.Tensor, skip_features: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, skip_features: list[torch.Tensor]) -> torch.Tensor:
         """forward pass with skip connections."""
         # reverse skip features for decoder order
         skips = skip_features[::-1]
@@ -390,7 +388,7 @@ class MultiScaleFusion(nn.Module):
         self.scale_weights = nn.Parameter(torch.ones(n_scales) / n_scales)
         self.softmax = nn.Softmax(dim=0)
 
-    def forward(self, scale_outputs: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, scale_outputs: list[torch.Tensor]) -> torch.Tensor:
         """fuse multi-scale outputs."""
         target_size = scale_outputs[0].shape[-2:]
 
@@ -456,7 +454,7 @@ class DenseSAGenerator(BaseGenerator):
         self.dense_blocks = nn.ModuleList()
         current_channels = ngf * 4
 
-        for i in range(n_dense_blocks):
+        for _i in range(n_dense_blocks):
             block = DenseResidualBlock(current_channels, growth_rate, n_layers=4)
             self.dense_blocks.append(block)
             current_channels += growth_rate * 4

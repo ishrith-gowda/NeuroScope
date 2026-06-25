@@ -4,15 +4,16 @@ decoder modules for generator architectures.
 this module provides various decoder implementations for image-to-image translation.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple
 
-from ..blocks.conv import ConvBlock, UpsampleBlock
-from ..blocks.residual import ResidualBlock
 from ..attention.self_attention import SelfAttention2d
 from ..attention.spatial_attention import CBAM
+from ..blocks.conv import UpsampleBlock
+from ..blocks.residual import ResidualBlock
 
 
 class ConvDecoder(nn.Module):
@@ -42,7 +43,7 @@ class ConvDecoder(nn.Module):
         norm_type: str = "instance",
         activation: str = "relu",
         use_attention: bool = False,
-        attention_layers: Optional[List[int]] = None,
+        attention_layers: Optional[list[int]] = None,
         use_skip: bool = False,
     ):
         super().__init__()
@@ -83,7 +84,7 @@ class ConvDecoder(nn.Module):
         )
 
     def forward(
-        self, x: torch.Tensor, skip_features: Optional[List[torch.Tensor]] = None
+        self, x: torch.Tensor, skip_features: Optional[list[torch.Tensor]] = None
     ) -> torch.Tensor:
         """
         forward pass.
@@ -146,7 +147,7 @@ class ResidualDecoder(nn.Module):
         self.stages = nn.ModuleList()
 
         current_channels = in_channels
-        for i in range(n_upsample):
+        for _i in range(n_upsample):
             out_ch = max(current_channels // 2, base_channels)
 
             stage = nn.ModuleList(
@@ -174,7 +175,7 @@ class ResidualDecoder(nn.Module):
         )
 
     def forward(
-        self, x: torch.Tensor, skip_features: Optional[List[torch.Tensor]] = None
+        self, x: torch.Tensor, skip_features: Optional[list[torch.Tensor]] = None
     ) -> torch.Tensor:
         """forward pass."""
         for i, (upsample, residual) in enumerate(self.stages):
@@ -211,7 +212,7 @@ class UNetDecoder(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        skip_channels: List[int],
+        skip_channels: list[int],
         base_channels: int = 64,
         norm_type: str = "batch",
     ):
@@ -247,7 +248,7 @@ class UNetDecoder(nn.Module):
         # final convolution
         self.final = nn.Conv2d(current_channels, out_channels, 1)
 
-    def forward(self, x: torch.Tensor, skip_features: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, skip_features: list[torch.Tensor]) -> torch.Tensor:
         """
         forward pass.
 
@@ -287,7 +288,7 @@ class AttentionDecoder(nn.Module):
     """
 
     def __init__(
-        self, in_channels: int, out_channels: int, skip_channels: List[int], base_channels: int = 64
+        self, in_channels: int, out_channels: int, skip_channels: list[int], base_channels: int = 64
     ):
         super().__init__()
 
@@ -322,7 +323,7 @@ class AttentionDecoder(nn.Module):
 
         self.final = nn.Conv2d(current_channels, out_channels, 1)
 
-    def forward(self, x: torch.Tensor, skip_features: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, skip_features: list[torch.Tensor]) -> torch.Tensor:
         """forward pass with attention-gated skip connections."""
         skips = skip_features[::-1]
 
@@ -404,7 +405,7 @@ class ProgressiveDecoder(nn.Module):
         self.to_rgb = nn.ModuleList()
 
         current_channels = in_channels
-        for i in range(n_scales):
+        for _i in range(n_scales):
             out_ch = max(current_channels // 2, base_channels)
 
             self.scale_decoders.append(
@@ -424,7 +425,7 @@ class ProgressiveDecoder(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        skip_features: Optional[List[torch.Tensor]] = None,
+        skip_features: Optional[list[torch.Tensor]] = None,
         return_all_scales: bool = False,
     ) -> torch.Tensor:
         """
@@ -486,7 +487,7 @@ class PixelShuffleDecoder(nn.Module):
         self.stages = nn.ModuleList()
 
         current_channels = in_channels
-        for i in range(n_upsample):
+        for _i in range(n_upsample):
             out_ch = max(current_channels // 2, base_channels)
 
             self.stages.append(
@@ -505,7 +506,7 @@ class PixelShuffleDecoder(nn.Module):
         )
 
     def forward(
-        self, x: torch.Tensor, skip_features: Optional[List[torch.Tensor]] = None
+        self, x: torch.Tensor, skip_features: Optional[list[torch.Tensor]] = None
     ) -> torch.Tensor:
         """forward pass using pixel shuffle upsampling."""
         for i, stage in enumerate(self.stages):

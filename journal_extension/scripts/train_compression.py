@@ -14,35 +14,32 @@ usage:
     python train_compression.py --lambda_rate 0.01 --entropy_model_type factorized
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.nn.parallel import DataParallel
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
 import numpy as np
+import torch
+import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
+from torch.nn.parallel import DataParallel
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig
 from neuroscope.models.compression.compressed_generator import (
     CompressedSACycleGAN25D,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 
 
@@ -105,7 +102,7 @@ class CompressionTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         # compression hyperparameters
         entropy_model_type: str = "factorized",
         num_hyper_channels: int = 128,
@@ -279,7 +276,7 @@ class CompressionTrainer:
     def _save_config(self, init_args: dict):
         """save experiment configuration."""
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "lambda_rate": self.lambda_rate,
                 "compression_warmup_epochs": self.compression_warmup_epochs,
@@ -327,7 +324,7 @@ class CompressionTrainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_step(self, batch: Dict[str, torch.Tensor], epoch: int) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor], epoch: int) -> dict[str, float]:
         """execute single training step with rate-distortion loss."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -483,7 +480,7 @@ class CompressionTrainer:
             "bpe": avg_bpe,
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
 
@@ -505,7 +502,7 @@ class CompressionTrainer:
             leave=True,
         )
 
-        for batch_idx, batch in enumerate(pbar):
+        for _batch_idx, batch in enumerate(pbar):
             losses = self.train_step(batch, epoch)
 
             for key in epoch_losses:
@@ -535,7 +532,7 @@ class CompressionTrainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self, epoch: int) -> Dict[str, float]:
+    def validate(self, epoch: int) -> dict[str, float]:
         """validate the model."""
         self.model.eval()
 
@@ -778,9 +775,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     # create model config

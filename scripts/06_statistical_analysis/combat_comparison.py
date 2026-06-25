@@ -16,15 +16,12 @@ references:
 
 import argparse
 import json
-import os
 import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
 
 import numpy as np
-from scipy import stats
-import warnings
 
 # add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -61,7 +58,7 @@ class ComBatHarmonizer:
 
     def _standardize_across_features(
         self, data: np.ndarray, batch_labels: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         standardize data across features.
 
@@ -103,7 +100,7 @@ class ComBatHarmonizer:
 
     def _compute_batch_effects(
         self, data_std: np.ndarray, batch_labels: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         compute batch-specific location (gamma) and scale (delta) parameters.
         """
@@ -124,8 +121,8 @@ class ComBatHarmonizer:
         return gamma_hat, delta_hat
 
     def _empirical_bayes_estimate(
-        self, gamma_hat: np.ndarray, delta_hat: np.ndarray, batch_counts: Dict
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, gamma_hat: np.ndarray, delta_hat: np.ndarray, batch_counts: dict
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         compute empirical bayes estimates for batch effects.
 
@@ -139,7 +136,7 @@ class ComBatHarmonizer:
         tau_sq = np.var(gamma_hat, axis=0, ddof=1)
 
         # prior for delta (scale) - inverse gamma
-        delta_bar = np.mean(delta_hat, axis=0)
+        np.mean(delta_hat, axis=0)
         lambda_bar = np.mean(delta_hat, axis=0)
         theta_bar = np.var(delta_hat, axis=0, ddof=1)
 
@@ -255,7 +252,7 @@ class ComBatHarmonizer:
 
 def harmonize_mri_with_combat(
     domain_a_data: np.ndarray, domain_b_data: np.ndarray, config: Optional[ComBatConfig] = None
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     harmonize two mri domains using combat.
 
@@ -287,7 +284,7 @@ def harmonize_mri_with_combat(
 
 def evaluate_combat_harmonization(
     raw_features_a: np.ndarray, raw_features_b: np.ndarray, output_dir: Path
-) -> Dict:
+) -> dict:
     """
     evaluate combat harmonization and compare with deep learning methods.
     """

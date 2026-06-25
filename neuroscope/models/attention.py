@@ -13,7 +13,6 @@ reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple
 
 
 class SelfAttention(nn.Module):
@@ -47,7 +46,7 @@ class SelfAttention(nn.Module):
         # softmax for attention weights
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         forward pass with attention.
 
@@ -339,8 +338,8 @@ class CrossModalAttention(nn.Module):
         returns:
             cross-modality attended tensor of shape (b, 4, h, w)
         """
-        B, C, H, W = x.size()
-        assert C == self.in_channels, f"Expected {self.in_channels} channels, got {C}"
+        _B, C, _H, _W = x.size()
+        assert self.in_channels == C, f"Expected {self.in_channels} channels, got {C}"
 
         # encode each modality separately
         modality_features = []
@@ -349,7 +348,7 @@ class CrossModalAttention(nn.Module):
             modality_features.append(feat)
 
         # stack modalities: (b, num_modalities, hidden_dim, h, w)
-        stacked = torch.stack(modality_features, dim=1)
+        torch.stack(modality_features, dim=1)
 
         # compute cross-modal attention
         attended_features = []

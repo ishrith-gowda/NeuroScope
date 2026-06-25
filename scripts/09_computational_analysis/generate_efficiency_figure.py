@@ -7,7 +7,6 @@ with proper latex rendering.
 """
 
 import json
-import numpy as np
 from pathlib import Path
 
 import matplotlib
@@ -62,9 +61,7 @@ def create_efficiency_figure(metrics_list: list, output_path: Path):
     # extract data
     methods = [m["method_name"].replace("_", " ").title() for m in metrics_list]
     times_per_slice = [m.get("inference_time_per_slice_ms", 0) for m in metrics_list]
-    times_per_volume = [
-        m.get("inference_time_per_volume_ms", 0) / 1000 for m in metrics_list
-    ]  # convert to seconds
+    [m.get("inference_time_per_volume_ms", 0) / 1000 for m in metrics_list]  # convert to seconds
     throughput_slices = [m.get("throughput_slices_per_sec", 0) for m in metrics_list]
 
     # calculate throughput volumes per hour from throughput slices per sec

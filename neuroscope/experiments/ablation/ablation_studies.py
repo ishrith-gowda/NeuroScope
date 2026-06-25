@@ -5,11 +5,11 @@ systematic evaluation of model components
 with statistical validation.
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from pathlib import Path
-import json
 import itertools
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -18,7 +18,7 @@ class AblationConfig:
 
     name: str
     description: str
-    modifications: Dict[str, Any]
+    modifications: dict[str, Any]
     expected_impact: str = "unknown"  # positive, negative, neutral
 
 
@@ -44,8 +44,8 @@ class AblationStudy:
         self.output_dir = Path(output_dir)
         self.n_trials = n_trials
 
-        self.ablations: List[AblationConfig] = []
-        self.results: Dict[str, List[Dict]] = {}
+        self.ablations: list[AblationConfig] = []
+        self.results: dict[str, list[dict]] = {}
 
     def add_ablation(self, ablation: AblationConfig):
         """add an ablation configuration."""
@@ -89,7 +89,7 @@ class AblationStudy:
         for ablation in components:
             self.add_ablation(ablation)
 
-    def add_interaction_study(self, components: List[str], max_combination: int = 2):
+    def add_interaction_study(self, components: list[str], max_combination: int = 2):
         """
         add interaction studies between components.
 
@@ -101,7 +101,7 @@ class AblationStudy:
             for combo in itertools.combinations(components, r):
                 name = "no_" + "_and_".join(c.split(".")[-1] for c in combo)
 
-                modifications = {c: False for c in combo}
+                modifications = dict.fromkeys(combo, False)
 
                 self.add_ablation(
                     AblationConfig(
@@ -112,7 +112,7 @@ class AblationStudy:
                     )
                 )
 
-    def apply_modifications(self, config: Any, modifications: Dict[str, Any]) -> Any:
+    def apply_modifications(self, config: Any, modifications: dict[str, Any]) -> Any:
         """
         apply modifications to configuration.
 
@@ -138,7 +138,7 @@ class AblationStudy:
 
         return modified
 
-    def run(self, runner_class=None) -> Dict:
+    def run(self, runner_class=None) -> dict:
         """
         run complete ablation study.
 
@@ -197,15 +197,15 @@ class AblationStudy:
         modified.training.seed = config.training.seed + trial
         return modified
 
-    def _analyze_results(self) -> Dict:
+    def _analyze_results(self) -> dict:
         """
         analyze ablation results with statistical tests.
 
         returns:
             analysis dictionary
         """
-        from scipy import stats
         import numpy as np
+        from scipy import stats
 
         analysis = {"baseline": {}, "ablations": {}, "statistical_tests": {}, "rankings": {}}
 
@@ -236,7 +236,7 @@ class AblationStudy:
 
                 if len(baseline_values) >= 2 and len(values) >= 2:
                     # paired t-test
-                    t_stat, p_value = stats.ttest_ind(baseline_values, values)
+                    _t_stat, p_value = stats.ttest_ind(baseline_values, values)
 
                     # effect size (cohen's d)
                     pooled_std = np.sqrt((np.std(baseline_values) ** 2 + np.std(values) ** 2) / 2)
@@ -256,7 +256,7 @@ class AblationStudy:
 
         return analysis
 
-    def _extract_metrics(self, name: str) -> Dict[str, List[float]]:
+    def _extract_metrics(self, name: str) -> dict[str, list[float]]:
         """extract metrics from results."""
         metrics = {}
 
@@ -269,7 +269,7 @@ class AblationStudy:
 
         return metrics
 
-    def _rank_ablations(self, analysis: Dict) -> Dict:
+    def _rank_ablations(self, analysis: dict) -> dict:
         """rank ablations by their impact on metrics."""
         rankings = {}
 
@@ -287,7 +287,7 @@ class AblationStudy:
 
         return rankings
 
-    def _save_report(self, analysis: Dict):
+    def _save_report(self, analysis: dict):
         """save analysis report."""
         # json report
         path = self.output_dir / "ablation_analysis.json"
@@ -297,7 +297,7 @@ class AblationStudy:
         # generate markdown report
         self._generate_markdown_report(analysis)
 
-    def _generate_markdown_report(self, analysis: Dict):
+    def _generate_markdown_report(self, analysis: dict):
         """generate markdown report."""
         lines = ["# Ablation Study Report", "", "## Baseline Performance", ""]
 
@@ -341,7 +341,7 @@ class AblationStudy:
 
 def run_ablation_suite(
     base_config: Any, output_dir: str, n_trials: int = 3, include_interactions: bool = True
-) -> Dict:
+) -> dict:
     """
     run complete ablation study suite.
 

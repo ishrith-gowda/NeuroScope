@@ -5,15 +5,15 @@ complete 3d cyclegan implementation for volumetric medical image
 harmonization, including self-attention enhanced variants.
 """
 
-from typing import Dict, Optional, Any, Tuple, List
 from dataclasses import dataclass, field
+from typing import Any, Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.cuda.amp import autocast
 
-from .generator_3d import Generator3D, SAGenerator3D, UNetGenerator3D
 from .discriminator_3d import Discriminator3D, MultiScaleDiscriminator3D
+from .generator_3d import Generator3D, SAGenerator3D, UNetGenerator3D
 
 
 @dataclass
@@ -25,7 +25,7 @@ class CycleGAN3DConfig:
     out_channels: int = 1
 
     # volume dimensions (for memory estimation)
-    volume_size: Tuple[int, int, int] = (64, 128, 128)  # d, h, w
+    volume_size: tuple[int, int, int] = (64, 128, 128)  # d, h, w
 
     # generator settings
     ngf: int = 32  # reduced for 3d memory constraints
@@ -48,7 +48,7 @@ class CycleGAN3DConfig:
     use_amp: bool = True
     use_checkpoint: bool = True  # gradient checkpointing
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in self.__annotations__}
 
 
@@ -129,7 +129,7 @@ class CycleGAN3D(nn.Module):
                 use_checkpoint=self.config.use_checkpoint,
             )
 
-    def forward(self, real_A: torch.Tensor, real_B: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, real_A: torch.Tensor, real_B: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         forward pass computing all generated volumes.
 
@@ -163,7 +163,7 @@ class CycleGAN3D(nn.Module):
 
     def compute_generator_loss(
         self, real_A: torch.Tensor, real_B: torch.Tensor
-    ) -> Tuple[torch.Tensor, Dict[str, float]]:
+    ) -> tuple[torch.Tensor, dict[str, float]]:
         """
         compute total generator loss.
 
@@ -217,7 +217,7 @@ class CycleGAN3D(nn.Module):
 
     def compute_discriminator_loss(
         self, real_A: torch.Tensor, real_B: torch.Tensor, fake_A: torch.Tensor, fake_B: torch.Tensor
-    ) -> Tuple[torch.Tensor, Dict[str, float]]:
+    ) -> tuple[torch.Tensor, dict[str, float]]:
         """
         compute discriminator loss.
 
@@ -280,15 +280,15 @@ class CycleGAN3D(nn.Module):
         """translate volume from domain b to a."""
         return self.G_B2A(x)
 
-    def get_generator_params(self) -> List[torch.nn.Parameter]:
+    def get_generator_params(self) -> list[torch.nn.Parameter]:
         """get all generator parameters."""
         return list(self.G_A2B.parameters()) + list(self.G_B2A.parameters())
 
-    def get_discriminator_params(self) -> List[torch.nn.Parameter]:
+    def get_discriminator_params(self) -> list[torch.nn.Parameter]:
         """get all discriminator parameters."""
         return list(self.D_A.parameters()) + list(self.D_B.parameters())
 
-    def count_parameters(self) -> Dict[str, int]:
+    def count_parameters(self) -> dict[str, int]:
         """count parameters per component."""
         return {
             "G_A2B": sum(p.numel() for p in self.G_A2B.parameters()),
@@ -298,7 +298,7 @@ class CycleGAN3D(nn.Module):
             "total": sum(p.numel() for p in self.parameters()),
         }
 
-    def estimate_memory(self, batch_size: int = 1) -> Dict[str, float]:
+    def estimate_memory(self, batch_size: int = 1) -> dict[str, float]:
         """
         estimate gpu memory requirements.
 
@@ -334,7 +334,7 @@ class SACycleGAN3DConfig(CycleGAN3DConfig):
 
     # attention settings
     attention_type: str = "self"  # 'self', 'multi_head', 'axial', 'cbam'
-    attention_positions: List[int] = field(default_factory=lambda: [2, 4])
+    attention_positions: list[int] = field(default_factory=lambda: [2, 4])
     num_attention_heads: int = 4
 
     # additional loss weights
@@ -388,7 +388,7 @@ class SACycleGAN3D(CycleGAN3D):
         real_B: torch.Tensor,
         tumor_mask_A: Optional[torch.Tensor] = None,
         tumor_mask_B: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, Dict[str, float]]:
+    ) -> tuple[torch.Tensor, dict[str, float]]:
         """
         compute generator loss with additional terms.
         """
@@ -428,7 +428,7 @@ class Perceptual3DLoss(nn.Module):
     uses 3d feature extraction for perceptual similarity.
     """
 
-    def __init__(self, layers: List[int] = None):
+    def __init__(self, layers: Optional[list[int]] = None):
         super().__init__()
 
         self.layers = layers or [2, 5, 8]

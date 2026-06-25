@@ -5,19 +5,19 @@ provides vgg-based feature extractors for perceptual loss
 computation and feature matching in image translation.
 """
 
-from typing import List, Optional, Dict, Tuple, Any
 from dataclasses import dataclass
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from collections import OrderedDict
 
 
 @dataclass
 class VGGConfig:
     """configuration for vgg feature extractor."""
 
-    feature_layers: List[str] = None
+    feature_layers: list[str] = None
     use_bn: bool = False
     pretrained: bool = True
     requires_grad: bool = False
@@ -35,8 +35,8 @@ class VGGNormalization(nn.Module):
 
     def __init__(
         self,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
     ):
         super().__init__()
         self.register_buffer("mean", torch.tensor(mean).view(1, 3, 1, 1))
@@ -101,7 +101,7 @@ class VGG16Features(nn.Module):
 
     def __init__(
         self,
-        feature_layers: Optional[List[str]] = None,
+        feature_layers: Optional[list[str]] = None,
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
@@ -146,7 +146,7 @@ class VGG16Features(nn.Module):
 
         self.eval()
 
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         extract features from specified layers.
 
@@ -167,7 +167,7 @@ class VGG16Features(nn.Module):
 
         return features
 
-    def get_feature_channels(self) -> Dict[str, int]:
+    def get_feature_channels(self) -> dict[str, int]:
         """get number of channels for each feature layer."""
         channels = {
             "relu1_1": 64,
@@ -237,7 +237,7 @@ class VGG19Features(nn.Module):
 
     def __init__(
         self,
-        feature_layers: Optional[List[str]] = None,
+        feature_layers: Optional[list[str]] = None,
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
@@ -289,7 +289,7 @@ class VGG19Features(nn.Module):
 
         self.eval()
 
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """extract features from specified layers."""
         x = self.normalize(x)
 
@@ -302,7 +302,7 @@ class VGG19Features(nn.Module):
 
         return features
 
-    def get_feature_channels(self) -> Dict[str, int]:
+    def get_feature_channels(self) -> dict[str, int]:
         """get number of channels for each feature layer."""
         channels = {
             "relu1_1": 64,
@@ -336,8 +336,8 @@ class VGGPerceptualExtractor(nn.Module):
     def __init__(
         self,
         vgg_type: str = "vgg19",
-        feature_layers: Optional[List[str]] = None,
-        layer_weights: Optional[Dict[str, float]] = None,
+        feature_layers: Optional[list[str]] = None,
+        layer_weights: Optional[dict[str, float]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
         normalize_features: bool = False,
@@ -385,7 +385,7 @@ class VGGPerceptualExtractor(nn.Module):
         else:
             self.pool = None
 
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """extract weighted features."""
         features = self.backbone(x)
 
@@ -450,8 +450,8 @@ class MultiLayerVGG(nn.Module):
 
     def __init__(
         self,
-        content_layers: Optional[List[str]] = None,
-        style_layers: Optional[List[str]] = None,
+        content_layers: Optional[list[str]] = None,
+        style_layers: Optional[list[str]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
     ):
@@ -481,7 +481,7 @@ class MultiLayerVGG(nn.Module):
         gram = torch.bmm(features, features.transpose(1, 2))
         return gram / (C * H * W)
 
-    def forward(self, x: torch.Tensor) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[dict[str, torch.Tensor], dict[str, torch.Tensor]]:
         """
         extract content and style features.
 

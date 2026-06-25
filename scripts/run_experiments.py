@@ -19,17 +19,15 @@ author: neuroscope team
 date: 2025
 """
 
-import os
-import sys
-import json
 import argparse
+import json
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import torch
-from collections import defaultdict
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -38,14 +36,15 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # import our modules
 try:
     from evaluation.comprehensive_evaluation import (
+        AblationStudy,
         EvaluationPipeline,
         ImageQualityMetrics,
-        StatisticalTests,
-        AblationStudy,
         RadiomicsAnalysis,
+        StatisticalTests,
     )
+
     from neuroscope.models.architectures.sa_cyclegan import create_sa_cyclegan
-    from neuroscope.models.baselines import ComBat, HistogramMatching, CUTGenerator, UNIT
+    from neuroscope.models.baselines import UNIT, ComBat, CUTGenerator, HistogramMatching
 except ImportError as e:
     print(f"warning: could not import all modules: {e}")
 
@@ -70,7 +69,7 @@ class ExperimentConfig:
     image_size: int = 256
 
     # methods to compare
-    methods: List[str] = [
+    methods: list[str] = [
         "sa_cyclegan",  # our method
         "cyclegan",  # standard baseline
         "cut",  # cut (park et al.)
@@ -80,7 +79,7 @@ class ExperimentConfig:
     ]
 
     # ablation variants
-    ablation_variants: List[str] = [
+    ablation_variants: list[str] = [
         "full_model",
         "no_self_attention",
         "no_cbam",
@@ -135,7 +134,7 @@ class ExperimentLogger:
         with open(self.log_file, "a") as f:
             f.write(entry + "\n")
 
-    def log_metrics(self, method: str, metrics: Dict[str, float]):
+    def log_metrics(self, method: str, metrics: dict[str, float]):
         """log metrics for a method."""
         metrics_str = ", ".join([f"{k}={v:.4f}" for k, v in metrics.items()])
         self.log(f"[{method}] {metrics_str}")
@@ -167,15 +166,15 @@ class ResultAggregator:
         self.comparisons = []
         self.ablations = {}
 
-    def add_method_results(self, method: str, metrics: Dict[str, Dict]):
+    def add_method_results(self, method: str, metrics: dict[str, dict]):
         """add results for a method."""
         self.method_results[method] = metrics
 
-    def add_comparison(self, comparison: Dict):
+    def add_comparison(self, comparison: dict):
         """add a statistical comparison."""
         self.comparisons.append(comparison)
 
-    def add_ablation(self, variant: str, results: Dict):
+    def add_ablation(self, variant: str, results: dict):
         """add ablation study results."""
         self.ablations[variant] = results
 
@@ -359,15 +358,15 @@ class FigureGenerator:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_all(self, results: Dict):
+    def generate_all(self, results: dict):
         """generate all figures for publication."""
         try:
             import matplotlib
 
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
-            from matplotlib.gridspec import GridSpec
             import seaborn as sns
+            from matplotlib.gridspec import GridSpec
 
             sns.set_style("whitegrid")
             plt.rcParams.update(
@@ -390,12 +389,12 @@ class FigureGenerator:
         except ImportError:
             print("warning: matplotlib/seaborn not available for figure generation")
 
-    def _generate_method_comparison(self, results: Dict, plt, sns):
+    def _generate_method_comparison(self, results: dict, plt, sns):
         """figure 2: bar chart comparing all methods."""
         methods = list(results.get("methods", {}).keys())
         metrics = ["ssim", "psnr"]
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+        _fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
         for idx, metric in enumerate(metrics):
             values = []
@@ -426,7 +425,7 @@ class FigureGenerator:
         plt.savefig(self.output_dir / "fig2_method_comparison.png", bbox_inches="tight")
         plt.close()
 
-    def _generate_ablation_chart(self, results: Dict, plt, sns):
+    def _generate_ablation_chart(self, results: dict, plt, sns):
         """figure 3: ablation study visualization."""
         ablations = results.get("ablations", {})
         if not ablations:
@@ -439,10 +438,10 @@ class FigureGenerator:
         sorted_pairs = sorted(zip(variants, ssim_values), key=lambda x: x[1], reverse=True)
         variants, ssim_values = zip(*sorted_pairs)
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        _fig, ax = plt.subplots(figsize=(10, 6))
 
         colors = sns.color_palette("RdYlGn", len(variants))
-        bars = ax.barh(range(len(variants)), ssim_values, color=colors)
+        ax.barh(range(len(variants)), ssim_values, color=colors)
 
         ax.set_yticks(range(len(variants)))
         ax.set_yticklabels([v.replace("_", " ").replace("no ", "w/o ") for v in variants])
@@ -456,7 +455,7 @@ class FigureGenerator:
         plt.savefig(self.output_dir / "fig3_ablation.png", bbox_inches="tight")
         plt.close()
 
-    def _generate_training_curves(self, results: Dict, plt, sns):
+    def _generate_training_curves(self, results: dict, plt, sns):
         """figure 4: training loss curves."""
         # simulated training curves if not available
         epochs = np.arange(1, 101)
@@ -466,7 +465,7 @@ class FigureGenerator:
         d_loss = 0.5 * np.exp(-epochs / 20) + 0.3 + np.random.randn(100) * 0.03
         cycle_loss = 1.5 * np.exp(-epochs / 25) + 0.2 + np.random.randn(100) * 0.02
 
-        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        _fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
         axes[0].plot(epochs, g_loss, "b-", linewidth=2)
         axes[0].set_xlabel("Epoch")
@@ -491,7 +490,7 @@ class FigureGenerator:
         plt.savefig(self.output_dir / "fig4_training_curves.png", bbox_inches="tight")
         plt.close()
 
-    def _generate_qualitative_grid(self, results: Dict, plt, GridSpec):
+    def _generate_qualitative_grid(self, results: dict, plt, GridSpec):
         """figure 5: qualitative comparison grid (placeholder)."""
         # this would show actual mri translations
         # for now, create a placeholder structure
@@ -591,7 +590,7 @@ class ExperimentRunner:
 
         self.logger.summary()
 
-    def _train_or_load_models(self) -> Dict:
+    def _train_or_load_models(self) -> dict:
         """train models or load pre-trained weights."""
         models = {}
         checkpoint_dir = Path(self.config.checkpoint_dir)
@@ -610,7 +609,7 @@ class ExperimentRunner:
 
         return models
 
-    def _evaluate_methods(self, models: Dict) -> Dict:
+    def _evaluate_methods(self, models: dict) -> dict:
         """evaluate all methods on test data."""
         results = {}
 
@@ -654,7 +653,7 @@ class ExperimentRunner:
 
         return results
 
-    def _run_ablations(self) -> Dict:
+    def _run_ablations(self) -> dict:
         """run ablation studies."""
         ablations = {}
 
@@ -684,7 +683,7 @@ class ExperimentRunner:
 
         return ablations
 
-    def _run_statistical_analysis(self, results: Dict) -> List[Dict]:
+    def _run_statistical_analysis(self, results: dict) -> list[dict]:
         """run statistical significance tests."""
         stats_test = StatisticalTests(alpha=self.config.alpha)
         comparisons = []

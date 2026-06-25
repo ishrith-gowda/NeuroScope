@@ -6,19 +6,18 @@ this script creates train/val/test splits for paired mri data.
 """
 
 import argparse
-import json
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # add the project root to the python path if not already there
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+from neuroscope.core.logging import get_logger, setup_logging
 from neuroscope.preprocessing import create_paired_dataset_splits
-from neuroscope.core.logging import setup_logging, get_logger
 
 
 def parse_args():
@@ -76,7 +75,7 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     # create dataset splits
-    splits = create_paired_dataset_splits(
+    create_paired_dataset_splits(
         domain_a_dir=args.domain_a_dir,
         domain_b_dir=args.domain_b_dir,
         output_dir=args.output_dir,

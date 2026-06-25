@@ -5,7 +5,8 @@ provides resnet-based feature extractors for multi-scale
 perceptual loss and feature matching.
 """
 
-from typing import List, Optional, Dict, Tuple
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -16,8 +17,8 @@ class ResNetNormalization(nn.Module):
 
     def __init__(
         self,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
     ):
         super().__init__()
         self.register_buffer("mean", torch.tensor(mean).view(1, 3, 1, 1))
@@ -48,7 +49,7 @@ class ResNet18Features(nn.Module):
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
-        feature_stages: Optional[List[int]] = None,
+        feature_stages: Optional[list[int]] = None,
         weights: Optional[str] = "IMAGENET1K_V1",
     ):
         super().__init__()
@@ -87,11 +88,11 @@ class ResNet18Features(nn.Module):
         self.eval()
 
     @property
-    def feature_channels(self) -> Dict[int, int]:
+    def feature_channels(self) -> dict[int, int]:
         """get number of channels at each stage."""
         return {1: 64, 2: 128, 3: 256, 4: 512}
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         """
         extract features from specified stages.
 
@@ -137,7 +138,7 @@ class ResNet34Features(nn.Module):
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
-        feature_stages: Optional[List[int]] = None,
+        feature_stages: Optional[list[int]] = None,
         weights: Optional[str] = "IMAGENET1K_V1",
     ):
         super().__init__()
@@ -172,10 +173,10 @@ class ResNet34Features(nn.Module):
         self.eval()
 
     @property
-    def feature_channels(self) -> Dict[int, int]:
+    def feature_channels(self) -> dict[int, int]:
         return {1: 64, 2: 128, 3: 256, 4: 512}
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         x = self.normalize(x)
         features = {}
 
@@ -216,7 +217,7 @@ class ResNet50Features(nn.Module):
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
-        feature_stages: Optional[List[int]] = None,
+        feature_stages: Optional[list[int]] = None,
         include_stem: bool = False,
         weights: Optional[str] = "IMAGENET1K_V1",
     ):
@@ -253,11 +254,11 @@ class ResNet50Features(nn.Module):
         self.eval()
 
     @property
-    def feature_channels(self) -> Dict[int, int]:
+    def feature_channels(self) -> dict[int, int]:
         channels = {0: 64, 1: 256, 2: 512, 3: 1024, 4: 2048}
         return {s: channels[s] for s in self.feature_stages if s in channels}
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         x = self.normalize(x)
         features = {}
 
@@ -299,8 +300,8 @@ class ResNetPerceptualExtractor(nn.Module):
     def __init__(
         self,
         resnet_type: str = "resnet50",
-        feature_stages: Optional[List[int]] = None,
-        stage_weights: Optional[Dict[int, float]] = None,
+        feature_stages: Optional[list[int]] = None,
+        stage_weights: Optional[dict[int, float]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
         normalize_features: bool = False,
@@ -338,7 +339,7 @@ class ResNetPerceptualExtractor(nn.Module):
                 feature_stages=feature_stages,
             )
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         """extract features from all stages."""
         features = self.backbone(x)
 
@@ -400,8 +401,8 @@ class MultiScaleResNetFeatures(nn.Module):
     def __init__(
         self,
         resnet_type: str = "resnet50",
-        scales: List[float] = None,
-        feature_stages: Optional[List[int]] = None,
+        scales: Optional[list[float]] = None,
+        feature_stages: Optional[list[int]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
     ):
@@ -430,7 +431,7 @@ class MultiScaleResNetFeatures(nn.Module):
                 feature_stages=feature_stages,
             )
 
-    def forward(self, x: torch.Tensor) -> Dict[float, Dict[int, torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> dict[float, dict[int, torch.Tensor]]:
         """
         extract features at multiple scales.
 
@@ -459,7 +460,7 @@ class MultiScaleResNetFeatures(nn.Module):
         self,
         pred: torch.Tensor,
         target: torch.Tensor,
-        scale_weights: Optional[Dict[float, float]] = None,
+        scale_weights: Optional[dict[float, float]] = None,
     ) -> torch.Tensor:
         """compute loss across multiple scales."""
         if scale_weights is None:

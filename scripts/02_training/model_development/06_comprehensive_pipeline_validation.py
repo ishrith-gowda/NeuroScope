@@ -13,14 +13,11 @@ this script validates the entire preprocessing -> cyclegan pipeline to ensure:
 import argparse
 import json
 import logging
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import SimpleITK as sitk
-import torch
 from neuroscope_dataset_loader import get_cycle_domain_loaders
 
 # import paths from preprocessing config
@@ -43,7 +40,7 @@ def setup_logging(verbose: bool = False):
     )
 
 
-def validate_preprocessing_outputs() -> Dict[str, any]:
+def validate_preprocessing_outputs() -> dict[str, any]:
     """
     validate that preprocessing outputs are correctly normalized to [0,1].
 
@@ -66,7 +63,7 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
         return results
 
     # load metadata
-    with open(metadata_path, "r") as f:
+    with open(metadata_path) as f:
         meta = json.load(f)
 
     # check a sample of subjects from each domain
@@ -127,7 +124,7 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
 
                 except Exception as e:
                     results["failed_subjects"].append(
-                        f"{section}/{subject_id}/{modality} (error: {str(e)})"
+                        f"{section}/{subject_id}/{modality} (error: {e!s})"
                     )
                     subject_valid = False
 
@@ -137,7 +134,7 @@ def validate_preprocessing_outputs() -> Dict[str, any]:
     return results
 
 
-def validate_dataset_loader() -> Dict[str, any]:
+def validate_dataset_loader() -> dict[str, any]:
     """
     validate that dataset loader correctly handles tensor normalization.
 
@@ -205,15 +202,15 @@ def validate_dataset_loader() -> Dict[str, any]:
                     )
 
             except Exception as e:
-                results["issues"].append(f"Error testing {loader_name}: {str(e)}")
+                results["issues"].append(f"Error testing {loader_name}: {e!s}")
 
     except Exception as e:
-        results["issues"].append(f"Failed to create loaders: {str(e)}")
+        results["issues"].append(f"Failed to create loaders: {e!s}")
 
     return results
 
 
-def validate_data_consistency() -> Dict[str, any]:
+def validate_data_consistency() -> dict[str, any]:
     """
     validate consistency between preprocessing outputs and dataset loader inputs.
 
@@ -226,7 +223,7 @@ def validate_data_consistency() -> Dict[str, any]:
 
     try:
         # load metadata
-        with open(PATHS["metadata_splits"], "r") as f:
+        with open(PATHS["metadata_splits"]) as f:
             meta = json.load(f)
 
         # get a sample subject from each domain
@@ -296,12 +293,12 @@ def validate_data_consistency() -> Dict[str, any]:
                         )
 
     except Exception as e:
-        results["issues"].append(f"Data consistency check failed: {str(e)}")
+        results["issues"].append(f"Data consistency check failed: {e!s}")
 
     return results
 
 
-def validate_file_structure() -> Dict[str, any]:
+def validate_file_structure() -> dict[str, any]:
     """
     validate that all required files and directories exist.
 
@@ -342,7 +339,7 @@ def validate_file_structure() -> Dict[str, any]:
     return results
 
 
-def generate_validation_report(results: Dict[str, any]) -> None:
+def generate_validation_report(results: dict[str, any]) -> None:
     """generate a comprehensive validation report."""
     logging.info("=== GENERATING VALIDATION REPORT ===")
 

@@ -27,7 +27,6 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import torch
@@ -40,7 +39,6 @@ sys.path.insert(0, str(project_root))
 
 from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer  # noqa: E402
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # metrics
@@ -152,7 +150,7 @@ def evaluate_checkpoint(
     trainer: HybridNCETrainer,
     checkpoint_path: Path,
     label: str,
-) -> Dict:
+) -> dict:
     """run full test-set inference and return aggregated metrics."""
     print(f"\n[{label}] loading checkpoint: {checkpoint_path}")
     ckpt = torch.load(checkpoint_path, map_location=trainer.device, weights_only=False)
@@ -175,7 +173,7 @@ def evaluate_checkpoint(
     saved_lambda = ckpt.get("lambda_nce", "?")
     print(f"[{label}] checkpoint epoch={saved_epoch} lambda_nce={saved_lambda}")
 
-    per_slice: Dict[str, List[float]] = {
+    per_slice: dict[str, list[float]] = {
         "ssim_A2B": [],
         "ssim_B2A": [],
         "ssim_global_A2B": [],
@@ -249,7 +247,7 @@ def evaluate_checkpoint(
     mmd_a2b = maximum_mean_discrepancy(fake_b_features, real_b_features)
     mmd_b2a = maximum_mean_discrepancy(fake_a_features, real_a_features)
 
-    summary: Dict = {
+    summary: dict = {
         "label": label,
         "checkpoint": str(checkpoint_path),
         "n_slices": n_slices,

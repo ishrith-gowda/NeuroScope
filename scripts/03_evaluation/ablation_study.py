@@ -28,29 +28,26 @@ usage:
 import argparse
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-from tqdm import tqdm
 from scipy import stats
 from skimage.metrics import structural_similarity as ssim_func
-from skimage.metrics import peak_signal_noise_ratio as psnr_func
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.baseline_cyclegan_25d import (
     BaselineCycleGAN25D,
     BaselineCycleGAN25DConfig,
 )
-from neuroscope.data.datasets.dataset_25d import create_dataloaders
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 
 
 class AblationStudy:
@@ -87,7 +84,7 @@ class AblationStudy:
         # modality names for per-channel analysis
         self.modalities = ["T1", "T1CE", "T2", "FLAIR"]
 
-    def load_baseline_model(self) -> Tuple[nn.Module, int]:
+    def load_baseline_model(self) -> tuple[nn.Module, int]:
         """load baseline cyclegan model."""
         print("[ablation] loading baseline model...")
         checkpoint = torch.load(self.baseline_path, map_location=self.device, weights_only=False)
@@ -120,7 +117,7 @@ class AblationStudy:
 
         return model, epoch
 
-    def load_attention_model(self) -> Tuple[nn.Module, int]:
+    def load_attention_model(self) -> tuple[nn.Module, int]:
         """load sa-cyclegan model with attention."""
         print("[ablation] loading attention model...")
         checkpoint = torch.load(self.attention_path, map_location=self.device, weights_only=False)
@@ -173,7 +170,7 @@ class AblationStudy:
         real_B: torch.Tensor,
         center_A: torch.Tensor,
         center_B: torch.Tensor,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         compute cycle consistency and translation metrics.
 
@@ -217,7 +214,7 @@ class AblationStudy:
         }
 
         # per-modality metrics
-        for m_idx, modality in enumerate(self.modalities):
+        for _m_idx, modality in enumerate(self.modalities):
             metrics[f"cycle_ssim_A_{modality}"] = []
             metrics[f"cycle_ssim_B_{modality}"] = []
 
@@ -299,7 +296,7 @@ class AblationStudy:
 
         return metrics
 
-    def run_evaluation(self, model: nn.Module, test_loader: DataLoader, model_name: str) -> Dict:
+    def run_evaluation(self, model: nn.Module, test_loader: DataLoader, model_name: str) -> dict:
         """
         run full evaluation on test set.
 
@@ -353,7 +350,7 @@ class AblationStudy:
 
         return summary
 
-    def compute_statistical_tests(self, baseline_results: Dict, attention_results: Dict) -> Dict:
+    def compute_statistical_tests(self, baseline_results: dict, attention_results: dict) -> dict:
         """
         compute statistical significance tests between models.
 
@@ -416,7 +413,7 @@ class AblationStudy:
 
         return stats_results
 
-    def generate_latex_table(self, stats_results: Dict) -> str:
+    def generate_latex_table(self, stats_results: dict) -> str:
         """generate latex table for publication."""
         lines = [
             r"\begin{table}[htbp]",

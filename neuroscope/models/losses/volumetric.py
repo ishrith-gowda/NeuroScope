@@ -13,8 +13,8 @@ volumetric medical image processing:
 - tissuepreservationloss: preserves gm/wm/csf boundaries
 """
 
-from typing import Dict, List, Optional, Tuple, Union
 import math
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -148,7 +148,7 @@ class VolumetricMultiScaleSSIM(nn.Module):
         self,
         window_size: int = 11,
         channel: int = 1,
-        weights: Optional[List[float]] = None,
+        weights: Optional[list[float]] = None,
         data_range: float = 1.0,
     ):
         """
@@ -353,7 +353,7 @@ class VolumetricGradientLoss(nn.Module):
         # shape for conv3d: (out, in, d, h, w)
         return kernel.unsqueeze(0).unsqueeze(0)
 
-    def _compute_gradients(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+    def _compute_gradients(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """compute 3d gradients using sobel filters."""
         # apply to each channel
         B, C, D, H, W = x.shape
@@ -411,7 +411,7 @@ class VolumetricPerceptualLoss(nn.Module):
     def __init__(
         self,
         feature_extractor: str = "resnet3d",  # 'resnet3d', 'vgg2.5d', 'custom'
-        layer_weights: Optional[Dict[str, float]] = None,
+        layer_weights: Optional[dict[str, float]] = None,
         normalize_features: bool = True,
     ):
         """
@@ -510,7 +510,7 @@ class ResNet3DEncoder(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         """extract features at multiple levels."""
         features = {}
 
@@ -576,7 +576,7 @@ class VGG25DEncoder(nn.Module):
         super().__init__()
 
         try:
-            from torchvision.models import vgg16, VGG16_Weights
+            from torchvision.models import VGG16_Weights, vgg16
 
             vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
         except ImportError:
@@ -591,7 +591,7 @@ class VGG25DEncoder(nn.Module):
         for param in self.features.parameters():
             param.requires_grad = False
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         """
         extract 2.5d features from orthogonal views.
 
@@ -601,7 +601,7 @@ class VGG25DEncoder(nn.Module):
         returns:
             dictionary of multi-view features
         """
-        B, C, D, H, W = x.shape
+        _B, C, D, H, W = x.shape
 
         # get central slices from each view
         axial_idx = D // 2
@@ -648,7 +648,7 @@ class Custom3DEncoder(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         features = self.encoder(x)
         return {"layer1": features}
 
@@ -683,7 +683,7 @@ class AnatomicalConsistencyLoss(nn.Module):
         self.weights = {"gm": gm_weight, "wm": wm_weight, "csf": csf_weight}
 
     def forward(
-        self, pred: Tensor, target: Tensor, tissue_maps: Optional[Dict[str, Tensor]] = None
+        self, pred: Tensor, target: Tensor, tissue_maps: Optional[dict[str, Tensor]] = None
     ) -> Tensor:
         """
         compute anatomical consistency loss.
@@ -714,7 +714,7 @@ class AnatomicalConsistencyLoss(nn.Module):
 
         return total_loss
 
-    def _estimate_tissue_priors(self, volume: Tensor) -> Dict[str, Tensor]:
+    def _estimate_tissue_priors(self, volume: Tensor) -> dict[str, Tensor]:
         """
         estimate tissue probability maps from intensity.
 
@@ -804,7 +804,7 @@ class VolumetricNCELoss(nn.Module):
         self,
         num_patches: int = 64,
         temperature: float = 0.07,
-        nce_layers: List[int] = [0, 4, 8, 12, 16],
+        nce_layers: Optional[list[int]] = None,
     ):
         """
         initialize nce loss.
@@ -814,6 +814,8 @@ class VolumetricNCELoss(nn.Module):
             temperature: contrastive temperature
             nce_layers: layers to use for nce
         """
+        if nce_layers is None:
+            nce_layers = [0, 4, 8, 12, 16]
         super().__init__()
 
         self.num_patches = num_patches
@@ -823,7 +825,7 @@ class VolumetricNCELoss(nn.Module):
         self.cross_entropy = nn.CrossEntropyLoss(reduction="none")
 
     def forward(
-        self, feat_q: List[Tensor], feat_k: List[Tensor], feat_neg: Optional[List[Tensor]] = None
+        self, feat_q: list[Tensor], feat_k: list[Tensor], feat_neg: Optional[list[Tensor]] = None
     ) -> Tensor:
         """
         compute nce loss.
@@ -992,9 +994,9 @@ class CombinedVolumetricLoss(nn.Module):
         rec_B: Tensor,
         idt_A: Optional[Tensor] = None,
         idt_B: Optional[Tensor] = None,
-        features_A: Optional[List[Tensor]] = None,
-        features_B: Optional[List[Tensor]] = None,
-    ) -> Dict[str, Tensor]:
+        features_A: Optional[list[Tensor]] = None,
+        features_B: Optional[list[Tensor]] = None,
+    ) -> dict[str, Tensor]:
         """
         compute all losses.
 

@@ -4,11 +4,11 @@ reconstruction losses for image-to-image translation.
 this module provides various reconstruction loss formulations.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
-import math
 
 
 class L1Loss(nn.Module):
@@ -185,7 +185,7 @@ class GradientLoss(nn.Module):
 
     def _compute_gradient(self, x: torch.Tensor) -> torch.Tensor:
         """compute image gradient magnitude."""
-        B, C, H, W = x.size()
+        _B, C, _H, _W = x.size()
 
         # expand sobel filters to all channels
         sobel_x = self.sobel_x.expand(C, 1, 3, 3).to(x.device, x.dtype)

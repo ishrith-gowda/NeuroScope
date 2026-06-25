@@ -9,24 +9,23 @@ this script creates side-by-side comparison images showing:
 - difference maps highlighting changes
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-import torch
-import torch.nn.functional as F
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.colors import Normalize
-from pathlib import Path
 import argparse
-from tqdm import tqdm
 import random
+from pathlib import Path
 
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from tqdm import tqdm
+
 from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 
 # publication-quality settings (matching gold standard)
 plt.rcParams.update(
@@ -185,7 +184,6 @@ def create_translation_figure(
     gs = gridspec.GridSpec(4, 6, figure=fig, hspace=0.15, wspace=0.05)
 
     # row labels
-    row_labels = ["Input", "Translated", "Reconstructed", "Difference"]
 
     # a->b direction (top half)
     fig.text(
@@ -210,8 +208,6 @@ def create_translation_figure(
         va="center",
         ha="center",
     )
-
-    images_to_show = []
 
     # a->b->a direction
     # row 0: input a
@@ -345,7 +341,7 @@ def create_multimodality_figure(
         fake_B_attn = tensor_to_image(attention_outputs["fake_B"], mod_idx)
         rec_A_base = tensor_to_image(baseline_outputs["rec_A"], mod_idx)
         rec_A_attn = tensor_to_image(attention_outputs["rec_A"], mod_idx)
-        diff_base = np.abs(real_A - rec_A_base)
+        np.abs(real_A - rec_A_base)
         diff_attn = np.abs(real_A - rec_A_attn)
 
         # plot row

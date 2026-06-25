@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
 
@@ -21,9 +20,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-LAMBDAS: List[float] = [0.1, 0.5, 1.0, 2.0]
-LAMBDA_COLORS: Dict[float, str] = {
+LAMBDAS: list[float] = [0.1, 0.5, 1.0, 2.0]
+LAMBDA_COLORS: dict[float, str] = {
     0.1: "#9CA3AF",
     0.5: "#059669",
     1.0: "#2563EB",
@@ -51,8 +49,8 @@ PUB_STYLE = {
 }
 
 
-def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
-    out: Dict[float, Dict[str, np.ndarray]] = {}
+def load_per_slice(results_dir: Path) -> dict[float, dict[str, np.ndarray]]:
+    out: dict[float, dict[str, np.ndarray]] = {}
     for lam in LAMBDAS:
         path = results_dir / f"test_results_lambda{lam}.json"
         if not path.exists():
@@ -65,7 +63,7 @@ def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
     return out
 
 
-def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_box(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     metrics = [
         ("ssim_global_A2B", "Global SSIM (A$\\to$B)", (0.93, 1.0)),
         ("ssim_global_B2A", "Global SSIM (B$\\to$A)", (0.93, 1.0)),
@@ -89,7 +87,7 @@ def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
             tick_labels=labels,
             patch_artist=True,
             showfliers=False,
-            medianprops=dict(color="black", linewidth=1.0),
+            medianprops={"color": "black", "linewidth": 1.0},
         )
         for patch, c in zip(bp["boxes"], cols):
             patch.set_facecolor(c)
@@ -107,7 +105,7 @@ def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
     plt.close(fig)
 
 
-def fig_cdf(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_cdf(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(10.0, 3.8))
     keys = [
         ("ssim_global_A2B", "Global SSIM (A$\\to$B)"),
@@ -132,7 +130,7 @@ def fig_cdf(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
     plt.close(fig)
 
 
-def fig_diff_violin(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_diff_violin(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     """paired differences relative to lambda=1.0 baseline."""
     if 1.0 not in per_slice:
         return
@@ -183,7 +181,7 @@ def fig_diff_violin(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path
     plt.close(fig)
 
 
-def fig_scatter_pairs(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_scatter_pairs(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     """4x4 scatter matrix of pairwise per-slice correlations on the global ssim."""
     keys = sorted(per_slice.keys())
     if len(keys) < 2:

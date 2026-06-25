@@ -60,4 +60,4 @@ def get_logger(name: str) -> logging.Logger:
 default_log_file = config.paths.get("logs_dir") / "neuroscope.log"
 logger = setup_logging(default_log_file)
 
-__all__ = ["setup_logging", "get_logger", "logger"]
+__all__ = ["get_logger", "logger", "setup_logging"]

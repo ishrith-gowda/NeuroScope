@@ -7,7 +7,6 @@ patchgan-style discriminators that classify nxn patches.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple
 
 from .base import BaseDiscriminator, PatchDiscriminator
 
@@ -208,7 +207,7 @@ class ResidualPatchDiscriminator(BaseDiscriminator):
         self.blocks = nn.ModuleList()
         in_ch = ndf
 
-        for i in range(n_blocks):
+        for _i in range(n_blocks):
             out_ch = min(in_ch * 2, 512)
             self.blocks.append(ResidualDownBlock(in_ch, out_ch))
             in_ch = out_ch

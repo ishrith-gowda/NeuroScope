@@ -5,11 +5,12 @@ this module provides regularization losses to improve
 training stability and prevent mode collapse.
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List
-import math
 
 
 class GradientPenalty(nn.Module):
@@ -97,7 +98,7 @@ class SpectralRegularization(nn.Module):
         reg_loss = 0.0
         count = 0
 
-        for name, module in model.named_modules():
+        for _name, module in model.named_modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 weight = module.weight
 
@@ -216,7 +217,7 @@ class PathLengthRegularization(nn.Module):
 
     def forward(self, fake_images: torch.Tensor, latents: torch.Tensor) -> torch.Tensor:
         """compute path length regularization."""
-        batch_size = fake_images.size(0)
+        fake_images.size(0)
 
         # random noise for gradient computation
         noise = torch.randn_like(fake_images) / math.sqrt(fake_images.size(2) * fake_images.size(3))
@@ -263,7 +264,7 @@ class OrthogonalRegularization(nn.Module):
         """compute orthogonal regularization."""
         reg_loss = 0.0
 
-        for name, module in model.named_modules():
+        for _name, module in model.named_modules():
             if isinstance(module, nn.Conv2d):
                 weight = module.weight
                 weight_flat = weight.view(weight.size(0), -1)

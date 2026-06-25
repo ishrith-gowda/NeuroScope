@@ -23,14 +23,12 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.stats import bootstrap
 from statsmodels.stats.multitest import multipletests
-from tqdm import tqdm
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -63,7 +61,7 @@ class StatisticalAnalyzer:
         self.correction_method = correction_method
         self.n_bootstrap = n_bootstrap
 
-    def paired_t_test(self, data1: np.ndarray, data2: np.ndarray) -> Tuple[float, float]:
+    def paired_t_test(self, data1: np.ndarray, data2: np.ndarray) -> tuple[float, float]:
         """
         perform paired t-test.
 
@@ -77,7 +75,7 @@ class StatisticalAnalyzer:
         t_stat, p_value = stats.ttest_rel(data1, data2)
         return t_stat, p_value
 
-    def wilcoxon_test(self, data1: np.ndarray, data2: np.ndarray) -> Tuple[float, float]:
+    def wilcoxon_test(self, data1: np.ndarray, data2: np.ndarray) -> tuple[float, float]:
         """
         perform wilcoxon signed-rank test (non-parametric).
 
@@ -108,7 +106,7 @@ class StatisticalAnalyzer:
 
     def bootstrap_ci(
         self, data: np.ndarray, confidence_level: float = 0.95, statistic=np.mean
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         calculate bootstrap confidence interval.
 
@@ -132,7 +130,7 @@ class StatisticalAnalyzer:
 
         return res.confidence_interval.low, res.confidence_interval.high
 
-    def anova_with_posthoc(self, data_dict: Dict[str, np.ndarray]) -> Tuple[float, float, Dict]:
+    def anova_with_posthoc(self, data_dict: dict[str, np.ndarray]) -> tuple[float, float, dict]:
         """
         perform one-way anova with post-hoc pairwise tests.
 
@@ -182,7 +180,7 @@ class StatisticalAnalyzer:
 
         return f_stat, p_value, pairwise_results
 
-    def normality_test(self, data: np.ndarray) -> Tuple[float, float]:
+    def normality_test(self, data: np.ndarray) -> tuple[float, float]:
         """
         test for normality using shapiro-wilk test.
 
@@ -195,7 +193,7 @@ class StatisticalAnalyzer:
         stat, p_value = stats.shapiro(data)
         return stat, p_value
 
-    def analyze_metric(self, results: Dict[str, Dict], metric: str) -> Dict:
+    def analyze_metric(self, results: dict[str, dict], metric: str) -> dict:
         """
         perform comprehensive statistical analysis for a single metric.
 
@@ -229,7 +227,7 @@ class StatisticalAnalyzer:
         descriptive = {}
         for model_name, data in data_dict.items():
             # normality test
-            shapiro_stat, shapiro_p = self.normality_test(data)
+            _shapiro_stat, shapiro_p = self.normality_test(data)
 
             # bootstrap ci
             ci_low, ci_high = self.bootstrap_ci(data)
@@ -273,7 +271,7 @@ class StatisticalAnalyzer:
 
         # check if best model is significantly better than others
         significantly_better_than = []
-        for other_model in means.keys():
+        for other_model in means:
             if other_model != best_model:
                 pair_key = (best_model, other_model)
                 reverse_key = (other_model, best_model)
@@ -292,7 +290,7 @@ class StatisticalAnalyzer:
 
         return analysis
 
-    def generate_summary_table(self, analyses: List[Dict]) -> pd.DataFrame:
+    def generate_summary_table(self, analyses: list[dict]) -> pd.DataFrame:
         """
         generate summary table of statistical results.
 
@@ -326,7 +324,7 @@ class StatisticalAnalyzer:
         return pd.DataFrame(rows)
 
     def generate_pairwise_table(
-        self, analyses: List[Dict], model1: str, model2: str
+        self, analyses: list[dict], model1: str, model2: str
     ) -> pd.DataFrame:
         """
         generate pairwise comparison table for two models.
@@ -408,7 +406,7 @@ def main():
         logger.error(f"Results file not found: {results_file}")
         return
 
-    with open(results_file, "r") as f:
+    with open(results_file) as f:
         results_list = json.load(f)
 
     # convert to dictionary
@@ -468,7 +466,7 @@ def main():
                 print(pairwise_table.to_string(index=False))
 
     logger.info("\n" + "=" * 80)
-    logger.info(f"Statistical analysis complete!")
+    logger.info("Statistical analysis complete!")
     logger.info(f"Results saved to: {output_dir}")
     logger.info("=" * 80)
 

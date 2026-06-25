@@ -13,17 +13,13 @@ designed for main figure in publication manuscript.
 
 import argparse
 import json
-import numpy as np
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.patches import Patch
-
+import matplotlib.pyplot as plt
 
 # publication style
 plt.rcParams.update(
@@ -56,7 +52,7 @@ COLORS = {
 }
 
 
-def load_all_results(results_dir: Path) -> Dict:
+def load_all_results(results_dir: Path) -> dict:
     """load results from all evaluation phases."""
     results = {}
 
@@ -87,7 +83,7 @@ def load_all_results(results_dir: Path) -> Dict:
     return results
 
 
-def create_comprehensive_figure(results: Dict, output_path: Path):
+def create_comprehensive_figure(results: dict, output_path: Path):
     """
     create comprehensive multi-panel results figure.
 
@@ -140,7 +136,7 @@ def create_comprehensive_figure(results: Dict, output_path: Path):
     # (b) raw confusion matrix
     ax2 = fig.add_subplot(gs[0, 1])
     raw_cm = domain_class.get("raw", {}).get("confusion_matrix", [[0, 0], [0, 0]])
-    im = ax2.imshow(raw_cm, cmap="Blues", aspect="equal")
+    ax2.imshow(raw_cm, cmap="Blues", aspect="equal")
     ax2.set_xticks([0, 1])
     ax2.set_yticks([0, 1])
     ax2.set_xticklabels(["BraTS", "UPenn"])
@@ -166,7 +162,7 @@ def create_comprehensive_figure(results: Dict, output_path: Path):
     # (c) harmonized confusion matrix
     ax3 = fig.add_subplot(gs[0, 2])
     harm_cm = domain_class.get("harmonized", {}).get("confusion_matrix", [[0, 0], [0, 0]])
-    im = ax3.imshow(harm_cm, cmap="Blues", aspect="equal")
+    ax3.imshow(harm_cm, cmap="Blues", aspect="equal")
     ax3.set_xticks([0, 1])
     ax3.set_yticks([0, 1])
     ax3.set_xticklabels(["BraTS", "UPenn"])
@@ -298,7 +294,7 @@ def create_comprehensive_figure(results: Dict, output_path: Path):
         times = [r["inference_time_per_slice_ms"] for r in comp_results]
 
         # add sa-cyclegan estimate (typical inference time ~50ms on gpu)
-        methods = ["SA-CycleGAN\n(GPU)"] + methods
+        methods = ["SA-CycleGAN\n(GPU)", *methods]
         times = [50.0] + times  # estimated gpu inference time
 
         bars = ax8.barh(
@@ -363,7 +359,13 @@ clinical implications:
         fontsize=9,
         verticalalignment="top",
         fontfamily="monospace",
-        bbox=dict(boxstyle="round", facecolor="#F8F9FA", edgecolor="#DEE2E6", alpha=0.9, pad=0.5),
+        bbox={
+            "boxstyle": "round",
+            "facecolor": "#F8F9FA",
+            "edgecolor": "#DEE2E6",
+            "alpha": 0.9,
+            "pad": 0.5,
+        },
     )
 
     # save
@@ -374,7 +376,7 @@ clinical implications:
     print(f"[fig] saved comprehensive results figure to {output_path}")
 
 
-def create_latex_summary_table(results: Dict, output_path: Path):
+def create_latex_summary_table(results: dict, output_path: Path):
     """create latex summary table for publication."""
     downstream = results.get("downstream", {}).get("results", {})
     statistical = results.get("statistical", {})

@@ -1,6 +1,5 @@
 import argparse
 import logging
-from pathlib import Path
 import sys
 
 from neuroscope_dataset_loader import get_cycle_domain_loaders

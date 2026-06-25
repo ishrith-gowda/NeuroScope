@@ -5,17 +5,14 @@ generate slice comparison grids, attention maps,
 and supplementary figures.
 """
 
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-import numpy as np
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-import seaborn as sns
-
 
 # publication settings
 plt.rcParams.update(
@@ -139,7 +136,7 @@ def create_loss_landscape(output_path: str):
     args:
         output_path: output path
     """
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    _fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     # create 2d loss landscape
     x = np.linspace(-2, 2, 100)
@@ -192,7 +189,7 @@ def create_convergence_analysis(output_path: str):
     args:
         output_path: output path
     """
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    _fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
     epochs = np.arange(1, 201)
 
@@ -264,7 +261,7 @@ def create_feature_distribution(output_path: str):
     args:
         output_path: output path
     """
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    _fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
     # before harmonization
     ax = axes[0, 0]
@@ -345,7 +342,7 @@ def create_effect_size_forest_plot(output_path: str):
     args:
         output_path: output path
     """
-    fig, ax = plt.subplots(figsize=(10, 8))
+    _fig, ax = plt.subplots(figsize=(10, 8))
 
     # ablation components and their effect sizes
     components = [
@@ -360,7 +357,7 @@ def create_effect_size_forest_plot(output_path: str):
 
     y_positions = np.arange(len(components))
 
-    for i, (name, effect, ci) in enumerate(components):
+    for i, (_name, effect, ci) in enumerate(components):
         color = "#2E86AB" if effect >= 0 else "#C73E1D"
 
         # point estimate
@@ -395,7 +392,7 @@ def create_effect_size_forest_plot(output_path: str):
         6.5,
         "Effect Size Guide:\n|d| < 0.2: Negligible\n0.2-0.5: Small\n0.5-0.8: Medium\n> 0.8: Large",
         fontsize=9,
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
 
     plt.tight_layout()

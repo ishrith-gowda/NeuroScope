@@ -4,9 +4,9 @@ evaluation metrics tests.
 unit tests for quality metrics and statistical analysis.
 """
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
 
 class TestSSIM:
@@ -282,8 +282,9 @@ class TestReporters:
 
     def test_json_export(self, tmp_path):
         """test json export."""
-        from ..evaluation.reporters import JSONReporter
         import json
+
+        from ..evaluation.reporters import JSONReporter
 
         reporter = JSONReporter()
 
@@ -292,7 +293,7 @@ class TestReporters:
         output_path = tmp_path / "results.json"
         reporter.save(results, str(output_path))
 
-        with open(output_path, "r") as f:
+        with open(output_path) as f:
             loaded = json.load(f)
 
         assert loaded["ssim"] == 0.92

@@ -14,7 +14,8 @@ reference:
 """
 
 import copy
-from typing import Dict, List, Optional
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
@@ -47,7 +48,7 @@ class FedAvgAggregator:
         self.global_model = global_model
         self.share_discriminators = share_discriminators
 
-    def get_global_state(self) -> Dict[str, torch.Tensor]:
+    def get_global_state(self) -> dict[str, torch.Tensor]:
         """get the current global model state dict."""
         if self.share_discriminators:
             return copy.deepcopy(self.global_model.state_dict())
@@ -59,7 +60,7 @@ class FedAvgAggregator:
                     state[k] = v.clone()
             return state
 
-    def distribute_to_clients(self, client_models: List[nn.Module]) -> None:
+    def distribute_to_clients(self, client_models: list[nn.Module]) -> None:
         """
         distribute global model weights to all clients.
 
@@ -76,8 +77,8 @@ class FedAvgAggregator:
 
     def aggregate(
         self,
-        client_models: List[nn.Module],
-        client_weights: Optional[List[float]] = None,
+        client_models: list[nn.Module],
+        client_weights: Optional[list[float]] = None,
     ) -> None:
         """
         aggregate client model updates via weighted averaging.
@@ -101,7 +102,7 @@ class FedAvgAggregator:
 
         # determine which parameters to aggregate
         keys_to_aggregate = set()
-        for k in global_state.keys():
+        for k in global_state:
             if self.share_discriminators:
                 keys_to_aggregate.add(k)
             else:
@@ -109,7 +110,7 @@ class FedAvgAggregator:
                     keys_to_aggregate.add(k)
 
         # weighted average
-        for k in global_state.keys():
+        for k in global_state:
             if k in keys_to_aggregate:
                 aggregated_state[k] = torch.zeros_like(global_state[k])
                 for client, weight in zip(client_models, client_weights):
@@ -121,7 +122,7 @@ class FedAvgAggregator:
 
         self.global_model.load_state_dict(aggregated_state)
 
-    def compute_model_divergence(self, client_models: List[nn.Module]) -> Dict[str, float]:
+    def compute_model_divergence(self, client_models: list[nn.Module]) -> dict[str, float]:
         """
         compute divergence between client models and global model.
 
@@ -138,7 +139,7 @@ class FedAvgAggregator:
 
         for client in client_models:
             client_state = client.state_dict()
-            for k in global_state.keys():
+            for k in global_state:
                 if "G_A2B" in k and "weight" in k:
                     diff = (client_state[k] - global_state[k]).norm().item()
                     divergences["G_A2B"] += diff
@@ -222,8 +223,8 @@ class FederatedSimulator:
     def run_round(
         self,
         client_trainers: list,
-        client_weights: Optional[List[float]] = None,
-    ) -> Dict[str, float]:
+        client_weights: Optional[list[float]] = None,
+    ) -> dict[str, float]:
         """
         execute one federated round.
 
@@ -238,7 +239,7 @@ class FederatedSimulator:
 
         # local training
         client_metrics = []
-        for i, (trainer, model) in enumerate(zip(client_trainers, self.client_models)):
+        for _i, (trainer, model) in enumerate(zip(client_trainers, self.client_models)):
             trainer.model = model
             metrics = {}
             for _ in range(self.local_epochs):

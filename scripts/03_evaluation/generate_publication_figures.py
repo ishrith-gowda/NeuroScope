@@ -18,15 +18,12 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import seaborn as sns
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch
-from PIL import Image
+import seaborn as sns
 
 # setup plotting style for publications
 plt.style.use("seaborn-v0_8-paper")
@@ -149,8 +146,8 @@ class PublicationFigureGenerator:
 
     def plot_qualitative_comparison(
         self,
-        samples: List[Dict[str, np.ndarray]],
-        model_names: List[str],
+        samples: list[dict[str, np.ndarray]],
+        model_names: list[str],
         save_name: str = "qualitative_comparison",
     ):
         """
@@ -171,7 +168,7 @@ class PublicationFigureGenerator:
         gs = gridspec.GridSpec(n_samples, n_cols, figure=fig, wspace=0.05, hspace=0.15)
 
         # column titles
-        titles = ["input", "ground truth"] + model_names
+        titles = ["input", "ground truth", *model_names]
 
         for row_idx, sample in enumerate(samples):
             # input
@@ -207,7 +204,7 @@ class PublicationFigureGenerator:
         plt.close()
 
     def plot_quantitative_results_table(
-        self, results: Dict[str, Dict], save_name: str = "quantitative_results"
+        self, results: dict[str, dict], save_name: str = "quantitative_results"
     ):
         """
         create publication-ready quantitative results table.
@@ -265,7 +262,7 @@ class PublicationFigureGenerator:
         logger.info(f"saved latex to {latex_path}")
 
         # create visual table
-        fig, ax = plt.subplots(figsize=(14, len(df) * 0.6 + 1))
+        _fig, ax = plt.subplots(figsize=(14, len(df) * 0.6 + 1))
         ax.axis("tight")
         ax.axis("off")
 
@@ -303,7 +300,7 @@ class PublicationFigureGenerator:
         plt.close()
 
     def plot_metric_distributions(
-        self, results: Dict[str, Dict], save_name: str = "metric_distributions"
+        self, results: dict[str, dict], save_name: str = "metric_distributions"
     ):
         """
         plot distribution of metrics across test set.
@@ -345,7 +342,7 @@ class PublicationFigureGenerator:
         plt.close()
 
     def plot_box_comparison(
-        self, results: Dict[str, Dict], metric: str = "ssim", save_name: str = "box_comparison"
+        self, results: dict[str, dict], metric: str = "ssim", save_name: str = "box_comparison"
     ):
         """
         create box plot comparing models on a metric.
@@ -373,7 +370,7 @@ class PublicationFigureGenerator:
             return
 
         # create figure
-        fig, ax = plt.subplots(figsize=(10, 6))
+        _fig, ax = plt.subplots(figsize=(10, 6))
 
         bp = ax.boxplot(data, labels=labels, patch_artist=True, showmeans=True, meanline=True)
 

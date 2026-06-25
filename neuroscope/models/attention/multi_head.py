@@ -4,11 +4,11 @@ multi-head attention mechanisms.
 implements multi-head attention variants for transformer-style processing.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple
-import math
 
 
 class MultiHeadSelfAttention2d(nn.Module):
@@ -54,7 +54,7 @@ class MultiHeadSelfAttention2d(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_attention: bool = False
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         forward pass.
 
@@ -65,7 +65,7 @@ class MultiHeadSelfAttention2d(nn.Module):
         returns:
             output tensor and optionally attention maps
         """
-        B, C, H, W = x.size()
+        B, _C, H, W = x.size()
         N = H * W
 
         # compute q, k, v

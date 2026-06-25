@@ -4,9 +4,10 @@ this module provides various normalization techniques specifically designed
 for 3d medical imaging volumes, including brain mri preprocessing.
 """
 
+from typing import Optional
+
 import numpy as np
 import torch
-from typing import Optional, Tuple
 
 from neuroscope.core.logging import get_logger
 
@@ -21,7 +22,7 @@ class VolumeNormalization:
         volume: np.ndarray,
         min_val: Optional[float] = None,
         max_val: Optional[float] = None,
-        target_range: Tuple[float, float] = (0, 1),
+        target_range: tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """normalize volume to [0, 1] or custom range using min-max normalization.
@@ -111,7 +112,7 @@ class VolumeNormalization:
 
         # avoid division by zero
         if v_std == 0:
-            logger.warning(f"Standard deviation is zero. Setting normalized volume to zeros.")
+            logger.warning("Standard deviation is zero. Setting normalized volume to zeros.")
             return np.zeros_like(volume)
 
         # apply z-score normalization
@@ -124,7 +125,7 @@ class VolumeNormalization:
         volume: np.ndarray,
         low_percentile: float = 1.0,
         high_percentile: float = 99.0,
-        target_range: Tuple[float, float] = (0, 1),
+        target_range: tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """normalize volume using percentile clipping.
@@ -216,7 +217,7 @@ class VolumeNormalization:
     @staticmethod
     def adaptive_histogram_equalization(
         volume: np.ndarray,
-        block_size: Tuple[int, int, int] = (32, 32, 32),
+        block_size: tuple[int, int, int] = (32, 32, 32),
         clip_limit: float = 0.01,
     ) -> np.ndarray:
         """apply adaptive histogram equalization to the volume.

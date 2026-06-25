@@ -19,19 +19,16 @@ derived regions:
 
 import argparse
 import json
-import os
-import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
-from scipy import ndimage
 from skimage.transform import resize
 from tqdm import tqdm
 
 
-def load_nifti(filepath: Path) -> Tuple[np.ndarray, np.ndarray]:
+def load_nifti(filepath: Path) -> tuple[np.ndarray, np.ndarray]:
     """
     load nifti file and return data with affine matrix.
 
@@ -53,7 +50,7 @@ def save_nifti(data: np.ndarray, affine: np.ndarray, filepath: Path) -> None:
     nib.save(img, str(filepath))
 
 
-def convert_labels_to_regions(seg: np.ndarray) -> Dict[str, np.ndarray]:
+def convert_labels_to_regions(seg: np.ndarray) -> dict[str, np.ndarray]:
     """
     convert brats segmentation labels to clinically relevant regions.
 
@@ -77,11 +74,11 @@ def convert_labels_to_regions(seg: np.ndarray) -> Dict[str, np.ndarray]:
 
 
 def extract_slices_with_tumor(
-    modalities: Dict[str, np.ndarray],
+    modalities: dict[str, np.ndarray],
     segmentation: np.ndarray,
-    slice_range: Tuple[int, int] = (30, 125),
+    slice_range: tuple[int, int] = (30, 125),
     min_tumor_pixels: int = 100,
-) -> List[Dict]:
+) -> list[dict]:
     """
     extract 2d slices that contain tumor for training.
 
@@ -127,7 +124,7 @@ def extract_slices_with_tumor(
 
 
 def resize_slice(
-    data: np.ndarray, target_size: Tuple[int, int], is_label: bool = False
+    data: np.ndarray, target_size: tuple[int, int], is_label: bool = False
 ) -> np.ndarray:
     """
     resize 2d slice to target size.
@@ -180,10 +177,10 @@ def normalize_intensity(data: np.ndarray, mask: Optional[np.ndarray] = None) -> 
 def process_brats_subject(
     subject_dir: Path,
     output_dir: Path,
-    target_size: Tuple[int, int] = (128, 128),
-    slice_range: Tuple[int, int] = (30, 125),
+    target_size: tuple[int, int] = (128, 128),
+    slice_range: tuple[int, int] = (30, 125),
     min_tumor_pixels: int = 50,
-) -> Optional[Dict]:
+) -> Optional[dict]:
     """
     process a single brats subject.
 
@@ -264,7 +261,7 @@ def process_brats_subject(
         "tumor_pixels": [],
     }
 
-    for i, slice_data in enumerate(slices):
+    for _i, slice_data in enumerate(slices):
         slice_idx = slice_data["slice_idx"]
         subject_info["slice_indices"].append(slice_idx)
         subject_info["tumor_pixels"].append(slice_data["tumor_pixels"])
@@ -303,8 +300,8 @@ def process_brats_subject(
 
 
 def create_splits(
-    subjects: List[str], train_ratio: float = 0.7, val_ratio: float = 0.15, seed: int = 42
-) -> Dict[str, List[str]]:
+    subjects: list[str], train_ratio: float = 0.7, val_ratio: float = 0.15, seed: int = 42
+) -> dict[str, list[str]]:
     """
     create train/val/test splits.
 

@@ -8,14 +8,15 @@ to compute radiomics preservation metrics.
 
 import argparse
 import json
-import numpy as np
-from pathlib import Path
-from datetime import datetime
 import sys
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from radiomics_preservation import RadiomicsPreservationAnalyzer, compute_preservation_metrics
+from radiomics_preservation import RadiomicsPreservationAnalyzer
 
 
 def generate_feature_names(n_features: int, n_modalities: int = 4) -> list:
@@ -29,7 +30,7 @@ def generate_feature_names(n_features: int, n_modalities: int = 4) -> list:
     modalities = ["t1", "t1gd", "t2", "flair"]
     names = []
 
-    for mod_idx, mod in enumerate(modalities):
+    for _mod_idx, mod in enumerate(modalities):
         for i in range(features_per_mod):
             if i < features_per_mod // 3:
                 category = "fo"  # first-order-like
@@ -77,12 +78,12 @@ def run_preservation_analysis(
     }
 
     # domain a preservation
-    print(f"[preservation] analyzing domain a preservation...")
+    print("[preservation] analyzing domain a preservation...")
     results["domain_a_preservation"] = analyzer.analyze_preservation(raw_a, harmonized_a)
 
     # domain b preservation (if harmonized_b available)
     if harmonized_b is not None and len(harmonized_b) > 0:
-        print(f"[preservation] analyzing domain b preservation...")
+        print("[preservation] analyzing domain b preservation...")
         # for domain b, compare raw_b with itself since we're targeting domain a style
         # this shows how features change when harmonizing to target domain
         results["domain_b_preservation"] = analyzer.analyze_preservation(raw_b, harmonized_b)
@@ -95,7 +96,7 @@ def run_preservation_analysis(
 
     # cross-domain alignment
     n_common = min(len(raw_a), len(raw_b))
-    print(f"[preservation] analyzing cross-domain alignment...")
+    print("[preservation] analyzing cross-domain alignment...")
     results["cross_domain_raw"] = analyzer.analyze_preservation(raw_a[:n_common], raw_b[:n_common])
 
     # after harmonization
@@ -178,7 +179,7 @@ def main():
     cross_raw = results["cross_domain_raw"]["overall"]
     cross_harm = results["cross_domain_harmonized"]["overall"]
 
-    print(f"  domain a preservation:")
+    print("  domain a preservation:")
     print(f"    mean ccc: {overall_a.get('mean_ccc', 0):.4f} +/- {overall_a.get('std_ccc', 0):.4f}")
     print(f"    mean icc: {overall_a.get('mean_icc', 0):.4f} +/- {overall_a.get('std_icc', 0):.4f}")
     print(
@@ -186,14 +187,14 @@ def main():
     )
 
     if overall_b:
-        print(f"  domain b preservation:")
+        print("  domain b preservation:")
         print(
             f"    mean ccc: {overall_b.get('mean_ccc', 0):.4f} +/- {overall_b.get('std_ccc', 0):.4f}"
         )
 
-    print(f"  cross-domain alignment (raw):")
+    print("  cross-domain alignment (raw):")
     print(f"    mean ccc: {cross_raw.get('mean_ccc', 0):.4f}")
-    print(f"  cross-domain alignment (harmonized):")
+    print("  cross-domain alignment (harmonized):")
     print(f"    mean ccc: {cross_harm.get('mean_ccc', 0):.4f}")
     print(f"  improvement: {cross_harm.get('mean_ccc', 0) - cross_raw.get('mean_ccc', 0):.4f}")
     print("=" * 60)

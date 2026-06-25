@@ -25,17 +25,15 @@ import logging
 import sys
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from scipy import stats
-from scipy.ndimage import label
-from skimage.metrics import structural_similarity as ssim
 from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 from tqdm import tqdm
 
 # suppress warnings
@@ -203,8 +201,8 @@ class MetricCalculator:
 
     def calculate_fid(
         self,
-        real_images: List[np.ndarray],
-        generated_images: List[np.ndarray],
+        real_images: list[np.ndarray],
+        generated_images: list[np.ndarray],
         batch_size: int = 50,
     ) -> float:
         """
@@ -350,8 +348,8 @@ class ModelEvaluator:
         return checkpoint
 
     def evaluate_model(
-        self, model_name: str, checkpoint_path: Path, metrics: List[str] = None
-    ) -> Dict:
+        self, model_name: str, checkpoint_path: Path, metrics: Optional[list[str]] = None
+    ) -> dict:
         """
         evaluate a single model.
 
@@ -369,7 +367,7 @@ class ModelEvaluator:
         logger.info(f"\nEvaluating {model_name}...")
 
         # load model
-        checkpoint = self.load_model(checkpoint_path)
+        self.load_model(checkpoint_path)
 
         # find test images
         test_files = sorted(self.test_data_dir.rglob("*.nii.gz"))
@@ -431,7 +429,7 @@ class ModelEvaluator:
 
         return results
 
-    def compare_models(self, results: List[Dict]) -> pd.DataFrame:
+    def compare_models(self, results: list[dict]) -> pd.DataFrame:
         """
         create comparison table of all models.
 

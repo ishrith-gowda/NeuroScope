@@ -13,11 +13,12 @@ key innovations:
 reference: this is a novel contribution for neurips-level publication.
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, List
-import math
 
 
 class SpectralNorm(nn.Module):
@@ -267,8 +268,10 @@ class SAGenerator(nn.Module):
         ngf: int = 64,
         n_residual_blocks: int = 9,
         use_modality_encoder: bool = True,
-        attention_layers: List[int] = [3, 4, 5],  # which residual blocks get self-attention
+        attention_layers: Optional[list[int]] = None,  # which residual blocks get self-attention
     ):
+        if attention_layers is None:
+            attention_layers = [3, 4, 5]
         super().__init__()
 
         self.use_modality_encoder = use_modality_encoder
@@ -495,7 +498,7 @@ class MultiScaleDiscriminator(nn.Module):
 
         self.downsample = nn.AvgPool2d(3, stride=2, padding=1)
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """
         args:
             x: input image [b, c, h, w]
@@ -565,7 +568,7 @@ class SACycleGAN(nn.Module):
 
     def forward(
         self, real_A: torch.Tensor, real_B: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         forward pass for training.
 
@@ -629,7 +632,7 @@ def create_sa_cyclegan(
     d_params = count_parameters(model.D_A)
     total = count_parameters(model)
 
-    print(f"sa-cyclegan architecture summary:")
+    print("sa-cyclegan architecture summary:")
     print(f"  generator parameters: {g_params:,}")
     print(f"  discriminator parameters: {d_params:,}")
     print(f"  total parameters: {total:,}")

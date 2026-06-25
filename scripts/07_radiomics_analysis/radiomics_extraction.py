@@ -15,11 +15,12 @@ references:
 - zwanenburg et al. (2020): image biomarker standardisation initiative
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from scipy import ndimage, stats
 import warnings
+from dataclasses import dataclass, field
+from typing import Optional
+
+import numpy as np
+from scipy import ndimage, stats
 
 
 @dataclass
@@ -30,8 +31,8 @@ class RadiomicsConfig:
     bin_width: float = 25.0  # intensity bin width for discretization
 
     # glcm settings
-    glcm_distances: List[int] = field(default_factory=lambda: [1, 2, 3])
-    glcm_angles: List[float] = field(
+    glcm_distances: list[int] = field(default_factory=lambda: [1, 2, 3])
+    glcm_angles: list[float] = field(
         default_factory=lambda: [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
     )
 
@@ -49,7 +50,7 @@ class FirstOrderFeatures:
     """
 
     @staticmethod
-    def extract(image: np.ndarray, mask: Optional[np.ndarray] = None) -> Dict[str, float]:
+    def extract(image: np.ndarray, mask: Optional[np.ndarray] = None) -> dict[str, float]:
         """
         extract first-order features from image.
 
@@ -67,9 +68,8 @@ class FirstOrderFeatures:
         values = image[mask].flatten()
 
         if len(values) < 10:
-            return {
-                k: 0.0
-                for k in [
+            return dict.fromkeys(
+                [
                     "mean",
                     "median",
                     "std",
@@ -87,8 +87,9 @@ class FirstOrderFeatures:
                     "percentile_10",
                     "percentile_90",
                     "robust_mean",
-                ]
-            }
+                ],
+                0.0,
+            )
 
         features = {}
 
@@ -198,7 +199,7 @@ class GLCMFeatures:
         return glcm
 
     @staticmethod
-    def extract_from_glcm(glcm: np.ndarray) -> Dict[str, float]:
+    def extract_from_glcm(glcm: np.ndarray) -> dict[str, float]:
         """
         extract haralick texture features from glcm.
 
@@ -211,8 +212,8 @@ class GLCMFeatures:
         features = {}
 
         # marginal distributions
-        px = np.sum(glcm, axis=1)
-        py = np.sum(glcm, axis=0)
+        np.sum(glcm, axis=1)
+        np.sum(glcm, axis=0)
 
         # indices
         levels = glcm.shape[0]
@@ -264,12 +265,16 @@ class GLCMFeatures:
     def extract(
         image: np.ndarray,
         mask: Optional[np.ndarray] = None,
-        distances: List[int] = [1],
-        angles: List[float] = [0],
-    ) -> Dict[str, float]:
+        distances: Optional[list[int]] = None,
+        angles: Optional[list[float]] = None,
+    ) -> dict[str, float]:
         """
         extract averaged glcm features across distances and angles.
         """
+        if angles is None:
+            angles = [0]
+        if distances is None:
+            distances = [1]
         if mask is not None:
             # apply mask
             image = image.copy()
@@ -288,7 +293,7 @@ class GLCMFeatures:
             return {}
 
         averaged = {}
-        for key in all_features[0].keys():
+        for key in all_features[0]:
             values = [f[key] for f in all_features]
             averaged[f"glcm_{key}"] = float(np.mean(values))
 
@@ -305,8 +310,8 @@ class ShapeFeatures:
 
     @staticmethod
     def extract(
-        mask: np.ndarray, voxel_spacing: Tuple[float, ...] = (1.0, 1.0)
-    ) -> Dict[str, float]:
+        mask: np.ndarray, voxel_spacing: tuple[float, ...] = (1.0, 1.0)
+    ) -> dict[str, float]:
         """
         extract shape features from binary mask.
 
@@ -421,7 +426,7 @@ class RadiomicsExtractor:
 
     def extract_slice(
         self, image: np.ndarray, mask: Optional[np.ndarray] = None
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         extract all radiomics features from a single slice.
 
@@ -454,8 +459,8 @@ class RadiomicsExtractor:
         return features
 
     def extract_multimodal(
-        self, images: Dict[str, np.ndarray], mask: Optional[np.ndarray] = None
-    ) -> Dict[str, float]:
+        self, images: dict[str, np.ndarray], mask: Optional[np.ndarray] = None
+    ) -> dict[str, float]:
         """
         extract features from multiple modalities.
 
@@ -478,9 +483,9 @@ class RadiomicsExtractor:
 def extract_radiomics_from_dataset(
     data_dir: str,
     output_path: str,
-    modalities: List[str] = ["t1", "t1gd", "t2", "flair"],
+    modalities: Optional[list[str]] = None,
     max_samples: int = 500,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """
     extract radiomics features from a dataset directory.
 
@@ -493,10 +498,10 @@ def extract_radiomics_from_dataset(
     returns:
         dictionary of extracted feature arrays
     """
-    import os
-    import glob
     from pathlib import Path
 
+    if modalities is None:
+        modalities = ["t1", "t1gd", "t2", "flair"]
     data_path = Path(data_dir)
     extractor = RadiomicsExtractor()
 

@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 
 class BaseConfig:
@@ -83,7 +83,7 @@ class BaseConfig:
         for path in self.paths.values():
             os.makedirs(path, exist_ok=True)
 
-    def update(self, config_dict: Dict[str, Any]):
+    def update(self, config_dict: dict[str, Any]):
         """update configuration from dictionary."""
         for section, values in config_dict.items():
             if hasattr(self, section) and isinstance(getattr(self, section), dict):
@@ -95,12 +95,12 @@ class BaseConfig:
         """load configuration from file."""
         import json
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config_dict = json.load(f)
 
         self.update(config_dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """convert configuration to dictionary."""
         config_dict = {}
 

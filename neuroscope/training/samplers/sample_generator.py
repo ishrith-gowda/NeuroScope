@@ -7,12 +7,11 @@ monitoring and publication purposes.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, List, Tuple, Union
 from pathlib import Path
+from typing import Optional, Union
+
 import numpy as np
 import torch
-import torch.nn as nn
-from datetime import datetime
 
 
 class SampleGenerator:
@@ -33,9 +32,9 @@ class SampleGenerator:
         output_dir: Union[str, Path],
         save_format: str = "png",
         dpi: int = 150,
-        figsize: Tuple[int, int] = (16, 8),
+        figsize: tuple[int, int] = (16, 8),
         max_samples: int = 8,
-        modality_names: Optional[List[str]] = None,
+        modality_names: Optional[list[str]] = None,
     ):
         """
         initialize sample generator.
@@ -67,7 +66,7 @@ class SampleGenerator:
             d.mkdir(parents=True, exist_ok=True)
 
         # track saved samples for animation
-        self.sample_history: List[Dict] = []
+        self.sample_history: list[dict] = []
 
     def _to_numpy(self, tensor: torch.Tensor) -> np.ndarray:
         """convert tensor to numpy array."""
@@ -115,8 +114,8 @@ class SampleGenerator:
             path to saved figure
         """
         try:
-            import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
+            import matplotlib.pyplot as plt
         except ImportError:
             print("warning: matplotlib not available for sample generation")
             return None
@@ -445,7 +444,7 @@ class SampleGenerator:
         rec_B: torch.Tensor,
         epoch: int,
         batch_idx: int = 0,
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """
         generate all sample types for a batch.
 

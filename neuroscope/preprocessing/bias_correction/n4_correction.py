@@ -1,10 +1,11 @@
 """n4 bias field correction for mri."""
 
 import os
+from pathlib import Path
+from typing import Optional, Union
+
 import numpy as np
 import torch
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
 
 from neuroscope.core.logging import get_logger
 
@@ -21,7 +22,7 @@ class N4BiasFieldCorrection:
     def __init__(
         self,
         shrink_factor: int = 4,
-        iterations: List[int] = None,
+        iterations: Optional[list[int]] = None,
         convergence_threshold: float = 0.001,
         spline_order: int = 3,
         spline_distance: float = 200.0,
@@ -51,7 +52,7 @@ class N4BiasFieldCorrection:
         self,
         input_image: np.ndarray,
         mask: Optional[np.ndarray] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """apply n4 bias field correction to a volume.
 
         args:
@@ -124,7 +125,7 @@ class N4BiasFieldCorrection:
         file_pattern: str = "*.nii.gz",
         mask_dir: Optional[Union[str, Path]] = None,
         save_bias: bool = False,
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> dict[str, dict[str, float]]:
         """batch process multiple volumes.
 
         args:
@@ -253,7 +254,7 @@ class N4BiasFieldCorrection:
         original_volume: np.ndarray,
         corrected_volume: np.ndarray,
         bias_field: np.ndarray,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """calculate correction metrics.
 
         args:

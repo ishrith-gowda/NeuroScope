@@ -18,10 +18,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import json
-import numpy as np
+
 import matplotlib.pyplot as plt
-import seaborn as sns
-from latex_figure_config import FIGURE_SIZES, COLORS, save_figure
+import numpy as np
+from latex_figure_config import COLORS
 
 # load evaluation results
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -148,7 +148,7 @@ def generate_cycle_consistency_figure(cycle_results):
         x = np.arange(2)
         width = 0.6
 
-        bars = ax.bar(
+        ax.bar(
             x,
             [cycle_a_mean, cycle_b_mean],
             yerr=[cycle_a_std, cycle_b_std],

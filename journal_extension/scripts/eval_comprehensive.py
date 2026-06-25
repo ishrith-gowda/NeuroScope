@@ -17,12 +17,10 @@ usage:
                                  --output_dir /path/to/evaluation
 """
 
-import os
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import stats
@@ -36,7 +34,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # ============================================================================
 
 
-def paired_t_test(a: np.ndarray, b: np.ndarray) -> Dict[str, float]:
+def paired_t_test(a: np.ndarray, b: np.ndarray) -> dict[str, float]:
     """
     paired t-test with bonferroni correction and effect size.
 
@@ -72,7 +70,7 @@ def paired_t_test(a: np.ndarray, b: np.ndarray) -> Dict[str, float]:
     }
 
 
-def wilcoxon_test(a: np.ndarray, b: np.ndarray) -> Dict[str, float]:
+def wilcoxon_test(a: np.ndarray, b: np.ndarray) -> dict[str, float]:
     """
     wilcoxon signed-rank test (non-parametric alternative to paired t-test).
 
@@ -93,7 +91,7 @@ def wilcoxon_test(a: np.ndarray, b: np.ndarray) -> Dict[str, float]:
     }
 
 
-def bonferroni_correction(p_values: List[float], alpha: float = 0.05) -> List[bool]:
+def bonferroni_correction(p_values: list[float], alpha: float = 0.05) -> list[bool]:
     """apply bonferroni correction to multiple comparisons."""
     n = len(p_values)
     adjusted_alpha = alpha / n
@@ -131,9 +129,9 @@ class ComparisonTableGenerator:
 
     def generate_method_comparison(
         self,
-        results: Dict[str, Dict[str, Dict[str, float]]],
-        metrics: List[str],
-        metric_directions: Dict[str, str],  # 'higher' or 'lower'
+        results: dict[str, dict[str, dict[str, float]]],
+        metrics: list[str],
+        metric_directions: dict[str, str],  # 'higher' or 'lower'
         output_file: str = "table_method_comparison.tex",
     ) -> str:
         """
@@ -206,7 +204,7 @@ class ComparisonTableGenerator:
 
     def generate_ablation_table(
         self,
-        results: Dict[str, Dict[str, Dict[str, float]]],
+        results: dict[str, dict[str, dict[str, float]]],
         output_file: str = "table_nce_ablation.tex",
     ) -> str:
         """
@@ -215,7 +213,7 @@ class ComparisonTableGenerator:
         shows the effect of different lambda_nce values on
         reconstruction and alignment metrics.
         """
-        configs = sorted(results.keys())
+        sorted(results.keys())
         metrics = ["ssim", "psnr", "lpips", "mmd", "classifier_acc"]
         directions = {
             "ssim": "higher",
@@ -229,7 +227,7 @@ class ComparisonTableGenerator:
 
     def generate_rd_table(
         self,
-        results: Dict[str, Dict[str, float]],
+        results: dict[str, dict[str, float]],
         output_file: str = "table_compression_rd.tex",
     ) -> str:
         """
@@ -287,7 +285,7 @@ class JournalEvaluator:
 
         self.table_gen = ComparisonTableGenerator(output_dir)
 
-    def load_results(self, experiment: str) -> Dict:
+    def load_results(self, experiment: str) -> dict:
         """load results json for an experiment."""
         path = self.results_dir / experiment / "results.json"
         if path.exists():
@@ -300,7 +298,7 @@ class JournalEvaluator:
         baseline_metrics: np.ndarray,
         method_metrics: np.ndarray,
         method_name: str,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         run full statistical comparison between baseline and method.
 
@@ -329,7 +327,7 @@ class JournalEvaluator:
         results.update(test_results)
         return results
 
-    def generate_full_report(self) -> Dict:
+    def generate_full_report(self) -> dict:
         """
         generate the complete evaluation report.
 
@@ -345,7 +343,7 @@ class JournalEvaluator:
         }
 
         # load all available results
-        for ext in report.keys():
+        for ext in report:
             results = self.load_results(ext)
             if results:
                 report[ext] = results

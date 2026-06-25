@@ -14,18 +14,12 @@ designed for top-tier venue submission (miccai, tmi, neuroimage).
 
 import argparse
 import json
-import os
-import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import Optional
 
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.lines import Line2D
-import seaborn as sns
-from scipy import stats
+import numpy as np
 
 # set publication-quality defaults
 plt.rcParams.update(
@@ -77,10 +71,10 @@ class MethodResult:
     mmd: float
     cosine_similarity: float
     fid: Optional[float] = None
-    accuracy_ci: Optional[Tuple[float, float]] = None
+    accuracy_ci: Optional[tuple[float, float]] = None
 
 
-def load_results(results_dir: Path) -> Dict:
+def load_results(results_dir: Path) -> dict:
     """load all evaluation results from directory."""
     results = {}
 
@@ -105,7 +99,7 @@ def load_results(results_dir: Path) -> Dict:
     return results
 
 
-def compile_method_results(results: Dict) -> List[MethodResult]:
+def compile_method_results(results: dict) -> list[MethodResult]:
     """compile results from all methods into comparable format."""
     methods = []
 
@@ -154,7 +148,7 @@ def compile_method_results(results: Dict) -> List[MethodResult]:
     return methods
 
 
-def plot_method_comparison_bar(methods: List[MethodResult], output_path: Path):
+def plot_method_comparison_bar(methods: list[MethodResult], output_path: Path):
     """
     create bar chart comparing methods across metrics.
 
@@ -272,7 +266,7 @@ def plot_method_comparison_bar(methods: List[MethodResult], output_path: Path):
     print(f"[fig] saved method comparison to {output_path}")
 
 
-def plot_improvement_waterfall(methods: List[MethodResult], output_path: Path):
+def plot_improvement_waterfall(methods: list[MethodResult], output_path: Path):
     """
     create waterfall chart showing progressive improvement.
 
@@ -381,7 +375,7 @@ def plot_improvement_waterfall(methods: List[MethodResult], output_path: Path):
     print(f"[fig] saved improvement waterfall to {output_path}")
 
 
-def plot_radar_comparison(methods: List[MethodResult], output_path: Path):
+def plot_radar_comparison(methods: list[MethodResult], output_path: Path):
     """
     create radar/spider chart comparing methods across metrics.
 
@@ -421,12 +415,12 @@ def plot_radar_comparison(methods: List[MethodResult], output_path: Path):
     angles = np.linspace(0, 2 * np.pi, n_metrics, endpoint=False).tolist()
     angles += angles[:1]  # close the polygon
 
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={"polar": True})
     plt.subplots_adjust(top=0.85)
 
     for method in methods:
         values = []
-        for metric_name, (attr, higher_better) in metrics.items():
+        for _metric_name, (attr, higher_better) in metrics.items():
             val = getattr(method, attr)
             raw_val = getattr(raw, attr)
 
@@ -489,7 +483,7 @@ def plot_radar_comparison(methods: List[MethodResult], output_path: Path):
     print(f"[fig] saved radar comparison to {output_path}")
 
 
-def create_latex_comparison_table(methods: List[MethodResult], output_path: Path):
+def create_latex_comparison_table(methods: list[MethodResult], output_path: Path):
     """
     create latex table for method comparison.
     """
@@ -527,7 +521,7 @@ def create_latex_comparison_table(methods: List[MethodResult], output_path: Path
     print(f"[table] saved latex table to {output_path}")
 
 
-def plot_statistical_summary(results: Dict, output_path: Path):
+def plot_statistical_summary(results: dict, output_path: Path):
     """
     create comprehensive statistical summary figure.
 

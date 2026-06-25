@@ -14,17 +14,12 @@ all figures designed for top-tier venue submission (miccai, tmi, neuroimage).
 
 import argparse
 import json
-import os
-import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
 import seaborn as sns
-from scipy import stats
 
 # set publication-quality defaults
 plt.rcParams.update(
@@ -60,7 +55,7 @@ COLORS = {
 
 
 def plot_domain_classification_comparison(
-    raw_results: Dict, harmonized_results: Optional[Dict], output_path: Path
+    raw_results: dict, harmonized_results: Optional[dict], output_path: Path
 ):
     """
     plot domain classification accuracy comparison.
@@ -68,7 +63,7 @@ def plot_domain_classification_comparison(
     bar chart comparing raw vs harmonized classification metrics.
     lower values after harmonization indicate better domain adaptation.
     """
-    fig, axes = plt.subplots(1, 3, figsize=(10, 3.5))
+    _fig, axes = plt.subplots(1, 3, figsize=(10, 3.5))
 
     metrics = ["accuracy", "auc", "f1"]
     metric_labels = ["Accuracy", "AUC-ROC", "F1-Score"]
@@ -147,7 +142,7 @@ def plot_domain_classification_comparison(
     # confusion matrix - raw
     if "confusion_matrix" in raw_results:
         cm_raw = np.array(raw_results["confusion_matrix"])
-        im1 = axes[1].imshow(cm_raw, cmap="Blues", vmin=0)
+        axes[1].imshow(cm_raw, cmap="Blues", vmin=0)
         axes[1].set_xticks([0, 1])
         axes[1].set_yticks([0, 1])
         axes[1].set_xticklabels(["BraTS", "UPenn"])
@@ -172,7 +167,7 @@ def plot_domain_classification_comparison(
     # confusion matrix - harmonized
     if harmonized_results and "confusion_matrix" in harmonized_results:
         cm_harm = np.array(harmonized_results["confusion_matrix"])
-        im2 = axes[2].imshow(cm_harm, cmap="Greens", vmin=0)
+        axes[2].imshow(cm_harm, cmap="Greens", vmin=0)
         axes[2].set_xticks([0, 1])
         axes[2].set_yticks([0, 1])
         axes[2].set_xticklabels(["BraTS", "UPenn"])
@@ -321,14 +316,14 @@ def plot_tsne_visualization(
 
 
 def plot_feature_distribution_metrics(
-    raw_metrics: Dict, harmonized_metrics: Optional[Dict], output_path: Path
+    raw_metrics: dict, harmonized_metrics: Optional[dict], output_path: Path
 ):
     """
     plot feature distribution metrics comparison.
 
     bar chart showing fid, kid, mmd, swd before/after harmonization.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    _fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # metrics to plot
     metrics = ["fid", "kid_mean", "mmd_rbf", "sliced_wasserstein"]
@@ -491,7 +486,7 @@ COLORS_ENHANCED = {
 
 
 def plot_harmonization_effect_summary(
-    domain_results: Dict, feature_results: Dict, output_path: Path
+    domain_results: dict, feature_results: dict, output_path: Path
 ):
     """
     create publication-quality summary figure showing overall harmonization effect.
@@ -712,7 +707,7 @@ def plot_harmonization_effect_summary(
         ax3.set_title(r"(c) Harmonization Effect Summary", fontsize=14, pad=10)
 
         # add value labels on bars
-        for i, (bar, val) in enumerate(zip(bars, improvements)):
+        for _i, (bar, val) in enumerate(zip(bars, improvements)):
             width_bar = bar.get_width()
             xpos = width_bar + 1.5 if width_bar >= 0 else width_bar - 1.5
             ha = "left" if width_bar >= 0 else "right"
@@ -759,7 +754,7 @@ COLORS_TRAINING = {
 }
 
 
-def plot_training_curves(history: Dict, output_path: Path):
+def plot_training_curves(history: dict, output_path: Path):
     """
     plot domain classifier training curves with publication-quality styling.
     """
@@ -856,7 +851,7 @@ def plot_training_curves(history: Dict, output_path: Path):
     print(f"[fig] saved publication-quality training curves to {output_path}")
 
 
-def create_latex_table(domain_results: Dict, feature_results: Dict, output_path: Path):
+def create_latex_table(domain_results: dict, feature_results: dict, output_path: Path):
     """
     create latex table summarizing all downstream evaluation results.
     """

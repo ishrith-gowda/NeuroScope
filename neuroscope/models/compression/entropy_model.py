@@ -11,11 +11,10 @@ reference:
     balle et al., "end-to-end optimized image compression", iclr 2017.
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from typing import Tuple
 
 
 class FactorizedPrior(nn.Module):
@@ -78,7 +77,7 @@ class FactorizedPrior(nn.Module):
                 x = x + torch.tanh(x) * torch.tanh(self.factors[i])
         return x
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         estimate bitrate of quantized latent.
 
@@ -173,7 +172,7 @@ class HyperpriorModel(nn.Module):
         # factorized prior for the hyperprior latent itself
         self.hyper_prior = FactorizedPrior(num_hyper_channels)
 
-    def forward(self, y: torch.Tensor, y_hat: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, y: torch.Tensor, y_hat: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         estimate bitrate of quantized latent using hyperprior.
 
@@ -183,7 +182,7 @@ class HyperpriorModel(nn.Module):
         returns:
             tuple of (total_bits, bits_per_element)
         """
-        b, c, h, w = y_hat.shape
+        b, _c, h, w = y_hat.shape
 
         # encode hyperprior
         z = self.hyper_encoder(y.detach() if not self.training else y)

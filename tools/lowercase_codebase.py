@@ -14,9 +14,7 @@ preserves:
 - section dividers (=== or ---)
 """
 
-import os
 import re
-import sys
 from pathlib import Path
 
 
@@ -76,9 +74,9 @@ def lowercase_docstring(text: str) -> str:
 def process_file(filepath: str) -> bool:
     """process a single python file. returns true if modified."""
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
         return False
 
     original = content
@@ -204,7 +202,7 @@ def main():
         total_count += 1
         if process_file(str(setup_py)):
             modified_count += 1
-            print(f"  modified: setup.py")
+            print("  modified: setup.py")
 
     print(f"\nprocessed {total_count} files, modified {modified_count}")
 

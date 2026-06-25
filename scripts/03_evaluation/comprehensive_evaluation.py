@@ -18,17 +18,16 @@ import json
 import logging
 import sys
 import warnings
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import torch
 import torch.nn as nn
+from skimage.metrics import peak_signal_noise_ratio as psnr_func
+from skimage.metrics import structural_similarity as ssim_func
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from skimage.metrics import structural_similarity as ssim_func
-from skimage.metrics import peak_signal_noise_ratio as psnr_func
 
 # suppress warnings
 warnings.filterwarnings("ignore")
@@ -36,8 +35,8 @@ warnings.filterwarnings("ignore")
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -96,7 +95,7 @@ class ComprehensiveEvaluator:
         except ImportError:
             logger.warning("lpips not available. install with: pip install lpips")
 
-    def load_model(self) -> Tuple[nn.Module, Dict]:
+    def load_model(self) -> tuple[nn.Module, dict]:
         """load trained model from checkpoint."""
         logger.info("loading checkpoint...")
         checkpoint = torch.load(self.checkpoint_path, map_location=self.device, weights_only=False)
@@ -191,7 +190,7 @@ class ComprehensiveEvaluator:
         """compute mean squared error."""
         return float(np.mean((img1 - img2) ** 2))
 
-    def compute_lpips(self, img1: torch.Tensor, img2: torch.Tensor) -> List[float]:
+    def compute_lpips(self, img1: torch.Tensor, img2: torch.Tensor) -> list[float]:
         """compute lpips perceptual similarity for a batch."""
         if self.lpips_model is None:
             return [-1.0] * img1.size(0)
@@ -233,12 +232,12 @@ class ComprehensiveEvaluator:
 
         return [-1.0] * img1.size(0)
 
-    def run_evaluation(self) -> Dict:
+    def run_evaluation(self) -> dict:
         """run comprehensive evaluation on test set."""
         logger.info("starting comprehensive evaluation...")
 
         # load model and test data
-        model, config = self.load_model()
+        model, _config = self.load_model()
         test_loader = self.load_test_data()
 
         # storage for metrics
@@ -352,7 +351,7 @@ class ComprehensiveEvaluator:
 
         return results
 
-    def _compute_statistics(self, metrics: Dict[str, List[float]], fid: float) -> Dict:
+    def _compute_statistics(self, metrics: dict[str, list[float]], fid: float) -> dict:
         """compute statistics for metrics."""
         stats = {}
 
@@ -372,12 +371,12 @@ class ComprehensiveEvaluator:
 
         return stats
 
-    def compute_fid(self, real_images: List[np.ndarray], fake_images: List[np.ndarray]) -> float:
+    def compute_fid(self, real_images: list[np.ndarray], fake_images: list[np.ndarray]) -> float:
         """compute fréchet inception distance."""
         try:
+            from PIL import Image
             from scipy.linalg import sqrtm
             from torchvision import models, transforms
-            from PIL import Image
 
             # load inception model
             inception = models.inception_v3(pretrained=True, transform_input=False)
@@ -440,7 +439,7 @@ class ComprehensiveEvaluator:
             logger.error(f"fid computation failed: {e}")
             return -1.0
 
-    def _print_summary(self, results: Dict):
+    def _print_summary(self, results: dict):
         """print evaluation summary."""
         logger.info("\n" + "=" * 80)
         logger.info("evaluation results summary")
@@ -506,7 +505,7 @@ def main():
         num_workers=args.num_workers,
     )
 
-    results = evaluator.run_evaluation()
+    evaluator.run_evaluation()
 
     logger.info("\nevaluation complete!")
 

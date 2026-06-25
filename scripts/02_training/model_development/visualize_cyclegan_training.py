@@ -1,21 +1,18 @@
 # visualize_cyclegan_training.py
 
-import os
 import json
-import glob
 import logging
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms as T
 import torchvision.utils as vutils
-from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
-from torchinfo import summary
-from torch.utils.data import DataLoader
 from neuroscope_dataset_loader import get_cycle_domain_loaders
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
+from torchinfo import summary
 from train_cyclegan import ResNetGenerator
-
 
 # -----------------------------
 # utility and logging setup
@@ -43,7 +40,7 @@ def save_figure(fig, output_dir, name):
 
 
 def plot_loss_curves(log_file_path, output_dir):
-    with open(log_file_path, "r") as f:
+    with open(log_file_path) as f:
         logs = json.load(f)
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
@@ -78,8 +75,8 @@ def compute_ssim_psnr(real, fake):
 
 def evaluate_metrics(loader, G, device, output_dir):
     ssim_scores, psnr_scores = [], []
-    to_pil = T.ToPILImage()
-    to_tensor = T.ToTensor()
+    T.ToPILImage()
+    T.ToTensor()
 
     for idx, real in enumerate(loader):
         if idx >= 20:

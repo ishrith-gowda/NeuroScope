@@ -13,24 +13,23 @@ usage:
     python train_multi_domain.py --n_domains 4 --style_dim 256
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
-import numpy as np
 from tqdm import tqdm
 
 # add project root to path
@@ -61,12 +60,12 @@ class MultiDomainMRIDataset(Dataset):
 
     def __init__(
         self,
-        data_dirs: Dict[str, str],
-        domain_names: List[str],
-        image_size: Tuple[int, int] = (128, 128),
+        data_dirs: dict[str, str],
+        domain_names: list[str],
+        image_size: tuple[int, int] = (128, 128),
         split: str = "train",
         domain_split_file: Optional[str] = None,
-        slice_range: Tuple[int, int] = (30, 125),
+        slice_range: tuple[int, int] = (30, 125),
         cache_volumes: bool = True,
     ):
         """
@@ -89,7 +88,7 @@ class MultiDomainMRIDataset(Dataset):
         self.slice_range = slice_range
         self.cache_volumes = cache_volumes
         self.domain_to_id = {name: i for i, name in enumerate(domain_names)}
-        self._cache: Dict[str, np.ndarray] = {}
+        self._cache: dict[str, np.ndarray] = {}
 
         # load domain split if provided
         domain_subjects = None
@@ -99,7 +98,7 @@ class MultiDomainMRIDataset(Dataset):
             print(f"loaded domain split from {domain_split_file}")
 
         # collect subjects per domain
-        self.domain_subject_dirs: Dict[str, List[Path]] = {}
+        self.domain_subject_dirs: dict[str, list[Path]] = {}
         for domain_name in domain_names:
             domain_dir = Path(data_dirs[domain_name])
             if not domain_dir.exists():
@@ -244,8 +243,8 @@ class MultiDomainTrainer:
     def __init__(
         self,
         config: MultiDomainConfig,
-        data_dirs: Dict[str, str],
-        domain_names: List[str],
+        data_dirs: dict[str, str],
+        domain_names: list[str],
         output_dir: str,
         batch_size: int = 16,
         image_size: int = 128,
@@ -255,7 +254,7 @@ class MultiDomainTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         lambda_cls: float = 1.0,
         lambda_rec: float = 10.0,
         scheduler_type: str = "cosine",
@@ -263,7 +262,7 @@ class MultiDomainTrainer:
         min_lr: float = 1e-6,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
-        domain_split_file: str = None,
+        domain_split_file: Optional[str] = None,
     ):
         setup_torch_performance()
         self.config = config
@@ -325,14 +324,14 @@ class MultiDomainTrainer:
             self.model.discriminator = DataParallel(self.model.discriminator)
 
         # create datasets and dataloaders
-        loader_kwargs = dict(
-            batch_size=batch_size,
-            num_workers=num_workers,
-            pin_memory=True,
-            prefetch_factor=4 if num_workers > 0 else None,
-            persistent_workers=num_workers > 0,
-            drop_last=True,
-        )
+        loader_kwargs = {
+            "batch_size": batch_size,
+            "num_workers": num_workers,
+            "pin_memory": True,
+            "prefetch_factor": 4 if num_workers > 0 else None,
+            "persistent_workers": num_workers > 0,
+            "drop_last": True,
+        }
         self.train_dataset = MultiDomainMRIDataset(
             data_dirs=data_dirs,
             domain_names=domain_names,
@@ -413,7 +412,7 @@ class MultiDomainTrainer:
 
     def _save_config(self, init_args: dict):
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "lambda_cls": self.lambda_cls,
                 "lambda_rec": self.lambda_rec,
@@ -445,7 +444,7 @@ class MultiDomainTrainer:
             targets[i] = np.random.choice(choices)
         return targets
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """single training step for multi-domain model."""
         real = batch["input"].to(self.device)
         src_domain = batch["domain_id"].to(self.device)
@@ -540,7 +539,7 @@ class MultiDomainTrainer:
             "idt_loss": loss_idt.item(),
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         self.model.train()
         epoch_losses = {"G_loss": 0, "D_loss": 0, "G_cls": 0, "rec_loss": 0}
 
@@ -686,9 +685,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     config = MultiDomainConfig(

@@ -1,17 +1,14 @@
 import argparse
+import json
 import logging
 import os
-from pathlib import Path
-import sys
-import json
 
+import numpy as np
 import torch
 import torchvision.utils as vutils
-import numpy as np
-from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
-
 from neuroscope_dataset_loader import get_cycle_domain_loaders
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 from train_cyclegan import ResNetGenerator
 
 

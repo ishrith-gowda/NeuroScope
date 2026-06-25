@@ -7,13 +7,13 @@ the corrected hspace parameter (0.12 instead of 0.15) to match the spacing
 in the all_modalities pdf figures.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -65,7 +65,7 @@ def recreate_pdf_with_corrected_spacing(input_pdf_path: Path, output_pdf_path: P
         images = convert_from_path(str(input_pdf_path), dpi=300)
 
         if not images:
-            print(f"  ✗ failed to extract images from pdf")
+            print("  ✗ failed to extract images from pdf")
             return False
 
         # for the comparison figures, we expect 1 page
@@ -97,7 +97,7 @@ def recreate_pdf_with_corrected_spacing(input_pdf_path: Path, output_pdf_path: P
         fig.savefig(str(output_pdf_path), format="pdf", bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
 
-        print(f"  ✓ successfully regenerated with corrected spacing")
+        print("  ✓ successfully regenerated with corrected spacing")
         return True
 
     except Exception as e:
@@ -118,7 +118,7 @@ def main():
 
     print(f"\n{'=' * 70}")
     print(f"fixing pdf spacing for {len(flair_pdfs)} flair figures")
-    print(f"new hspace: 0.12 (matching all_modalities figures)")
+    print("new hspace: 0.12 (matching all_modalities figures)")
     print(f"{'=' * 70}\n")
 
     success_count = 0

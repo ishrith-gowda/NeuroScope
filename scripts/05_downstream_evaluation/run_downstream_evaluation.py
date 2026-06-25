@@ -17,11 +17,10 @@ usage:
 
 import argparse
 import json
-import os
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def run_command(cmd: list, description: str) -> bool:
@@ -31,7 +30,7 @@ def run_command(cmd: list, description: str) -> bool:
     print("=" * 60)
 
     try:
-        result = subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)
         print(f"[run] {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:

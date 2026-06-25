@@ -7,15 +7,15 @@ for unified logging experience.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, Any, Union, List
 from pathlib import Path
-from datetime import datetime
+from typing import Any, Optional, Union
+
 import torch
 import torch.nn as nn
 
-from .tensorboard_logger import TensorBoardLogger
-from .file_loggers import CSVLogger, JSONLogger, MetricsAggregator
 from .console_logger import ConsoleLogger
+from .file_loggers import CSVLogger, JSONLogger, MetricsAggregator
+from .tensorboard_logger import TensorBoardLogger
 
 
 class LoggerManager:
@@ -131,13 +131,13 @@ class LoggerManager:
         self.global_step = 0
         self.current_epoch = 0
         self.total_epochs = 0
-        self.config: Dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
 
     # =========================================================================
     # configuration & metadata
     # =========================================================================
 
-    def log_config(self, config: Dict[str, Any]):
+    def log_config(self, config: dict[str, Any]):
         """log training configuration."""
         self.config = config
 
@@ -215,7 +215,7 @@ class LoggerManager:
                 "training_start", f"Starting training for {total_epochs} epochs"
             )
 
-    def on_training_end(self, final_metrics: Optional[Dict[str, float]] = None):
+    def on_training_end(self, final_metrics: Optional[dict[str, float]] = None):
         """called at the end of training."""
         if self.console_logger:
             self.console_logger.on_training_end(final_metrics)
@@ -238,8 +238,8 @@ class LoggerManager:
     def on_epoch_end(
         self,
         epoch: int,
-        train_metrics: Dict[str, float],
-        val_metrics: Optional[Dict[str, float]] = None,
+        train_metrics: dict[str, float],
+        val_metrics: Optional[dict[str, float]] = None,
         lr: Optional[float] = None,
         time_elapsed: Optional[float] = None,
     ):
@@ -272,7 +272,7 @@ class LoggerManager:
         self,
         batch_idx: int,
         total_batches: int,
-        losses: Dict[str, float],
+        losses: dict[str, float],
         batch_size: int = 1,
         samples_per_sec: Optional[float] = None,
     ):
@@ -301,7 +301,7 @@ class LoggerManager:
             self.tb_logger.log_scalar(tag, value, step)
 
     def log_scalars(
-        self, main_tag: str, tag_scalar_dict: Dict[str, float], step: Optional[int] = None
+        self, main_tag: str, tag_scalar_dict: dict[str, float], step: Optional[int] = None
     ):
         """log multiple scalars."""
         step = step if step is not None else self.global_step
@@ -349,7 +349,7 @@ class LoggerManager:
     # gradients & weights
     # =========================================================================
 
-    def log_gradients(self, models: Dict[str, nn.Module], step: Optional[int] = None):
+    def log_gradients(self, models: dict[str, nn.Module], step: Optional[int] = None):
         """log gradient norms for multiple models."""
         if self.tb_logger:
             self.tb_logger.log_gradient_norms(models, step)
@@ -369,7 +369,7 @@ class LoggerManager:
         epoch: int,
         path: str,
         is_best: bool = False,
-        metrics: Optional[Dict[str, float]] = None,
+        metrics: Optional[dict[str, float]] = None,
     ):
         """log checkpoint save."""
         if self.console_logger:
@@ -431,8 +431,8 @@ class LoggerManager:
     # =========================================================================
 
     def _flatten_dict(
-        self, d: Dict[str, Any], parent_key: str = "", sep: str = "/"
-    ) -> Dict[str, Any]:
+        self, d: dict[str, Any], parent_key: str = "", sep: str = "/"
+    ) -> dict[str, Any]:
         """flatten a nested dictionary."""
         items = []
         for k, v in d.items():
@@ -443,7 +443,7 @@ class LoggerManager:
                 items.append((new_key, v))
         return dict(items)
 
-    def get_train_averages(self) -> Dict[str, float]:
+    def get_train_averages(self) -> dict[str, float]:
         """get averaged training metrics for current epoch."""
         return self.train_aggregator.get_averages()
 

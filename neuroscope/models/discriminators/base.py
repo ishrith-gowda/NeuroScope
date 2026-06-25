@@ -5,10 +5,11 @@ this module provides abstract base classes and common functionality
 for discriminator architectures.
 """
 
+from abc import ABC, abstractmethod
+from typing import Optional, Union
+
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
-from typing import Optional, List, Tuple, Union
 
 
 class BaseDiscriminator(nn.Module, ABC):
@@ -34,7 +35,7 @@ class BaseDiscriminator(nn.Module, ABC):
     @abstractmethod
     def forward(
         self, x: torch.Tensor
-    ) -> Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor, List[torch.Tensor]]]:
+    ) -> Union[torch.Tensor, list[torch.Tensor], tuple[torch.Tensor, list[torch.Tensor]]]:
         """
         forward pass.
 
@@ -110,7 +111,7 @@ class PatchDiscriminator(BaseDiscriminator):
         """forward pass."""
         return self.model(x)
 
-    def get_all_activations(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def get_all_activations(self, x: torch.Tensor) -> list[torch.Tensor]:
         """get activations from all intermediate layers."""
         activations = []
 
@@ -134,7 +135,7 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
         self.n_scales = n_scales
         self.discriminators = nn.ModuleList()
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """
         forward pass at multiple scales.
 
@@ -152,7 +153,7 @@ class MultiScaleDiscriminatorBase(BaseDiscriminator):
 
         return outputs
 
-    def get_all_features(self, x: torch.Tensor) -> List[List[torch.Tensor]]:
+    def get_all_features(self, x: torch.Tensor) -> list[list[torch.Tensor]]:
         """get features from all scales and layers."""
         all_features = []
         current_input = x
@@ -267,7 +268,7 @@ class FeatureMatchingDiscriminator(BaseDiscriminator):
 
     def forward(
         self, x: torch.Tensor, return_features: bool = True
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[torch.Tensor]]]:
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, list[torch.Tensor]]]:
         """
         forward pass.
 

@@ -1,10 +1,9 @@
-import os
 import json
 import logging
 import random
-from typing import Dict, List, Tuple, Any
-from pathlib import Path
 import time
+from pathlib import Path
+from typing import Any
 
 from neuroscope_preprocessing_config import PATHS
 
@@ -16,7 +15,7 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
+def validate_enriched_metadata(metadata: dict[str, Any]) -> bool:
     """
     validate the enriched metadata structure before processing.
 
@@ -63,7 +62,7 @@ def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
     return True
 
 
-def load_enriched_metadata(metadata_path: Path) -> Dict[str, Any]:
+def load_enriched_metadata(metadata_path: Path) -> dict[str, Any]:
     """
     load and validate the enriched neuroscope dataset metadata.
 
@@ -81,7 +80,7 @@ def load_enriched_metadata(metadata_path: Path) -> Dict[str, Any]:
         raise FileNotFoundError(f"enriched metadata file not found: {metadata_path}")
 
     try:
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             metadata = json.load(f)
         logging.info("loaded enriched metadata from %s", metadata_path)
     except json.JSONDecodeError as e:
@@ -93,7 +92,7 @@ def load_enriched_metadata(metadata_path: Path) -> Dict[str, Any]:
     return metadata
 
 
-def assign_domain_labels(metadata: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+def assign_domain_labels(metadata: dict[str, Any]) -> tuple[list[str], list[str]]:
     """
     assign domain labels to subjects and collect subject lists.
 
@@ -132,12 +131,12 @@ def assign_domain_labels(metadata: Dict[str, Any]) -> Tuple[List[str], List[str]
 
 
 def stratified_split_subjects(
-    subject_ids: List[str],
+    subject_ids: list[str],
     train_frac: float = 0.7,
     val_frac: float = 0.15,
     test_frac: float = 0.15,
     seed: int = 42,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     split subjects into train/validation/test sets with specified proportions.
 
@@ -198,8 +197,8 @@ def stratified_split_subjects(
 
 
 def apply_splits_to_metadata(
-    metadata: Dict[str, Any], brats_splits: Dict[str, str], upenn_splits: Dict[str, str]
-) -> Dict[str, Any]:
+    metadata: dict[str, Any], brats_splits: dict[str, str], upenn_splits: dict[str, str]
+) -> dict[str, Any]:
     """
     apply split assignments to the metadata structure.
 
@@ -239,7 +238,7 @@ def apply_splits_to_metadata(
     return metadata
 
 
-def generate_split_summary(metadata: Dict[str, Any]) -> Dict[str, Dict[str, int]]:
+def generate_split_summary(metadata: dict[str, Any]) -> dict[str, dict[str, int]]:
     """
     generate summary statistics for the train/val/test splits.
 
@@ -256,7 +255,7 @@ def generate_split_summary(metadata: Dict[str, Any]) -> Dict[str, Dict[str, int]
     }
 
     for section in ["brats", "upenn"]:
-        for subj_id, subj_info in metadata[section]["valid_subjects"].items():
+        for _subj_id, subj_info in metadata[section]["valid_subjects"].items():
             split = subj_info.get("split", "unknown")
             if split in summary[section]:
                 summary[section][split] += 1
@@ -267,7 +266,7 @@ def generate_split_summary(metadata: Dict[str, Any]) -> Dict[str, Dict[str, int]
     return summary
 
 
-def save_split_text_files(metadata: Dict[str, Any], output_dir: Path) -> None:
+def save_split_text_files(metadata: dict[str, Any], output_dir: Path) -> None:
     """
     save subject lists for each split to text files for easy access.
 
@@ -302,7 +301,7 @@ def save_split_text_files(metadata: Dict[str, Any], output_dir: Path) -> None:
             logging.error("failed to write %s split file: %s", split, e)
 
 
-def save_metadata_with_splits(metadata: Dict[str, Any], output_path: Path) -> None:
+def save_metadata_with_splits(metadata: dict[str, Any], output_path: Path) -> None:
     """
     save the metadata with domain and split assignments.
 
@@ -323,7 +322,7 @@ def save_metadata_with_splits(metadata: Dict[str, Any], output_path: Path) -> No
         raise
 
 
-def print_split_summary(summary: Dict[str, Dict[str, int]]) -> None:
+def print_split_summary(summary: dict[str, dict[str, int]]) -> None:
     """
     print a formatted summary of the train/val/test splits.
 
@@ -355,7 +354,7 @@ def print_split_summary(summary: Dict[str, Dict[str, int]]) -> None:
     overall = summary["overall"]
     total = overall["total"]
 
-    print(f"\noverall:")
+    print("\noverall:")
     print(
         f"  train:      {overall['train']:3d} subjects ({overall['train'] / max(total, 1) * 100:.1f}%)"
     )
@@ -367,7 +366,7 @@ def print_split_summary(summary: Dict[str, Dict[str, int]]) -> None:
     )
     print(f"  total:      {total:3d} subjects")
 
-    print(f"\ndomain assignment:")
+    print("\ndomain assignment:")
     print(f"  domain a (brats): {summary['brats']['total']} subjects")
     print(f"  domain b (upenn): {summary['upenn']['total']} subjects")
 

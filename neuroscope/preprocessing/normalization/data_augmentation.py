@@ -4,9 +4,10 @@ this module provides various augmentation techniques for medical imaging data,
 including geometric transformations and intensity modifications.
 """
 
+from typing import Any, Optional
+
 import numpy as np
 import torch
-from typing import Dict, List, Optional, Tuple, Any
 
 from neuroscope.core.logging import get_logger
 
@@ -19,7 +20,7 @@ class DataAugmentation:
     @staticmethod
     def random_flip(
         volume: np.ndarray,
-        axes: List[int] = None,
+        axes: Optional[list[int]] = None,
         p: float = 0.5,
     ) -> np.ndarray:
         """randomly flip the volume along specified axes.
@@ -53,7 +54,7 @@ class DataAugmentation:
     def random_rotation_3d(
         volume: np.ndarray,
         max_angle: float = 15.0,  # degrees
-        axes: List[Tuple[int, int]] = None,
+        axes: Optional[list[tuple[int, int]]] = None,
         mode: str = "constant",
         order: int = 1,
     ) -> np.ndarray:
@@ -95,7 +96,7 @@ class DataAugmentation:
     @staticmethod
     def random_crop(
         volume: np.ndarray,
-        crop_size: Tuple[int, ...],
+        crop_size: tuple[int, ...],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """randomly crop the volume.
@@ -148,7 +149,7 @@ class DataAugmentation:
     @staticmethod
     def random_intensity_shift(
         volume: np.ndarray,
-        shift_range: Tuple[float, float],
+        shift_range: tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """apply random intensity shift augmentation.
@@ -192,7 +193,7 @@ class DataAugmentation:
     @staticmethod
     def random_intensity_scale(
         volume: np.ndarray,
-        scale_range: Tuple[float, float],
+        scale_range: tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """apply random intensity scaling augmentation.
@@ -233,7 +234,7 @@ class DataAugmentation:
     def random_noise(
         volume: np.ndarray,
         noise_type: str = "gaussian",
-        params: Dict[str, Any] = None,
+        params: Optional[dict[str, Any]] = None,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """add random noise to the volume.

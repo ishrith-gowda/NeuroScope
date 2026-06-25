@@ -22,7 +22,6 @@ medical image segmentation including:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional, Tuple
 
 
 class ConvBlock(nn.Module):
@@ -87,7 +86,7 @@ class DownBlock(nn.Module):
         self.conv = ConvBlock(in_channels, out_channels)
         self.pool = nn.MaxPool2d(2)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         features = self.conv(x)
         pooled = self.pool(features)
         return pooled, features
@@ -396,9 +395,8 @@ def compute_hausdorff_distance(
 
 
 # need scipy for hausdorff
-from scipy import ndimage
 import numpy as np
-
+from scipy import ndimage
 
 if __name__ == "__main__":
     # test model

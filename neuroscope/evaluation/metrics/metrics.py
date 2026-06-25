@@ -5,13 +5,13 @@ comprehensive collection of image quality and similarity metrics
 for evaluating medical image harmonization.
 """
 
-from typing import Optional, Dict, List, Tuple, Union
-from dataclasses import dataclass, field
 import math
+from dataclasses import dataclass, field
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 
 
 @dataclass
@@ -20,8 +20,8 @@ class MetricResult:
 
     value: float
     std: Optional[float] = None
-    per_sample: Optional[List[float]] = None
-    metadata: Dict = field(default_factory=dict)
+    per_sample: Optional[list[float]] = None
+    metadata: dict = field(default_factory=dict)
 
 
 class SSIM(nn.Module):
@@ -150,7 +150,7 @@ class MultiScaleSSIM(nn.Module):
         window_size: int = 11,
         sigma: float = 1.5,
         channel: int = 1,
-        weights: Optional[List[float]] = None,
+        weights: Optional[list[float]] = None,
         data_range: float = 1.0,
     ):
         """
@@ -190,7 +190,6 @@ class MultiScaleSSIM(nn.Module):
         levels = len(self.weights)
 
         msssim = []
-        mcs = []
 
         for i in range(levels):
             ssim_val = self.ssim(x, y)
@@ -441,7 +440,7 @@ class TumorPreservationScore(nn.Module):
     during harmonization.
     """
 
-    def __init__(self, threshold: float = 0.5, region_weights: Optional[Dict[str, float]] = None):
+    def __init__(self, threshold: float = 0.5, region_weights: Optional[dict[str, float]] = None):
         """
         args:
             threshold: segmentation threshold
@@ -500,8 +499,8 @@ class TissueContrastRatio(nn.Module):
         super().__init__()
 
     def forward(
-        self, image: torch.Tensor, tissue_masks: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+        self, image: torch.Tensor, tissue_masks: dict[str, torch.Tensor]
+    ) -> dict[str, torch.Tensor]:
         """
         compute contrast ratios between tissue types.
 
@@ -579,7 +578,7 @@ class ImageQualityMetrics:
         self.ms_ssim = MultiScaleSSIM().to(device)
         self.psnr = PSNR().to(device)
 
-    def compute_all(self, x: torch.Tensor, y: torch.Tensor) -> Dict[str, float]:
+    def compute_all(self, x: torch.Tensor, y: torch.Tensor) -> dict[str, float]:
         """compute all metrics."""
         x = x.to(self.device)
         y = y.to(self.device)
@@ -607,7 +606,7 @@ class MedicalImageMetrics:
 
     def compute_all(
         self, original: torch.Tensor, harmonized: torch.Tensor, segmentation: torch.Tensor
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """compute all medical metrics."""
         original = original.to(self.device)
         harmonized = harmonized.to(self.device)
@@ -630,7 +629,7 @@ def compute_psnr(x: torch.Tensor, y: torch.Tensor, **kwargs) -> float:
 
 def compute_all_metrics(
     x: torch.Tensor, y: torch.Tensor, segmentation: Optional[torch.Tensor] = None
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     compute all available metrics.
 

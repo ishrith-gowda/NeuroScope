@@ -11,18 +11,16 @@ orchestrates all statistical validation tasks:
 
 import argparse
 import json
-import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 
 # add current directory to path for relative imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from combat_comparison import ComBatConfig, ComBatHarmonizer, evaluate_combat_harmonization
-from comprehensive_statistics import BootstrapCI, StatisticalResult
+from combat_comparison import evaluate_combat_harmonization
 
 
 def extract_features_from_slices(data_dir: Path, domain: str) -> np.ndarray:
@@ -275,7 +273,7 @@ def main():
 
     # load existing evaluation results
     print("[main] loading evaluation results...")
-    with open(args.evaluation_results, "r") as f:
+    with open(args.evaluation_results) as f:
         evaluation_results = json.load(f)
 
     # load pre-extracted features

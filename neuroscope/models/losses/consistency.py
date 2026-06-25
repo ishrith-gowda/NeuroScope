@@ -4,10 +4,11 @@ consistency losses for cycle-consistent image translation.
 this module provides cycle consistency and identity preservation losses.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Callable
 
 
 class CycleConsistencyLoss(nn.Module):
@@ -246,7 +247,7 @@ class TemporalConsistencyLoss(nn.Module):
 
     def _warp(self, img: torch.Tensor, flow: torch.Tensor) -> torch.Tensor:
         """warp image using optical flow."""
-        B, C, H, W = img.size()
+        B, _C, H, W = img.size()
 
         # create mesh grid
         grid_y, grid_x = torch.meshgrid(

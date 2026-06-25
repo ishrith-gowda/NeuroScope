@@ -1,10 +1,9 @@
-import os
 import json
 import logging
-from typing import Dict, Any, Optional, Set
-import pandas as pd
 from pathlib import Path
+from typing import Any, Optional
 
+import pandas as pd
 from neuroscope_preprocessing_config import PATHS
 
 
@@ -15,7 +14,7 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-def load_metadata(metadata_path: Path) -> Dict[str, Any]:
+def load_metadata(metadata_path: Path) -> dict[str, Any]:
     """
     load the existing neuroscope dataset metadata json with validation.
 
@@ -34,7 +33,7 @@ def load_metadata(metadata_path: Path) -> Dict[str, Any]:
         raise FileNotFoundError(f"metadata file not found: {metadata_path}")
 
     try:
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             metadata = json.load(f)
         logging.info("loaded metadata from: %s", metadata_path)
 
@@ -148,7 +147,7 @@ def clean_and_validate_field_strength(value: Any) -> Optional[float]:
         return None
 
 
-def enrich_brats_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def enrich_brats_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     """
     enrich brats metadata with known/inferred acquisition parameters.
 
@@ -163,7 +162,7 @@ def enrich_brats_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
 
     enriched_count = 0
 
-    for subject_id, subj_info in valid_subjects.items():
+    for _subject_id, subj_info in valid_subjects.items():
         # brats-tcga data is from tcga, typically acquired on various scanners
         # we can add some general information based on tcga dataset characteristics
         subj_info["dataset_source"] = "TCGA-GBM"
@@ -183,7 +182,7 @@ def enrich_brats_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return metadata
 
 
-def enrich_upenn_metadata(metadata: Dict[str, Any], acquisition_df: pd.DataFrame) -> Dict[str, Any]:
+def enrich_upenn_metadata(metadata: dict[str, Any], acquisition_df: pd.DataFrame) -> dict[str, Any]:
     """
     enrich upenn metadata with acquisition parameters from csv.
 
@@ -201,7 +200,7 @@ def enrich_upenn_metadata(metadata: Dict[str, Any], acquisition_df: pd.DataFrame
     missing_count = 0
 
     # get set of available ids in csv for efficient lookup
-    csv_ids: Set[str] = set(acquisition_df["ID"].astype(str))
+    set(acquisition_df["ID"].astype(str))
 
     for subject_id, subj_info in valid_subjects.items():
         # add dataset source information
@@ -277,7 +276,7 @@ def enrich_upenn_metadata(metadata: Dict[str, Any], acquisition_df: pd.DataFrame
     return metadata
 
 
-def add_enrichment_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def add_enrichment_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     """
     add metadata about the enrichment process.
 
@@ -305,7 +304,7 @@ def add_enrichment_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     return metadata
 
 
-def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
+def validate_enriched_metadata(metadata: dict[str, Any]) -> bool:
     """
     validate the enriched metadata structure and content.
 
@@ -344,7 +343,7 @@ def validate_enriched_metadata(metadata: Dict[str, Any]) -> bool:
         return False
 
 
-def save_metadata(metadata: Dict[str, Any], output_path: Path) -> None:
+def save_metadata(metadata: dict[str, Any], output_path: Path) -> None:
     """
     save enriched metadata dictionary to a json file with validation.
 
@@ -371,7 +370,7 @@ def save_metadata(metadata: Dict[str, Any], output_path: Path) -> None:
         raise
 
 
-def print_enrichment_summary(metadata: Dict[str, Any]) -> None:
+def print_enrichment_summary(metadata: dict[str, Any]) -> None:
     """
     print a comprehensive summary of the enrichment results.
 

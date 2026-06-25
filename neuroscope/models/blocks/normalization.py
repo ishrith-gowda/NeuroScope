@@ -6,7 +6,6 @@ this module provides various normalization layers used in gan architectures.
 
 import torch
 import torch.nn as nn
-from typing import Optional
 
 
 class AdaptiveInstanceNorm2d(nn.Module):

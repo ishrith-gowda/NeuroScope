@@ -22,29 +22,26 @@ author: neuroscope team
 date: 2025
 """
 
-import os
-import sys
-import json
 import argparse
+import contextlib
+import json
 import random
+import sys
 import time
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 from collections import deque
+from pathlib import Path
 
+import nibabel as nib
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.tensorboard import SummaryWriter
+from PIL import Image
 from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, LambdaLR
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
-from PIL import Image
 from tqdm import tqdm
-import nibabel as nib
 
 # add project root to path
 project_root = Path(__file__).parent.parent
@@ -53,17 +50,17 @@ sys.path.insert(0, str(project_root))
 # import our novel architecture and losses
 try:
     from neuroscope.models.architectures.sa_cyclegan import (
+        MultiScaleDiscriminator,
         SACycleGAN,
         SAGenerator,
-        MultiScaleDiscriminator,
         create_sa_cyclegan,
     )
     from neuroscope.models.losses.advanced_losses import (
-        PerceptualLoss,
         ContrastiveLoss,
         ModalitySpecificLoss,
-        TumorPreservationLoss,
+        PerceptualLoss,
         TotalLoss,
+        TumorPreservationLoss,
     )
 except ImportError:
     print("warning: could not import custom modules. using fallback.")
@@ -162,7 +159,7 @@ class MRISliceDataset(Dataset):
         image_size: int = 256,
         augment: bool = True,
         cache_size: int = 1000,
-        slice_range: Tuple[int, int] = (40, 120),  # focus on brain slices
+        slice_range: tuple[int, int] = (40, 120),  # focus on brain slices
     ):
         self.root_dir = Path(root_dir) / domain
         self.image_size = image_size
@@ -466,7 +463,7 @@ class SACycleGANTrainer:
 
     def train_epoch(
         self, dataloader_A: DataLoader, dataloader_B: DataLoader, epoch: int
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
 
@@ -496,7 +493,7 @@ class SACycleGANTrainer:
                 break
 
             # create target tensors with label smoothing
-            batch_size = real_A.size(0)
+            real_A.size(0)
 
             # forward pass through generators
             fake_B, fake_A, rec_A, rec_B = self.model(real_A, real_B)
@@ -549,13 +546,11 @@ class SACycleGANTrainer:
                 ) * self.config.lambda_perceptual
 
                 # contrastive loss (if implemented with encoder)
-                try:
+                with contextlib.suppress(BaseException):
                     contrastive_loss = (
                         self.criterion_contrastive(fake_B, real_A, real_B)
                         + self.criterion_contrastive(fake_A, real_B, real_A)
                     ) * self.config.lambda_contrastive
-                except:
-                    pass
 
             # total generator loss
             g_loss = g_loss_adv + cycle_loss + idt_loss + perceptual_loss + contrastive_loss

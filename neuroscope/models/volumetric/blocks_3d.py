@@ -9,8 +9,6 @@ advanced 3d blocks for volumetric medical image processing including:
 - memory-efficient implementations for large volumes
 """
 
-from typing import Optional, Tuple, List, Union
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -508,8 +506,8 @@ class PatchEmbed3D(nn.Module):
 
     def __init__(
         self,
-        volume_size: Tuple[int, int, int] = (64, 256, 256),
-        patch_size: Tuple[int, int, int] = (4, 16, 16),
+        volume_size: tuple[int, int, int] = (64, 256, 256),
+        patch_size: tuple[int, int, int] = (4, 16, 16),
         in_channels: int = 1,
         embed_dim: int = 768,
     ):
@@ -528,7 +526,7 @@ class PatchEmbed3D(nn.Module):
         self.norm = nn.LayerNorm(embed_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        B, C, D, H, W = x.shape
+        _B, _C, _D, _H, _W = x.shape
         x = self.proj(x)  # [b, embed_dim, d', h', w']
         x = x.flatten(2).transpose(1, 2)  # [b, n, embed_dim]
         x = self.norm(x)

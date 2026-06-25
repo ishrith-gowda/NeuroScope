@@ -19,12 +19,12 @@ references:
 
 import argparse
 import json
-import numpy as np
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
-from scipy import stats
 import warnings
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+from scipy import stats
 
 
 @dataclass
@@ -138,7 +138,7 @@ def compute_icc(x: np.ndarray, y: np.ndarray, icc_type: str = "2,1") -> float:
     return float(np.clip(icc, 0, 1))
 
 
-def bland_altman_analysis(x: np.ndarray, y: np.ndarray) -> Tuple[float, float, float, float]:
+def bland_altman_analysis(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]:
     """
     perform bland-altman analysis for method agreement.
 
@@ -235,11 +235,11 @@ class RadiomicsPreservationAnalyzer:
     analyzer for radiomics feature preservation across harmonization.
     """
 
-    def __init__(self, feature_names: List[str]):
+    def __init__(self, feature_names: list[str]):
         self.feature_names = feature_names
         self.feature_categories = self._categorize_features(feature_names)
 
-    def _categorize_features(self, names: List[str]) -> Dict[str, List[int]]:
+    def _categorize_features(self, names: list[str]) -> dict[str, list[int]]:
         """categorize features by type."""
         categories = {"first_order": [], "glcm": [], "shape": [], "other": []}
 
@@ -257,7 +257,7 @@ class RadiomicsPreservationAnalyzer:
 
     def analyze_preservation(
         self, original_features: np.ndarray, harmonized_features: np.ndarray
-    ) -> Dict:
+    ) -> dict:
         """
         analyze feature preservation for all features.
 
@@ -352,9 +352,9 @@ def compare_methods_preservation(
     original_b: np.ndarray,
     harmonized_a: np.ndarray,
     harmonized_b: np.ndarray,
-    feature_names: List[str],
+    feature_names: list[str],
     method_name: str = "sa-cyclegan",
-) -> Dict:
+) -> dict:
     """
     compare feature preservation between domains after harmonization.
 
@@ -421,7 +421,7 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"[preservation] loading features...")
+    print("[preservation] loading features...")
 
     original_a = np.load(args.original_a)
     original_b = np.load(args.original_b)
@@ -441,7 +441,7 @@ def main():
         feature_names = [f"feature_{i}" for i in range(original_a.shape[1])]
 
     # run analysis
-    print(f"[preservation] analyzing feature preservation...")
+    print("[preservation] analyzing feature preservation...")
     results = compare_methods_preservation(
         original_a, original_b, harmonized_a, harmonized_b, feature_names, args.method_name
     )
@@ -454,15 +454,15 @@ def main():
     print("=" * 60)
     print(f"[preservation] {args.method_name} results:")
     print("=" * 60)
-    print(f"  domain a preservation:")
+    print("  domain a preservation:")
     print(f"    mean ccc: {results['domain_a_preservation']['overall']['mean_ccc']:.4f}")
     print(f"    mean icc: {results['domain_a_preservation']['overall']['mean_icc']:.4f}")
-    print(f"  domain b preservation:")
+    print("  domain b preservation:")
     print(f"    mean ccc: {results['domain_b_preservation']['overall']['mean_ccc']:.4f}")
     print(f"    mean icc: {results['domain_b_preservation']['overall']['mean_icc']:.4f}")
-    print(f"  cross-domain alignment (raw):")
+    print("  cross-domain alignment (raw):")
     print(f"    mean ccc: {results['cross_domain_raw']['overall']['mean_ccc']:.4f}")
-    print(f"  cross-domain alignment (harmonized):")
+    print("  cross-domain alignment (harmonized):")
     print(f"    mean ccc: {results['cross_domain_harmonized']['overall']['mean_ccc']:.4f}")
     print("=" * 60)
 

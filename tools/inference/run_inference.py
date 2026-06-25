@@ -9,21 +9,23 @@ usage:
     python run_inference.py --cases case_ids.json --checkpoint path/to/checkpoint.pth
 """
 
-import json
-import torch
-import numpy as np
 import argparse
-from pathlib import Path
-from typing import Dict, List, Tuple
+import json
 import sys
+from pathlib import Path
+from typing import Optional
+
+import numpy as np
+import torch
 
 # add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from neuroscope.models.cyclegan_25d import CycleGAN25D
-from neuroscope.data.brats_dataset import BraTSDataset
 from torch.utils.data import DataLoader
+
+from neuroscope.data.brats_dataset import BraTSDataset
+from neuroscope.models.cyclegan_25d import CycleGAN25D
 
 
 def load_model(checkpoint_path: Path, device: str = "cuda") -> CycleGAN25D:
@@ -64,7 +66,7 @@ def load_model(checkpoint_path: Path, device: str = "cuda") -> CycleGAN25D:
     return model, config
 
 
-def load_test_dataset(config, case_indices: List[int] = None) -> DataLoader:
+def load_test_dataset(config, case_indices: Optional[list[int]] = None) -> DataLoader:
     """load test dataset with optional case filtering"""
     print("loading test dataset...")
 
@@ -87,15 +89,15 @@ def load_test_dataset(config, case_indices: List[int] = None) -> DataLoader:
         batch_size=1,
         shuffle=False,
         num_workers=0,
-        pin_memory=True if torch.cuda.is_available() else False,
+        pin_memory=bool(torch.cuda.is_available()),
     )
 
     return test_loader
 
 
 def run_inference_on_cases(
-    model: CycleGAN25D, dataloader: DataLoader, device: str, case_info: Dict
-) -> Dict[str, np.ndarray]:
+    model: CycleGAN25D, dataloader: DataLoader, device: str, case_info: dict
+) -> dict[str, np.ndarray]:
     """
     run inference on selected cases
 
@@ -168,7 +170,7 @@ def run_inference_on_cases(
     ]:
         results[key] = np.stack(results[key], axis=0)
 
-    print(f"\ninference complete. shapes:")
+    print("\ninference complete. shapes:")
     print(f"  inputs_a: {results['inputs_a'].shape}")
     print(f"  generated_b: {results['generated_b'].shape}")
     print(f"  reconstructed_a: {results['reconstructed_a'].shape}")
@@ -176,7 +178,7 @@ def run_inference_on_cases(
     return results
 
 
-def save_inference_results(results: Dict, output_dir: Path, category: str):
+def save_inference_results(results: dict, output_dir: Path, category: str):
     """save inference results as numpy arrays"""
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -250,10 +252,10 @@ def main():
 
     # load case selections
     print(f"\nloading case selections from {cases_path}")
-    with open(cases_path, "r") as f:
+    with open(cases_path) as f:
         cases = json.load(f)
 
-    print(f"metadata:")
+    print("metadata:")
     print(f"  test samples: {cases['metadata']['n_samples']}")
     print(f"  checkpoint: {cases['metadata']['checkpoint']}")
     print(f"  checkpoint epoch: {cases['metadata']['checkpoint_epoch']}")

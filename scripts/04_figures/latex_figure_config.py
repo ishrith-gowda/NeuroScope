@@ -11,9 +11,8 @@ date: january 2026
 
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
 import numpy as np
+import seaborn as sns
 
 # use agg backend for non-interactive rendering
 matplotlib.use("Agg")
@@ -106,7 +105,7 @@ def get_figure_size(width="columnwidth", fraction=1.0, aspect_ratio="golden"):
     return (fig_width, fig_height)
 
 
-def save_figure(fig, filename, output_dir="figures/main", formats=["pdf"]):
+def save_figure(fig, filename, output_dir="figures/main", formats=None):
     """
     save figure in multiple formats with consistent settings.
 
@@ -116,9 +115,10 @@ def save_figure(fig, filename, output_dir="figures/main", formats=["pdf"]):
         output_dir: directory to save figures
         formats: list of formats to save ['pdf', 'png', 'pgf']
     """
-    import os
     from pathlib import Path
 
+    if formats is None:
+        formats = ["pdf"]
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -205,4 +205,4 @@ if __name__ == "__main__":
     plt.close()
 
     print("latex configuration test complete!")
-    print(f"test figure saved to: figures/main/test_latex_rendering.pdf")
+    print("test figure saved to: figures/main/test_latex_rendering.pdf")

@@ -7,10 +7,10 @@ with proper latex rendering.
 """
 
 import json
-import numpy as np
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -69,7 +69,7 @@ def create_domain_classification_figure(results: dict, output_path: Path):
         ax.set_box_aspect(1)
 
     raw = results["raw"]
-    harmonized = results.get("harmonized", None)
+    harmonized = results.get("harmonized")
 
     # (a) classification metrics
     ax = axes[0]

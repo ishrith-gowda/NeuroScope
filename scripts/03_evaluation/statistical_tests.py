@@ -17,14 +17,13 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
-from scipy.stats import ttest_rel, wilcoxon
-import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import ttest_rel, wilcoxon
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -43,7 +42,7 @@ class StatisticalComparator:
         """
         self.alpha = alpha
 
-    def paired_ttest(self, samples1: np.ndarray, samples2: np.ndarray) -> Dict:
+    def paired_ttest(self, samples1: np.ndarray, samples2: np.ndarray) -> dict:
         """
         perform paired t-test.
 
@@ -66,7 +65,7 @@ class StatisticalComparator:
 
         return result
 
-    def wilcoxon_test(self, samples1: np.ndarray, samples2: np.ndarray) -> Dict:
+    def wilcoxon_test(self, samples1: np.ndarray, samples2: np.ndarray) -> dict:
         """
         perform wilcoxon signed-rank test (non-parametric).
 
@@ -99,7 +98,7 @@ class StatisticalComparator:
 
     def bootstrap_ci(
         self, samples: np.ndarray, n_bootstrap: int = 10000, ci_level: float = 0.95
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         compute bootstrap confidence interval.
 
@@ -148,8 +147,8 @@ class StatisticalComparator:
         return float(d)
 
     def bonferroni_correction(
-        self, p_values: List[float], alpha: Optional[float] = None
-    ) -> Tuple[List[bool], float]:
+        self, p_values: list[float], alpha: Optional[float] = None
+    ) -> tuple[list[bool], float]:
         """
         apply bonferroni correction for multiple comparisons.
 
@@ -171,8 +170,8 @@ class StatisticalComparator:
         return significant, adjusted_alpha
 
     def holm_bonferroni_correction(
-        self, p_values: List[float], alpha: Optional[float] = None
-    ) -> List[bool]:
+        self, p_values: list[float], alpha: Optional[float] = None
+    ) -> list[bool]:
         """
         apply holm-bonferroni correction (more powerful than bonferroni).
 
@@ -203,11 +202,11 @@ class StatisticalComparator:
 
     def compare_models(
         self,
-        model1_results: Dict,
-        model2_results: Dict,
+        model1_results: dict,
+        model2_results: dict,
         model1_name: str = "model 1",
         model2_name: str = "model 2",
-    ) -> Dict:
+    ) -> dict:
         """
         comprehensive statistical comparison between two models.
 
@@ -286,7 +285,7 @@ class StatisticalComparator:
         else:
             return "large"
 
-    def generate_comparison_table(self, comparisons: List[Dict], output_path: Path):
+    def generate_comparison_table(self, comparisons: list[dict], output_path: Path):
         """
         generate publication-ready comparison table.
 
@@ -329,8 +328,8 @@ class StatisticalComparator:
 
     def plot_comparison(
         self,
-        model1_results: Dict,
-        model2_results: Dict,
+        model1_results: dict,
+        model2_results: dict,
         model1_name: str,
         model2_name: str,
         output_dir: Path,
@@ -360,7 +359,7 @@ class StatisticalComparator:
                 continue
 
             # create violin plot
-            fig, ax = plt.subplots(figsize=(8, 6))
+            _fig, ax = plt.subplots(figsize=(8, 6))
 
             data = pd.DataFrame(
                 {

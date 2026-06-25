@@ -5,10 +5,11 @@ including normalization, standardization, and data augmentation.
 """
 
 import os
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import numpy as np
 import torch
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any, Callable
 
 from neuroscope.core.logging import get_logger
 
@@ -23,7 +24,7 @@ class VolumeNormalization:
         volume: np.ndarray,
         min_val: Optional[float] = None,
         max_val: Optional[float] = None,
-        target_range: Tuple[float, float] = (0, 1),
+        target_range: tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """normalize volume to [0, 1] or custom range using min-max normalization.
@@ -113,7 +114,7 @@ class VolumeNormalization:
 
         # avoid division by zero
         if v_std == 0:
-            logger.warning(f"Standard deviation is zero. Setting normalized volume to zeros.")
+            logger.warning("Standard deviation is zero. Setting normalized volume to zeros.")
             return np.zeros_like(volume)
 
         # apply z-score normalization
@@ -126,7 +127,7 @@ class VolumeNormalization:
         volume: np.ndarray,
         low_percentile: float = 1.0,
         high_percentile: float = 99.0,
-        target_range: Tuple[float, float] = (0, 1),
+        target_range: tuple[float, float] = (0, 1),
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """normalize volume using percentile clipping.
@@ -218,7 +219,7 @@ class VolumeNormalization:
     @staticmethod
     def adaptive_histogram_equalization(
         volume: np.ndarray,
-        block_size: Tuple[int, int, int] = (32, 32, 32),
+        block_size: tuple[int, int, int] = (32, 32, 32),
         clip_limit: float = 0.01,
     ) -> np.ndarray:
         """apply adaptive histogram equalization to the volume.
@@ -351,7 +352,7 @@ class DataAugmentation:
     @staticmethod
     def random_flip(
         volume: np.ndarray,
-        axes: List[int] = None,
+        axes: Optional[list[int]] = None,
         p: float = 0.5,
     ) -> np.ndarray:
         """randomly flip the volume along specified axes.
@@ -385,7 +386,7 @@ class DataAugmentation:
     def random_rotation_3d(
         volume: np.ndarray,
         max_angle: float = 15.0,  # degrees
-        axes: List[Tuple[int, int]] = None,
+        axes: Optional[list[tuple[int, int]]] = None,
         mode: str = "constant",
         order: int = 1,
     ) -> np.ndarray:
@@ -427,7 +428,7 @@ class DataAugmentation:
     @staticmethod
     def random_crop(
         volume: np.ndarray,
-        crop_size: Tuple[int, ...],
+        crop_size: tuple[int, ...],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """randomly crop the volume.
@@ -480,7 +481,7 @@ class DataAugmentation:
     @staticmethod
     def random_intensity_shift(
         volume: np.ndarray,
-        shift_range: Tuple[float, float],
+        shift_range: tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """apply random intensity shift augmentation.
@@ -524,7 +525,7 @@ class DataAugmentation:
     @staticmethod
     def random_intensity_scale(
         volume: np.ndarray,
-        scale_range: Tuple[float, float],
+        scale_range: tuple[float, float],
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """apply random intensity scaling augmentation.
@@ -565,7 +566,7 @@ class DataAugmentation:
     def random_noise(
         volume: np.ndarray,
         noise_type: str = "gaussian",
-        params: Dict[str, Any] = None,
+        params: Optional[dict[str, Any]] = None,
         mask: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         """add random noise to the volume.
@@ -669,7 +670,7 @@ class VolumePreprocessor:
 
     def __init__(
         self,
-        preprocessing_steps: List[Tuple[str, Dict[str, Any]]] = None,
+        preprocessing_steps: Optional[list[tuple[str, dict[str, Any]]]] = None,
     ):
         """initialize volumepreprocessor.
 
@@ -679,7 +680,7 @@ class VolumePreprocessor:
         """
         self.preprocessing_steps = preprocessing_steps or []
 
-    def add_step(self, step_name: str, parameters: Dict[str, Any] = None):
+    def add_step(self, step_name: str, parameters: Optional[dict[str, Any]] = None):
         """add a preprocessing step.
 
         args:
@@ -780,7 +781,7 @@ class VolumePreprocessor:
         output_dir: Union[str, Path],
         file_pattern: str = "*.nii.gz",
         mask_dir: Optional[Union[str, Path]] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """batch process multiple volumes.
 
         args:

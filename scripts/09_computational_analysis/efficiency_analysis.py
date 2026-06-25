@@ -14,12 +14,12 @@ applicability of the harmonization method.
 
 import argparse
 import json
-import time
-import numpy as np
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
 import sys
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+import numpy as np
 
 # add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -50,15 +50,15 @@ def count_parameters(model) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def estimate_flops(model, input_shape: Tuple[int, ...]) -> float:
+def estimate_flops(model, input_shape: tuple[int, ...]) -> float:
     """
     estimate flops for a single forward pass.
 
     this is a rough estimate based on layer types.
     """
     try:
-        from thop import profile
         import torch
+        from thop import profile
 
         dummy_input = torch.randn(1, *input_shape)
         flops, _ = profile(model, inputs=(dummy_input,), verbose=False)
@@ -72,7 +72,7 @@ def estimate_flops(model, input_shape: Tuple[int, ...]) -> float:
 
 def measure_inference_time(
     model, input_data: np.ndarray, device: str = "cuda", n_warmup: int = 5, n_trials: int = 20
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     measure inference time with warmup.
 
@@ -188,9 +188,10 @@ def get_model_size(model) -> float:
     returns:
         model size in mb
     """
-    import torch
-    import tempfile
     import os
+    import tempfile
+
+    import torch
 
     with tempfile.NamedTemporaryFile(delete=False) as f:
         torch.save(model.state_dict(), f.name)
@@ -202,7 +203,7 @@ def get_model_size(model) -> float:
 
 def analyze_model_efficiency(
     model,
-    input_shape: Tuple[int, ...],
+    input_shape: tuple[int, ...],
     method_name: str,
     device: str = "cuda",
     n_slices_per_volume: int = 155,
@@ -222,7 +223,6 @@ def analyze_model_efficiency(
     returns:
         efficiencymetrics dataclass
     """
-    import torch
 
     print(f"[efficiency] analyzing {method_name}...")
 
@@ -230,7 +230,7 @@ def analyze_model_efficiency(
     input_data = np.random.randn(*input_shape).astype(np.float32)
 
     # measure inference time
-    mean_time_ms, std_time_ms = measure_inference_time(model, input_data, device)
+    mean_time_ms, _std_time_ms = measure_inference_time(model, input_data, device)
 
     # measure peak memory
     peak_memory = measure_peak_memory(model, input_data, device)
@@ -263,8 +263,8 @@ def analyze_model_efficiency(
 
 
 def analyze_baseline_efficiency(
-    method_name: str, input_shape: Tuple[int, ...], n_samples: int = 100
-) -> Dict:
+    method_name: str, input_shape: tuple[int, ...], n_samples: int = 100
+) -> dict:
     """
     analyze efficiency of classical baseline methods.
 
@@ -280,10 +280,10 @@ def analyze_baseline_efficiency(
     baseline_path = Path(__file__).parent.parent / "08_additional_baselines"
     sys.path.insert(0, str(baseline_path))
     from baseline_methods import (
-        ZScoreNormalizer,
         HistogramMatcher,
         NyulNormalizer,
         WhiteStripeNormalizer,
+        ZScoreNormalizer,
     )
 
     print(f"[efficiency] analyzing {method_name}...")
@@ -297,20 +297,28 @@ def analyze_baseline_efficiency(
     # initialize method
     if method_name == "zscore":
         method = ZScoreNormalizer()
-        process_func = lambda x: method.normalize(x)
+
+        def process_func(x):
+            return method.normalize(x)
     elif method_name == "histogram_matching":
         method = HistogramMatcher()
         reference = np.random.randn(*test_data.shape).astype(np.float32)
         method.fit(reference)
-        process_func = lambda x: method.transform(x)
+
+        def process_func(x):
+            return method.transform(x)
     elif method_name == "nyul":
         method = NyulNormalizer()
         training_images = [np.random.randn(*test_data.shape).astype(np.float32) for _ in range(10)]
         method.learn_standard(training_images)
-        process_func = lambda x: method.normalize(x)
+
+        def process_func(x):
+            return method.normalize(x)
     elif method_name == "whitestripe":
         method = WhiteStripeNormalizer()
-        process_func = lambda x: method.normalize(x)
+
+        def process_func(x):
+            return method.normalize(x)
     else:
         raise ValueError(f"unknown method: {method_name}")
 
@@ -341,7 +349,7 @@ def analyze_baseline_efficiency(
     }
 
 
-def create_comparison_table(metrics_list: List[Dict], output_path: Path):
+def create_comparison_table(metrics_list: list[dict], output_path: Path):
     """
     create latex comparison table for efficiency metrics.
 
@@ -383,7 +391,7 @@ method & time/slice & time/vol. & throughput & memory & params & size \\
     print(f"[table] saved efficiency table to {output_path}")
 
 
-def plot_efficiency_comparison(metrics_list: List[Dict], output_dir: Path):
+def plot_efficiency_comparison(metrics_list: list[dict], output_dir: Path):
     """
     create efficiency comparison figures.
 
@@ -415,7 +423,7 @@ def plot_efficiency_comparison(metrics_list: List[Dict], output_dir: Path):
     memories = [m.get("peak_memory_mb", 0) for m in metrics_list]
 
     # create figure with subplots
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    _fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
     # inference time
     ax = axes[0]
@@ -502,6 +510,7 @@ def main():
     if args.model_path and Path(args.model_path).exists():
         try:
             import torch
+
             from neuroscope.models.architectures.sa_cyclegan_25d import (
                 SACycleGAN25D,
                 SACycleGAN25DConfig,

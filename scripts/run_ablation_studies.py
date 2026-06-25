@@ -28,10 +28,9 @@ import json
 import logging
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 # setup logging
 logging.basicConfig(
@@ -78,7 +77,7 @@ class AblationStudyOrchestrator:
         self.results = {}
         self.start_time = None
 
-    def _define_ablations(self) -> Dict:
+    def _define_ablations(self) -> dict:
         """define all ablation configurations."""
         return {
             "full_model": {
@@ -210,7 +209,7 @@ class AblationStudyOrchestrator:
             },
         }
 
-    def run_ablation(self, name: str, config: Dict) -> Dict:
+    def run_ablation(self, name: str, config: dict) -> dict:
         """
         run a single ablation experiment.
 
@@ -297,7 +296,7 @@ class AblationStudyOrchestrator:
 
         return result
 
-    def run_all_ablations(self, specific_ablations: Optional[List[str]] = None):
+    def run_all_ablations(self, specific_ablations: Optional[list[str]] = None):
         """
         run all ablation studies.
 
@@ -323,7 +322,7 @@ class AblationStudyOrchestrator:
             ablations_to_run = self.ablations
 
         logger.info(f"Running {len(ablations_to_run)} ablation studies:")
-        for name in ablations_to_run.keys():
+        for name in ablations_to_run:
             logger.info(f"  - {name}: {self.ablations[name]['description']}")
         logger.info("")
 

@@ -24,20 +24,19 @@ usage:
     python eval_downstream.py --config ../configs/downstream.yaml
 """
 
-import os
-import sys
 import argparse
 import json
-from pathlib import Path
+import sys
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
+from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.amp import autocast, GradScaler
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader, Dataset
-import numpy as np
 from tqdm import tqdm
 
 try:
@@ -90,7 +89,7 @@ def remap_brats_labels(seg: np.ndarray) -> np.ndarray:
     return out
 
 
-def compute_region_masks(labels: np.ndarray) -> Dict[str, np.ndarray]:
+def compute_region_masks(labels: np.ndarray) -> dict[str, np.ndarray]:
     """
     compute derived brats tumor region masks from contiguous labels.
     input uses remapped labels: 0=bg, 1=ncr/net, 2=ed, 3=et
@@ -120,9 +119,9 @@ class BraTSSliceDataset(Dataset):
     def __init__(
         self,
         data_dir: str,
-        subject_ids: List[str],
-        image_size: Tuple[int, int] = (128, 128),
-        slice_range: Tuple[int, int] = (30, 125),
+        subject_ids: list[str],
+        image_size: tuple[int, int] = (128, 128),
+        slice_range: tuple[int, int] = (30, 125),
         require_tumor: bool = True,
         min_tumor_pixels: int = 10,
     ):
@@ -143,9 +142,9 @@ class BraTSSliceDataset(Dataset):
         self.min_tumor_pixels = min_tumor_pixels
 
         # build sample index: (subject_dir, slice_idx)
-        self.samples: List[Tuple[Path, int]] = []
-        self._volume_cache: Dict[str, np.ndarray] = {}
-        self._seg_cache: Dict[str, np.ndarray] = {}
+        self.samples: list[tuple[Path, int]] = []
+        self._volume_cache: dict[str, np.ndarray] = {}
+        self._seg_cache: dict[str, np.ndarray] = {}
 
         for subj_id in sorted(subject_ids):
             subj_dir = self.data_dir / subj_id
@@ -179,11 +178,9 @@ class BraTSSliceDataset(Dataset):
         for mod in self.MODALITIES:
             if not (subj_dir / f"{mod}.nii.gz").exists():
                 return False
-        if not (subj_dir / "seg.nii.gz").exists():
-            return False
-        return True
+        return (subj_dir / "seg.nii.gz").exists()
 
-    def _load_volume(self, subj_dir: Path) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_volume(self, subj_dir: Path) -> tuple[np.ndarray, np.ndarray]:
         """load 4-modality volume and seg. returns ([4, h, w, d], [h, w, d])."""
         cache_key = str(subj_dir)
         if cache_key in self._volume_cache:
@@ -252,7 +249,7 @@ class BraTSSliceDataset(Dataset):
         }
 
 
-def get_subject_ids(data_dir: str) -> List[str]:
+def get_subject_ids(data_dir: str) -> list[str]:
     """get all subject ids that have seg.nii.gz in a data directory."""
     data_path = Path(data_dir)
     if not data_path.exists():
@@ -265,10 +262,10 @@ def get_subject_ids(data_dir: str) -> List[str]:
 
 
 def split_subjects(
-    subject_ids: List[str],
+    subject_ids: list[str],
     train_frac: float = 0.8,
     seed: int = 42,
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """split subject ids into train and test sets."""
     rng = np.random.RandomState(seed)
     ids = list(subject_ids)
@@ -421,7 +418,7 @@ class CombinedSegLoss(nn.Module):
 
 def compute_dice_score(
     pred: torch.Tensor, target: torch.Tensor, n_classes: int = 4
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     compute per-class dice scores.
 
@@ -456,7 +453,7 @@ def compute_dice_score(
     return dice_scores
 
 
-def compute_region_dice(pred: torch.Tensor, target: torch.Tensor) -> Dict[str, float]:
+def compute_region_dice(pred: torch.Tensor, target: torch.Tensor) -> dict[str, float]:
     """
     compute dice for brats-derived tumor regions (wt, tc, et).
 
@@ -548,6 +545,8 @@ def generate_harmonized_data(
     """
     from neuroscope.models.architectures.sa_cyclegan_25d import (
         SACycleGAN25DConfig,
+    )
+    from neuroscope.models.architectures.sa_cyclegan_25d import (
         SAGenerator25D as GeneratorSA25D,
     )
 
@@ -706,7 +705,7 @@ class DownstreamEvaluator:
     def _make_loader(
         self,
         data_dir: str,
-        subject_ids: List[str],
+        subject_ids: list[str],
         shuffle: bool = True,
         require_tumor: bool = True,
     ) -> DataLoader:
@@ -732,7 +731,7 @@ class DownstreamEvaluator:
         val_loader: Optional[DataLoader] = None,
         model_name: str = "unet",
         resume_path: Optional[str] = None,
-    ) -> Tuple[UNet, Dict]:
+    ) -> tuple[UNet, dict]:
         """
         train a u-net segmentation model.
 
@@ -837,7 +836,7 @@ class DownstreamEvaluator:
         self,
         model: UNet,
         test_loader: DataLoader,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         evaluate segmentation model on a test set.
 
@@ -851,7 +850,7 @@ class DownstreamEvaluator:
         all_dice = []
         all_region_dice = []
         all_hd95 = []
-        per_subject: Dict[str, List[Dict]] = {}
+        per_subject: dict[str, list[dict]] = {}
 
         for batch in test_loader:
             images = batch["image"].to(self.device)
@@ -888,13 +887,13 @@ class DownstreamEvaluator:
         # aggregate slice-level metrics
         results = {}
         if all_dice:
-            for key in all_dice[0].keys():
+            for key in all_dice[0]:
                 values = [d[key] for d in all_dice]
                 results[f"dice_{key}_mean"] = float(np.mean(values))
                 results[f"dice_{key}_std"] = float(np.std(values))
 
         if all_region_dice:
-            for key in all_region_dice[0].keys():
+            for key in all_region_dice[0]:
                 values = [d[key] for d in all_region_dice]
                 results[f"region_{key}_mean"] = float(np.mean(values))
                 results[f"region_{key}_std"] = float(np.std(values))
@@ -907,7 +906,7 @@ class DownstreamEvaluator:
         subject_summaries = {}
         for subj, slice_results in per_subject.items():
             subj_summary = {}
-            for key in slice_results[0].keys():
+            for key in slice_results[0]:
                 values = [s[key] for s in slice_results]
                 subj_summary[key] = float(np.mean(values))
             subject_summaries[subj] = subj_summary
@@ -922,7 +921,7 @@ class DownstreamEvaluator:
         harm_a_dir: Optional[str] = None,
         harm_b_dir: Optional[str] = None,
         resume_path: Optional[str] = None,
-    ) -> Dict[str, Dict]:
+    ) -> dict[str, dict]:
         """
         evaluate cross-site segmentation transfer.
 
@@ -974,7 +973,7 @@ class DownstreamEvaluator:
                 resume_raw = str(candidates[-1])
 
         print("  training u-net on raw site a...")
-        model_raw, hist_raw = self.train_segmentation(
+        model_raw, _hist_raw = self.train_segmentation(
             train_loader_raw_a,
             model_name="raw_a_to_b",
             resume_path=resume_raw,
@@ -1014,7 +1013,7 @@ class DownstreamEvaluator:
                     resume_harm = str(candidates[-1])
 
             print("  training u-net on harmonized site a...")
-            model_harm, hist_harm = self.train_segmentation(
+            model_harm, _hist_harm = self.train_segmentation(
                 train_loader_harm_a,
                 model_name="harm_a_to_b",
                 resume_path=resume_harm,
@@ -1064,7 +1063,7 @@ class DownstreamEvaluator:
                 resume_rev = str(candidates[-1])
 
         print("  training u-net on raw site b...")
-        model_rev, hist_rev = self.train_segmentation(
+        model_rev, _hist_rev = self.train_segmentation(
             train_loader_raw_b,
             model_name="raw_b_to_a",
             resume_path=resume_rev,
@@ -1115,7 +1114,7 @@ class DownstreamEvaluator:
 
         return results
 
-    def save_results(self, results: Dict, filename: str = "downstream_results.json"):
+    def save_results(self, results: dict, filename: str = "downstream_results.json"):
         """save evaluation results to json."""
         output_path = self.output_dir / filename
 
@@ -1239,9 +1238,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     # resolve amp flag

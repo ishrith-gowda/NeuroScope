@@ -10,11 +10,12 @@ identical to sa-cyclegan-2.5d except:
 this baseline proves whether attention mechanisms improve performance.
 """
 
+from dataclasses import dataclass
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict
-from dataclasses import dataclass
 
 
 @dataclass
@@ -317,7 +318,7 @@ class BaselineCycleGAN25D(nn.Module):
             use_spectral_norm=config.use_spectral_norm,
         )
 
-    def forward(self, slices_a: torch.Tensor, slices_b: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, slices_a: torch.Tensor, slices_b: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         training forward pass.
 
@@ -350,7 +351,7 @@ class BaselineCycleGAN25D(nn.Module):
         """translate from domain b to a."""
         return self.G_B2A(slices)
 
-    def get_parameter_count(self) -> Dict[str, int]:
+    def get_parameter_count(self) -> dict[str, int]:
         """get parameter counts for each component."""
         return {
             "g_a2b": sum(p.numel() for p in self.G_A2B.parameters()),

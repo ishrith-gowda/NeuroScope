@@ -4,28 +4,30 @@ this script provides comprehensive package configuration including
 dependencies, entry points, and package metadata.
 """
 
-import os
-import sys
 from pathlib import Path
-from setuptools import setup, find_packages, find_namespace_packages
+
+from setuptools import find_packages, setup
+
 
 # read readme for long description
 def read_readme():
     """read readme file for long description."""
     readme_path = Path(__file__).parent / "README.md"
     if readme_path.exists():
-        with open(readme_path, "r", encoding="utf-8") as fh:
+        with open(readme_path, encoding="utf-8") as fh:
             return fh.read()
     return "SA-CycleGAN-2.5D: Self-Attention CycleGAN with Tri-Planar Context for Multi-Site MRI Harmonization"
+
 
 # read requirements
 def read_requirements():
     """read requirements from requirements.txt."""
     requirements_path = Path(__file__).parent / "requirements.txt"
     if requirements_path.exists():
-        with open(requirements_path, "r", encoding="utf-8") as fh:
+        with open(requirements_path, encoding="utf-8") as fh:
             return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
     return []
+
 
 # package configuration
 setup(
@@ -42,7 +44,6 @@ setup(
         "Source": "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D",
         "Documentation": "https://neuroscope.readthedocs.io/",
     },
-    
     # package discovery
     packages=find_packages(),
     package_dir={"neuroscope": "neuroscope"},
@@ -56,10 +57,8 @@ setup(
             "tests/fixtures/*.json",
         ]
     },
-    
     # python version requirements
     python_requires=">=3.9",
-    
     # dependencies
     install_requires=[
         "torch>=1.11.0",
@@ -80,7 +79,6 @@ setup(
         "click>=8.0.0",
         "tensorboard>=2.8.0",
     ],
-    
     # optional dependencies
     extras_require={
         "dev": [
@@ -150,7 +148,6 @@ setup(
             "notebook>=6.4.0",
         ],
     },
-    
     # entry points for cli
     entry_points={
         "console_scripts": [
@@ -161,7 +158,6 @@ setup(
             "neuroscope-pipeline=neuroscope.scripts.cli.pipeline:main",
         ],
     },
-    
     # classifiers
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -179,7 +175,6 @@ setup(
         "Environment :: GPU",
         "Environment :: Console",
     ],
-    
     # keywords
     keywords=[
         "medical imaging",
@@ -193,28 +188,20 @@ setup(
         "computer vision",
         "biomedical",
     ],
-    
     # license
     license="MIT",
-    
-    # minimum python version
-    python_requires=">=3.9",
-    
+    # (python_requires is declared once, above)
     # zip safe
     zip_safe=False,
-    
     # test suite
     test_suite="tests",
-    
     # command line options
     cmdclass={},
-    
     # data files
     data_files=[
         ("neuroscope/config", ["neuroscope/config/defaults/training_config.py"]),
         ("neuroscope/tests/fixtures", []),
     ],
-    
     # scripts
     scripts=[
         "scripts/cli/neuroscope_cli.py",

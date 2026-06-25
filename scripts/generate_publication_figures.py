@@ -23,17 +23,13 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import nibabel as nib
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import gridspec
 from matplotlib.colors import LinearSegmentedColormap
-from scipy import stats as scipy_stats
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -57,7 +53,7 @@ class PublicationFigureGenerator:
         self,
         results_dir: Path,
         output_dir: Path,
-        formats: List[str] = None,
+        formats: Optional[list[str]] = None,
         dpi: int = 300,
     ):
         """
@@ -92,7 +88,7 @@ class PublicationFigureGenerator:
             fig.savefig(filepath, format=fmt, dpi=self.dpi, bbox_inches="tight", pad_inches=0.1)
             logger.info(f"Saved: {filepath}")
 
-    def generate_training_curves(self, tensorboard_logs: Dict):
+    def generate_training_curves(self, tensorboard_logs: dict):
         """
         generate training curves figure.
 
@@ -177,7 +173,7 @@ class PublicationFigureGenerator:
         self.save_figure(fig, "training_curves")
         plt.close()
 
-    def generate_quantitative_comparison(self, results: Dict):
+    def generate_quantitative_comparison(self, results: dict):
         """
         generate bar chart comparing quantitative metrics.
 
@@ -232,7 +228,7 @@ class PublicationFigureGenerator:
             ax.grid(True, alpha=0.3, axis="y")
 
             # add value labels on bars
-            for i, (bar, mean, std) in enumerate(zip(bars, means, stds)):
+            for _i, (bar, mean, std) in enumerate(zip(bars, means, stds)):
                 height = bar.get_height()
                 ax.text(
                     bar.get_x() + bar.get_width() / 2.0,
@@ -248,7 +244,7 @@ class PublicationFigureGenerator:
         plt.close()
 
     def generate_qualitative_comparison(
-        self, sample_images: Dict[str, np.ndarray], slice_idx: Optional[int] = None
+        self, sample_images: dict[str, np.ndarray], slice_idx: Optional[int] = None
     ):
         """
         generate qualitative comparison showing example outputs.
@@ -322,7 +318,7 @@ class PublicationFigureGenerator:
         self.save_figure(fig, "ablation_heatmap")
         plt.close()
 
-    def generate_statistical_significance(self, pvalues: Dict):
+    def generate_statistical_significance(self, pvalues: dict):
         """
         generate statistical significance visualization.
 
@@ -331,7 +327,7 @@ class PublicationFigureGenerator:
         """
         logger.info("Generating statistical significance plot...")
 
-        models = sorted(set([k[0] for k in pvalues.keys()] + [k[1] for k in pvalues.keys()]))
+        models = sorted(set([k[0] for k in pvalues] + [k[1] for k in pvalues]))
         n_models = len(models)
 
         # create matrix of p-values
@@ -367,7 +363,7 @@ class PublicationFigureGenerator:
         for i in range(n_models):
             for j in range(n_models):
                 if i != j:
-                    text = ax.text(
+                    ax.text(
                         j,
                         i,
                         f"{pvalue_matrix[i, j]:.4f}",
@@ -384,7 +380,7 @@ class PublicationFigureGenerator:
         plt.close()
 
     def generate_attention_visualization(
-        self, attention_maps: Dict[str, np.ndarray], input_image: np.ndarray
+        self, attention_maps: dict[str, np.ndarray], input_image: np.ndarray
     ):
         """
         visualize attention maps from self-attention layers.
@@ -420,7 +416,7 @@ class PublicationFigureGenerator:
         # load results
         results_file = self.results_dir / "all_results.json"
         if results_file.exists():
-            with open(results_file, "r") as f:
+            with open(results_file) as f:
                 results = json.load(f)
 
             # convert to dictionary keyed by model name

@@ -1,11 +1,10 @@
-import os
 import json
 import logging
 from pathlib import Path
-from glob import glob
-from typing import Dict, List, Tuple, Set
-import SimpleITK as sitk
+from typing import Optional
+
 import numpy as np
+import SimpleITK as sitk
 from neuroscope_preprocessing_config import PATHS
 
 
@@ -54,8 +53,8 @@ def verify_mri_file(file_path: Path) -> bool:
 
 
 def find_modality_files(
-    subject_dir: Path, modality_suffixes: List[str], exclude_patterns: Set[str] = None
-) -> Tuple[Dict[str, str], List[str]]:
+    subject_dir: Path, modality_suffixes: list[str], exclude_patterns: Optional[set[str]] = None
+) -> tuple[dict[str, str], list[str]]:
     """
     find modality files for a subject, with robust exclusion of segmentation files.
 
@@ -92,8 +91,8 @@ def find_modality_files(
             logging.debug("excluded segmentation file: %s", file_path.name)
 
     # match files to required modalities
-    found: Dict[str, str] = {}
-    missing: List[str] = []
+    found: dict[str, str] = {}
+    missing: list[str] = []
 
     for suffix in modality_suffixes:
         matches = [f for f in filtered_files if f.name.endswith(suffix)]
@@ -115,8 +114,8 @@ def find_modality_files(
 
 
 def scan_dataset(
-    root_dir: Path, modality_suffixes: List[str], dataset_name: str
-) -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
+    root_dir: Path, modality_suffixes: list[str], dataset_name: str
+) -> tuple[dict[str, dict[str, str]], dict[str, list[str]]]:
     """
     scan subject subdirectories under root_dir and check for required modalities.
 
@@ -128,8 +127,8 @@ def scan_dataset(
     returns:
         tuple of (valid_subjects_dict, missing_subjects_dict)
     """
-    valid: Dict[str, Dict[str, str]] = {}
-    missing: Dict[str, List[str]] = {}
+    valid: dict[str, dict[str, str]] = {}
+    missing: dict[str, list[str]] = {}
 
     if not root_dir.exists():
         logging.error("%s dataset root directory does not exist: %s", dataset_name, root_dir)
@@ -170,7 +169,7 @@ def scan_dataset(
     return valid, missing
 
 
-def validate_metadata(metadata: Dict) -> bool:
+def validate_metadata(metadata: dict) -> bool:
     """
     validate the generated metadata structure.
 
@@ -300,7 +299,7 @@ def main() -> None:
         + metadata["upenn"]["dataset_info"]["complete_subjects"]
     )
 
-    print(f"\noverall:")
+    print("\noverall:")
     print(f"  total complete subjects:  {total_complete}")
     print("=" * 60)
 

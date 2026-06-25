@@ -15,22 +15,21 @@ import argparse
 import json
 import logging
 import sys
-from pathlib import Path
-from typing import Dict
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import torch
+from skimage.metrics import peak_signal_noise_ratio as psnr_func
+from skimage.metrics import structural_similarity as ssim_func
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from skimage.metrics import structural_similarity as ssim_func
-from skimage.metrics import peak_signal_noise_ratio as psnr_func
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 from neuroscope.data.datasets.dataset_25d import create_dataloaders
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -111,7 +110,7 @@ class CycleConsistencyEvaluator:
 
     def compute_cycle_metrics(
         self, original: np.ndarray, reconstructed: np.ndarray
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """compute metrics between original and cycle-reconstructed images."""
         # compute per-channel metrics
         ssim_scores = []
@@ -166,7 +165,7 @@ class CycleConsistencyEvaluator:
 
         logger.info("running cycle reconstructions...")
         with torch.no_grad():
-            for batch_idx, batch in enumerate(tqdm(test_loader, desc="evaluating cycles")):
+            for _batch_idx, batch in enumerate(tqdm(test_loader, desc="evaluating cycles")):
                 real_a = batch["A"].to(self.device)  # [b, 12, h, w]
                 real_b = batch["B"].to(self.device)  # [b, 12, h, w]
                 center_a = batch["A_center"].to(self.device)  # [b, 4, h, w]
@@ -229,7 +228,7 @@ class CycleConsistencyEvaluator:
 
         return results
 
-    def _compute_stats(self, metrics: Dict) -> Dict:
+    def _compute_stats(self, metrics: dict) -> dict:
         """compute statistics for metrics."""
         stats = {}
 
@@ -246,7 +245,7 @@ class CycleConsistencyEvaluator:
 
         return stats
 
-    def _print_summary(self, results: Dict):
+    def _print_summary(self, results: dict):
         """print evaluation summary."""
         logger.info("\n" + "=" * 80)
         logger.info("cycle consistency evaluation results")

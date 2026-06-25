@@ -5,11 +5,12 @@ this module provides loss functions designed specifically for
 medical image analysis, particularly mri domain adaptation.
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict, List, Tuple
-import math
 
 
 class TumorPreservationLoss(nn.Module):
@@ -46,7 +47,7 @@ class TumorPreservationLoss(nn.Module):
 
     def _compute_edges(self, x: torch.Tensor) -> torch.Tensor:
         """compute edge map using sobel operator."""
-        B, C, H, W = x.size()
+        _B, C, _H, _W = x.size()
 
         sobel_x = self.sobel_x.expand(C, 1, 3, 3).to(x.device, x.dtype)
         sobel_y = self.sobel_y.expand(C, 1, 3, 3).to(x.device, x.dtype)
@@ -143,7 +144,7 @@ class RadiomicsPreservationLoss(nn.Module):
         input_img: torch.Tensor,
         output_img: torch.Tensor,
         roi_mask: Optional[torch.Tensor] = None,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         compute radiomics preservation loss.
 
@@ -258,7 +259,7 @@ class ModalityConsistencyLoss(nn.Module):
         modality_weights: dictionary mapping modality names to weights
     """
 
-    def __init__(self, modality_weights: Optional[Dict[str, float]] = None):
+    def __init__(self, modality_weights: Optional[dict[str, float]] = None):
         super().__init__()
 
         # default weights for standard mri modalities
@@ -270,7 +271,7 @@ class ModalityConsistencyLoss(nn.Module):
         }
 
     def forward(
-        self, input_modalities: Dict[str, torch.Tensor], output_modalities: Dict[str, torch.Tensor]
+        self, input_modalities: dict[str, torch.Tensor], output_modalities: dict[str, torch.Tensor]
     ) -> torch.Tensor:
         """
         compute modality consistency loss.

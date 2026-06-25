@@ -16,10 +16,11 @@ references:
 - shinohara et al. (2014): statistical normalization for multi-site mri
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from scipy import ndimage, stats, interpolate
+from typing import Optional
+
+import numpy as np
+from scipy import interpolate, stats
 
 
 @dataclass
@@ -29,7 +30,7 @@ class NormalizationConfig:
     percentile_low: float = 1.0
     percentile_high: float = 99.0
     n_bins: int = 256
-    target_range: Tuple[float, float] = (0.0, 1.0)
+    target_range: tuple[float, float] = (0.0, 1.0)
 
 
 class ZScoreNormalizer:
@@ -232,7 +233,7 @@ class NyulNormalizer:
         self.standard_landmarks = None
         self.percentiles = np.linspace(0, 100, n_landmarks)
 
-    def learn_standard(self, images: List[np.ndarray], masks: Optional[List[np.ndarray]] = None):
+    def learn_standard(self, images: list[np.ndarray], masks: Optional[list[np.ndarray]] = None):
         """
         learn standard histogram landmarks from training images.
 
@@ -362,10 +363,10 @@ class WhiteStripeNormalizer:
 
 
 def apply_baseline_harmonization(
-    domain_a_images: List[np.ndarray],
-    domain_b_images: List[np.ndarray],
+    domain_a_images: list[np.ndarray],
+    domain_b_images: list[np.ndarray],
     method: str = "histogram_matching",
-) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     apply baseline harmonization method to two domains.
 
@@ -416,7 +417,7 @@ def apply_baseline_harmonization(
 
 def evaluate_baseline_method(
     domain_a_features: np.ndarray, domain_b_features: np.ndarray, method_name: str = "baseline"
-) -> Dict:
+) -> dict:
     """
     evaluate baseline method using same metrics as sa-cyclegan.
 

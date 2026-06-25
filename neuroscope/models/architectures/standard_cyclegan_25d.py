@@ -15,13 +15,13 @@ this architecture is specifically designed for multi-modal mri translation,
 preserving anatomical structures and inter-slice continuity.
 """
 
+import math
+from dataclasses import dataclass
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, List, Dict
-from dataclasses import dataclass
-import math
-
 
 # =============================================================================
 # configuration
@@ -39,7 +39,7 @@ class SACycleGAN25DConfig:
     # generator settings
     ngf: int = 64  # base generator filters
     n_residual_blocks: int = 9
-    attention_layers: Tuple[int, ...] = (3, 4, 5)  # which blocks get self-attention
+    attention_layers: tuple[int, ...] = (3, 4, 5)  # which blocks get self-attention
     use_modality_encoder: bool = True
 
     # discriminator settings
@@ -376,7 +376,7 @@ class PatchDiscriminator(nn.Module):
         layers = [get_conv(in_channels, ndf), nn.LeakyReLU(0.2, inplace=True)]
 
         nf = ndf
-        for i in range(1, n_layers):
+        for _i in range(1, n_layers):
             nf_prev = nf
             nf = min(nf * 2, 512)
             layers.extend(
@@ -431,7 +431,7 @@ class MultiScaleDiscriminator(nn.Module):
         )
         self.downsample = nn.AvgPool2d(3, stride=2, padding=1)
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         outputs = []
         for i, disc in enumerate(self.discriminators):
             if i > 0:
@@ -480,7 +480,7 @@ class SACycleGAN25D(nn.Module):
             use_attention=self.config.use_disc_attention,
         )
 
-    def forward(self, slices_A: torch.Tensor, slices_B: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, slices_A: torch.Tensor, slices_B: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         training forward pass.
 
@@ -516,7 +516,7 @@ class SACycleGAN25D(nn.Module):
         """translate from domain b to a."""
         return self.G_B2A(slices)
 
-    def get_parameter_count(self) -> Dict[str, int]:
+    def get_parameter_count(self) -> dict[str, int]:
         """get parameter counts for each component."""
         return {
             "G_A2B": sum(p.numel() for p in self.G_A2B.parameters()),

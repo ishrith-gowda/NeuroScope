@@ -8,10 +8,10 @@ with statistical significance markers using proper latex rendering.
 
 import argparse
 import json
-import numpy as np
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -116,7 +116,7 @@ def create_ablation_figure(results: dict, output_path: Path):
     x = np.arange(len(metrics))
     width = 0.35
 
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         baseline_vals,
         width,
@@ -127,7 +127,7 @@ def create_ablation_figure(results: dict, output_path: Path):
         linewidth=0.5,
         capsize=3,
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         attention_vals,
         width,
@@ -168,7 +168,7 @@ def create_ablation_figure(results: dict, output_path: Path):
 
     x = np.arange(len(metrics_psnr))
 
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         baseline_psnr,
         width,
@@ -179,7 +179,7 @@ def create_ablation_figure(results: dict, output_path: Path):
         linewidth=0.5,
         capsize=3,
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         attention_psnr,
         width,
@@ -224,7 +224,7 @@ def create_ablation_figure(results: dict, output_path: Path):
 
     x = np.arange(len(modalities))
 
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         baseline_mod,
         width,
@@ -233,7 +233,7 @@ def create_ablation_figure(results: dict, output_path: Path):
         edgecolor="black",
         linewidth=0.5,
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         attention_mod,
         width,
@@ -278,7 +278,7 @@ def create_ablation_figure(results: dict, output_path: Path):
     ]
 
     colors = [COLORS["positive"] if d > 0 else COLORS["negative"] for d in effect_sizes]
-    bars = ax.barh(effect_metrics, effect_sizes, color=colors, edgecolor="black", linewidth=0.5)
+    ax.barh(effect_metrics, effect_sizes, color=colors, edgecolor="black", linewidth=0.5)
 
     ax.axvline(x=0, color="black", linestyle="-", linewidth=0.5)
     ax.axvline(x=0.8, color="gray", linestyle="--", linewidth=0.5, alpha=0.7)

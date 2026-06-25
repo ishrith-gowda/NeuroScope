@@ -5,14 +5,15 @@ test script to verify the corrected rendering approach for single-modality figur
 creates sample test pdfs to confirm spacing matches all_modalities rendering.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 # publication-quality settings (matching paper standards)
 plt.rcParams.update(
@@ -109,13 +110,13 @@ def main():
     print("\n" + "=" * 70)
     print("test pdfs created - both should have identical spacing")
     print("=" * 70)
-    print(f"\ncompare these files:")
+    print("\ncompare these files:")
     print(f"  1. {path1.name}")
     print(f"  2. {path2.name}")
-    print(f"\nboth now use:")
-    print(f"  - fig, axes = plt.subplots(4, 6, figsize=(16, 11))")
-    print(f"  - plt.subplots_adjust(hspace=0.12, wspace=0.05)")
-    print(f"  - plt.tight_layout(rect=[0, 0, 1, 0.96])")
+    print("\nboth now use:")
+    print("  - fig, axes = plt.subplots(4, 6, figsize=(16, 11))")
+    print("  - plt.subplots_adjust(hspace=0.12, wspace=0.05)")
+    print("  - plt.tight_layout(rect=[0, 0, 1, 0.96])")
     print("\n✓ rendering approach is now identical!\n")
 
     return 0

@@ -7,9 +7,10 @@ logs scalars, images, histograms, and model graphs.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, Any, Union, List
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -127,7 +128,7 @@ class TensorBoardLogger:
     def log_scalars(
         self,
         main_tag: str,
-        tag_scalar_dict: Dict[str, float],
+        tag_scalar_dict: dict[str, float],
         step: Optional[int] = None,
         walltime: Optional[float] = None,
     ):
@@ -135,7 +136,7 @@ class TensorBoardLogger:
         step = step if step is not None else self.step
         self.writer.add_scalars(main_tag, tag_scalar_dict, step, walltime)
 
-    def log_training_losses(self, losses: Dict[str, float], step: Optional[int] = None):
+    def log_training_losses(self, losses: dict[str, float], step: Optional[int] = None):
         """
         log training losses with organized structure.
 
@@ -167,7 +168,7 @@ class TensorBoardLogger:
         if "D_B" in losses:
             self.log_scalar("Loss/Discriminator/B", losses["D_B"], step)
 
-    def log_validation_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
+    def log_validation_metrics(self, metrics: dict[str, float], step: Optional[int] = None):
         """
         log validation metrics.
 
@@ -324,7 +325,7 @@ class TensorBoardLogger:
         self.log_images(f"Samples/B2A_cycle/modality_{modality_idx}", grid_B2A, step)
 
     def log_attention_maps(
-        self, attention_maps: Dict[str, torch.Tensor], step: Optional[int] = None
+        self, attention_maps: dict[str, torch.Tensor], step: Optional[int] = None
     ):
         """
         log attention maps from self-attention layers.
@@ -404,7 +405,7 @@ class TensorBoardLogger:
                 tag = f"{prefix}Gradients/{name}" if prefix else f"Gradients/{name}"
                 self.log_histogram(tag, param.grad.data, step)
 
-    def log_gradient_norms(self, models: Dict[str, nn.Module], step: Optional[int] = None):
+    def log_gradient_norms(self, models: dict[str, nn.Module], step: Optional[int] = None):
         """
         log gradient l2 norms for models.
 
@@ -456,7 +457,7 @@ class TensorBoardLogger:
             print(f"warning: could not log model graph: {e}")
 
     def log_hyperparameters(
-        self, hparam_dict: Dict[str, Any], metric_dict: Optional[Dict[str, float]] = None
+        self, hparam_dict: dict[str, Any], metric_dict: Optional[dict[str, float]] = None
     ):
         """
         log hyperparameters.
@@ -488,7 +489,7 @@ class TensorBoardLogger:
         step = step if step is not None else self.step
         self.writer.add_text(tag, text, step)
 
-    def log_config(self, config: Dict[str, Any]):
+    def log_config(self, config: dict[str, Any]):
         """log configuration as formatted text."""
         config_text = "## Training Configuration\n\n"
         for section, values in config.items():

@@ -23,32 +23,30 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List, Sequence
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, Rectangle
-
 
 # ---------------------------------------------------------------------------
 # constants
 # ---------------------------------------------------------------------------
 
 
-LAMBDA_VALUES: List[float] = [0.1, 0.5, 1.0, 2.0]
-LAMBDA_LABELS: Dict[float, str] = {
+LAMBDA_VALUES: list[float] = [0.1, 0.5, 1.0, 2.0]
+LAMBDA_LABELS: dict[float, str] = {
     0.1: r"$\lambda_{\mathrm{NCE}}=0.1$",
     0.5: r"$\lambda_{\mathrm{NCE}}=0.5$",
     1.0: r"$\lambda_{\mathrm{NCE}}=1.0$",
     2.0: r"$\lambda_{\mathrm{NCE}}=2.0$",
 }
 
-LAMBDA_COLORS: Dict[float, str] = {
+LAMBDA_COLORS: dict[float, str] = {
     0.1: "#9CA3AF",
     0.5: "#059669",
     1.0: "#2563EB",
@@ -83,9 +81,9 @@ PUB_STYLE = {
 # ---------------------------------------------------------------------------
 
 
-def load_histories(results_dir: Path) -> Dict[float, Dict]:
+def load_histories(results_dir: Path) -> dict[float, dict]:
     """load per-lambda training_history.json files."""
-    histories: Dict[float, Dict] = {}
+    histories: dict[float, dict] = {}
     for lam in LAMBDA_VALUES:
         path = results_dir / f"lambda{lam}_history.json"
         if not path.exists():
@@ -96,7 +94,7 @@ def load_histories(results_dir: Path) -> Dict[float, Dict]:
     return histories
 
 
-def load_testset_summary(results_dir: Path) -> Dict[float, Dict]:
+def load_testset_summary(results_dir: Path) -> dict[float, dict]:
     """load test-set evaluation results if present."""
     summary_path = results_dir / "patchnce_testset_summary.json"
     if not summary_path.exists():
@@ -104,7 +102,7 @@ def load_testset_summary(results_dir: Path) -> Dict[float, Dict]:
         return {}
     with open(summary_path) as f:
         raw = json.load(f)
-    results: Dict[float, Dict] = {}
+    results: dict[float, dict] = {}
     for label, payload in raw.items():
         if not label.startswith("lambda"):
             continue
@@ -132,7 +130,7 @@ def smooth(values, window: int = 5) -> np.ndarray:
     return np.convolve(padded, kernel, mode="valid")[: len(arr)]
 
 
-def best_val_metrics(history: Dict) -> Dict[str, float]:
+def best_val_metrics(history: dict) -> dict[str, float]:
     """extract best val ssim and the corresponding psnr."""
     ssim_a2b = np.asarray(history["val"]["ssim_A2B"], dtype=np.float64)
     ssim_b2a = np.asarray(history["val"]["ssim_B2A"], dtype=np.float64)
@@ -150,7 +148,7 @@ def best_val_metrics(history: Dict) -> Dict[str, float]:
         "psnr_A2B": float(psnr_a2b[best_idx]),
         "psnr_B2A": float(psnr_b2a[best_idx]),
         "final_mean_ssim": float(mean_ssim[-1]),
-        "n_epochs": int(len(mean_ssim)),
+        "n_epochs": len(mean_ssim),
     }
 
 
@@ -165,7 +163,7 @@ def save_figure(fig, out_dir: Path, stem: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def fig_val_curves(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_val_curves(histories: dict[float, dict], out_dir: Path) -> None:
     """validation ssim and psnr learning curves for all four lambdas."""
     fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.0), sharex=True)
 
@@ -213,7 +211,7 @@ def fig_val_curves(histories: Dict[float, Dict], out_dir: Path) -> None:
     save_figure(fig, out_dir, "fig_patchnce_val_curves")
 
 
-def fig_loss_components(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_loss_components(histories: dict[float, dict], out_dir: Path) -> None:
     """four panel: G_loss, D_loss, cycle_loss, nce_loss across epochs."""
     fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.0), sharex=True)
     keys = [
@@ -263,7 +261,7 @@ def fig_loss_components(histories: Dict[float, Dict], out_dir: Path) -> None:
 
 
 def fig_lambda_sweep(
-    histories: Dict[float, Dict], testset: Dict[float, Dict], out_dir: Path
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
 ) -> None:
     """sweep plots: best mean ssim and psnr vs lambda."""
     lams = sorted(histories.keys())
@@ -314,7 +312,7 @@ def fig_lambda_sweep(
     save_figure(fig, out_dir, "fig_patchnce_lambda_sweep")
 
 
-def fig_test_metrics(testset: Dict[float, Dict], out_dir: Path) -> None:
+def fig_test_metrics(testset: dict[float, dict], out_dir: Path) -> None:
     """test-set bar charts: ssim, psnr, mae, mmd, all per lambda."""
     if not testset:
         return
@@ -362,7 +360,7 @@ def fig_test_metrics(testset: Dict[float, Dict], out_dir: Path) -> None:
     save_figure(fig, out_dir, "fig_patchnce_test_metrics")
 
 
-def fig_lr_schedule(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_lr_schedule(histories: dict[float, dict], out_dir: Path) -> None:
     """learning rate schedule visualization."""
     fig, ax = plt.subplots(figsize=(7.0, 3.0))
     for lam in LAMBDA_VALUES:
@@ -380,7 +378,7 @@ def fig_lr_schedule(histories: Dict[float, Dict], out_dir: Path) -> None:
     save_figure(fig, out_dir, "fig_patchnce_lr_schedule")
 
 
-def fig_epoch_times(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_epoch_times(histories: dict[float, dict], out_dir: Path) -> None:
     """epoch wall-clock distribution per lambda."""
     fig, ax = plt.subplots(figsize=(7.0, 3.4))
     boxes = []
@@ -400,7 +398,7 @@ def fig_epoch_times(histories: Dict[float, Dict], out_dir: Path) -> None:
         tick_labels=labels,
         patch_artist=True,
         showfliers=True,
-        medianprops=dict(color="black", linewidth=1.0),
+        medianprops={"color": "black", "linewidth": 1.0},
     )
     for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)
@@ -500,7 +498,7 @@ def fig_architecture(out_dir: Path) -> None:
 
 
 def fig_summary_panel(
-    histories: Dict[float, Dict], testset: Dict[float, Dict], out_dir: Path
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
 ) -> None:
     """3 by 2 multi-panel summary suitable for the journal main figure."""
     fig = plt.figure(figsize=(11.0, 8.0))
@@ -621,7 +619,7 @@ def fig_summary_panel(
 # ---------------------------------------------------------------------------
 
 
-def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict], out_dir: Path) -> None:
+def table_ablation(histories: dict[float, dict], testset: dict[float, dict], out_dir: Path) -> None:
     """ablation table: lambda vs val ssim/psnr (and test if available)."""
     lams = sorted(histories.keys())
     rows = []
@@ -707,7 +705,7 @@ def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict], out
     (out_dir / "table_patchnce_ablation.tex").write_text("\n".join(lines) + "\n")
 
 
-def table_testset(testset: Dict[float, Dict], out_dir: Path) -> None:
+def table_testset(testset: dict[float, dict], out_dir: Path) -> None:
     """detailed test-set table including std and percentiles."""
     if not testset:
         return
@@ -754,14 +752,14 @@ def table_testset(testset: Dict[float, Dict], out_dir: Path) -> None:
 
 
 def write_aggregate(
-    histories: Dict[float, Dict], testset: Dict[float, Dict], out_dir: Path
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
 ) -> None:
     """write a single json blob with the canonical extension a numbers."""
     lams = sorted(histories.keys())
     summary = {"lambdas": lams, "runs": {}}
     for lam in lams:
         m = best_val_metrics(histories[lam])
-        run: Dict = {"validation": m, "lambda_nce": lam, "n_epochs": m["n_epochs"]}
+        run: dict = {"validation": m, "lambda_nce": lam, "n_epochs": m["n_epochs"]}
         epoch_times = histories[lam].get("epoch_times", [])
         if epoch_times:
             run["epoch_time_mean"] = float(np.mean(epoch_times))

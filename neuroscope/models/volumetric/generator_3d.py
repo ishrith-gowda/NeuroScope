@@ -8,20 +8,20 @@ volumetric generators for 3d medical image translation including:
 - u-net style 3d generators with skip connections
 """
 
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.checkpoint import checkpoint
 
 from .blocks_3d import (
-    ResidualBlock3D,
-    DownsampleBlock3D,
-    UpsampleBlock3D,
-    SelfAttention3D,
-    MultiHeadSelfAttention3D,
-    AxialAttention3D,
     CBAM3D,
+    AxialAttention3D,
+    DownsampleBlock3D,
+    MultiHeadSelfAttention3D,
+    ResidualBlock3D,
+    SelfAttention3D,
+    UpsampleBlock3D,
 )
 
 
@@ -60,7 +60,7 @@ class Generator3D(nn.Module):
         # encoder (downsampling)
         self.encoder = nn.ModuleList()
         mult = 1
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             in_ch = ngf * mult
             out_ch = ngf * mult * 2
             self.encoder.append(DownsampleBlock3D(in_ch, out_ch, norm_type=norm_type))
@@ -68,7 +68,7 @@ class Generator3D(nn.Module):
 
         # bottleneck (residual blocks)
         self.bottleneck = nn.ModuleList()
-        for i in range(n_residual):
+        for _i in range(n_residual):
             self.bottleneck.append(
                 ResidualBlock3D(
                     ngf * mult,
@@ -80,7 +80,7 @@ class Generator3D(nn.Module):
 
         # decoder (upsampling)
         self.decoder = nn.ModuleList()
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             in_ch = ngf * mult
             out_ch = ngf * mult // 2
             self.decoder.append(UpsampleBlock3D(in_ch, out_ch, norm_type=norm_type))
@@ -130,7 +130,7 @@ class SAGenerator3D(nn.Module):
         ngf: int = 32,
         n_downsampling: int = 2,
         n_residual: int = 6,
-        attention_positions: Optional[List[int]] = None,
+        attention_positions: Optional[list[int]] = None,
         attention_type: str = "self",  # 'self', 'multi_head', 'axial', 'cbam'
         norm_type: str = "instance",
         use_dropout: bool = False,
@@ -285,7 +285,7 @@ class UNetGenerator3D(nn.Module):
         self.down_attns = nn.ModuleList() if use_attention else None
 
         mult = 1
-        for i in range(n_levels):
+        for _i in range(n_levels):
             in_ch = ngf * mult
             out_ch = ngf * mult * 2
 
@@ -321,7 +321,7 @@ class UNetGenerator3D(nn.Module):
         self.up_samples = nn.ModuleList()
         self.up_attns = nn.ModuleList() if use_attention else None
 
-        for i in range(n_levels):
+        for _i in range(n_levels):
             in_ch = ngf * mult + ngf * mult // 2  # skip connection
             out_ch = ngf * mult // 2
 
@@ -486,7 +486,7 @@ class HybridGenerator2_5D(nn.Module):
         """
         # handle 3d input by extracting context slices
         if x.dim() == 5:
-            B, C, D, H, W = x.shape
+            B, _C, D, H, W = x.shape
             center_idx = D // 2
             start_idx = max(0, center_idx - self.context_slices // 2)
             end_idx = min(D, start_idx + self.context_slices)

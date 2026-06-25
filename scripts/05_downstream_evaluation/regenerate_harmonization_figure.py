@@ -64,7 +64,7 @@ def main():
     # regenerate figure with improved styling
     output_path = output_dir / "fig_harmonization_summary.pdf"
 
-    print(f"[regenerate] generating improved harmonization summary figure...")
+    print("[regenerate] generating improved harmonization summary figure...")
     plot_harmonization_effect_summary(domain_results, feature_results, output_path)
 
     print(f"[regenerate] ✓ saved improved figure to {output_path}")

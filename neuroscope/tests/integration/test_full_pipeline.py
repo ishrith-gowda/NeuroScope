@@ -4,20 +4,21 @@ this module provides comprehensive integration tests for the entire
 neuroscope pipeline including preprocessing, training, and evaluation.
 """
 
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-import numpy as np
-import torch
 import json
+import shutil
+import tempfile
+from pathlib import Path
 
+import numpy as np
+import pytest
+import torch
+
+from neuroscope.config import get_default_preprocessing_config, get_default_training_config
 from neuroscope.core.logging import configure_logging
-from neuroscope.config import get_default_training_config, get_default_preprocessing_config
-from neuroscope.preprocessing.normalization import VolumePreprocessor
 from neuroscope.models.architectures import CycleGAN
-from neuroscope.training.trainers import CycleGANTrainer
+from neuroscope.preprocessing.normalization import VolumePreprocessor
 from neuroscope.training.optimizers import CycleGANOptimizer
+from neuroscope.training.trainers import CycleGANTrainer
 
 
 class TestFullPipeline:
@@ -90,7 +91,7 @@ class TestFullPipeline:
         configure_logging(level="WARNING")
 
         # get preprocessing configuration
-        config = get_default_preprocessing_config()
+        get_default_preprocessing_config()
 
         # initialize preprocessor
         preprocessor = VolumePreprocessor(
@@ -350,7 +351,7 @@ class TestFullPipeline:
 
         # test invalid model configuration
         with pytest.raises(Exception):
-            model = CycleGAN(
+            CycleGAN(
                 input_channels=0,  # invalid
                 output_channels=4,
                 generator_channels=32,

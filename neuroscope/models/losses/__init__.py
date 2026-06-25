@@ -8,147 +8,149 @@ particularly optimized for medical imaging and mri domain adaptation.
 # adversarial losses
 from .adversarial import (
     GANLoss,
-    LSGANLoss,
-    WassersteinLoss,
-    WassersteinGANLoss,
-    HingeLoss,
     HingeGANLoss,
-    VanillaGANLoss,
-    RelativisticLoss,
-    RelativisticAverageLoss,
-    SoftplusLoss,
+    HingeLoss,
+    LSGANLoss,
     MultiScaleGANLoss,
-)
-
-# perceptual and style losses
-from .perceptual import (
-    VGGFeatureExtractor,
-    PerceptualLoss,
-    StyleLoss,
-    ContentStyleLoss,
-)
-
-# reconstruction losses
-from .reconstruction import (
-    L1Loss,
-    L2Loss,
-    SSIMLoss,
-    MultiScaleSSIMLoss,
-    GradientLoss,
-    CharbonnierLoss,
-    FocalFrequencyLoss,
+    RelativisticAverageLoss,
+    RelativisticLoss,
+    SoftplusLoss,
+    VanillaGANLoss,
+    WassersteinGANLoss,
+    WassersteinLoss,
 )
 
 # consistency losses
 from .consistency import (
+    ContrastiveConsistencyLoss,
     CycleConsistencyLoss,
     CycleLoss,
-    IdentityLoss,
     FeatureMatchingLoss,
-    ContrastiveConsistencyLoss,
+    IdentityLoss,
+    ModeSeekingLoss,
     SemanticConsistencyLoss,
     TemporalConsistencyLoss,
-    ModeSeekingLoss,
 )
 
 # medical imaging losses
 from .medical import (
-    TumorPreservationLoss,
-    RadiomicsPreservationLoss,
-    ModalityConsistencyLoss,
     AnatomicalConsistencyLoss,
     ContrastEnhancementLoss,
+    ModalityConsistencyLoss,
     NormalizedCrossCorrelationLoss,
+    RadiomicsPreservationLoss,
+    TumorPreservationLoss,
+)
+
+# perceptual and style losses
+from .perceptual import (
+    ContentStyleLoss,
+    PerceptualLoss,
+    StyleLoss,
+    VGGFeatureExtractor,
+)
+
+# reconstruction losses
+from .reconstruction import (
+    CharbonnierLoss,
+    FocalFrequencyLoss,
+    GradientLoss,
+    L1Loss,
+    L2Loss,
+    MultiScaleSSIMLoss,
+    SSIMLoss,
 )
 
 # regularization losses
 from .regularization import (
-    GradientPenalty,
-    SpectralRegularization,
-    R1Regularization,
-    R2Regularization,
-    PathLengthRegularization,
-    OrthogonalRegularization,
-    LatentRegularization,
     ConsistencyRegularization,
     CutoutRegularization,
+    GradientPenalty,
+    LatentRegularization,
+    OrthogonalRegularization,
+    PathLengthRegularization,
+    R1Regularization,
+    R2Regularization,
+    SpectralRegularization,
+)
+from .volumetric import (
+    AnatomicalConsistencyLoss as VolumetricAnatomicalLoss,
 )
 
 # volumetric (3d) losses
 from .volumetric import (
-    VolumetricSSIM,
-    VolumetricMultiScaleSSIM,
+    CombinedVolumetricLoss,
+    TissuePreservationLoss,
     VolumetricCycleConsistencyLoss,
     VolumetricGradientLoss,
-    VolumetricPerceptualLoss,
-    VolumetricNCELoss,
     VolumetricIdentityLoss,
-    AnatomicalConsistencyLoss as VolumetricAnatomicalLoss,
-    TissuePreservationLoss,
-    CombinedVolumetricLoss,
+    VolumetricMultiScaleSSIM,
+    VolumetricNCELoss,
+    VolumetricPerceptualLoss,
+    VolumetricSSIM,
 )
 
 __all__ = [
-    # adversarial
-    "GANLoss",
-    "LSGANLoss",
-    "WassersteinLoss",
-    "WassersteinGANLoss",
-    "HingeLoss",
-    "HingeGANLoss",
-    "VanillaGANLoss",
-    "RelativisticLoss",
-    "RelativisticAverageLoss",
-    "SoftplusLoss",
-    "MultiScaleGANLoss",
-    # perceptual
-    "VGGFeatureExtractor",
-    "PerceptualLoss",
-    "StyleLoss",
-    "ContentStyleLoss",
-    # reconstruction
-    "L1Loss",
-    "L2Loss",
-    "SSIMLoss",
-    "MultiScaleSSIMLoss",
-    "GradientLoss",
+    "AnatomicalConsistencyLoss",
     "CharbonnierLoss",
-    "FocalFrequencyLoss",
+    "CombinedVolumetricLoss",
+    "ConsistencyRegularization",
+    "ContentStyleLoss",
+    "ContrastEnhancementLoss",
+    "ContrastiveConsistencyLoss",
+    "CutoutRegularization",
     # consistency
     "CycleConsistencyLoss",
     "CycleLoss",
-    "IdentityLoss",
     "FeatureMatchingLoss",
-    "ContrastiveConsistencyLoss",
-    "SemanticConsistencyLoss",
-    "TemporalConsistencyLoss",
-    "ModeSeekingLoss",
-    # medical
-    "TumorPreservationLoss",
-    "RadiomicsPreservationLoss",
-    "ModalityConsistencyLoss",
-    "AnatomicalConsistencyLoss",
-    "ContrastEnhancementLoss",
-    "NormalizedCrossCorrelationLoss",
+    "FocalFrequencyLoss",
+    # adversarial
+    "GANLoss",
+    "GradientLoss",
     # regularization
     "GradientPenalty",
-    "SpectralRegularization",
+    "HingeGANLoss",
+    "HingeLoss",
+    "IdentityLoss",
+    # reconstruction
+    "L1Loss",
+    "L2Loss",
+    "LSGANLoss",
+    "LatentRegularization",
+    "ModalityConsistencyLoss",
+    "ModeSeekingLoss",
+    "MultiScaleGANLoss",
+    "MultiScaleSSIMLoss",
+    "NormalizedCrossCorrelationLoss",
+    "OrthogonalRegularization",
+    "PathLengthRegularization",
+    "PerceptualLoss",
     "R1Regularization",
     "R2Regularization",
-    "PathLengthRegularization",
-    "OrthogonalRegularization",
-    "LatentRegularization",
-    "ConsistencyRegularization",
-    "CutoutRegularization",
-    # volumetric (3d)
-    "VolumetricSSIM",
-    "VolumetricMultiScaleSSIM",
+    "RadiomicsPreservationLoss",
+    "RelativisticAverageLoss",
+    "RelativisticLoss",
+    "SSIMLoss",
+    "SemanticConsistencyLoss",
+    "SoftplusLoss",
+    "SpectralRegularization",
+    "StyleLoss",
+    "TemporalConsistencyLoss",
+    "TissuePreservationLoss",
+    # medical
+    "TumorPreservationLoss",
+    # perceptual
+    "VGGFeatureExtractor",
+    "VanillaGANLoss",
+    "VolumetricAnatomicalLoss",
     "VolumetricCycleConsistencyLoss",
     "VolumetricGradientLoss",
-    "VolumetricPerceptualLoss",
-    "VolumetricNCELoss",
     "VolumetricIdentityLoss",
-    "VolumetricAnatomicalLoss",
-    "TissuePreservationLoss",
-    "CombinedVolumetricLoss",
+    "VolumetricMultiScaleSSIM",
+    "VolumetricNCELoss",
+    "VolumetricPerceptualLoss",
+    # volumetric (3d)
+    "VolumetricSSIM",
+    "WassersteinGANLoss",
+    "WassersteinLoss",
 ]

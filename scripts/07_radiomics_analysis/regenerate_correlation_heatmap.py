@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """regenerate correlation heatmap figure from results json."""
 
-import json
 import importlib.util
+import json
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location(

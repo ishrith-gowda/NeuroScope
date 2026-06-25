@@ -4,14 +4,15 @@ encoder modules for generator architectures.
 this module provides various encoder implementations for image-to-image translation.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, List, Tuple, Dict
 
+from ..attention.self_attention import SelfAttention2d
 from ..blocks.conv import ConvBlock, DownsampleBlock
 from ..blocks.residual import ResidualBlock
-from ..attention.self_attention import SelfAttention2d
 
 
 class ConvEncoder(nn.Module):
@@ -38,7 +39,7 @@ class ConvEncoder(nn.Module):
         norm_type: str = "instance",
         activation: str = "relu",
         use_attention: bool = False,
-        attention_layers: Optional[List[int]] = None,
+        attention_layers: Optional[list[int]] = None,
     ):
         super().__init__()
 
@@ -80,7 +81,7 @@ class ConvEncoder(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_intermediates: bool = True
-    ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, Optional[list[torch.Tensor]]]:
         """
         forward pass.
 
@@ -152,7 +153,7 @@ class ResidualEncoder(nn.Module):
         self.stages = nn.ModuleList()
 
         current_channels = base_channels
-        for i in range(n_downsample):
+        for _i in range(n_downsample):
             out_channels = min(current_channels * 2, 512)
 
             stage = nn.ModuleList(
@@ -180,7 +181,7 @@ class ResidualEncoder(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_intermediates: bool = True
-    ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, Optional[list[torch.Tensor]]]:
         """forward pass with optional intermediate outputs."""
         intermediates = []
 
@@ -259,7 +260,7 @@ class DenseEncoder(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_intermediates: bool = True
-    ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, Optional[list[torch.Tensor]]]:
         """forward pass."""
         intermediates = []
 
@@ -289,7 +290,7 @@ class DenseBlock(nn.Module):
         self.layers = nn.ModuleList()
         current_channels = in_channels
 
-        for i in range(n_layers):
+        for _i in range(n_layers):
             self.layers.append(
                 nn.Sequential(
                     nn.BatchNorm2d(current_channels),
@@ -359,7 +360,7 @@ class MultiModalEncoder(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_intermediates: bool = False
-    ) -> Tuple[torch.Tensor, Optional[Dict]]:
+    ) -> tuple[torch.Tensor, Optional[dict]]:
         """
         forward pass.
 
@@ -466,7 +467,7 @@ class HierarchicalEncoder(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_intermediates: bool = False
-    ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, Optional[list[torch.Tensor]]]:
         """forward pass with multi-scale processing."""
         scale_features = []
 

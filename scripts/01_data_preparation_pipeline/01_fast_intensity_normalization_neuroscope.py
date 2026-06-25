@@ -1,11 +1,12 @@
-import os
+import argparse
 import json
 import logging
-import SimpleITK as sitk
-import numpy as np
+import os
 import time
-import argparse
-from typing import List, Tuple, Dict, Optional
+from typing import Optional
+
+import numpy as np
+import SimpleITK as sitk
 from neuroscope_preprocessing_config import PATHS
 from preprocessing_utils import verify_mri_path
 
@@ -15,7 +16,7 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-def find_modality_paths_fixed(section: str, subj_id: str) -> List[str]:
+def find_modality_paths_fixed(section: str, subj_id: str) -> list[str]:
     """
     locate modality files for a subject, avoiding segmentation masks.
     uses neuroscope_config.py for path resolution.
@@ -154,13 +155,13 @@ def fast_intensity_normalize(
         return image
 
 
-def resample_to_isotropic(image: sitk.Image, spacing: Tuple[float, float, float]) -> sitk.Image:
+def resample_to_isotropic(image: sitk.Image, spacing: tuple[float, float, float]) -> sitk.Image:
     """
     resample image to target isotropic spacing with linear interpolation.
     """
     orig_size = image.GetSize()
     orig_spacing = image.GetSpacing()
-    new_size = [int(round(orig_size[i] * (orig_spacing[i] / spacing[i]))) for i in range(3)]
+    new_size = [round(orig_size[i] * (orig_spacing[i] / spacing[i])) for i in range(3)]
 
     resampler = sitk.ResampleImageFilter()
     resampler.SetReferenceImage(image)
@@ -174,8 +175,8 @@ def resample_to_isotropic(image: sitk.Image, spacing: Tuple[float, float, float]
 def process_subject_fast_intensity_only(
     section: str,
     subj_id: str,
-    paths: List[str],
-    target_spacing: Tuple[float, float, float],
+    paths: list[str],
+    target_spacing: tuple[float, float, float],
     enable_resampling: bool = True,
     background_percentile: float = 5.0,
     brain_low: float = 1.0,
@@ -252,13 +253,15 @@ def process_subject_fast_intensity_only(
 
 
 def process_subjects_from_splits(
-    target_spacing: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+    target_spacing: tuple[float, float, float] = (1.0, 1.0, 1.0),
     enable_resampling: bool = True,
     background_percentile: float = 5.0,
     brain_low: float = 1.0,
     brain_high: float = 99.0,
-    splits_to_process: List[str] = ["train"],  # can be ['train', 'val', 'test']
+    splits_to_process: Optional[list[str]] = None,  # can be ['train', 'val', 'test']
 ) -> None:
+    if splits_to_process is None:
+        splits_to_process = ["train"]
     start_all = time.time()
 
     logging.info("=== FAST INTENSITY NORMALIZATION FOR CYCLEGAN ===")
@@ -274,7 +277,7 @@ def process_subjects_from_splits(
         logging.error("metadata splits file not found: %s", PATHS["metadata_splits"])
         return
 
-    with open(str(PATHS["metadata_splits"]), "r") as f:
+    with open(str(PATHS["metadata_splits"])) as f:
         meta = json.load(f)
 
     # build task list from specified splits
@@ -358,7 +361,7 @@ def dump_split_txts() -> None:
     """
     dump train/val/test subject lists from json to text files for convenience.
     """
-    with open(str(PATHS["metadata_splits"]), "r") as f:
+    with open(str(PATHS["metadata_splits"])) as f:
         meta = json.load(f)
 
     splits = {"train": [], "val": [], "test": []}

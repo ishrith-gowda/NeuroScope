@@ -2,7 +2,6 @@
 
 import torch
 import torch.nn as nn
-from typing import List, Optional, Union, Tuple
 
 
 class PatchDiscriminator(nn.Module):
@@ -25,7 +24,7 @@ class PatchDiscriminator(nn.Module):
 
         def discriminator_block(
             in_filters: int, out_filters: int, stride: int = 2, normalize: bool = True
-        ) -> List[nn.Module]:
+        ) -> list[nn.Module]:
             """create a discriminator block.
 
             args:

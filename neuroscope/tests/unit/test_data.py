@@ -4,10 +4,9 @@ data pipeline tests.
 unit tests for datasets, transforms, and data loading.
 """
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from pathlib import Path
 
 
 class TestTransforms:
@@ -138,7 +137,6 @@ class TestDataLoaders:
 
     def test_dataloader_creation(self):
         """test dataloader creation."""
-        from ..data.loaders import create_dataloaders
 
         # this will use mock data
         # in real tests, would need actual data path
@@ -189,9 +187,10 @@ class TestDataPipeline:
     @pytest.mark.integration
     def test_full_pipeline(self, mock_data_dir):
         """test complete data pipeline."""
+        from torch.utils.data import DataLoader
+
         from ..data.datasets import MRIDataset
         from ..data.transforms import Compose, NormalizeIntensity, ToTensor
-        from torch.utils.data import DataLoader
 
         transforms = Compose([NormalizeIntensity(), ToTensor()])
 

@@ -7,15 +7,15 @@ neuroscope functionality including preprocessing, training, and evaluation.
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
-from neuroscope.core.logging import get_logger, configure_logging
 from neuroscope.config import (
-    get_default_training_config,
-    get_default_preprocessing_config,
     get_default_evaluation_config,
+    get_default_preprocessing_config,
+    get_default_training_config,
     validate_config,
 )
+from neuroscope.core.logging import configure_logging, get_logger
 
 logger = get_logger(__name__)
 
@@ -34,13 +34,13 @@ def create_parser() -> argparse.ArgumentParser:
 examples:
   # preprocess data
   neuroscope preprocess --input-dir /path/to/raw --output-dir /path/to/processed
-  
+
   # train cyclegan model
   neuroscope train --config config.json --data-root /path/to/data
-  
+
   # evaluate model
   neuroscope evaluate --model-path /path/to/model --data-path /path/to/test/data
-  
+
   # run full pipeline
   neuroscope pipeline --input-dir /path/to/raw --output-dir /path/to/results
         """,
@@ -220,9 +220,9 @@ def preprocess_command(args: argparse.Namespace):
 
 def train_command(args: argparse.Namespace):
     """handle training command."""
-    from neuroscope.training.trainers import CycleGANTrainer
     from neuroscope.models.architectures import CycleGAN
     from neuroscope.training.optimizers import CycleGANOptimizer
+    from neuroscope.training.trainers import CycleGANTrainer
 
     logger.info("Starting CycleGAN training")
 
@@ -271,7 +271,7 @@ def evaluate_command(args: argparse.Namespace):
     logger.info("Starting model evaluation")
 
     # load model
-    model = torch.load(args.model_path, map_location="cpu")
+    torch.load(args.model_path, map_location="cpu")
 
     logger.info(f"Loaded model from: {args.model_path}")
     logger.info(f"Evaluating on data from: {args.data_path}")
@@ -367,7 +367,7 @@ def config_command(args: argparse.Namespace):
             sys.exit(1)
 
 
-def load_config_file(config_path: Path) -> Dict[str, Any]:
+def load_config_file(config_path: Path) -> dict[str, Any]:
     """load configuration from json file.
 
     args:
@@ -378,7 +378,7 @@ def load_config_file(config_path: Path) -> Dict[str, Any]:
     """
     import json
 
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return json.load(f)
 
 

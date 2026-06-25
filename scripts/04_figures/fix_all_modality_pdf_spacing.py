@@ -6,13 +6,13 @@ this script regenerates t1, t1ce, t2, and flair pdfs with the corrected hspace
 parameter (0.12 instead of 0.15) to match the spacing in all_modalities figures.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -64,7 +64,7 @@ def recreate_pdf_with_corrected_spacing(input_pdf_path: Path, output_pdf_path: P
         images = convert_from_path(str(input_pdf_path), dpi=300)
 
         if not images:
-            print(f"    ✗ failed to extract images from pdf")
+            print("    ✗ failed to extract images from pdf")
             return False
 
         # get image dimensions
@@ -92,7 +92,7 @@ def recreate_pdf_with_corrected_spacing(input_pdf_path: Path, output_pdf_path: P
         fig.savefig(str(output_pdf_path), format="pdf", bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
 
-        print(f"    ✓ regenerated with corrected spacing")
+        print("    ✓ regenerated with corrected spacing")
         return True
 
     except Exception as e:
@@ -119,7 +119,7 @@ def main():
     print(f"\n{'=' * 70}")
     print(f"fixing pdf spacing for {len(all_pdfs)} single-modality figures")
     print(f"modalities: {', '.join(modalities)}")
-    print(f"new hspace: 0.12 (matching all_modalities figures)")
+    print("new hspace: 0.12 (matching all_modalities figures)")
     print(f"{'=' * 70}\n")
 
     success_count = 0
@@ -127,7 +127,7 @@ def main():
 
     for pdf in all_pdfs:
         modality = pdf.stem.split("_")[-1]
-        sample_num = pdf.stem.split("_")[2]
+        pdf.stem.split("_")[2]
 
         # create temporary output path
         temp_output = pdf.with_stem(pdf.stem + "_temp")

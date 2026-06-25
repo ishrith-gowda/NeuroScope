@@ -1,12 +1,10 @@
 import argparse
-import json
+import datetime
+import importlib.util
 import logging
+import os
 import subprocess
 import sys
-import importlib.util
-import time
-import datetime
-import os
 from pathlib import Path
 
 # use paths for defaults
@@ -75,15 +73,14 @@ def setup_logging(verbose: bool):
 
 
 def run_py(script_path: Path, args: list) -> int:
-    cmd = [sys.executable, str(script_path)] + list(args)
+    cmd = [sys.executable, str(script_path), *list(args)]
     logging.info("Executing command: %s", " ".join(str(x) for x in cmd))
 
     try:
         # run the process and capture output
         res = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             check=False,  # don't raise exception on non-zero exit
         )

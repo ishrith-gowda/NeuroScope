@@ -14,16 +14,8 @@ usage:
 
 import argparse
 import logging
-import os
-import shutil
 import subprocess
-import sys
-import tarfile
-import zipfile
 from pathlib import Path
-from typing import List, Optional
-from urllib.request import urlretrieve
-import json
 
 # setup logging
 logging.basicConfig(
@@ -284,7 +276,7 @@ class DatasetDownloader:
 
         logger.info(f"Instructions saved to: {readme_path}")
 
-    def create_download_script_summary(self, datasets: List[str]):
+    def create_download_script_summary(self, datasets: list[str]):
         """create a summary document of all datasets to download."""
         summary_path = self.output_dir / "DATASETS_SUMMARY.md"
 

@@ -4,12 +4,13 @@ resnet-based generator architecture.
 classic generator architecture using residual blocks.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional, List
 
-from ..blocks.residual import ResidualBlock
 from ..attention.self_attention import SelfAttention2d
+from ..blocks.residual import ResidualBlock
 from .base import BaseGenerator
 
 
@@ -73,7 +74,7 @@ class ResNetGenerator(BaseGenerator):
         # downsampling
         self.downsample = nn.ModuleList()
         mult = 1
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             self.downsample.append(
                 nn.Sequential(
                     nn.Conv2d(ngf * mult, ngf * mult * 2, 3, stride=2, padding=1),
@@ -98,7 +99,7 @@ class ResNetGenerator(BaseGenerator):
 
         # upsampling
         self.upsample = nn.ModuleList()
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             self.upsample.append(
                 nn.Sequential(
                     nn.ConvTranspose2d(
@@ -158,7 +159,7 @@ class ResNetGeneratorWithAttention(ResNetGenerator):
         norm_type: str = "instance",
         use_dropout: bool = False,
         padding_type: str = "reflect",
-        attention_layers: Optional[List[int]] = None,
+        attention_layers: Optional[list[int]] = None,
     ):
         super().__init__(
             in_channels,
@@ -339,7 +340,7 @@ class DeepResNetGenerator(BaseGenerator):
         # progressive downsampling
         self.downsample = nn.ModuleList()
         mult = 1
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             out_mult = min(mult * 2, 8)  # cap at 8x base
             self.downsample.append(
                 nn.Sequential(
@@ -352,12 +353,12 @@ class DeepResNetGenerator(BaseGenerator):
 
         # deep residual blocks
         self.residual_blocks = nn.ModuleList()
-        for i in range(n_residual):
+        for _i in range(n_residual):
             self.residual_blocks.append(PreActResidualBlock(ngf * mult))
 
         # progressive upsampling
         self.upsample = nn.ModuleList()
-        for i in range(n_downsampling):
+        for _i in range(n_downsampling):
             out_mult = max(mult // 2, 1)
             self.upsample.append(
                 nn.Sequential(
@@ -389,7 +390,7 @@ class DeepResNetGenerator(BaseGenerator):
         for block in self.residual_blocks:
             out = block(out)
 
-        for i, up in enumerate(self.upsample):
+        for _i, up in enumerate(self.upsample):
             out = up(out)
 
         out = self.final(out)

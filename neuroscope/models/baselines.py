@@ -15,14 +15,12 @@ in a neurips-level publication.
 reference implementations are simplified for reproducibility.
 """
 
+from typing import Optional
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, Dict, List
-from scipy import stats
-from sklearn.preprocessing import StandardScaler
-
 
 # ============================================================================
 # combat: statistical harmonization
@@ -113,7 +111,7 @@ class ComBat:
 
     def _parametric_eb(
         self, gamma_hat: np.ndarray, delta_hat: np.ndarray, batch: np.ndarray, batches: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """parametric empirical bayes estimation."""
         n_batch = len(batches)
         n_features = gamma_hat.shape[1]
@@ -163,7 +161,7 @@ class ComBat:
         batch: np.ndarray,
         batches: np.ndarray,
         stand_data: np.ndarray,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """non-parametric empirical bayes using kernel density estimation."""
         # simplified: just use sample estimates
         return gamma_hat.copy(), delta_hat.copy()
@@ -303,7 +301,7 @@ class PatchSampleF(nn.Module):
 
     def forward(
         self, feats: torch.Tensor, num_patches: int = 256, patch_ids: Optional[torch.Tensor] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         sample patches from feature maps.
 
@@ -550,7 +548,7 @@ class VAEEncoder(nn.Module):
         self.fc_mu = nn.Conv2d(ngf * (2**n_downsampling), latent_dim, 1)
         self.fc_logvar = nn.Conv2d(ngf * (2**n_downsampling), latent_dim, 1)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         encode input to latent space.
 
@@ -622,7 +620,7 @@ class UNIT(nn.Module):
         self.enc_b = VAEEncoder(input_nc, ngf, latent_dim=latent_dim)
         self.dec_b = VAEDecoder(output_nc, ngf, latent_dim=latent_dim)
 
-    def forward(self, x_a: torch.Tensor, x_b: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, x_a: torch.Tensor, x_b: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         forward pass for training.
 
@@ -773,7 +771,7 @@ class BaselineRunner:
         model = UNIT(input_nc=input_nc, output_nc=input_nc)
         self.baselines[name] = {"type": "unit", "model": model.to(self.device)}
 
-    def list_baselines(self) -> List[str]:
+    def list_baselines(self) -> list[str]:
         """list available baselines."""
         return list(self.baselines.keys())
 

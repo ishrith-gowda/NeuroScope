@@ -6,8 +6,6 @@ implements various spatial attention modules for adaptive feature selection.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Optional, Tuple
 
 
 class SpatialAttention(nn.Module):
@@ -131,7 +129,7 @@ class CoordinateAttention(nn.Module):
         returns:
             attended tensor [b, c, h, w]
         """
-        B, C, H, W = x.size()
+        _B, _C, H, W = x.size()
 
         # pool along each direction
         x_h = self.pool_h(x)  # [b, c, h, 1]

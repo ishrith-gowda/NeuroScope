@@ -1,5 +1,5 @@
 """logging initialization."""
 
-from neuroscope.core.logging.logger import setup_logging, get_logger, logger
+from neuroscope.core.logging.logger import get_logger, logger, setup_logging
 
-__all__ = ["setup_logging", "get_logger", "logger"]
+__all__ = ["get_logger", "logger", "setup_logging"]

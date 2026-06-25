@@ -22,7 +22,6 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import matplotlib
 
@@ -31,7 +30,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import yaml
-from tqdm import tqdm
 
 project_root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(project_root))
@@ -39,9 +37,8 @@ sys.path.insert(0, str(project_root))
 from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer  # noqa: E402
 from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig  # noqa: E402
 
-
-MODALITY_NAMES: List[str] = ["FLAIR", "T1", "T1ce", "T2"]
-LAMBDA_VALUES: List[float] = [0.1, 0.5, 1.0, 2.0]
+MODALITY_NAMES: list[str] = ["FLAIR", "T1", "T1ce", "T2"]
+LAMBDA_VALUES: list[float] = [0.1, 0.5, 1.0, 2.0]
 
 
 def build_trainer(
@@ -90,9 +87,9 @@ def load_checkpoint_into(trainer: HybridNCETrainer, ckpt_path: Path) -> int:
 
 
 @torch.no_grad()
-def collect_cases(trainer: HybridNCETrainer, num_cases: int) -> List[Dict]:
+def collect_cases(trainer: HybridNCETrainer, num_cases: int) -> list[dict]:
     """grab a few diverse test cases by picking spread-out batch indices."""
-    cases: List[Dict] = []
+    cases: list[dict] = []
     target = max(1, num_cases)
     indices_seen = set()
     for batch_idx, batch in enumerate(trainer.test_loader):
@@ -122,7 +119,7 @@ def collect_cases(trainer: HybridNCETrainer, num_cases: int) -> List[Dict]:
 
 
 @torch.no_grad()
-def run_translations(trainer: HybridNCETrainer, cases: List[Dict]) -> List[Dict]:
+def run_translations(trainer: HybridNCETrainer, cases: list[dict]) -> list[dict]:
     """add fake_B / fake_A / rec_A / rec_B for each case using current weights."""
     out = []
     for case in cases:
@@ -168,7 +165,7 @@ def normalise(arr: np.ndarray) -> np.ndarray:
     return (arr - lo) / (hi - lo)
 
 
-def render_grid(per_lambda: Dict[float, List[Dict]], modality_index: int, out_path: Path) -> None:
+def render_grid(per_lambda: dict[float, list[dict]], modality_index: int, out_path: Path) -> None:
     """render figure: rows = case, columns = sequence per lambda."""
     if not per_lambda:
         return
@@ -246,7 +243,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     ckpt_root = Path(args.checkpoint_root)
 
-    runs: List[Tuple[float, Path]] = [
+    runs: list[tuple[float, Path]] = [
         (
             1.0,
             ckpt_root
@@ -309,7 +306,7 @@ def main():
         )
     print(f"collected {len(cases)} cases")
 
-    per_lambda: Dict[float, List[Dict]] = {}
+    per_lambda: dict[float, list[dict]] = {}
     for lam, ckpt_path in runs:
         if not ckpt_path.exists():
             print(f"[lambda={lam}] missing checkpoint, skipping.")
@@ -327,7 +324,7 @@ def main():
         "modality_names": MODALITY_NAMES,
         "modality_index": args.modality_index,
     }
-    arrays_dict: Dict[str, np.ndarray] = {}
+    arrays_dict: dict[str, np.ndarray] = {}
     for lam, val_list in per_lambda.items():
         for i, val in enumerate(val_list):
             for key in (

@@ -7,10 +7,10 @@ and research papers.
 author: neuroscope research team
 """
 
-from typing import Optional, Dict, List, Tuple, Union, Any
 from pathlib import Path
+from typing import Optional, Union
+
 import numpy as np
-from datetime import datetime
 
 
 class FigureGenerator:
@@ -33,7 +33,7 @@ class FigureGenerator:
         style: str = "publication",
         save_format: str = "pdf",
         dpi: int = 300,
-        figsize: Tuple[float, float] = (10, 6),
+        figsize: tuple[float, float] = (10, 6),
         font_size: int = 12,
     ):
         """
@@ -70,8 +70,8 @@ class FigureGenerator:
     def _setup_style(self):
         """configure matplotlib style."""
         try:
-            import matplotlib.pyplot as plt
             import matplotlib as mpl
+            import matplotlib.pyplot as plt
 
             if self.style == "publication":
                 # clean, publication-ready style
@@ -119,7 +119,7 @@ class FigureGenerator:
 
     def plot_training_losses(
         self,
-        history: Dict[str, List[float]],
+        history: dict[str, list[float]],
         title: str = "Training Losses",
         smooth_window: int = 0,
     ) -> Path:
@@ -155,12 +155,10 @@ class FigureGenerator:
                 return y
             return np.convolve(y, np.ones(window) / window, mode="valid")
 
-        epochs = None
-
         # generator loss
         if "G_loss" in history or "train_G_loss" in history:
             data = history.get("G_loss", history.get("train_G_loss", []))
-            epochs = range(1, len(data) + 1)
+            range(1, len(data) + 1)
             y = smooth(data, smooth_window) if smooth_window else data
             x = range(1, len(y) + 1)
             axes[0, 0].plot(x, y, color=colors["G_loss"], linewidth=1.5, label="Generator")
@@ -192,7 +190,7 @@ class FigureGenerator:
         axes[0, 1].legend()
 
         # gan losses (if available)
-        gan_keys = [k for k in history.keys() if "gan" in k.lower()]
+        gan_keys = [k for k in history if "gan" in k.lower()]
         for key in gan_keys:
             data = history[key]
             y = smooth(data, smooth_window) if smooth_window else data
@@ -225,7 +223,7 @@ class FigureGenerator:
         return filepath
 
     def plot_generator_discriminator_balance(
-        self, g_losses: List[float], d_losses: List[float], title: str = "GAN Training Balance"
+        self, g_losses: list[float], d_losses: list[float], title: str = "GAN Training Balance"
     ) -> Path:
         """
         plot generator vs discriminator loss balance.
@@ -277,7 +275,7 @@ class FigureGenerator:
     # =========================================================================
 
     def plot_validation_metrics(
-        self, history: Dict[str, List[float]], title: str = "Validation Metrics"
+        self, history: dict[str, list[float]], title: str = "Validation Metrics"
     ) -> Path:
         """
         plot validation metrics (ssim, psnr) over training.
@@ -290,7 +288,7 @@ class FigureGenerator:
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
         # ssim
-        ssim_keys = [k for k in history.keys() if "ssim" in k.lower()]
+        ssim_keys = [k for k in history if "ssim" in k.lower()]
         for key in ssim_keys:
             data = history[key]
             epochs = range(1, len(data) + 1)
@@ -303,7 +301,7 @@ class FigureGenerator:
         axes[0].legend()
 
         # psnr
-        psnr_keys = [k for k in history.keys() if "psnr" in k.lower()]
+        psnr_keys = [k for k in history if "psnr" in k.lower()]
         for key in psnr_keys:
             data = history[key]
             epochs = range(1, len(data) + 1)
@@ -327,16 +325,16 @@ class FigureGenerator:
 
     def plot_combined_metrics(
         self,
-        train_history: Dict[str, List[float]],
-        val_history: Dict[str, List[float]],
+        train_history: dict[str, list[float]],
+        val_history: dict[str, list[float]],
         title: str = "Training Progress",
     ) -> Path:
         """
         create comprehensive training progress figure.
         """
         try:
-            import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
+            import matplotlib.pyplot as plt
         except ImportError:
             return None
 
@@ -371,7 +369,7 @@ class FigureGenerator:
 
         # ssim
         ax4 = fig.add_subplot(gs[1, 0])
-        ssim_keys = [k for k in val_history.keys() if "ssim" in k.lower()]
+        ssim_keys = [k for k in val_history if "ssim" in k.lower()]
         for key in ssim_keys:
             ax4.plot(val_history[key], linewidth=1.5, label=key, marker="o", markersize=3)
         ax4.set_xlabel("Validation Step")
@@ -383,7 +381,7 @@ class FigureGenerator:
 
         # psnr
         ax5 = fig.add_subplot(gs[1, 1])
-        psnr_keys = [k for k in val_history.keys() if "psnr" in k.lower()]
+        psnr_keys = [k for k in val_history if "psnr" in k.lower()]
         for key in psnr_keys:
             ax5.plot(val_history[key], linewidth=1.5, label=key, marker="o", markersize=3)
         ax5.set_xlabel("Validation Step")
@@ -416,7 +414,7 @@ class FigureGenerator:
     # =========================================================================
 
     def plot_gradient_norms(
-        self, gradient_history: Dict[str, List[float]], title: str = "Gradient Norms"
+        self, gradient_history: dict[str, list[float]], title: str = "Gradient Norms"
     ) -> Path:
         """
         plot gradient norm history to detect vanishing/exploding gradients.
@@ -458,17 +456,17 @@ class FigureGenerator:
 
     def create_publication_summary(
         self,
-        history: Dict[str, List[float]],
-        val_history: Dict[str, List[float]],
-        final_metrics: Dict[str, float],
+        history: dict[str, list[float]],
+        val_history: dict[str, list[float]],
+        final_metrics: dict[str, float],
         experiment_name: str = "SA-CycleGAN",
     ) -> Path:
         """
         create a publication-ready summary figure.
         """
         try:
-            import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
+            import matplotlib.pyplot as plt
         except ImportError:
             return None
 
@@ -559,7 +557,7 @@ class FigureGenerator:
             fontsize=11,
             verticalalignment="top",
             fontfamily="monospace",
-            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
         )
         ax_f.set_title("(f) Final Results")
 
@@ -573,12 +571,12 @@ class FigureGenerator:
 
     def generate_all_figures(
         self,
-        history: Dict[str, List[float]],
-        val_history: Optional[Dict[str, List[float]]] = None,
-        gradient_history: Optional[Dict[str, List[float]]] = None,
-        final_metrics: Optional[Dict[str, float]] = None,
+        history: dict[str, list[float]],
+        val_history: Optional[dict[str, list[float]]] = None,
+        gradient_history: Optional[dict[str, list[float]]] = None,
+        final_metrics: Optional[dict[str, float]] = None,
         experiment_name: str = "SA-CycleGAN",
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """
         generate all standard training figures.
 

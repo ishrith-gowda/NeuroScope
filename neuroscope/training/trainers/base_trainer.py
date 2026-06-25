@@ -5,16 +5,15 @@ provides robust training infrastructure for gan-based
 image translation models with proper logging and checkpointing.
 """
 
-from typing import Dict, List, Optional, Any, Callable, Tuple, Union
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from abc import ABC, abstractmethod
-import time
-import json
+from typing import Any, Optional, Union
+
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
+from torch.utils.data import DataLoader
 
 
 @dataclass
@@ -62,11 +61,11 @@ class TrainerConfig:
     # buffer pool size for discriminator
     pool_size: int = 50
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in self.__annotations__}
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "TrainerConfig":
+    def from_dict(cls, d: dict[str, Any]) -> "TrainerConfig":
         return cls(**{k: v for k, v in d.items() if k in cls.__annotations__})
 
 
@@ -80,22 +79,22 @@ class TrainingState:
     best_epoch: int = 0
 
     # running statistics
-    losses: Dict[str, float] = field(default_factory=dict)
-    metrics: Dict[str, float] = field(default_factory=dict)
+    losses: dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
 
     # training history
-    history: Dict[str, List[float]] = field(
+    history: dict[str, list[float]] = field(
         default_factory=lambda: {"loss_g": [], "loss_d": [], "loss_cycle": [], "loss_identity": []}
     )
 
-    def update_history(self, losses: Dict[str, float]):
+    def update_history(self, losses: dict[str, float]):
         """update training history."""
         for key, value in losses.items():
             if key not in self.history:
                 self.history[key] = []
             self.history[key].append(value)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "epoch": self.epoch,
             "global_step": self.global_step,
@@ -105,7 +104,7 @@ class TrainingState:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "TrainingState":
+    def from_dict(cls, d: dict[str, Any]) -> "TrainingState":
         state = cls()
         state.epoch = d.get("epoch", 0)
         state.global_step = d.get("global_step", 0)
@@ -171,7 +170,7 @@ class BaseTrainer(ABC):
         - mixed precision training
     """
 
-    def __init__(self, config: TrainerConfig, callbacks: Optional[List] = None):
+    def __init__(self, config: TrainerConfig, callbacks: Optional[list] = None):
         self.config = config
         self.device = torch.device(config.device if torch.cuda.is_available() else "cpu")
         self.callbacks = callbacks or []
@@ -187,22 +186,22 @@ class BaseTrainer(ABC):
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
-    def build_models(self) -> Dict[str, nn.Module]:
+    def build_models(self) -> dict[str, nn.Module]:
         """build and return model dictionary."""
         pass
 
     @abstractmethod
-    def build_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
+    def build_optimizers(self) -> dict[str, torch.optim.Optimizer]:
         """build and return optimizer dictionary."""
         pass
 
     @abstractmethod
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """execute single training step."""
         pass
 
     @abstractmethod
-    def validate_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def validate_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """execute single validation step."""
         pass
 
@@ -240,7 +239,7 @@ class BaseTrainer(ABC):
 
         self._call_callbacks("on_train_end")
 
-    def _train_epoch(self, train_loader: DataLoader) -> Dict[str, float]:
+    def _train_epoch(self, train_loader: DataLoader) -> dict[str, float]:
         """train for one epoch."""
         for model in self.models.values():
             model.train()
@@ -274,7 +273,7 @@ class BaseTrainer(ABC):
 
         return epoch_losses
 
-    def _validate_epoch(self, val_loader: DataLoader) -> Dict[str, float]:
+    def _validate_epoch(self, val_loader: DataLoader) -> dict[str, float]:
         """validate for one epoch."""
         for model in self.models.values():
             model.eval()
@@ -296,7 +295,7 @@ class BaseTrainer(ABC):
 
         return val_metrics
 
-    def _to_device(self, batch: Dict[str, Any]) -> Dict[str, Any]:
+    def _to_device(self, batch: dict[str, Any]) -> dict[str, Any]:
         """move batch to device."""
         result = {}
         for key, value in batch.items():
@@ -378,7 +377,7 @@ class BaseTrainer(ABC):
 
         print(f"loaded checkpoint from epoch {checkpoint['epoch']}")
 
-    def _log_progress(self, batch_idx: int, num_batches: int, losses: Dict[str, float]):
+    def _log_progress(self, batch_idx: int, num_batches: int, losses: dict[str, float]):
         """log training progress."""
         loss_str = " | ".join([f"{k}: {v:.4f}" for k, v in losses.items()])
         print(
@@ -407,7 +406,7 @@ class GANTrainer(BaseTrainer):
         discriminator: nn.Module,
         config: TrainerConfig,
         gan_loss: Optional[nn.Module] = None,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[list] = None,
     ):
         super().__init__(config, callbacks)
 
@@ -419,10 +418,10 @@ class GANTrainer(BaseTrainer):
         # build optimizers
         self.optimizers = self.build_optimizers()
 
-    def build_models(self) -> Dict[str, nn.Module]:
+    def build_models(self) -> dict[str, nn.Module]:
         return self.models
 
-    def build_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
+    def build_optimizers(self) -> dict[str, torch.optim.Optimizer]:
         return {
             "G": torch.optim.Adam(
                 self.models["G"].parameters(),
@@ -436,7 +435,7 @@ class GANTrainer(BaseTrainer):
             ),
         }
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         real = batch["real"]
         batch_size = real.size(0)
 
@@ -492,7 +491,7 @@ class GANTrainer(BaseTrainer):
 
         return losses
 
-    def validate_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def validate_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         return {}
 
 
@@ -518,7 +517,7 @@ class CycleGANTrainer(BaseTrainer):
         criterion_cycle: Optional[nn.Module] = None,
         criterion_identity: Optional[nn.Module] = None,
         criterion_perceptual: Optional[nn.Module] = None,
-        callbacks: Optional[List] = None,
+        callbacks: Optional[list] = None,
     ):
         super().__init__(config, callbacks)
 
@@ -543,10 +542,10 @@ class CycleGANTrainer(BaseTrainer):
         # build optimizers
         self.optimizers = self.build_optimizers()
 
-    def build_models(self) -> Dict[str, nn.Module]:
+    def build_models(self) -> dict[str, nn.Module]:
         return self.models
 
-    def build_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
+    def build_optimizers(self) -> dict[str, torch.optim.Optimizer]:
         return {
             "G": torch.optim.Adam(
                 list(self.models["G_A2B"].parameters()) + list(self.models["G_B2A"].parameters()),
@@ -560,7 +559,7 @@ class CycleGANTrainer(BaseTrainer):
             ),
         }
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         real_A = batch["real_A"]
         real_B = batch["real_B"]
 
@@ -686,7 +685,7 @@ class CycleGANTrainer(BaseTrainer):
 
         return losses
 
-    def validate_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def validate_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """compute validation metrics."""
         real_A = batch["real_A"]
         real_B = batch["real_B"]
@@ -711,7 +710,7 @@ class CycleGANTrainer(BaseTrainer):
 
     def generate_samples(
         self, real_A: torch.Tensor, real_B: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """generate sample translations for visualization."""
         with torch.no_grad():
             fake_B = self.models["G_A2B"](real_A)

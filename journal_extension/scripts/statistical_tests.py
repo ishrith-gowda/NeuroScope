@@ -19,14 +19,12 @@ from __future__ import annotations
 import itertools
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy import stats
 
-
-LAMBDAS: List[float] = [0.1, 0.5, 1.0, 2.0]
-METRICS: List[str] = [
+LAMBDAS: list[float] = [0.1, 0.5, 1.0, 2.0]
+METRICS: list[str] = [
     "ssim_A2B",
     "ssim_B2A",
     "ssim_global_A2B",
@@ -38,8 +36,8 @@ METRICS: List[str] = [
 ]
 
 
-def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
-    out: Dict[float, Dict[str, np.ndarray]] = {}
+def load_per_slice(results_dir: Path) -> dict[float, dict[str, np.ndarray]]:
+    out: dict[float, dict[str, np.ndarray]] = {}
     for lam in LAMBDAS:
         path = results_dir / f"test_results_lambda{lam}.json"
         if not path.exists():
@@ -59,7 +57,7 @@ def cohens_d(a: np.ndarray, b: np.ndarray) -> float:
     return float(diff.mean() / s) if s > 0 else 0.0
 
 
-def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> Tuple[float, float]:
+def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> tuple[float, float]:
     rng = np.random.default_rng(seed)
     n = len(diff)
     if n == 0:
@@ -70,9 +68,9 @@ def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> Tuple[
     return float(lo), float(hi)
 
 
-def pairwise_compare(per_slice: Dict[float, Dict[str, np.ndarray]]) -> List[Dict]:
+def pairwise_compare(per_slice: dict[float, dict[str, np.ndarray]]) -> list[dict]:
     """run all pairwise comparisons across lambdas for every metric."""
-    results: List[Dict] = []
+    results: list[dict] = []
     pairs = list(itertools.combinations(sorted(per_slice.keys()), 2))
     for metric in METRICS:
         for la, lb in pairs:
@@ -108,12 +106,12 @@ def pairwise_compare(per_slice: Dict[float, Dict[str, np.ndarray]]) -> List[Dict
     return results
 
 
-def apply_bonferroni(rows: List[Dict], alpha: float = 0.05) -> List[Dict]:
+def apply_bonferroni(rows: list[dict], alpha: float = 0.05) -> list[dict]:
     """add bonferroni-corrected significance flag based on within-metric pairs."""
-    by_metric: Dict[str, List[Dict]] = {}
+    by_metric: dict[str, list[dict]] = {}
     for r in rows:
         by_metric.setdefault(r["metric"], []).append(r)
-    for metric, group in by_metric.items():
+    for _metric, group in by_metric.items():
         n = len(group)
         adjusted = alpha / max(n, 1)
         for r in group:
@@ -122,7 +120,7 @@ def apply_bonferroni(rows: List[Dict], alpha: float = 0.05) -> List[Dict]:
     return rows
 
 
-def write_latex(rows: List[Dict], out_path: Path) -> None:
+def write_latex(rows: list[dict], out_path: Path) -> None:
     """compact pairwise table for the manuscript."""
     primary_metrics = [
         ("ssim_global_A2B", "SSIM (A$\\to$B, global)"),

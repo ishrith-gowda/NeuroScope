@@ -5,24 +5,23 @@ structured logging and experiment tracking for
 reproducible research.
 """
 
-from typing import Optional, Dict, List, Any, Union
-from pathlib import Path
-from datetime import datetime
-import logging
 import json
+import logging
 import sys
-
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 
 # global logger registry
-_loggers: Dict[str, logging.Logger] = {}
+_loggers: dict[str, logging.Logger] = {}
 
 
 def setup_logger(
     name: str = "neuroscope",
     level: int = logging.INFO,
-    log_file: Union[str, Path] = None,
+    log_file: Optional[Union[str, Path]] = None,
     console: bool = True,
-    format_string: str = None,
+    format_string: Optional[str] = None,
 ) -> logging.Logger:
     """
     set up a logger with file and console handlers.
@@ -91,13 +90,13 @@ class MetricTracker:
     """
 
     def __init__(self):
-        self.history: Dict[str, List[float]] = {}
-        self.running: Dict[str, float] = {}
-        self.counts: Dict[str, int] = {}
-        self.best: Dict[str, float] = {}
-        self.best_epoch: Dict[str, int] = {}
+        self.history: dict[str, list[float]] = {}
+        self.running: dict[str, float] = {}
+        self.counts: dict[str, int] = {}
+        self.best: dict[str, float] = {}
+        self.best_epoch: dict[str, int] = {}
 
-    def update(self, metrics: Dict[str, float], n: int = 1):
+    def update(self, metrics: dict[str, float], n: int = 1):
         """
         update with new metric values.
 
@@ -113,7 +112,7 @@ class MetricTracker:
             self.running[name] += value * n
             self.counts[name] += n
 
-    def average(self) -> Dict[str, float]:
+    def average(self) -> dict[str, float]:
         """get running averages."""
         return {name: self.running[name] / max(self.counts[name], 1) for name in self.running}
 
@@ -143,7 +142,7 @@ class MetricTracker:
 
         self.reset()
 
-    def get_history(self, name: str) -> List[float]:
+    def get_history(self, name: str) -> list[float]:
         """get metric history."""
         return self.history.get(name, [])
 
@@ -170,7 +169,7 @@ class MetricTracker:
             return value > self.best[name]
         return value < self.best[name]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """convert to dictionary."""
         return {"history": self.history, "best": self.best, "best_epoch": self.best_epoch}
 
@@ -182,7 +181,7 @@ class MetricTracker:
     @classmethod
     def load(cls, path: Union[str, Path]) -> "MetricTracker":
         """load from json file."""
-        with open(path, "r") as f:
+        with open(path) as f:
             data = json.load(f)
 
         tracker = cls()
@@ -205,7 +204,7 @@ class ExperimentLogger:
         self,
         experiment_name: str,
         output_dir: Union[str, Path],
-        config: Dict = None,
+        config: Optional[dict] = None,
         use_tensorboard: bool = True,
         use_wandb: bool = False,
     ):
@@ -277,7 +276,7 @@ class ExperimentLogger:
         """log a message."""
         getattr(self.logger, level)(message)
 
-    def log_metrics(self, metrics: Dict[str, float], step: int = None, prefix: str = ""):
+    def log_metrics(self, metrics: dict[str, float], step: Optional[int] = None, prefix: str = ""):
         """
         log metrics.
 
@@ -303,7 +302,7 @@ class ExperimentLogger:
                 log_dict["step"] = step
             wandb.log(log_dict)
 
-    def log_image(self, tag: str, image, step: int = None):
+    def log_image(self, tag: str, image, step: Optional[int] = None):
         """
         log image.
 
@@ -340,7 +339,7 @@ class ExperimentLogger:
         averages = {k: v[-1] for k, v in self.metrics.history.items()}
         self.logger.info(f"Epoch {epoch} - {averages}")
 
-    def save_checkpoint(self, state: Dict, filename: str = "checkpoint.pth"):
+    def save_checkpoint(self, state: dict, filename: str = "checkpoint.pth"):
         """save checkpoint."""
         import torch
 

@@ -5,7 +5,8 @@ modern efficient feature extractors with compound scaling
 for perceptual losses and feature matching.
 """
 
-from typing import List, Optional, Dict, Tuple, Union
+from typing import Optional, Union
+
 import torch
 import torch.nn as nn
 
@@ -23,8 +24,8 @@ class EfficientNetNormalization(nn.Module):
 
     def __init__(
         self,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
     ):
         super().__init__()
         self.register_buffer("mean", torch.tensor(mean).view(1, 3, 1, 1))
@@ -68,7 +69,7 @@ class EfficientNetB0Features(nn.Module):
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
-        feature_stages: Optional[List[int]] = None,
+        feature_stages: Optional[list[int]] = None,
         weights: Optional[str] = "IMAGENET1K_V1",
     ):
         super().__init__()
@@ -102,11 +103,11 @@ class EfficientNetB0Features(nn.Module):
         self.eval()
 
     @property
-    def feature_channels(self) -> Dict[int, int]:
+    def feature_channels(self) -> dict[int, int]:
         """get number of channels at each stage."""
         return {s: self.STAGE_CHANNELS[s] for s in self.feature_stages}
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         """
         extract features from specified stages.
 
@@ -152,7 +153,7 @@ class EfficientNetB4Features(nn.Module):
         pretrained: bool = True,
         requires_grad: bool = False,
         normalize_input: bool = True,
-        feature_stages: Optional[List[int]] = None,
+        feature_stages: Optional[list[int]] = None,
         weights: Optional[str] = "IMAGENET1K_V1",
     ):
         super().__init__()
@@ -182,10 +183,10 @@ class EfficientNetB4Features(nn.Module):
         self.eval()
 
     @property
-    def feature_channels(self) -> Dict[int, int]:
+    def feature_channels(self) -> dict[int, int]:
         return {s: self.STAGE_CHANNELS[s] for s in self.feature_stages}
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         x = self.normalize(x)
 
         features = {}
@@ -207,8 +208,8 @@ class EfficientNetFeatureExtractor(nn.Module):
     def __init__(
         self,
         variant: str = "b0",
-        feature_stages: Optional[List[int]] = None,
-        stage_weights: Optional[Dict[int, float]] = None,
+        feature_stages: Optional[list[int]] = None,
+        stage_weights: Optional[dict[int, float]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
         normalize_features: bool = False,
@@ -242,7 +243,7 @@ class EfficientNetFeatureExtractor(nn.Module):
         else:
             raise ValueError(f"Unsupported variant: {variant}")
 
-    def forward(self, x: torch.Tensor) -> Dict[int, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> dict[int, torch.Tensor]:
         """extract features from all stages."""
         features = self.backbone(x)
 
@@ -294,8 +295,8 @@ class HybridFeatureExtractor(nn.Module):
 
     def __init__(
         self,
-        backbones: Optional[List[str]] = None,
-        backbone_weights: Optional[Dict[str, float]] = None,
+        backbones: Optional[list[str]] = None,
+        backbone_weights: Optional[dict[str, float]] = None,
         pretrained: bool = True,
         normalize_input: bool = True,
     ):
@@ -304,12 +305,12 @@ class HybridFeatureExtractor(nn.Module):
         self.backbones_names = backbones or ["vgg19", "resnet50"]
 
         if backbone_weights is None:
-            backbone_weights = {name: 1.0 for name in self.backbones_names}
+            backbone_weights = dict.fromkeys(self.backbones_names, 1.0)
         self.backbone_weights = backbone_weights
 
         # import backbone classes
-        from .vgg import VGG19Features
         from .resnet import ResNet50Features
+        from .vgg import VGG19Features
 
         # build backbones
         self.backbones = nn.ModuleDict()
@@ -331,7 +332,7 @@ class HybridFeatureExtractor(nn.Module):
                 pretrained=pretrained, normalize_input=normalize_input, feature_stages=[4, 6, 8]
             )
 
-    def forward(self, x: torch.Tensor) -> Dict[str, Dict[Union[str, int], torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> dict[str, dict[Union[str, int], torch.Tensor]]:
         """
         extract features from all backbones.
 
@@ -387,7 +388,7 @@ class HybridFeatureExtractor(nn.Module):
 
         return total_loss
 
-    def get_all_feature_channels(self) -> Dict[str, Dict]:
+    def get_all_feature_channels(self) -> dict[str, dict]:
         """get feature channels for all backbones."""
         channels = {}
         for name, backbone in self.backbones.items():

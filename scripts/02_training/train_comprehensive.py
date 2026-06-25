@@ -21,19 +21,17 @@ usage:
 author: neuroscope research team
 """
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
-from datetime import datetime
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+
 import torch
-import numpy as np
-import random
 
 
 def set_environment():
@@ -46,7 +44,7 @@ def set_environment():
 
     # fix macos malloc stack logging warnings
     os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
-    os.environ["MallocStackLogging"] = "0"
+    os.environ["MALLOCSTACKLOGGING"] = "0"
 
     # suppress unhelpful warnings
     import warnings
@@ -151,7 +149,7 @@ def verify_data_paths(config):
         brats_nifti = list(brats_path.glob("**/*.nii.gz"))
         print(f"   brats: {len(brats_subjects)} subjects, {len(brats_nifti)} nifti files")
         if len(brats_subjects) == 0:
-            print(f"   warning: no subject folders found in brats directory")
+            print("   warning: no subject folders found in brats directory")
 
     if not upenn_path.exists():
         print(f"   upenn directory not found: {upenn_path}")
@@ -162,7 +160,7 @@ def verify_data_paths(config):
         upenn_nifti = list(upenn_path.glob("**/*.nii.gz"))
         print(f"   upenn: {len(upenn_subjects)} subjects, {len(upenn_nifti)} nifti files")
         if len(upenn_subjects) == 0:
-            print(f"   warning: no subject folders found in upenn directory")
+            print("   warning: no subject folders found in upenn directory")
 
     return True
 
@@ -213,13 +211,13 @@ def main():
 examples:
     # train with yaml config
     python train_comprehensive.py --config path/to/config.yaml
-    
+
     # quick debug run
     python train_comprehensive.py --debug
-    
+
     # override settings
     python train_comprehensive.py --epochs 50 --batch_size 8 --lr 1e-4
-    
+
     # resume training
     python train_comprehensive.py --resume experiments/run_001/checkpoints/latest.pth
         """,
@@ -247,7 +245,7 @@ examples:
     print_banner()
 
     # device info
-    device, device_name = get_device_info()
+    _device, device_name = get_device_info()
     print(f"device: {device_name}")
     print(f"python: {sys.version.split()[0]}")
     print(f"pytorch: {torch.__version__}")
@@ -282,7 +280,7 @@ examples:
     print(f"   trainable: {trainer.trainable_params:,}")
 
     # data summary
-    print(f"\ndataset splits:")
+    print("\ndataset splits:")
     print(f"   train: {trainer.train_samples:,} samples")
     print(f"   valid: {trainer.val_samples:,} samples")
     print(f"   test: {trainer.test_samples:,} samples")
@@ -298,7 +296,7 @@ examples:
         print("\n" + "=" * 60)
         print("training complete")
         print("=" * 60)
-        print(f"\nfinal results:")
+        print("\nfinal results:")
         for k, v in final_metrics.items():
             print(f"   {k}: {v:.4f}")
         print(f"\nresults saved to: {trainer.run_dir}")

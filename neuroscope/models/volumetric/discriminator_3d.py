@@ -7,12 +7,12 @@ volumetric discriminators for adversarial training including:
 - spectral normalized variants
 """
 
-from typing import Optional, List, Tuple
+from typing import Optional
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from .blocks_3d import SpectralNorm3d, GroupNorm3D
+from .blocks_3d import GroupNorm3D, SpectralNorm3d
 
 
 class Discriminator3D(nn.Module):
@@ -135,7 +135,7 @@ class MultiScaleDiscriminator3D(nn.Module):
         # downsampling for multi-scale
         self.downsample = nn.AvgPool3d(kernel_size=3, stride=2, padding=1, count_include_pad=False)
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """
         forward pass returning predictions at all scales.
 
@@ -228,7 +228,7 @@ class NLayerDiscriminator3D(nn.Module):
                 flat_sequence.extend(block)
             self.model = nn.Sequential(*flat_sequence)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, Optional[list[torch.Tensor]]]:
         """
         forward pass optionally returning intermediate features.
 
@@ -375,7 +375,7 @@ class FeatureMatchingDiscriminator3D(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_features: bool = True
-    ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """
         forward pass returning discrimination scores and features.
 

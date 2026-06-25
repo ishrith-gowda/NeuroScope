@@ -10,26 +10,25 @@ tests cover:
 - input/output shape validation
 """
 
+import gc
+
 import pytest
 import torch
-import torch.nn as nn
-from typing import Tuple
-import gc
 
 # import 3d architecture components
 from src.models.architectures.volumetric import (
-    ResidualBlock3D,
-    DownsampleBlock3D,
-    UpsampleBlock3D,
-    SelfAttention3D,
-    ResNetGenerator3D,
-    SAGenerator3D,
-    MemoryEfficientGenerator3D,
-    PatchDiscriminator3D,
-    MultiScaleDiscriminator3D,
-    SpectralDiscriminator3D,
     CycleGAN3D,
     CycleGAN3DConfig,
+    DownsampleBlock3D,
+    MemoryEfficientGenerator3D,
+    MultiScaleDiscriminator3D,
+    PatchDiscriminator3D,
+    ResidualBlock3D,
+    ResNetGenerator3D,
+    SAGenerator3D,
+    SelfAttention3D,
+    SpectralDiscriminator3D,
+    UpsampleBlock3D,
 )
 
 

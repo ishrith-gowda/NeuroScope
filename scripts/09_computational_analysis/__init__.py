@@ -7,22 +7,22 @@ requirements of harmonization methods.
 
 from .efficiency_analysis import (
     EfficiencyMetrics,
+    analyze_baseline_efficiency,
+    analyze_model_efficiency,
     count_parameters,
     estimate_flops,
+    get_model_size,
     measure_inference_time,
     measure_peak_memory,
-    get_model_size,
-    analyze_model_efficiency,
-    analyze_baseline_efficiency,
 )
 
 __all__ = [
     "EfficiencyMetrics",
+    "analyze_baseline_efficiency",
+    "analyze_model_efficiency",
     "count_parameters",
     "estimate_flops",
+    "get_model_size",
     "measure_inference_time",
     "measure_peak_memory",
-    "get_model_size",
-    "analyze_model_efficiency",
-    "analyze_baseline_efficiency",
 ]

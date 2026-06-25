@@ -5,11 +5,12 @@ this module provides self-attention layers for capturing long-range
 dependencies in feature maps.
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple
-import math
 
 
 class SelfAttention2d(nn.Module):
@@ -53,7 +54,7 @@ class SelfAttention2d(nn.Module):
 
     def forward(
         self, x: torch.Tensor, return_attention: bool = False
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         forward pass.
 
@@ -155,7 +156,7 @@ class MultiScaleSelfAttention(nn.Module):
         reduction: channel reduction ratio
     """
 
-    def __init__(self, in_channels: int, scales: Tuple[int, ...] = (1, 2, 4), reduction: int = 8):
+    def __init__(self, in_channels: int, scales: tuple[int, ...] = (1, 2, 4), reduction: int = 8):
         super().__init__()
 
         self.scales = scales
@@ -178,7 +179,7 @@ class MultiScaleSelfAttention(nn.Module):
         returns:
             output tensor
         """
-        B, C, H, W = x.size()
+        _B, _C, H, W = x.size()
         outputs = []
 
         for scale, attn in zip(self.scales, self.attention_layers):

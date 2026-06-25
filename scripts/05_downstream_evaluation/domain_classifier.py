@@ -18,25 +18,23 @@ segmentation-based evaluation when segmentation labels are unavailable.
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from scipy import stats
+from sklearn.manifold import TSNE
 from sklearn.metrics import (
     accuracy_score,
-    roc_auc_score,
     confusion_matrix,
-    classification_report,
     f1_score,
+    roc_auc_score,
 )
-from sklearn.manifold import TSNE
-from scipy import stats
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 # add parent directory to path
@@ -128,7 +126,7 @@ class MRIDomainDataset(Dataset):
         split: str = "train",
         split_file: Optional[Path] = None,
         max_slices_per_subject: int = 10,
-        slice_size: Tuple[int, int] = (128, 128),
+        slice_size: tuple[int, int] = (128, 128),
     ):
         self.domain_a_dir = Path(domain_a_dir)
         self.domain_b_dir = Path(domain_b_dir)
@@ -172,7 +170,7 @@ class MRIDomainDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
         filepath = self.samples[idx]
         label = self.labels[idx]
 
@@ -198,7 +196,7 @@ class MRIDomainDataset(Dataset):
         if data.shape[-2:] != self.slice_size:
             from skimage.transform import resize
 
-            resized = np.zeros((data.shape[0],) + self.slice_size, dtype=np.float32)
+            resized = np.zeros((data.shape[0], *self.slice_size), dtype=np.float32)
             for c in range(data.shape[0]):
                 resized[c] = resize(data[c], self.slice_size, preserve_range=True)
             data = resized
@@ -231,11 +229,13 @@ class NiftiDomainDataset(Dataset):
         self,
         domain_a_dir: Path,
         domain_b_dir: Path,
-        modalities: List[str] = ["t1", "t1gd", "t2", "flair"],
-        slice_range: Tuple[int, int] = (50, 110),
+        modalities: Optional[list[str]] = None,
+        slice_range: tuple[int, int] = (50, 110),
         slice_stride: int = 5,
-        slice_size: Tuple[int, int] = (128, 128),
+        slice_size: tuple[int, int] = (128, 128),
     ):
+        if modalities is None:
+            modalities = ["t1", "t1gd", "t2", "flair"]
         self.modalities = modalities
         self.slice_range = slice_range
         self.slice_stride = slice_stride
@@ -289,7 +289,7 @@ class NiftiDomainDataset(Dataset):
             # get volume shape from first modality
             import nibabel as nib
 
-            first_mod = list(mod_files.values())[0]
+            first_mod = next(iter(mod_files.values()))
             img = nib.load(str(first_mod))
             n_slices = img.shape[2]
 
@@ -303,7 +303,7 @@ class NiftiDomainDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
         subject_dir, slice_idx, domain_label = self.samples[idx]
 
         import nibabel as nib
@@ -346,7 +346,7 @@ def train_domain_classifier(
     n_epochs: int = 50,
     lr: float = 1e-4,
     patience: int = 10,
-) -> Dict:
+) -> dict:
     """
     train domain classifier.
 
@@ -456,7 +456,7 @@ def evaluate_domain_classifier(
     data_loader: DataLoader,
     device: torch.device,
     harmonization_model: Optional[nn.Module] = None,
-) -> Dict:
+) -> dict:
     """
     evaluate domain classifier on test data.
 
@@ -540,7 +540,7 @@ def harmonize_for_evaluation(
     return harmonized
 
 
-def compute_feature_statistics(features_a: np.ndarray, features_b: np.ndarray) -> Dict:
+def compute_feature_statistics(features_a: np.ndarray, features_b: np.ndarray) -> dict:
     """
     compute statistical comparisons between feature distributions.
 
@@ -596,7 +596,7 @@ def compute_feature_statistics(features_a: np.ndarray, features_b: np.ndarray) -
 
 def compute_tsne_embedding(
     features: np.ndarray, labels: np.ndarray, n_components: int = 2, perplexity: int = 30
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     compute t-sne embedding for visualization.
 

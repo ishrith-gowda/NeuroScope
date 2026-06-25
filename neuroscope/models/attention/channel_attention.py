@@ -4,10 +4,11 @@ channel attention mechanisms.
 implements various channel attention modules for adaptive feature recalibration.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
 
 
 class ChannelAttention(nn.Module):
@@ -139,7 +140,7 @@ class EfficientChannelAttention(nn.Module):
         returns:
             recalibrated tensor [b, c, h, w]
         """
-        B, C, H, W = x.size()
+        B, C, _H, _W = x.size()
 
         # global average pooling
         y = self.avg_pool(x)  # [b, c, 1, 1]
@@ -193,7 +194,7 @@ class GlobalContextBlock(nn.Module):
         returns:
             output tensor [b, c, h, w]
         """
-        B, C, H, W = x.size()
+        B, _C, H, W = x.size()
 
         # context modeling: weighted sum of all positions
         context = self.context(x)  # [b, 1, h, w]

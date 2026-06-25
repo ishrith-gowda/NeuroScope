@@ -31,18 +31,13 @@ usage:
 import argparse
 import json
 import logging
-import multiprocessing as mp
-import os
-import shutil
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
-import torch
 from scipy import ndimage
-from skimage import exposure
 from tqdm import tqdm
 
 # suppress warnings
@@ -60,8 +55,8 @@ class MRIPreprocessor:
 
     def __init__(
         self,
-        target_resolution: Tuple[float, float, float] = (1.0, 1.0, 1.0),
-        target_size: Optional[Tuple[int, int, int]] = None,
+        target_resolution: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        target_size: Optional[tuple[int, int, int]] = None,
         normalization_method: str = "zscore",
         bias_correction: bool = True,
         skull_strip: bool = True,
@@ -85,7 +80,7 @@ class MRIPreprocessor:
         self.skull_strip = skull_strip
         self.register_to_mni = register_to_mni
 
-    def load_nifti(self, filepath: Path) -> Tuple[np.ndarray, nib.Nifti1Image]:
+    def load_nifti(self, filepath: Path) -> tuple[np.ndarray, nib.Nifti1Image]:
         """load nifti file and return data + header."""
         img = nib.load(str(filepath))
         data = img.get_fdata()
@@ -99,15 +94,15 @@ class MRIPreprocessor:
     def resample_to_resolution(
         self,
         data: np.ndarray,
-        current_res: Tuple[float, float, float],
-        target_res: Tuple[float, float, float],
+        current_res: tuple[float, float, float],
+        target_res: tuple[float, float, float],
     ) -> np.ndarray:
         """resample volume to target resolution."""
         zoom_factors = [c / t for c, t in zip(current_res, target_res)]
         resampled = ndimage.zoom(data, zoom_factors, order=3)
         return resampled
 
-    def resize_to_shape(self, data: np.ndarray, target_shape: Tuple[int, int, int]) -> np.ndarray:
+    def resize_to_shape(self, data: np.ndarray, target_shape: tuple[int, int, int]) -> np.ndarray:
         """resize volume to target shape with center cropping/padding."""
         current_shape = data.shape
 
@@ -208,7 +203,9 @@ class MRIPreprocessor:
 
         return normalized
 
-    def preprocess_volume(self, filepath: Path, output_path: Path, metadata: Dict = None) -> Dict:
+    def preprocess_volume(
+        self, filepath: Path, output_path: Path, metadata: Optional[dict] = None
+    ) -> dict:
         """
         complete preprocessing pipeline for a single volume.
 
@@ -273,7 +270,7 @@ class DatasetPreprocessor:
         input_dir: Path,
         output_dir: Path,
         preprocessor: MRIPreprocessor,
-        modalities: List[str] = None,
+        modalities: Optional[list[str]] = None,
         num_workers: int = 4,
     ):
         """
@@ -454,7 +451,7 @@ class DatasetPreprocessor:
         self._save_statistics(all_stats, output_dir / "preprocessing_stats.json")
         logger.info(f"OASIS-3 preprocessing complete. Saved to {output_dir}")
 
-    def _save_statistics(self, stats: List[Dict], output_path: Path):
+    def _save_statistics(self, stats: list[dict], output_path: Path):
         """save preprocessing statistics to json file."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
 

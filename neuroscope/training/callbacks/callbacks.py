@@ -5,14 +5,15 @@ comprehensive collection of training callbacks for monitoring,
 checkpointing, and early stopping.
 """
 
-from typing import Optional, Dict, Any, List, Callable, Union
-from pathlib import Path
-from dataclasses import dataclass, field
-import time
 import json
+import time
+from abc import ABC
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
 
 
 @dataclass
@@ -25,10 +26,10 @@ class CallbackState:
     total_steps: int = 0
     train_loss: float = 0.0
     val_loss: Optional[float] = None
-    metrics: Dict[str, float] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
     model: Optional[nn.Module] = None
     optimizer: Optional[torch.optim.Optimizer] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
 class Callback(ABC):
@@ -70,7 +71,7 @@ class Callback(ABC):
 class CallbackList:
     """container for multiple callbacks."""
 
-    def __init__(self, callbacks: Optional[List[Callback]] = None):
+    def __init__(self, callbacks: Optional[list[Callback]] = None):
         self.callbacks = callbacks or []
 
     def append(self, callback: Callback) -> None:
@@ -279,7 +280,7 @@ class ProgressLogger(Callback):
     logs training progress with metrics.
     """
 
-    def __init__(self, log_freq: int = 100, metrics: Optional[List[str]] = None):
+    def __init__(self, log_freq: int = 100, metrics: Optional[list[str]] = None):
         """
         args:
             log_freq: batches between logs
@@ -395,16 +396,15 @@ class LearningRateMonitor(Callback):
 
     def __init__(self, log_freq: int = 100):
         self.log_freq = log_freq
-        self.lr_history: List[Dict[str, float]] = []
+        self.lr_history: list[dict[str, float]] = []
 
     def on_batch_end(self, state: CallbackState) -> None:
-        if state.step % self.log_freq == 0:
-            if state.optimizer is not None:
-                lrs = {}
-                for i, group in enumerate(state.optimizer.param_groups):
-                    lrs[f"lr_group_{i}"] = group["lr"]
+        if state.step % self.log_freq == 0 and state.optimizer is not None:
+            lrs = {}
+            for i, group in enumerate(state.optimizer.param_groups):
+                lrs[f"lr_group_{i}"] = group["lr"]
 
-                self.lr_history.append({"step": state.step, **lrs})
+            self.lr_history.append({"step": state.step, **lrs})
 
 
 class GradientMonitor(Callback):
@@ -425,7 +425,7 @@ class GradientMonitor(Callback):
         self.log_freq = log_freq
         self.log_histogram = log_histogram
 
-        self.grad_norms: List[Dict[str, float]] = []
+        self.grad_norms: list[dict[str, float]] = []
 
     def on_batch_end(self, state: CallbackState) -> None:
         if state.step % self.log_freq == 0:
@@ -458,7 +458,7 @@ class MetricsHistory(Callback):
             save_path: path to save history
         """
         self.save_path = Path(save_path) if save_path else None
-        self.history: Dict[str, List[float]] = {}
+        self.history: dict[str, list[float]] = {}
 
     def on_epoch_end(self, state: CallbackState) -> None:
         if "train_loss" not in self.history:
@@ -503,9 +503,9 @@ class GANMonitor(Callback):
         self.track_d_g_ratio = track_d_g_ratio
         self.track_mode_collapse = track_mode_collapse
 
-        self.g_losses: List[float] = []
-        self.d_losses: List[float] = []
-        self.d_g_ratios: List[float] = []
+        self.g_losses: list[float] = []
+        self.d_losses: list[float] = []
+        self.d_g_ratios: list[float] = []
 
     def on_batch_end(self, state: CallbackState) -> None:
         if state.step % self.log_freq == 0:
@@ -519,7 +519,7 @@ class GANMonitor(Callback):
                 ratio = d_loss / g_loss
                 self.d_g_ratios.append(ratio)
 
-    def get_stability_report(self) -> Dict[str, float]:
+    def get_stability_report(self) -> dict[str, float]:
         """get training stability report."""
         import numpy as np
 
@@ -549,8 +549,8 @@ class TimingCallback(Callback):
 
     def __init__(self):
         self.train_start = 0
-        self.epoch_times: List[float] = []
-        self.batch_times: List[float] = []
+        self.epoch_times: list[float] = []
+        self.batch_times: list[float] = []
         self._batch_start = 0
         self._epoch_start = 0
 
@@ -569,7 +569,7 @@ class TimingCallback(Callback):
     def on_batch_end(self, state: CallbackState) -> None:
         self.batch_times.append(time.time() - self._batch_start)
 
-    def get_timing_report(self) -> Dict[str, float]:
+    def get_timing_report(self) -> dict[str, float]:
         """get timing statistics."""
         import numpy as np
 

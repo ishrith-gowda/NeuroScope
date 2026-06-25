@@ -9,55 +9,55 @@ medical imaging and mri domain adaptation.
 # base classes
 from .base import (
     BaseGenerator,
-    EncoderDecoderGenerator,
-    ResidualGenerator,
-    MultiScaleGenerator,
     ConditionalGenerator,
+    EncoderDecoderGenerator,
+    MultiScaleGenerator,
+    ResidualGenerator,
     StyleGenerator,
+)
+
+# decoder modules
+from .decoder import (
+    AttentionDecoder,
+    ConvDecoder,
+    PixelShuffleDecoder,
+    ProgressiveDecoder,
+    ResidualDecoder,
+    UNetDecoder,
 )
 
 # encoder modules
 from .encoder import (
     ConvEncoder,
-    ResidualEncoder,
     DenseEncoder,
-    MultiModalEncoder,
     HierarchicalEncoder,
-)
-
-# decoder modules
-from .decoder import (
-    ConvDecoder,
-    ResidualDecoder,
-    UNetDecoder,
-    AttentionDecoder,
-    ProgressiveDecoder,
-    PixelShuffleDecoder,
+    MultiModalEncoder,
+    ResidualEncoder,
 )
 
 # resnet-based generators
 from .resnet import (
+    DeepResNetGenerator,
+    FastResNetGenerator,
     ResNetGenerator,
     ResNetGeneratorWithAttention,
-    FastResNetGenerator,
-    DeepResNetGenerator,
 )
 
 # self-attention generators
 from .sa_generator import (
-    SAGenerator,
-    SAEncoder,
+    DenseSAGenerator,
+    MultiScaleSAGenerator,
     SABottleneck,
     SADecoder,
-    MultiScaleSAGenerator,
-    DenseSAGenerator,
+    SAEncoder,
+    SAGenerator,
 )
 
 # u-net generators
 from .unet import (
-    UNetGenerator,
     AttentionUNetGenerator,
     ResUNetGenerator,
+    UNetGenerator,
     UNetPlusPlusGenerator,
 )
 
@@ -65,42 +65,42 @@ from .unet import (
 CycleGANGenerator = ResNetGenerator
 
 __all__ = [
+    "AttentionDecoder",
+    "AttentionUNetGenerator",
     # base
     "BaseGenerator",
-    "EncoderDecoderGenerator",
-    "ResidualGenerator",
-    "MultiScaleGenerator",
     "ConditionalGenerator",
-    "StyleGenerator",
-    # encoders
-    "ConvEncoder",
-    "ResidualEncoder",
-    "DenseEncoder",
-    "MultiModalEncoder",
-    "HierarchicalEncoder",
     # decoders
     "ConvDecoder",
-    "ResidualDecoder",
-    "UNetDecoder",
-    "AttentionDecoder",
-    "ProgressiveDecoder",
+    # encoders
+    "ConvEncoder",
+    "CycleGANGenerator",
+    "DeepResNetGenerator",
+    "DenseEncoder",
+    "DenseSAGenerator",
+    "EncoderDecoderGenerator",
+    "FastResNetGenerator",
+    "HierarchicalEncoder",
+    "MultiModalEncoder",
+    "MultiScaleGenerator",
+    "MultiScaleSAGenerator",
     "PixelShuffleDecoder",
+    "ProgressiveDecoder",
     # resnet
     "ResNetGenerator",
     "ResNetGeneratorWithAttention",
-    "FastResNetGenerator",
-    "DeepResNetGenerator",
-    "CycleGANGenerator",
-    # self-attention
-    "SAGenerator",
-    "SAEncoder",
+    "ResUNetGenerator",
+    "ResidualDecoder",
+    "ResidualEncoder",
+    "ResidualGenerator",
     "SABottleneck",
     "SADecoder",
-    "MultiScaleSAGenerator",
-    "DenseSAGenerator",
+    "SAEncoder",
+    # self-attention
+    "SAGenerator",
+    "StyleGenerator",
+    "UNetDecoder",
     # u-net
     "UNetGenerator",
-    "AttentionUNetGenerator",
-    "ResUNetGenerator",
     "UNetPlusPlusGenerator",
 ]

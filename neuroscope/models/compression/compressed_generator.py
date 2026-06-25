@@ -25,21 +25,21 @@ reference:
     image compression", iccv 2019.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, Dict, List
 
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25DConfig,
-    SAGenerator25D,
-    SliceEncoder25D,
-    ResidualBlock,
-    SelfAttention2D,
     CBAM,
+    ResidualBlock,
+    SACycleGAN25DConfig,
+    SelfAttention2D,
+    SliceEncoder25D,
 )
-from neuroscope.models.compression.quantization import UniformQuantize, NoiseQuantize
 from neuroscope.models.compression.entropy_model import FactorizedPrior, HyperpriorModel
+from neuroscope.models.compression.quantization import UniformQuantize
 
 
 class CompressedSAGenerator25D(nn.Module):
@@ -177,7 +177,7 @@ class CompressedSAGenerator25D(nn.Module):
             nn.Tanh(),
         )
 
-    def encode(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def encode(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """
         encode input to bottleneck representation.
 
@@ -195,7 +195,7 @@ class CompressedSAGenerator25D(nn.Module):
 
         return x, skips
 
-    def compress(self, latent: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def compress(self, latent: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         quantize bottleneck and estimate bitrate.
 
@@ -216,7 +216,7 @@ class CompressedSAGenerator25D(nn.Module):
         z = self.post_quant(y_hat)
         return z, total_bits, bpe
 
-    def decode(self, z: torch.Tensor, skips: List[torch.Tensor]) -> torch.Tensor:
+    def decode(self, z: torch.Tensor, skips: list[torch.Tensor]) -> torch.Tensor:
         """
         decode from bottleneck to output image.
 
@@ -240,7 +240,7 @@ class CompressedSAGenerator25D(nn.Module):
 
         return self.output(z)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         full forward pass: encode -> compress -> decode.
 
@@ -318,7 +318,7 @@ class CompressedSACycleGAN25D(nn.Module):
             use_attention=self.config.use_disc_attention,
         )
 
-    def forward(self, slices_A: torch.Tensor, slices_B: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, slices_A: torch.Tensor, slices_B: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         training forward pass with compression.
 
@@ -359,7 +359,7 @@ class CompressedSACycleGAN25D(nn.Module):
             "bits_total": bits_A2B + bits_B2A + bits_rec_A + bits_rec_B,
         }
 
-    def get_parameter_count(self) -> Dict[str, int]:
+    def get_parameter_count(self) -> dict[str, int]:
         """get parameter counts for each component."""
         return {
             "G_A2B": sum(p.numel() for p in self.G_A2B.parameters()),
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     # test full model
     model = CompressedSACycleGAN25D(config)
     params = model.get_parameter_count()
-    print(f"\ncompressed model parameters:")
+    print("\ncompressed model parameters:")
     for k, v in params.items():
         print(f"  {k}: {v:,} ({v / 1e6:.2f}m)")
 
@@ -400,7 +400,7 @@ if __name__ == "__main__":
     a = torch.randn(2, 12, 128, 128)
     b = torch.randn(2, 12, 128, 128)
     results = model(a, b)
-    print(f"\nforward pass results:")
+    print("\nforward pass results:")
     for k, v in results.items():
         if isinstance(v, torch.Tensor) and v.dim() > 0:
             print(f"  {k}: {v.shape}")

@@ -16,13 +16,10 @@ usage:
 """
 
 import argparse
-import json
 import logging
-import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -35,10 +32,10 @@ from tqdm import tqdm
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from neuroscope.models.components.generators import ResnetGenerator
-from neuroscope.models.components.discriminators import PatchGANDiscriminator
-from neuroscope.models.losses.cycle_losses import CycleLoss, IdentityLoss
 from neuroscope.data.medical_dataset import MedicalImageDataset
+from neuroscope.models.components.discriminators import PatchGANDiscriminator
+from neuroscope.models.components.generators import ResnetGenerator
+from neuroscope.models.losses.cycle_losses import CycleLoss, IdentityLoss
 
 # setup logging
 logging.basicConfig(
@@ -127,7 +124,7 @@ class BaselineCycleGANTrainer:
 
     def __init__(
         self,
-        config: Dict,
+        config: dict,
         output_dir: Path,
         use_wandb: bool = False,
         use_mlflow: bool = False,
@@ -236,7 +233,7 @@ class BaselineCycleGANTrainer:
         self.global_step = 0
         self.best_fid = float("inf")
 
-    def train_epoch(self, dataloader_a: DataLoader, dataloader_b: DataLoader) -> Dict:
+    def train_epoch(self, dataloader_a: DataLoader, dataloader_b: DataLoader) -> dict:
         """train for one epoch."""
         self.model.train()
 
@@ -258,7 +255,7 @@ class BaselineCycleGANTrainer:
             real_a = batch_a["image"].to(self.device)
             real_b = batch_b["image"].to(self.device)
 
-            batch_size = real_a.size(0)
+            real_a.size(0)
 
             # ===== train generators =====
             self.optimizer_G.zero_grad()
@@ -357,7 +354,7 @@ class BaselineCycleGANTrainer:
 
         return metrics
 
-    def save_checkpoint(self, metrics: Dict, is_best: bool = False):
+    def save_checkpoint(self, metrics: dict, is_best: bool = False):
         """save model checkpoint."""
         checkpoint = {
             "epoch": self.epoch,

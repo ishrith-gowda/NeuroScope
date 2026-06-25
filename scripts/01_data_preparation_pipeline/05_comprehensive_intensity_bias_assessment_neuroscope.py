@@ -1,19 +1,17 @@
-import os
+import argparse
 import json
 import logging
+import os
 import time
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
-import SimpleITK as sitk
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
 from collections import defaultdict
-import argparse
+from pathlib import Path
+from typing import Any, Optional
 
+import numpy as np
+import SimpleITK as sitk
 from neuroscope_preprocessing_config import PATHS
-from preprocessing_utils import write_json_with_schema, generate_brain_mask
+from preprocessing_utils import generate_brain_mask, write_json_with_schema
+from scipy import stats
 
 
 def configure_logging() -> None:
@@ -21,7 +19,7 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-def load_metadata_with_validation(metadata_path: Path) -> Dict[str, Any]:
+def load_metadata_with_validation(metadata_path: Path) -> dict[str, Any]:
     """
     load and validate the metadata with splits.
 
@@ -39,7 +37,7 @@ def load_metadata_with_validation(metadata_path: Path) -> Dict[str, Any]:
         raise FileNotFoundError(f"metadata file not found: {metadata_path}")
 
     try:
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             metadata = json.load(f)
         logging.info("loaded metadata from: %s", metadata_path)
     except json.JSONDecodeError as e:
@@ -95,7 +93,7 @@ def verify_preprocessed_file(file_path: str) -> bool:
         return False
 
 
-def compute_slice_wise_statistics(image: sitk.Image, mask: sitk.Image) -> Dict[str, float]:
+def compute_slice_wise_statistics(image: sitk.Image, mask: sitk.Image) -> dict[str, float]:
     """
     compute comprehensive slice-wise intensity statistics.
 
@@ -193,7 +191,7 @@ def compute_slice_wise_statistics(image: sitk.Image, mask: sitk.Image) -> Dict[s
 
     # 5. linear trend analysis (z-direction bias)
     try:
-        slope, intercept, r_value, p_value, std_err = stats.linregress(
+        slope, _intercept, r_value, p_value, _std_err = stats.linregress(
             valid_slice_indices, valid_means
         )
         metrics["linear_trend_slope"] = slope
@@ -219,8 +217,8 @@ def compute_slice_wise_statistics(image: sitk.Image, mask: sitk.Image) -> Dict[s
 
 
 def assess_subject_bias(
-    section: str, subject_id: str, modality_files: Dict[str, str], standardized_names: List[str]
-) -> Dict[str, Dict[str, float]]:
+    section: str, subject_id: str, modality_files: dict[str, str], standardized_names: list[str]
+) -> dict[str, dict[str, float]]:
     """
     assess intensity bias for all modalities of a single subject.
 
@@ -251,7 +249,7 @@ def assess_subject_bias(
             "_FLAIR.nii.gz": "flair",
         }
 
-    for suffix, file_path in modality_files.items():
+    for suffix, _file_path in modality_files.items():
         if suffix not in suffix_mapping:
             logging.debug("unknown modality suffix: %s", suffix)
             continue
@@ -296,8 +294,8 @@ def assess_subject_bias(
 
 
 def analyze_dataset_bias(
-    metadata: Dict[str, Any], splits_to_assess: List[str] = None
-) -> Dict[str, Any]:
+    metadata: dict[str, Any], splits_to_assess: Optional[list[str]] = None
+) -> dict[str, Any]:
     """
     analyze intensity bias across subjects in both datasets.
 
@@ -436,7 +434,7 @@ def analyze_dataset_bias(
     return results
 
 
-def generate_bias_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
+def generate_bias_summary_statistics(results: dict[str, Any]) -> dict[str, Any]:
     """
     generate summary statistics for bias assessment results.
 
@@ -463,7 +461,7 @@ def generate_bias_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
     modality_metrics = defaultdict(lambda: defaultdict(list))
 
     for section in ["brats", "upenn"]:
-        for subject_id, subject_results in results[section].items():
+        for _subject_id, subject_results in results[section].items():
             if isinstance(subject_results, dict) and "error" not in subject_results:
                 for modality, metrics in subject_results.items():
                     if isinstance(metrics, dict) and "error" not in metrics:
@@ -513,7 +511,7 @@ def generate_bias_summary_statistics(results: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def save_bias_assessment_results(
-    results: Dict[str, Any], summary: Dict[str, Any], output_path: Path
+    results: dict[str, Any], summary: dict[str, Any], output_path: Path
 ) -> None:
     """
     save comprehensive bias assessment results to json file.
@@ -573,7 +571,7 @@ def save_bias_assessment_results(
         raise
 
 
-def print_bias_assessment_summary(summary: Dict[str, Any], results: Dict[str, Any]) -> None:
+def print_bias_assessment_summary(summary: dict[str, Any], results: dict[str, Any]) -> None:
     """
     print a comprehensive summary of bias assessment results.
 
@@ -587,7 +585,7 @@ def print_bias_assessment_summary(summary: Dict[str, Any], results: Dict[str, An
 
     # processing summary
     proc_info = results.get("processing_info", {})
-    print(f"\nprocessing summary:")
+    print("\nprocessing summary:")
     print(f"  splits assessed:     {proc_info.get('splits_assessed', [])}")
     print(f"  total subjects:      {proc_info.get('total_subjects', 0)}")
     print(f"  successful:          {proc_info.get('successful_subjects', 0)}")
@@ -614,7 +612,7 @@ def print_bias_assessment_summary(summary: Dict[str, Any], results: Dict[str, An
     # overall bias metrics
     overall_stats = summary.get("overall_statistics", {})
     if overall_stats:
-        print(f"\noverall bias metrics (across all assessed subjects and modalities):")
+        print("\noverall bias metrics (across all assessed subjects and modalities):")
 
         key_metrics = ["slice_mean_variation", "linear_trend_slope", "cv_coefficient"]
         thresholds = summary.get("bias_thresholds", {})
@@ -642,7 +640,7 @@ def print_bias_assessment_summary(summary: Dict[str, Any], results: Dict[str, An
     # dataset comparison
     dataset_stats = summary.get("dataset_statistics", {})
     if len(dataset_stats) >= 2:
-        print(f"\ndataset comparison (slice mean variation):")
+        print("\ndataset comparison (slice mean variation):")
         for section in ["brats", "upenn"]:
             section_name = "BraTS-TCGA-GBM" if section == "brats" else "UPenn-GBM"
             if section in dataset_stats and "slice_mean_variation" in dataset_stats[section]:
@@ -653,31 +651,29 @@ def print_bias_assessment_summary(summary: Dict[str, Any], results: Dict[str, An
                 print(f"    count:           {stats_dict['count']}")
 
     # recommendations
-    print(f"\nrecommendations:")
+    print("\nrecommendations:")
     if overall_stats.get("slice_mean_variation", {}).get("median", 0) > 0.15:
-        print(f"high slice variation detected, need to consider n4 bias correction")
+        print("high slice variation detected, need to consider n4 bias correction")
     else:
-        print(f"acceptable slice variation levels")
+        print("acceptable slice variation levels")
 
     if abs(overall_stats.get("linear_trend_slope", {}).get("median", 0)) > 0.005:
-        print(f" significant linear trend detected, need to check acquisition protocols")
+        print(" significant linear trend detected, need to check acquisition protocols")
     else:
-        print(f"no significant linear trends detected")
+        print("no significant linear trends detected")
 
     # preprocessing recommendations
-    total_subjects_in_metadata = sum(
-        len(results[section]) for section in ["brats", "upenn"] if section in results
-    )
+    sum(len(results[section]) for section in ["brats", "upenn"] if section in results)
     if proc_info.get("skipped_subjects", 0) > 0:
         print(
             f"{proc_info.get('skipped_subjects', 0)} subjects skipped due to missing preprocessed files"
         )
-        print(f"consider running script 01 with additional splits if needed")
+        print("consider running script 01 with additional splits if needed")
 
     print("=" * 80)
 
 
-def check_preprocessing_status(metadata: Dict[str, Any]) -> Dict[str, Any]:
+def check_preprocessing_status(metadata: dict[str, Any]) -> dict[str, Any]:
     """
     check which subjects have been preprocessed and provide a summary.
 

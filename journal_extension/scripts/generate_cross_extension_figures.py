@@ -15,14 +15,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-
 
 # ---------------------------------------------------------------------------
 # styling
@@ -69,14 +67,14 @@ EXT_TITLES = {
 # ---------------------------------------------------------------------------
 
 
-def load_all_results(repo_root: Path) -> Dict:
+def load_all_results(repo_root: Path) -> dict:
     p = repo_root / "journal_extension" / "results" / "all_results.json"
     with open(p) as f:
         return json.load(f)
 
 
-def load_patchnce(repo_root: Path) -> Dict[float, Dict]:
-    out: Dict[float, Dict] = {}
+def load_patchnce(repo_root: Path) -> dict[float, dict]:
+    out: dict[float, dict] = {}
     res_dir = repo_root / "journal_extension" / "results" / "patchnce"
     for lam in [0.1, 0.5, 1.0, 2.0]:
         path = res_dir / f"lambda{lam}_history.json"
@@ -86,7 +84,7 @@ def load_patchnce(repo_root: Path) -> Dict[float, Dict]:
     return out
 
 
-def load_patchnce_test(repo_root: Path) -> Dict[float, Dict]:
+def load_patchnce_test(repo_root: Path) -> dict[float, dict]:
     p = repo_root / "journal_extension" / "results" / "patchnce" / "patchnce_testset_summary.json"
     if not p.exists():
         return {}
@@ -105,8 +103,8 @@ def load_patchnce_test(repo_root: Path) -> Dict[float, Dict]:
 # ---------------------------------------------------------------------------
 
 
-def summarise_extension_a(patchnce: Dict[float, Dict], patchnce_test: Dict[float, Dict]) -> Dict:
-    rows: List[Dict] = []
+def summarise_extension_a(patchnce: dict[float, dict], patchnce_test: dict[float, dict]) -> dict:
+    rows: list[dict] = []
     for lam, hist in sorted(patchnce.items()):
         ssim_a = np.asarray(hist["val"]["ssim_A2B"])
         ssim_b = np.asarray(hist["val"]["ssim_B2A"])
@@ -142,7 +140,7 @@ def summarise_extension_a(patchnce: Dict[float, Dict], patchnce_test: Dict[float
     }
 
 
-def summarise_extension_b(d: Dict) -> Dict:
+def summarise_extension_b(d: dict) -> dict:
     c = d.get("compression")
     if not c:
         return {}
@@ -161,7 +159,7 @@ def summarise_extension_b(d: Dict) -> Dict:
     }
 
 
-def summarise_extension_c(d: Dict) -> Dict:
+def summarise_extension_c(d: dict) -> dict:
     m = d.get("multi_domain")
     if not m:
         return {}
@@ -175,12 +173,12 @@ def summarise_extension_c(d: Dict) -> Dict:
     }
 
 
-def summarise_extension_d(d: Dict) -> Dict:
+def summarise_extension_d(d: dict) -> dict:
     ds = d.get("downstream")
     if not ds:
         return {}
 
-    def mean_fg(group: Dict) -> float:
+    def mean_fg(group: dict) -> float:
         keys = [k for k in group if k.endswith("_mean") and "background" not in k]
         if not keys:
             return float("nan")
@@ -202,7 +200,7 @@ def summarise_extension_d(d: Dict) -> Dict:
     }
 
 
-def summarise_extension_e(d: Dict) -> Dict:
+def summarise_extension_e(d: dict) -> dict:
     f = d.get("federated")
     if not f:
         return {}
@@ -226,8 +224,8 @@ def summarise_extension_e(d: Dict) -> Dict:
 
 
 def fig_cross_extension_overview(
-    patchnce: Dict[float, Dict],
-    all_results: Dict,
+    patchnce: dict[float, dict],
+    all_results: dict,
     out_dir: Path,
 ) -> None:
     """one big multi-panel figure --- one panel per extension."""
@@ -405,7 +403,7 @@ def fig_cross_extension_overview(
     plt.close(fig)
 
 
-def fig_cross_extension_radar(summary: Dict, out_dir: Path) -> None:
+def fig_cross_extension_radar(summary: dict, out_dir: Path) -> None:
     """radar / spider chart over normalized metrics, per extension."""
     metrics = ["Best SSIM", "Best PSNR", "Speed (1/EpochTime)", "Domain Alignment"]
 
@@ -476,7 +474,7 @@ def fig_cross_extension_radar(summary: Dict, out_dir: Path) -> None:
     angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False).tolist()
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(7.0, 6.0), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(7.0, 6.0), subplot_kw={"polar": True})
     for label, vals in series.items():
         v = vals + vals[:1]
         ax.plot(
@@ -497,7 +495,7 @@ def fig_cross_extension_radar(summary: Dict, out_dir: Path) -> None:
 
 
 def fig_cross_extension_progress(
-    patchnce: Dict[float, Dict], all_results: Dict, out_dir: Path
+    patchnce: dict[float, dict], all_results: dict, out_dir: Path
 ) -> None:
     """compact 2x2 multi-extension training-trajectory comparison."""
     fig, axes = plt.subplots(2, 2, figsize=(10.0, 6.5))
@@ -581,7 +579,7 @@ def fig_cross_extension_progress(
 # ---------------------------------------------------------------------------
 
 
-def table_cross_extension(summary: Dict, out_dir: Path) -> None:
+def table_cross_extension(summary: dict, out_dir: Path) -> None:
     a = summary.get("A", {}).get("best_by_val_ssim", {}) or {}
     b = summary.get("B", {}) or {}
     c = summary.get("C", {}) or {}

@@ -5,12 +5,13 @@ this module provides various residual block implementations used in
 generator and discriminator architectures.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional, Type
 
 
-def get_norm_layer(norm_type: str) -> Type[nn.Module]:
+def get_norm_layer(norm_type: str) -> type[nn.Module]:
     """get normalization layer class from string."""
     norm_layers = {
         "instance": nn.InstanceNorm2d,
@@ -42,7 +43,7 @@ class ResidualBlock(nn.Module):
     def __init__(
         self,
         channels: int,
-        norm_layer: Optional[Type[nn.Module]] = None,
+        norm_layer: Optional[type[nn.Module]] = None,
         norm_type: str = "instance",
         use_dropout: bool = False,
         dropout_prob: float = 0.5,
@@ -92,7 +93,7 @@ class PreActResidualBlock(nn.Module):
         norm_layer: normalization layer class
     """
 
-    def __init__(self, channels: int, norm_layer: Type[nn.Module] = nn.InstanceNorm2d):
+    def __init__(self, channels: int, norm_layer: type[nn.Module] = nn.InstanceNorm2d):
         super().__init__()
 
         self.block = nn.Sequential(
@@ -132,7 +133,7 @@ class BottleneckResidualBlock(nn.Module):
         in_channels: int,
         bottleneck_channels: Optional[int] = None,
         out_channels: Optional[int] = None,
-        norm_layer: Type[nn.Module] = nn.InstanceNorm2d,
+        norm_layer: type[nn.Module] = nn.InstanceNorm2d,
     ):
         super().__init__()
 
@@ -182,7 +183,7 @@ class SEResidualBlock(nn.Module):
     """
 
     def __init__(
-        self, channels: int, reduction: int = 16, norm_layer: Type[nn.Module] = nn.InstanceNorm2d
+        self, channels: int, reduction: int = 16, norm_layer: type[nn.Module] = nn.InstanceNorm2d
     ):
         super().__init__()
 
@@ -230,7 +231,7 @@ class DenseResidualBlock(nn.Module):
         channels: int,
         growth_rate: int = 32,
         n_layers: int = 4,
-        norm_layer: Type[nn.Module] = nn.InstanceNorm2d,
+        norm_layer: type[nn.Module] = nn.InstanceNorm2d,
     ):
         super().__init__()
 

@@ -10,11 +10,12 @@ comprehensive loss functions for medical image translation:
 - gradient difference
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional
-import math
 
 
 class LSGANLoss(nn.Module):
@@ -29,7 +30,7 @@ class LSGANLoss(nn.Module):
         return self.mse(pred, target)
 
     def discriminator_loss(
-        self, real_pred: List[torch.Tensor], fake_pred: List[torch.Tensor]
+        self, real_pred: list[torch.Tensor], fake_pred: list[torch.Tensor]
     ) -> torch.Tensor:
         """discriminator loss for multi-scale outputs."""
         loss = 0
@@ -37,7 +38,7 @@ class LSGANLoss(nn.Module):
             loss += self.forward(real, True) + self.forward(fake, False)
         return loss / len(real_pred)
 
-    def generator_loss(self, fake_pred: List[torch.Tensor]) -> torch.Tensor:
+    def generator_loss(self, fake_pred: list[torch.Tensor]) -> torch.Tensor:
         """generator loss for multi-scale outputs."""
         loss = 0
         for fake in fake_pred:
@@ -180,13 +181,15 @@ class PerceptualLoss(nn.Module):
     note: vgg expects 3-channel input, so we use first 3 modalities.
     """
 
-    def __init__(self, lambda_perceptual: float = 1.0, layers: List[int] = [3, 8, 15]):
+    def __init__(self, lambda_perceptual: float = 1.0, layers: Optional[list[int]] = None):
+        if layers is None:
+            layers = [3, 8, 15]
         super().__init__()
         self.lambda_perceptual = lambda_perceptual
         self.layers = layers
 
         try:
-            from torchvision.models import vgg16, VGG16_Weights
+            from torchvision.models import VGG16_Weights, vgg16
 
             vgg = vgg16(weights=VGG16_Weights.DEFAULT).features
         except:

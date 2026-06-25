@@ -1,18 +1,15 @@
-import os
+import argparse
 import json
 import logging
 import time
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
-import SimpleITK as sitk
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import defaultdict
+from pathlib import Path
+from typing import Any, Optional
 
+import numpy as np
+import SimpleITK as sitk
 from neuroscope_preprocessing_config import PATHS
-from preprocessing_utils import write_json_with_schema
-import argparse
-from preprocessing_utils import generate_brain_mask
+from preprocessing_utils import generate_brain_mask, write_json_with_schema
 
 
 # custom json encoder to handle all data types
@@ -26,9 +23,7 @@ class CustomJSONEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, (set, frozenset)):
             return list(obj)
-        elif isinstance(obj, bool):
-            return bool(obj)
-        elif isinstance(obj, np.bool_):
+        elif isinstance(obj, (bool, np.bool_)):
             return bool(obj)
         return super().default(obj)
 
@@ -38,9 +33,9 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-def load_metadata(metadata_path: Path) -> Dict[str, Any]:
+def load_metadata(metadata_path: Path) -> dict[str, Any]:
     """load metadata file."""
-    with open(metadata_path, "r") as f:
+    with open(metadata_path) as f:
         return json.load(f)
 
 
@@ -69,7 +64,7 @@ def parse_args():
 
 def analyze_intensity_distribution(
     image: sitk.Image, mask: sitk.Image, label: str
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """analyze intensity distribution within brain mask."""
     arr = sitk.GetArrayFromImage(image)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
@@ -92,7 +87,7 @@ def analyze_intensity_distribution(
     }
 
 
-def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> Dict[str, float]:
+def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> dict[str, float]:
     """analyze slice-wise uniformity."""
     arr = sitk.GetArrayFromImage(image)
     mask_arr = sitk.GetArrayFromImage(mask).astype(bool)
@@ -132,7 +127,7 @@ def analyze_slice_uniformity(image: sitk.Image, mask: sitk.Image) -> Dict[str, f
 
 def check_intensity_scaling_issues(
     original: sitk.Image, n4_corrected: sitk.Image, mask: sitk.Image
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """check for intensity scaling or range issues after n4 correction."""
     orig_arr = sitk.GetArrayFromImage(original)
     n4_arr = sitk.GetArrayFromImage(n4_corrected)
@@ -183,7 +178,7 @@ def check_intensity_scaling_issues(
     }
 
 
-def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]) -> Dict[str, Any]:
+def diagnose_single_subject(section: str, subject_id: str, modalities: list[str]) -> dict[str, Any]:
     """comprehensive diagnosis of n4 correction issues for one subject."""
     original_dir = PATHS["preprocessed_dir"] / section / subject_id
     n4_dir = PATHS["preprocessed_dir"] / f"{section}_n4corrected" / subject_id
@@ -294,8 +289,8 @@ def diagnose_single_subject(section: str, subject_id: str, modalities: List[str]
 
 
 def run_diagnostic_analysis(
-    metadata: Dict[str, Any], max_subjects_per_section: int = 10, splits: List[str] = None
-) -> Dict[str, Any]:
+    metadata: dict[str, Any], max_subjects_per_section: int = 10, splits: Optional[list[str]] = None
+) -> dict[str, Any]:
     """run diagnostic analysis on a sample of subjects."""
     logging.info("Starting N4 diagnostic analysis...")
 
@@ -347,7 +342,7 @@ def run_diagnostic_analysis(
     return results
 
 
-def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
+def generate_diagnostic_summary(results: dict[str, Any]) -> dict[str, Any]:
     """generate summary of diagnostic findings."""
     summary = {
         "analysis_overview": {
@@ -368,7 +363,7 @@ def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
     # generate recommendations based on findings
     recommendations = []
 
-    for issue, count in sorted_issues:
+    for issue, _count in sorted_issues:
         if "CV increased" in issue:
             recommendations.append(
                 "N4 correction is increasing rather than decreasing intensity variation - check N4 parameters"
@@ -406,7 +401,7 @@ def generate_diagnostic_summary(results: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def save_diagnostic_results(
-    results: Dict[str, Any], summary: Dict[str, Any], output_path: Path
+    results: dict[str, Any], summary: dict[str, Any], output_path: Path
 ) -> None:
     """save diagnostic results to json file."""
     output_data = {
@@ -417,12 +412,6 @@ def save_diagnostic_results(
     }
 
     try:
-        schema = {
-            "diagnostic_info": dict,
-            "analysis_summary": dict,
-            "subjects_analyzed": dict,
-            "detailed_diagnoses": dict,
-        }
         # write json directly using our custom encoder
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w") as f:
@@ -441,21 +430,21 @@ def save_diagnostic_results(
         raise
 
 
-def print_diagnostic_summary(summary: Dict[str, Any]) -> None:
+def print_diagnostic_summary(summary: dict[str, Any]) -> None:
     """print diagnostic summary."""
     print("\n" + "=" * 80)
     print("n4 correction diagnostic analysis")
     print("=" * 80)
 
-    print(f"\nanalysis overview:")
+    print("\nanalysis overview:")
     print(f"  subjects analyzed: {summary['analysis_overview']['subjects_analyzed']}")
     print(f"  sections analyzed: {summary['analysis_overview']['sections_analyzed']}")
 
-    print(f"\ntop issues detected:")
+    print("\ntop issues detected:")
     for i, (issue, count) in enumerate(summary["top_issues"][:5], 1):
         print(f"  {i}. {issue} (occurred {count} times)")
 
-    print(f"\nrecommendations:")
+    print("\nrecommendations:")
     for i, rec in enumerate(summary["recommendations"][:5], 1):
         print(f"  {i}. {rec}")
 

@@ -17,24 +17,15 @@ all figures follow publication standards:
 - vector formats where applicable
 """
 
-import os
-import sys
-import json
 import argparse
+import json
+import os
 from pathlib import Path
-from datetime import datetime
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Circle
-from matplotlib.lines import Line2D
-import seaborn as sns
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-from torchvision.utils import make_grid
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import FancyBboxPatch
 
 # force unbuffered output
 os.environ["PYTHONUNBUFFERED"] = "1"
@@ -111,7 +102,7 @@ def create_architecture_diagram(save_dir, colors):
     """create cyclegan architecture diagram"""
     pprint("creating architecture diagram...")
 
-    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+    _fig, ax = plt.subplots(1, 1, figsize=(12, 8))
     ax.set_xlim(-0.5, 10.5)
     ax.set_ylim(-1, 7)
     ax.axis("off")
@@ -146,7 +137,7 @@ def create_architecture_diagram(save_dir, colors):
             "",
             xy=(x2, y2),
             xytext=(x1, y1),
-            arrowprops=dict(arrowstyle=style, color="#333", lw=1.5),
+            arrowprops={"arrowstyle": style, "color": "#333", "lw": 1.5},
         )
 
     # title
@@ -209,7 +200,12 @@ def create_architecture_diagram(save_dir, colors):
         "",
         xy=(0.75, 3.5),
         xytext=(9.5, 3.5),
-        arrowprops=dict(arrowstyle="->", color="#333", lw=1.5, connectionstyle="arc3,rad=0"),
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "#333",
+            "lw": 1.5,
+            "connectionstyle": "arc3,rad=0",
+        },
     )
 
     draw_arrow(9.5, 1.5, 9.5, 2.5, ax)
@@ -217,7 +213,12 @@ def create_architecture_diagram(save_dir, colors):
         "",
         xy=(0.75, 2.5),
         xytext=(9.5, 2.5),
-        arrowprops=dict(arrowstyle="->", color="#333", lw=1.5, connectionstyle="arc3,rad=0"),
+        arrowprops={
+            "arrowstyle": "->",
+            "color": "#333",
+            "lw": 1.5,
+            "connectionstyle": "arc3,rad=0",
+        },
     )
 
     # discriminator arrows
@@ -260,7 +261,7 @@ def create_generator_diagram(save_dir, colors):
     """create detailed generator architecture diagram"""
     pprint("creating generator architecture diagram...")
 
-    fig, ax = plt.subplots(1, 1, figsize=(14, 5))
+    _fig, ax = plt.subplots(1, 1, figsize=(14, 5))
     ax.set_xlim(-0.5, 14)
     ax.set_ylim(-0.5, 4)
     ax.axis("off")
@@ -327,18 +328,27 @@ def create_generator_diagram(save_dir, colors):
     positions = [0.8, 2.1, 3.4, 4.7]
     for p in positions:
         ax.annotate(
-            "", xy=(p + 0.4, 2), xytext=(p, 2), arrowprops=dict(arrowstyle="->", color="#333", lw=1)
+            "",
+            xy=(p + 0.4, 2),
+            xytext=(p, 2),
+            arrowprops={"arrowstyle": "->", "color": "#333", "lw": 1},
         )
 
     for i in range(5):
         x = 5.7 + i * 0.7
         ax.annotate(
-            "", xy=(x + 0.4, 2), xytext=(x, 2), arrowprops=dict(arrowstyle="->", color="#333", lw=1)
+            "",
+            xy=(x + 0.4, 2),
+            xytext=(x, 2),
+            arrowprops={"arrowstyle": "->", "color": "#333", "lw": 1},
         )
 
     for p in [9.3, 10.4, 11.7, 13.0]:
         ax.annotate(
-            "", xy=(p + 0.4, 2), xytext=(p, 2), arrowprops=dict(arrowstyle="->", color="#333", lw=1)
+            "",
+            xy=(p + 0.4, 2),
+            xytext=(p, 2),
+            arrowprops={"arrowstyle": "->", "color": "#333", "lw": 1},
         )
 
     # skip connection indicator
@@ -346,7 +356,7 @@ def create_generator_diagram(save_dir, colors):
         "",
         xy=(5.1, 0.8),
         xytext=(9.5, 0.8),
-        arrowprops=dict(arrowstyle="<->", color="#666", lw=1, ls="--"),
+        arrowprops={"arrowstyle": "<->", "color": "#666", "lw": 1, "ls": "--"},
     )
     ax.text(7.3, 0.5, "Residual Blocks (256 channels)", fontsize=8, ha="center")
 
@@ -384,7 +394,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     # try to load actual loss data
     loss_data = None
     if loss_file and Path(loss_file).exists():
-        with open(loss_file, "r") as f:
+        with open(loss_file) as f:
             loss_data = json.load(f)
 
     # if no data, create synthetic data for demonstration
@@ -405,7 +415,7 @@ def create_loss_curves(save_dir, colors, loss_file=None):
     else:
         epochs = np.arange(1, len(loss_data["G_total"]) + 1)
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    _fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 
     # total generator loss
     ax = axes[0, 0]
@@ -466,7 +476,7 @@ def create_dataset_statistics(save_dir, colors):
     """create dataset statistics visualization"""
     pprint("creating dataset statistics...")
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    _fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 
     # dataset composition
     ax = axes[0, 0]
@@ -494,7 +504,7 @@ def create_dataset_statistics(save_dir, colors):
 
     x = np.arange(len(splits))
     width = 0.35
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         brats_split,
         width,
@@ -502,7 +512,7 @@ def create_dataset_statistics(save_dir, colors):
         color=colors["domain_a"],
         edgecolor="black",
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         upenn_split,
         width,
@@ -585,7 +595,7 @@ def create_hyperparameter_table(save_dir, colors):
     """create hyperparameter configuration table"""
     pprint("creating hyperparameter table...")
 
-    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    _fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     ax.axis("off")
     ax.set_title("Training Hyperparameters", fontsize=14, fontweight="bold", pad=20)
 
@@ -640,7 +650,7 @@ def create_techniques_diagram(save_dir, colors):
     """create diagram of anti-mode-collapse techniques"""
     pprint("creating techniques diagram...")
 
-    fig, ax = plt.subplots(1, 1, figsize=(12, 7))
+    _fig, ax = plt.subplots(1, 1, figsize=(12, 7))
     ax.set_xlim(-0.5, 12)
     ax.set_ylim(-0.5, 6)
     ax.axis("off")
@@ -663,7 +673,7 @@ def create_techniques_diagram(save_dir, colors):
         ("Gradient\nClipping", "max=1.0\nStability", colors["warning"], 5),
     ]
 
-    for i, (name, desc, color, idx) in enumerate(techniques):
+    for _i, (name, desc, color, idx) in enumerate(techniques):
         x = 1 + (idx % 3) * 4
         y = 3.5 if idx < 3 else 1
 
@@ -726,7 +736,7 @@ def main():
     colors = setup_publication_style()
 
     pprint(f"\noutput directory: {save_dir}")
-    pprint(f"generating figures...\n")
+    pprint("generating figures...\n")
 
     # generate all figures
     create_architecture_diagram(save_dir, colors)

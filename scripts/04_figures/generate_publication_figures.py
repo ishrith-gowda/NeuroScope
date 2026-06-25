@@ -11,16 +11,15 @@ this script creates comprehensive figures suitable for top-tier venues
 - radar/spider charts for multi-metric comparison
 """
 
-import json
 import argparse
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.ticker import MaxNLocator
-from pathlib import Path
-import seaborn as sns
-from typing import Dict, List, Tuple, Optional
+import json
 import warnings
+from pathlib import Path
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 warnings.filterwarnings("ignore")
 
@@ -66,11 +65,11 @@ COLORS = {
 
 def load_json(filepath: Path) -> dict:
     """load json file."""
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         return json.load(f)
 
 
-def smooth_curve(values: List[float], weight: float = 0.6) -> np.ndarray:
+def smooth_curve(values: list[float], weight: float = 0.6) -> np.ndarray:
     """apply exponential moving average smoothing."""
     smoothed = []
     last = values[0]
@@ -166,7 +165,7 @@ def create_training_curves_figure(
         fig.savefig(output_dir / f"fig01_training_curves.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved training curves figure")
+    print("[figures] saved training curves figure")
 
 
 def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
@@ -192,7 +191,7 @@ def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
     attention_means = [stats[m]["attention_mean"] for m in metrics]
     attention_stds = [stats[m]["attention_std"] for m in metrics]
 
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         baseline_means,
         width,
@@ -202,7 +201,7 @@ def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
         capsize=3,
         error_kw={"linewidth": 1},
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         attention_means,
         width,
@@ -238,7 +237,7 @@ def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
     attention_means = [stats[m]["attention_mean"] for m in metrics]
     attention_stds = [stats[m]["attention_std"] for m in metrics]
 
-    bars1 = ax.bar(
+    ax.bar(
         x - width / 2,
         baseline_means,
         width,
@@ -248,7 +247,7 @@ def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
         capsize=3,
         error_kw={"linewidth": 1},
     )
-    bars2 = ax.bar(
+    ax.bar(
         x + width / 2,
         attention_means,
         width,
@@ -281,7 +280,7 @@ def create_ablation_bar_chart(ablation_results: dict, output_dir: Path) -> None:
         fig.savefig(output_dir / f"fig02_ablation_comparison.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved ablation comparison figure")
+    print("[figures] saved ablation comparison figure")
 
 
 def create_modality_heatmap(ablation_results: dict, output_dir: Path) -> None:
@@ -327,7 +326,7 @@ def create_modality_heatmap(ablation_results: dict, output_dir: Path) -> None:
     # add text annotations
     for i in range(len(directions)):
         for j in range(len(modalities)):
-            text = ax.text(
+            ax.text(
                 j,
                 i,
                 f"{baseline_data[i, j]:.4f}",
@@ -357,7 +356,7 @@ def create_modality_heatmap(ablation_results: dict, output_dir: Path) -> None:
             sig = "***" if stats[metric_key]["significant"] else ""
             val = diff_data[i, j]
             sign = "+" if val > 0 else ""
-            text = ax.text(
+            ax.text(
                 j,
                 i,
                 f"{sign}{val:.4f}{sig}",
@@ -377,7 +376,7 @@ def create_modality_heatmap(ablation_results: dict, output_dir: Path) -> None:
         fig.savefig(output_dir / f"fig03_modality_analysis.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved modality analysis figure")
+    print("[figures] saved modality analysis figure")
 
 
 def create_effect_size_chart(ablation_results: dict, output_dir: Path) -> None:
@@ -413,7 +412,7 @@ def create_effect_size_chart(ablation_results: dict, output_dir: Path) -> None:
     # color based on direction of effect
     colors = [COLORS["attention"] if d > 0 else COLORS["baseline"] for d in effect_sizes]
 
-    bars = ax.barh(y_pos, effect_sizes, color=colors, alpha=0.8, edgecolor="black", linewidth=0.5)
+    ax.barh(y_pos, effect_sizes, color=colors, alpha=0.8, edgecolor="black", linewidth=0.5)
 
     # add threshold lines
     ax.axvline(x=0.2, color="gray", linestyle="--", alpha=0.5, linewidth=1)
@@ -449,14 +448,14 @@ def create_effect_size_chart(ablation_results: dict, output_dir: Path) -> None:
         fig.savefig(output_dir / f"fig04_effect_sizes.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved effect size figure")
+    print("[figures] saved effect size figure")
 
 
 def create_radar_chart(ablation_results: dict, output_dir: Path) -> None:
     """
     create radar/spider chart comparing both models across modalities.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5), subplot_kw=dict(projection="polar"))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), subplot_kw={"projection": "polar"})
 
     modalities = ["T1", "T1CE", "T2", "FLAIR"]
     baseline = ablation_results["baseline_results"]
@@ -511,7 +510,7 @@ def create_radar_chart(ablation_results: dict, output_dir: Path) -> None:
         fig.savefig(output_dir / f"fig05_radar_comparison.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved radar chart figure")
+    print("[figures] saved radar chart figure")
 
 
 def create_improvement_waterfall(ablation_results: dict, output_dir: Path) -> None:
@@ -568,7 +567,7 @@ def create_improvement_waterfall(ablation_results: dict, output_dir: Path) -> No
         fig.savefig(output_dir / f"fig06_improvement_by_modality.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved improvement waterfall figure")
+    print("[figures] saved improvement waterfall figure")
 
 
 def create_summary_table_figure(ablation_results: dict, output_dir: Path) -> None:
@@ -654,7 +653,7 @@ def create_summary_table_figure(ablation_results: dict, output_dir: Path) -> Non
         fig.savefig(output_dir / f"fig07_summary_table.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved summary table figure")
+    print("[figures] saved summary table figure")
 
 
 def create_direction_comparison(ablation_results: dict, output_dir: Path) -> None:
@@ -776,7 +775,7 @@ def create_direction_comparison(ablation_results: dict, output_dir: Path) -> Non
         fig.savefig(output_dir / f"fig08_direction_comparison.{fmt}", format=fmt)
 
     plt.close(fig)
-    print(f"[figures] saved direction comparison figure")
+    print("[figures] saved direction comparison figure")
 
 
 def main():

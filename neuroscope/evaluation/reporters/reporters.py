@@ -5,12 +5,12 @@ generate publication-ready reports in various formats
 including latex, csv, and json.
 """
 
-from typing import Optional, Dict, List, Any, Union
-from dataclasses import dataclass, field
-from pathlib import Path
-import json
 import csv
+import json
+from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional, Union
 
 
 @dataclass
@@ -18,10 +18,10 @@ class EvaluationReport:
     """container for evaluation report data."""
 
     title: str
-    methods: List[str]
-    metrics: Dict[str, Dict[str, float]]  # method -> metric -> value
-    statistical_tests: Optional[Dict] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    methods: list[str]
+    metrics: dict[str, dict[str, float]]  # method -> metric -> value
+    statistical_tests: Optional[dict] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         self.metadata["timestamp"] = datetime.now().isoformat()
@@ -33,9 +33,9 @@ class AblationReport:
 
     title: str
     baseline: str
-    configurations: Dict[str, Dict[str, float]]
-    component_contributions: Dict[str, float]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    configurations: dict[str, dict[str, float]]
+    component_contributions: dict[str, float]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -43,11 +43,11 @@ class ComparisonReport:
     """container for method comparison report."""
 
     title: str
-    methods: List[str]
-    metrics: List[str]
-    results_table: List[List[Any]]  # 2d table
-    best_per_metric: Dict[str, str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    methods: list[str]
+    metrics: list[str]
+    results_table: list[list[Any]]  # 2d table
+    best_per_metric: dict[str, str]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class LaTeXReporter:
@@ -101,7 +101,7 @@ class LaTeXReporter:
             latex table code
         """
         methods = report.methods
-        metrics = list(list(report.metrics.values())[0].keys())
+        metrics = list(next(iter(report.metrics.values())).keys())
 
         # find best values per metric
         best_values = {}
@@ -112,7 +112,7 @@ class LaTeXReporter:
             best_values[metric] = methods[best_idx]
 
         # generate latex
-        n_cols = len(metrics) + 1
+        len(metrics) + 1
         col_spec = "l" + "c" * len(metrics)
 
         lines = [
@@ -162,9 +162,9 @@ class LaTeXReporter:
             latex table code
         """
         configs = list(report.configurations.keys())
-        metrics = list(list(report.configurations.values())[0].keys())
+        metrics = list(next(iter(report.configurations.values())).keys())
 
-        n_cols = len(metrics) + 1
+        len(metrics) + 1
         col_spec = "l" + "c" * len(metrics)
 
         lines = [
@@ -206,7 +206,7 @@ class LaTeXReporter:
 
     def generate_statistical_table(
         self,
-        test_results: Dict[str, Dict],
+        test_results: dict[str, dict],
         caption: str = "Statistical comparison",
         label: str = "tab:stats",
     ) -> str:
@@ -272,7 +272,7 @@ class CSVReporter:
 
     def generate_comparison_csv(
         self, report: EvaluationReport, include_metadata: bool = True
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """
         generate comparison csv data.
 
@@ -292,8 +292,8 @@ class CSVReporter:
 
         # header
         methods = report.methods
-        metrics = list(list(report.metrics.values())[0].keys())
-        rows.append(["Method"] + metrics)
+        metrics = list(next(iter(report.metrics.values())).keys())
+        rows.append(["Method", *metrics])
 
         # data
         for method in methods:
@@ -304,7 +304,7 @@ class CSVReporter:
 
         return rows
 
-    def save(self, rows: List[List[str]], path: Union[str, Path]):
+    def save(self, rows: list[list[str]], path: Union[str, Path]):
         """save csv data to file."""
         with open(path, "w", newline="") as f:
             writer = csv.writer(f, delimiter=self.delimiter)
@@ -323,7 +323,7 @@ class JSONReporter:
 
     def generate_full_report(
         self, report: Union[EvaluationReport, AblationReport, ComparisonReport]
-    ) -> Dict:
+    ) -> dict:
         """
         generate complete json report.
 
@@ -366,7 +366,7 @@ class JSONReporter:
 
         return {}
 
-    def save(self, data: Dict, path: Union[str, Path]):
+    def save(self, data: dict, path: Union[str, Path]):
         """save json data to file."""
         with open(path, "w") as f:
             json.dump(data, f, indent=self.indent)
@@ -379,7 +379,7 @@ class ReportGenerator:
     generates reports in multiple formats simultaneously.
     """
 
-    def __init__(self, output_dir: Union[str, Path], formats: List[str] = None):
+    def __init__(self, output_dir: Union[str, Path], formats: Optional[list[str]] = None):
         """
         args:
             output_dir: output directory for reports
@@ -396,7 +396,7 @@ class ReportGenerator:
 
     def generate_evaluation_report(
         self, report: EvaluationReport, name: str = "evaluation"
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """
         generate evaluation report in all formats.
 
@@ -431,7 +431,7 @@ class ReportGenerator:
 
     def generate_ablation_report(
         self, report: AblationReport, name: str = "ablation"
-    ) -> Dict[str, Path]:
+    ) -> dict[str, Path]:
         """generate ablation report in all formats."""
         paths = {}
 

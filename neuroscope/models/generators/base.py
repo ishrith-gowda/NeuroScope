@@ -5,10 +5,11 @@ this module provides abstract base classes and common functionality
 for generator architectures.
 """
 
+from abc import ABC, abstractmethod
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
-from typing import Optional, Tuple, Dict, Any
 
 
 class BaseGenerator(nn.Module, ABC):
@@ -50,7 +51,7 @@ class BaseGenerator(nn.Module, ABC):
         """count trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-    def get_feature_maps(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def get_feature_maps(self, x: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         get intermediate feature maps for visualization/loss computation.
 

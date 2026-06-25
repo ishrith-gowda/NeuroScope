@@ -1,12 +1,12 @@
 """cyclegan model for unpaired image-to-image translation."""
 
+import itertools
+
 import torch
 import torch.nn as nn
-import itertools
-from typing import Dict, List, Optional, Tuple, Union, Any
 
-from neuroscope.models.components import ResNetGenerator, PatchDiscriminator, ReplayBuffer
 from neuroscope.core.logging import get_logger
+from neuroscope.models.components import PatchDiscriminator, ReplayBuffer, ResNetGenerator
 
 logger = get_logger(__name__)
 
@@ -68,7 +68,7 @@ class CycleGAN:
         beta1: float = 0.5,
         beta2: float = 0.999,
         weight_decay: float = 0.0001,
-    ) -> Tuple[torch.optim.Optimizer, torch.optim.Optimizer, torch.optim.Optimizer]:
+    ) -> tuple[torch.optim.Optimizer, torch.optim.Optimizer, torch.optim.Optimizer]:
         """set up optimizers for generators and discriminators.
 
         args:
@@ -103,7 +103,7 @@ class CycleGAN:
         optimizer_D_B: torch.optim.Optimizer,
         n_epochs: int = 200,
         decay_epoch: int = 100,
-    ) -> Tuple[torch.optim.lr_scheduler._LRScheduler, ...]:
+    ) -> tuple[torch.optim.lr_scheduler._LRScheduler, ...]:
         """set up learning rate schedulers.
 
         args:
@@ -153,7 +153,7 @@ class CycleGAN:
         optimizer_D_B: torch.optim.Optimizer,
         lambda_identity: float = 5.0,
         lambda_cycle: float = 10.0,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """perform one training step.
 
         args:

@@ -5,20 +5,15 @@ generate all publication-quality figures for
 cvpr/neurips/miccai submission.
 """
 
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-import json
-import numpy as np
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
-from matplotlib.gridspec import GridSpec
 import seaborn as sns
-
+from matplotlib.patches import FancyBboxPatch
 
 # publication settings
 plt.rcParams.update(
@@ -71,7 +66,7 @@ def create_architecture_diagram(output_path: str):
     args:
         output_path: output path for figure
     """
-    fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+    _fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.set_xlim(0, 14)
     ax.set_ylim(0, 8)
     ax.axis("off")
@@ -150,7 +145,7 @@ def create_architecture_diagram(output_path: str):
             "",
             xy=(x2, arrow_y),
             xytext=(x1, arrow_y),
-            arrowprops=dict(arrowstyle="->", color="gray", lw=1.2),
+            arrowprops={"arrowstyle": "->", "color": "gray", "lw": 1.2},
         )
 
     # labels
@@ -185,7 +180,7 @@ def create_architecture_diagram(output_path: str):
         "",
         xy=(11, 1.5),
         xytext=(11, 2.3),
-        arrowprops=dict(arrowstyle="->", color="#C2185B", lw=1.5),
+        arrowprops={"arrowstyle": "->", "color": "#C2185B", "lw": 1.5},
     )
 
     # title
@@ -220,7 +215,7 @@ def create_architecture_diagram(output_path: str):
     print(f"saved: {output_path}")
 
 
-def create_training_curves(training_log: Dict, output_path: str):
+def create_training_curves(training_log: dict, output_path: str):
     """
     create training curve visualization.
 
@@ -228,7 +223,7 @@ def create_training_curves(training_log: Dict, output_path: str):
         training_log: training history
         output_path: output path
     """
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    _fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 
     epochs = range(1, len(training_log.get("g_loss", [])) + 1)
 
@@ -283,7 +278,7 @@ def create_training_curves(training_log: Dict, output_path: str):
     print(f"saved: {output_path}")
 
 
-def create_method_comparison_bar(results: Dict[str, Dict], output_path: str):
+def create_method_comparison_bar(results: dict[str, dict], output_path: str):
     """
     create bar chart comparing methods.
 
@@ -291,7 +286,7 @@ def create_method_comparison_bar(results: Dict[str, Dict], output_path: str):
         results: dict of method -> metrics
         output_path: output path
     """
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    _fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 
     methods = list(results.keys())
     x = np.arange(len(methods))
@@ -359,7 +354,7 @@ def create_method_comparison_bar(results: Dict[str, Dict], output_path: str):
     print(f"saved: {output_path}")
 
 
-def create_ablation_heatmap(ablation_results: Dict[str, Dict], output_path: str):
+def create_ablation_heatmap(ablation_results: dict[str, dict], output_path: str):
     """
     create ablation study heatmap.
 
@@ -378,7 +373,7 @@ def create_ablation_heatmap(ablation_results: Dict[str, Dict], output_path: str)
             delta = ablation_results[comp].get(f"{metric.lower()}_delta", 0)
             data[i, j] = delta
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    _fig, ax = plt.subplots(figsize=(8, 6))
 
     # custom colormap (red for negative, green for positive)
     cmap = sns.diverging_palette(10, 130, as_cmap=True)
@@ -405,7 +400,7 @@ def create_ablation_heatmap(ablation_results: Dict[str, Dict], output_path: str)
     print(f"saved: {output_path}")
 
 
-def create_statistical_significance_plot(pairwise_tests: Dict, output_path: str):
+def create_statistical_significance_plot(pairwise_tests: dict, output_path: str):
     """
     create statistical significance visualization.
 
@@ -413,7 +408,7 @@ def create_statistical_significance_plot(pairwise_tests: Dict, output_path: str)
         pairwise_tests: pairwise test results
         output_path: output path
     """
-    methods = sorted(set(m for pair in pairwise_tests.keys() for m in pair.split("_vs_")))
+    methods = sorted({m for pair in pairwise_tests for m in pair.split("_vs_")})
     n = len(methods)
 
     # create p-value matrix
@@ -425,7 +420,7 @@ def create_statistical_significance_plot(pairwise_tests: Dict, output_path: str)
         p_matrix[i, j] = result.get("p_value", 1.0)
         p_matrix[j, i] = result.get("p_value", 1.0)
 
-    fig, ax = plt.subplots(figsize=(8, 7))
+    _fig, ax = plt.subplots(figsize=(8, 7))
 
     # custom annotation
     annot = np.empty_like(p_matrix, dtype=object)
@@ -471,7 +466,7 @@ def create_statistical_significance_plot(pairwise_tests: Dict, output_path: str)
         transform=ax.transAxes,
         fontsize=9,
         verticalalignment="center",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
     )
 
     plt.tight_layout()
@@ -480,7 +475,7 @@ def create_statistical_significance_plot(pairwise_tests: Dict, output_path: str)
     print(f"saved: {output_path}")
 
 
-def create_modality_analysis(modality_results: Dict[str, Dict], output_path: str):
+def create_modality_analysis(modality_results: dict[str, dict], output_path: str):
     """
     create modality-wise analysis plot.
 
@@ -491,7 +486,7 @@ def create_modality_analysis(modality_results: Dict[str, Dict], output_path: str
     modalities = ["T1", "T1ce", "T2", "FLAIR"]
     methods = list(modality_results.keys())
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    _fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     x = np.arange(len(modalities))
     width = 0.15
@@ -501,7 +496,7 @@ def create_modality_analysis(modality_results: Dict[str, Dict], output_path: str
     for i, method in enumerate(methods):
         values = [modality_results[method].get(m, {}).get("ssim", 0) for m in modalities]
         offset = (i - len(methods) / 2 + 0.5) * width
-        bars = ax.bar(
+        ax.bar(
             x + offset,
             values,
             width,

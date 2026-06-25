@@ -69,7 +69,7 @@ class TestSchedulers:
         scheduler = LinearWarmupScheduler(optimizer, warmup_epochs=5, total_epochs=100)
 
         lrs = []
-        for epoch in range(10):
+        for _epoch in range(10):
             lrs.append(optimizer.param_groups[0]["lr"])
             scheduler.step()
 
@@ -163,8 +163,8 @@ class TestTrainer:
     @pytest.fixture
     def mock_trainer(self):
         """create mock trainer."""
-        from ..models.generators import SAGenerator
         from ..models.discriminators import MultiScaleDiscriminator
+        from ..models.generators import SAGenerator
         from ..training.trainer import HarmonizationTrainer
 
         G_A2B = SAGenerator(4, 4, 16, 2, use_attention=False)
@@ -211,7 +211,7 @@ class TestGradientHandling:
         loss.backward()
 
         # before clipping
-        grad_norm_before = sum(p.grad.norm() ** 2 for p in model.parameters()) ** 0.5
+        sum(p.grad.norm() ** 2 for p in model.parameters()) ** 0.5
 
         clip_gradients(model.parameters(), max_norm=1.0)
 
@@ -226,7 +226,7 @@ class TestGradientHandling:
 
         accumulation_steps = 4
 
-        for i in range(accumulation_steps):
+        for _i in range(accumulation_steps):
             x = torch.randn(2, 10)
             y = model(x)
             loss = y.sum() / accumulation_steps
@@ -312,7 +312,7 @@ class TestEMA:
         from ..training.trainer import ExponentialMovingAverage
 
         model = nn.Linear(10, 10)
-        original_weight = model.weight.data.clone()
+        model.weight.data.clone()
 
         ema = ExponentialMovingAverage(model, decay=0.9)
 

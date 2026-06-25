@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """regenerate bland-altman figure using per-feature statistics from results json."""
 
-import json
 import importlib.util
-import numpy as np
+import json
 from pathlib import Path
+
+import numpy as np
 
 # direct import of radiomics_figures (directory name has numbers, can't use normal import)
 spec = importlib.util.spec_from_file_location(

@@ -14,25 +14,20 @@ generates comprehensive visualizations including:
 all figures use times new roman, seaborn styling, and publication standards.
 """
 
-import os
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
-from datetime import datetime
+from typing import Optional
 
-import numpy as np
-import torch
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.gridspec import GridSpec
+import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
-from scipy import stats
-from skimage.metrics import structural_similarity as ssim
+import torch
+from matplotlib.gridspec import GridSpec
 from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 
 # configure matplotlib for publication quality
 plt.rcParams.update(
@@ -65,13 +60,16 @@ sns.set_theme(style="whitegrid", palette="muted")
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from train_cyclegan_v2 import ResNetGenerator, PatchDiscriminator
-
 
 class PublicationFigureGenerator:
     """generate publication-quality figures for cyclegan results"""
 
-    def __init__(self, output_dir: str, checkpoint_dir: str = None, samples_dir: str = None):
+    def __init__(
+        self,
+        output_dir: str,
+        checkpoint_dir: Optional[str] = None,
+        samples_dir: Optional[str] = None,
+    ):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.checkpoint_dir = Path(checkpoint_dir) if checkpoint_dir else None
@@ -120,7 +118,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "fig1_architecture.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig1_architecture.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig1_architecture.pdf")
+        print("saved: fig1_architecture.pdf")
 
     def _draw_generator_architecture(self, ax):
         """draw generator block diagram"""
@@ -154,7 +152,7 @@ class PublicationFigureGenerator:
                     "",
                     xy=(x + 2.1, 1),
                     xytext=(x + 1.9, 1),
-                    arrowprops=dict(arrowstyle="->", color="black", lw=1.5),
+                    arrowprops={"arrowstyle": "->", "color": "black", "lw": 1.5},
                 )
 
         # add skip connection indicator
@@ -162,9 +160,13 @@ class PublicationFigureGenerator:
             "",
             xy=(5.9, 1.6),
             xytext=(2.5, 1.6),
-            arrowprops=dict(
-                arrowstyle="->", color="gray", lw=1, ls="--", connectionstyle="arc3,rad=-0.3"
-            ),
+            arrowprops={
+                "arrowstyle": "->",
+                "color": "gray",
+                "lw": 1,
+                "ls": "--",
+                "connectionstyle": "arc3,rad=-0.3",
+            },
         )
         ax.text(4.2, 1.85, "Skip connections in ResBlocks", fontsize=8, color="gray")
 
@@ -202,7 +204,7 @@ class PublicationFigureGenerator:
                     "",
                     xy=(x + w + 0.15, 1),
                     xytext=(x + w + 0.05, 1),
-                    arrowprops=dict(arrowstyle="->", color="black", lw=1),
+                    arrowprops={"arrowstyle": "->", "color": "black", "lw": 1},
                 )
 
         ax.text(
@@ -269,7 +271,7 @@ class PublicationFigureGenerator:
             "",
             xy=(4.1, 2.4),
             xytext=(1.9, 2.4),
-            arrowprops=dict(arrowstyle="->", color=self.colors["generator"], lw=2),
+            arrowprops={"arrowstyle": "->", "color": self.colors["generator"], "lw": 2},
         )
         ax.text(3, 2.6, "$G_{A→B}$", ha="center", fontsize=10, color=self.colors["generator"])
 
@@ -277,7 +279,7 @@ class PublicationFigureGenerator:
             "",
             xy=(1.9, 2.0),
             xytext=(4.1, 2.0),
-            arrowprops=dict(arrowstyle="->", color=self.colors["generator"], lw=2),
+            arrowprops={"arrowstyle": "->", "color": self.colors["generator"], "lw": 2},
         )
         ax.text(3, 1.75, "$G_{B→A}$", ha="center", fontsize=10, color=self.colors["generator"])
 
@@ -286,9 +288,12 @@ class PublicationFigureGenerator:
             "",
             xy=(0.95, 1.7),
             xytext=(0.95, 0.8),
-            arrowprops=dict(
-                arrowstyle="<->", color=self.colors["cycle"], lw=1.5, connectionstyle="arc3,rad=0.5"
-            ),
+            arrowprops={
+                "arrowstyle": "<->",
+                "color": self.colors["cycle"],
+                "lw": 1.5,
+                "connectionstyle": "arc3,rad=0.5",
+            },
         )
         ax.text(0.3, 1.2, "Cycle\nLoss", ha="center", fontsize=8, color=self.colors["cycle"])
 
@@ -296,12 +301,12 @@ class PublicationFigureGenerator:
             "",
             xy=(5.05, 1.7),
             xytext=(5.05, 0.8),
-            arrowprops=dict(
-                arrowstyle="<->",
-                color=self.colors["cycle"],
-                lw=1.5,
-                connectionstyle="arc3,rad=-0.5",
-            ),
+            arrowprops={
+                "arrowstyle": "<->",
+                "color": self.colors["cycle"],
+                "lw": 1.5,
+                "connectionstyle": "arc3,rad=-0.5",
+            },
         )
         ax.text(5.7, 1.2, "Cycle\nLoss", ha="center", fontsize=8, color=self.colors["cycle"])
 
@@ -313,7 +318,11 @@ class PublicationFigureGenerator:
             ha="center",
             fontsize=10,
             color=self.colors["discriminator"],
-            bbox=dict(boxstyle="round", facecolor="white", edgecolor=self.colors["discriminator"]),
+            bbox={
+                "boxstyle": "round",
+                "facecolor": "white",
+                "edgecolor": self.colors["discriminator"],
+            },
         )
         ax.text(
             5.05,
@@ -322,23 +331,29 @@ class PublicationFigureGenerator:
             ha="center",
             fontsize=10,
             color=self.colors["discriminator"],
-            bbox=dict(boxstyle="round", facecolor="white", edgecolor=self.colors["discriminator"]),
+            bbox={
+                "boxstyle": "round",
+                "facecolor": "white",
+                "edgecolor": self.colors["discriminator"],
+            },
         )
 
     # =========================================================================
     # figure 2: training loss curves
     # =========================================================================
-    def generate_loss_curves(self, loss_history: dict = None, loss_file: str = None):
+    def generate_loss_curves(
+        self, loss_history: Optional[dict] = None, loss_file: Optional[str] = None
+    ):
         """generate comprehensive training loss visualization"""
         if loss_history is None and loss_file:
-            with open(loss_file, "r") as f:
+            with open(loss_file) as f:
                 loss_history = json.load(f)
 
         if loss_history is None:
             print("warning: no loss history provided, skipping loss curves")
             return
 
-        fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+        _fig, axes = plt.subplots(2, 3, figsize=(14, 8))
 
         # smooth function
         def smooth(y, window=50):
@@ -420,7 +435,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "fig2_training_losses.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig2_training_losses.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig2_training_losses.pdf")
+        print("saved: fig2_training_losses.pdf")
 
     # =========================================================================
     # figure 3: sample translations with metrics
@@ -509,7 +524,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "fig3_sample_translations.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig3_sample_translations.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig3_sample_translations.pdf")
+        print("saved: fig3_sample_translations.pdf")
 
         return metrics_A2B, metrics_B2A
 
@@ -518,7 +533,7 @@ class PublicationFigureGenerator:
     # =========================================================================
     def generate_metrics_chart(self, metrics: dict):
         """generate bar chart comparing different model versions/configurations"""
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        _fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
         # ssim comparison
         ax = axes[0]
@@ -526,7 +541,7 @@ class PublicationFigureGenerator:
         ssim_vals = [metrics[m].get("ssim", 0) for m in models]
         ssim_stds = [metrics[m].get("ssim_std", 0) for m in models]
 
-        bars = ax.bar(
+        ax.bar(
             models,
             ssim_vals,
             yerr=ssim_stds,
@@ -545,7 +560,7 @@ class PublicationFigureGenerator:
         psnr_vals = [metrics[m].get("psnr", 0) for m in models]
         psnr_stds = [metrics[m].get("psnr_std", 0) for m in models]
 
-        bars = ax.bar(
+        ax.bar(
             models,
             psnr_vals,
             yerr=psnr_stds,
@@ -562,14 +577,14 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "fig4_metrics_comparison.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig4_metrics_comparison.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig4_metrics_comparison.pdf")
+        print("saved: fig4_metrics_comparison.pdf")
 
     # =========================================================================
     # figure 5: dataset distribution
     # =========================================================================
     def generate_dataset_distribution(self, metadata: dict):
         """visualize dataset split and characteristics"""
-        fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+        _fig, axes = plt.subplots(1, 3, figsize=(14, 4))
 
         # dataset split pie chart
         ax = axes[0]
@@ -578,7 +593,7 @@ class PublicationFigureGenerator:
         colors = [self.colors["brats"], self.colors["upenn"]]
         explode = (0.05, 0)
 
-        wedges, texts, autotexts = ax.pie(
+        _wedges, _texts, _autotexts = ax.pie(
             sizes,
             explode=explode,
             labels=datasets,
@@ -659,21 +674,21 @@ class PublicationFigureGenerator:
         ax.set_title("Input MRI Modalities (4-channel)", fontweight="bold")
         ax.set_xlim(0, 1.5)
 
-        for i, mod in enumerate(modalities):
+        for i, _mod in enumerate(modalities):
             ax.text(1.1, i, f"Ch {i}", va="center", fontsize=9)
 
         plt.tight_layout()
         plt.savefig(self.output_dir / "fig5_dataset_distribution.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig5_dataset_distribution.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig5_dataset_distribution.pdf")
+        print("saved: fig5_dataset_distribution.pdf")
 
     # =========================================================================
     # table 1: model configuration
     # =========================================================================
     def generate_config_table(self, config: dict):
         """generate a latex-style configuration table"""
-        fig, ax = plt.subplots(figsize=(8, 6))
+        _fig, ax = plt.subplots(figsize=(8, 6))
         ax.axis("off")
 
         table_data = [
@@ -721,7 +736,7 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "table1_configuration.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "table1_configuration.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: table1_configuration.pdf")
+        print("saved: table1_configuration.pdf")
 
     # =========================================================================
     # figure 6: epoch-wise metrics evolution
@@ -731,7 +746,7 @@ class PublicationFigureGenerator:
         if not epoch_metrics:
             return
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        _fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
         epochs = list(epoch_metrics.keys())
         ssim_a2b = [epoch_metrics[e].get("ssim_a2b", 0) for e in epochs]
@@ -770,12 +785,17 @@ class PublicationFigureGenerator:
         plt.savefig(self.output_dir / "fig6_epoch_metrics.pdf", bbox_inches="tight")
         plt.savefig(self.output_dir / "fig6_epoch_metrics.png", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"saved: fig6_epoch_metrics.pdf")
+        print("saved: fig6_epoch_metrics.pdf")
 
     # =========================================================================
     # generate all figures
     # =========================================================================
-    def generate_all(self, loss_file: str = None, config: dict = None, metadata: dict = None):
+    def generate_all(
+        self,
+        loss_file: Optional[str] = None,
+        config: Optional[dict] = None,
+        metadata: Optional[dict] = None,
+    ):
         """generate all publication figures"""
         print("\n" + "=" * 60)
         print("generating publication-quality figures")

@@ -26,10 +26,9 @@ import json
 import logging
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 # setup logging
 logging.basicConfig(
@@ -47,7 +46,7 @@ class BaselineOrchestrator:
         output_dir: Path,
         epochs: int = 200,
         batch_size: int = 4,
-        gpus: Optional[List[int]] = None,
+        gpus: Optional[list[int]] = None,
     ):
         """
         initialize orchestrator.
@@ -74,7 +73,7 @@ class BaselineOrchestrator:
         self.start_time = None
 
     def run_command(
-        self, cmd: List[str], env: Optional[Dict] = None, log_file: Optional[Path] = None
+        self, cmd: list[str], env: Optional[dict] = None, log_file: Optional[Path] = None
     ) -> int:
         """
         execute a command and log output.
@@ -149,7 +148,7 @@ class BaselineOrchestrator:
         if returncode == 0:
             logger.info(f"+ Baseline CycleGAN completed in {duration / 3600:.2f} hours")
         else:
-            logger.error(f"✗ Baseline CycleGAN failed!")
+            logger.error("✗ Baseline CycleGAN failed!")
 
     def run_combat(self):
         """run combat statistical harmonization."""
@@ -191,7 +190,7 @@ class BaselineOrchestrator:
         if returncode == 0:
             logger.info(f"+ ComBat completed in {duration / 60:.2f} minutes")
         else:
-            logger.error(f"✗ ComBat failed!")
+            logger.error("✗ ComBat failed!")
 
     def run_histogram_matching(self):
         """run histogram matching baseline."""
@@ -266,7 +265,7 @@ class BaselineOrchestrator:
 
         logger.info(f"\nExperiment log saved to: {log_file}")
 
-    def run_all(self, methods: Optional[List[str]] = None):
+    def run_all(self, methods: Optional[list[str]] = None):
         """
         run all baseline methods.
 

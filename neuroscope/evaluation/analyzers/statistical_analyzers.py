@@ -5,11 +5,12 @@ analysis frameworks for comprehensive evaluation
 of harmonization results across modalities and regions.
 """
 
-from typing import Optional, Dict, List, Tuple, Any
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Optional
+
 import numpy as np
-import json
 
 
 @dataclass
@@ -17,11 +18,11 @@ class AnalysisResult:
     """result from analysis."""
 
     name: str
-    metrics: Dict[str, float]
-    per_sample: Optional[Dict[str, List[float]]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, float]
+    per_sample: Optional[dict[str, list[float]]] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """convert to dictionary."""
         return {
             "name": self.name,
@@ -45,13 +46,13 @@ class ModalityAnalyzer:
 
     MODALITIES = ["T1", "T1ce", "T2", "FLAIR"]
 
-    def __init__(self, metrics_fn: callable = None):
+    def __init__(self, metrics_fn: Optional[callable] = None):
         """
         args:
             metrics_fn: function to compute metrics
         """
         self.metrics_fn = metrics_fn
-        self.results_per_modality: Dict[str, List[Dict]] = {m: [] for m in self.MODALITIES}
+        self.results_per_modality: dict[str, list[dict]] = {m: [] for m in self.MODALITIES}
 
     def add_result(
         self,
@@ -87,7 +88,7 @@ class ModalityAnalyzer:
 
         self.results_per_modality[modality].append(metrics)
 
-    def analyze(self) -> Dict[str, AnalysisResult]:
+    def analyze(self) -> dict[str, AnalysisResult]:
         """
         analyze results across all modalities.
 
@@ -121,7 +122,7 @@ class ModalityAnalyzer:
 
         return results
 
-    def get_summary(self) -> Dict[str, Dict[str, float]]:
+    def get_summary(self) -> dict[str, dict[str, float]]:
         """get summary statistics per modality."""
         results = self.analyze()
 
@@ -141,20 +142,20 @@ class RegionAnalyzer:
 
     REGIONS = ["enhancing", "necrotic", "edema", "whole_tumor", "background"]
 
-    def __init__(self, metrics_fn: callable = None):
+    def __init__(self, metrics_fn: Optional[callable] = None):
         """
         args:
             metrics_fn: function to compute metrics
         """
         self.metrics_fn = metrics_fn
-        self.results_per_region: Dict[str, List[Dict]] = {r: [] for r in self.REGIONS}
+        self.results_per_region: dict[str, list[dict]] = {r: [] for r in self.REGIONS}
 
     def add_result(
         self,
         original: np.ndarray,
         harmonized: np.ndarray,
         segmentation: np.ndarray,
-        label_mapping: Dict[str, int] = None,
+        label_mapping: Optional[dict[str, int]] = None,
     ):
         """
         add a result with segmentation mask.
@@ -199,7 +200,7 @@ class RegionAnalyzer:
 
             self.results_per_region[region].append(metrics)
 
-    def analyze(self) -> Dict[str, AnalysisResult]:
+    def analyze(self) -> dict[str, AnalysisResult]:
         """analyze results across all regions."""
         results = {}
 
@@ -241,10 +242,10 @@ class AblationAnalyzer:
             baseline_name: name of the full model configuration
         """
         self.baseline_name = baseline_name
-        self.configurations: Dict[str, Dict[str, List[float]]] = {}
+        self.configurations: dict[str, dict[str, list[float]]] = {}
 
     def add_configuration(
-        self, name: str, removed_components: List[str], metrics: Dict[str, float]
+        self, name: str, removed_components: list[str], metrics: dict[str, float]
     ):
         """
         add a configuration result.
@@ -272,7 +273,7 @@ class AblationAnalyzer:
         baseline_metrics = self.configurations[self.baseline_name]["metrics"]
         baseline_means = {}
 
-        for metric_name in baseline_metrics[0].keys():
+        for metric_name in baseline_metrics[0]:
             values = [m[metric_name] for m in baseline_metrics]
             baseline_means[metric_name] = np.mean(values)
 
@@ -286,13 +287,13 @@ class AblationAnalyzer:
             config_metrics = config_data["metrics"]
             config_means = {}
 
-            for metric_name in config_metrics[0].keys():
+            for metric_name in config_metrics[0]:
                 values = [m[metric_name] for m in config_metrics]
                 config_means[metric_name] = np.mean(values)
 
             # contribution = baseline - ablated
             contrib = {}
-            for metric_name in baseline_means.keys():
+            for metric_name in baseline_means:
                 diff = baseline_means[metric_name] - config_means[metric_name]
                 contrib[metric_name] = diff
 
@@ -310,7 +311,7 @@ class AblationAnalyzer:
             },
         )
 
-    def get_component_ranking(self, metric_name: str = "ssim") -> List[Tuple[str, float]]:
+    def get_component_ranking(self, metric_name: str = "ssim") -> list[tuple[str, float]]:
         """
         rank components by contribution to specific metric.
 
@@ -338,7 +339,7 @@ class CrossDatasetAnalyzer:
     perform on another.
     """
 
-    def __init__(self, source_dataset: str, target_datasets: List[str]):
+    def __init__(self, source_dataset: str, target_datasets: list[str]):
         """
         args:
             source_dataset: training dataset name
@@ -347,9 +348,9 @@ class CrossDatasetAnalyzer:
         self.source_dataset = source_dataset
         self.target_datasets = target_datasets
 
-        self.results: Dict[str, Dict[str, List[float]]] = {ds: {} for ds in target_datasets}
+        self.results: dict[str, dict[str, list[float]]] = {ds: {} for ds in target_datasets}
 
-    def add_result(self, target_dataset: str, metrics: Dict[str, float]):
+    def add_result(self, target_dataset: str, metrics: dict[str, float]):
         """
         add evaluation result on target dataset.
 
@@ -394,7 +395,7 @@ class CrossDatasetAnalyzer:
                 else 0
             )
 
-            for metric_name in list(self.results.values())[0].keys():
+            for metric_name in next(iter(self.results.values())):
                 source_perf = np.mean(self.results[self.target_datasets[source_idx]][metric_name])
 
                 for i, dataset in enumerate(self.target_datasets):
@@ -428,7 +429,7 @@ class CrossDatasetAnalyzer:
         """
         values = []
 
-        for dataset, metrics in self.results.items():
+        for _dataset, metrics in self.results.items():
             if metric_name in metrics:
                 values.append(np.mean(metrics[metric_name]))
 

@@ -5,10 +5,10 @@ comprehensive collection of learning rate scheduling strategies
 optimized for gan training.
 """
 
-from typing import Optional, List, Callable
-from dataclasses import dataclass
 import math
-import torch
+from dataclasses import dataclass
+from typing import Callable, Optional
+
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 

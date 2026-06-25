@@ -5,13 +5,14 @@ file handling, checkpoint management, and configuration loading
 for medical imaging data.
 """
 
-from typing import Optional, Dict, List, Any, Union, Tuple
-from pathlib import Path
 import json
-import shutil
 import re
-import torch
+import shutil
+from pathlib import Path
+from typing import Any, Optional, Union
+
 import numpy as np
+import torch
 
 
 def ensure_dir(path: Union[str, Path]) -> Path:
@@ -31,7 +32,7 @@ def ensure_dir(path: Union[str, Path]) -> Path:
 
 def list_files(
     directory: Union[str, Path], pattern: str = "*", recursive: bool = False
-) -> List[Path]:
+) -> list[Path]:
     """
     list files matching pattern.
 
@@ -76,7 +77,7 @@ def copy_file(src: Union[str, Path], dst: Union[str, Path], overwrite: bool = Fa
 # nifti handling
 
 
-def load_nifti(path: Union[str, Path], dtype: np.dtype = np.float32) -> Tuple[np.ndarray, Any]:
+def load_nifti(path: Union[str, Path], dtype: np.dtype = np.float32) -> tuple[np.ndarray, Any]:
     """
     load nifti file.
 
@@ -156,8 +157,8 @@ def save_checkpoint(
     scheduler: Any = None,
     epoch: int = 0,
     step: int = 0,
-    metrics: Dict[str, float] = None,
-    config: Dict = None,
+    metrics: Optional[dict[str, float]] = None,
+    config: Optional[dict] = None,
     **kwargs,
 ) -> Path:
     """
@@ -209,7 +210,7 @@ def load_checkpoint(
     scheduler: Any = None,
     device: str = "cpu",
     strict: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     load training checkpoint.
 
@@ -327,7 +328,7 @@ def load_cyclegan_checkpoint(
     D_A: torch.nn.Module = None,
     D_B: torch.nn.Module = None,
     device: str = "cpu",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     load cyclegan-specific checkpoint.
 
@@ -362,7 +363,7 @@ def load_cyclegan_checkpoint(
 # configuration handling
 
 
-def load_config(path: Union[str, Path], format: str = "auto") -> Dict[str, Any]:
+def load_config(path: Union[str, Path], format: str = "auto") -> dict[str, Any]:
     """
     load configuration file.
 
@@ -378,7 +379,7 @@ def load_config(path: Union[str, Path], format: str = "auto") -> Dict[str, Any]:
     if format == "auto":
         format = path.suffix.lstrip(".")
 
-    with open(path, "r") as f:
+    with open(path) as f:
         if format in ["yaml", "yml"]:
             import yaml
 
@@ -389,7 +390,7 @@ def load_config(path: Union[str, Path], format: str = "auto") -> Dict[str, Any]:
             raise ValueError(f"Unknown format: {format}")
 
 
-def save_config(config: Dict[str, Any], path: Union[str, Path], format: str = "auto"):
+def save_config(config: dict[str, Any], path: Union[str, Path], format: str = "auto"):
     """
     save configuration to file.
 
@@ -415,7 +416,7 @@ def save_config(config: Dict[str, Any], path: Union[str, Path], format: str = "a
             raise ValueError(f"Unknown format: {format}")
 
 
-def merge_configs(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+def merge_configs(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     """
     deep merge two configuration dictionaries.
 

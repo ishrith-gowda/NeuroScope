@@ -1,12 +1,11 @@
-import os
+import argparse
 import json
 import logging
-import time
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 import multiprocessing as mp
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import argparse
+from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import SimpleITK as sitk
@@ -18,10 +17,10 @@ except ImportError:
     exit(1)
 
 from preprocessing_utils import (
-    generate_brain_mask,
-    evaluate_bias_need,
     acceptable_n4_change,
     basic_intensity_stats,
+    evaluate_bias_need,
+    generate_brain_mask,
 )
 
 
@@ -43,7 +42,7 @@ def validate_image_file(file_path: Path) -> bool:
         return False
 
 
-def apply_conservative_n4(image: sitk.Image, mask: sitk.Image) -> Tuple[sitk.Image, bool]:
+def apply_conservative_n4(image: sitk.Image, mask: sitk.Image) -> tuple[sitk.Image, bool]:
     """
     apply n4 correction with very conservative parameters designed to avoid
     increasing variation while still providing some bias correction benefit.
@@ -162,7 +161,7 @@ def parse_args():
     return ap.parse_args()
 
 
-def process_subject_improved(args: Tuple[str, str, bool, float, Tuple[int, int]]) -> Dict:
+def process_subject_improved(args: tuple[str, str, bool, float, tuple[int, int]]) -> dict:
     """
     process n4 correction for a single subject with improved approach.
     """
@@ -199,7 +198,6 @@ def process_subject_improved(args: Tuple[str, str, bool, float, Tuple[int, int]]
         for modality in modalities:
             input_file = input_dir / f"{modality}.nii.gz"
             output_file = output_dir / f"{modality}.nii.gz"
-            reason_log = []
 
             # skip if output exists and not overwriting
             if output_file.exists() and not overwrite:
@@ -252,7 +250,7 @@ def process_subject_improved(args: Tuple[str, str, bool, float, Tuple[int, int]]
                     result["skipped_unnecessary"].append(f"{modality}_fallback_copy")
             except Exception as e:
                 result["failed_modalities"].append(f"{modality}_processing_error")
-                logging.debug(f"error processing {modality} for {subject_id}: {str(e)}")
+                logging.debug(f"error processing {modality} for {subject_id}: {e!s}")
 
         # mark as successful if at least one modality was processed/copied
         if (
@@ -270,8 +268,8 @@ def process_subject_improved(args: Tuple[str, str, bool, float, Tuple[int, int]]
 
 
 def collect_subjects_for_processing(
-    splits_to_process: List[str] = None, bias_threshold: float = 0.18
-) -> List[Tuple[str, str]]:
+    splits_to_process: Optional[list[str]] = None, bias_threshold: float = 0.18
+) -> list[tuple[str, str]]:
     """collect subjects for processing with validation."""
     if splits_to_process is None:
         splits_to_process = ["train", "val"]
@@ -279,7 +277,7 @@ def collect_subjects_for_processing(
     metadata_path = PATHS["metadata_splits"]
 
     try:
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             metadata = json.load(f)
     except Exception as e:
         logging.error(f"failed to load metadata: {e}")
@@ -309,12 +307,12 @@ def collect_subjects_for_processing(
 
 
 def run_improved_n4_correction(
-    subjects: List[Tuple[str, str]],
+    subjects: list[tuple[str, str]],
     overwrite: bool = False,
-    max_workers: int = None,
+    max_workers: Optional[int] = None,
     bias_threshold: float = 0.18,
-    second_pass: Tuple[int, int] = (10, 5),
-) -> Dict:
+    second_pass: tuple[int, int] = (10, 5),
+) -> dict:
     """
     run improved n4 correction with conservative parameters.
     """
@@ -399,7 +397,7 @@ def run_improved_n4_correction(
     return results
 
 
-def print_improved_summary(results: Dict):
+def print_improved_summary(results: dict):
     """print comprehensive summary of improved processing."""
     elapsed = results["elapsed_time"]
 
@@ -407,7 +405,7 @@ def print_improved_summary(results: Dict):
     print("improved n4 bias correction summary")
     print(f"{'=' * 70}")
 
-    print(f"\nprocessing results:")
+    print("\nprocessing results:")
     print(f"  total subjects:              {results['total_subjects']}")
     print(f"  successful:                  {results['successful_subjects']}")
     print(f"  failed:                      {results['failed_subjects']}")
@@ -415,7 +413,7 @@ def print_improved_summary(results: Dict):
         f"  success rate:                {results['successful_subjects'] / max(results['total_subjects'], 1) * 100:.1f}%"
     )
 
-    print(f"\nmodality processing breakdown:")
+    print("\nmodality processing breakdown:")
     print(f"  n4 corrected:                {results['total_modalities_processed']}")
     print(f"  skipped (already existed):   {results['total_modalities_skipped']}")
     print(f"  skipped (unnecessary/failed): {results['total_modalities_skipped_unnecessary']}")
@@ -430,7 +428,7 @@ def print_improved_summary(results: Dict):
         n4_rate = results["total_modalities_processed"] / total_modalities * 100
         print(f"  actual n4 correction rate:   {n4_rate:.1f}%")
 
-    print(f"\ntiming:")
+    print("\ntiming:")
     print(f"  processing time:             {elapsed / 60:.1f} minutes ({elapsed:.0f}s)")
     if elapsed > 0 and results["successful_subjects"] > 0:
         rate = results["successful_subjects"] * 60 / elapsed
@@ -438,12 +436,12 @@ def print_improved_summary(results: Dict):
         print(f"  processing rate:             {rate:.1f} subjects/minute")
         print(f"  average per subject:         {avg_time:.1f} seconds")
 
-    print(f"\nimproved approach features:")
-    print(f"  - conservative n4 parameters to avoid over-correction")
-    print(f"  - bias field assessment - skips n4 when unnecessary")
-    print(f"  - quality validation - rejects poor n4 results")
-    print(f"  - fallback strategy - copies original if n4 fails")
-    print(f"  - intensity range protection")
+    print("\nimproved approach features:")
+    print("  - conservative n4 parameters to avoid over-correction")
+    print("  - bias field assessment - skips n4 when unnecessary")
+    print("  - quality validation - rejects poor n4 results")
+    print("  - fallback strategy - copies original if n4 fails")
+    print("  - intensity range protection")
 
     # show sample processing details
     n4_applied_count = 0
@@ -460,20 +458,20 @@ def print_improved_summary(results: Dict):
 
     if n4_applied_count + skipped_unnecessary_count > 0:
         skip_rate = skipped_unnecessary_count / (n4_applied_count + skipped_unnecessary_count) * 100
-        print(f"\nbias field analysis results:")
+        print("\nbias field analysis results:")
         print(f"  modalities with minimal bias: {skipped_unnecessary_count} ({skip_rate:.1f}%)")
         print(f"  modalities needing n4:       {n4_applied_count} ({100 - skip_rate:.1f}%)")
 
-    print(f"\noutput location:")
+    print("\noutput location:")
     print(f"  improved n4 files: {PATHS['preprocessed_dir']}/[section]_n4corrected_v2/")
 
-    print(f"\nnext step:")
-    print(f"  run script 07 again on the _n4corrected_v2 directories to assess improvement")
+    print("\nnext step:")
+    print("  run script 07 again on the _n4corrected_v2 directories to assess improvement")
 
     print(f"{'=' * 70}")
 
 
-def main(config: Dict):
+def main(config: dict):
     """main function for improved n4 correction with provided config."""
     setup_logging()
 

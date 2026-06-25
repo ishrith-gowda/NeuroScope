@@ -1,22 +1,20 @@
-import os
-import sys
 import argparse
-import logging
 import itertools
 import json
+import logging
+import os
 import random
+import sys
 from datetime import datetime
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import seaborn as sns
 import torch
+from neuroscope_dataset_loader import get_cycle_domain_loaders
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.utils import save_image, make_grid
-import matplotlib.pyplot as plt
-
-import seaborn as sns
-import matplotlib as mpl
-
-from neuroscope_dataset_loader import get_cycle_domain_loaders
+from torchvision.utils import make_grid, save_image
 
 # ─── seaborn + times new roman setup ──────────────────────────────
 sns.set_theme(style="whitegrid")

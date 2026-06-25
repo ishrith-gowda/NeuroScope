@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """regenerate scatter plot figure using per-feature statistics from results json."""
 
-import json
 import importlib.util
-import numpy as np
+import json
 from pathlib import Path
+
+import numpy as np
 
 spec = importlib.util.spec_from_file_location(
     "radiomics_figures", Path(__file__).parent / "radiomics_figures.py"

@@ -17,36 +17,33 @@ usage:
     python train_federated.py --aggregation_strategy fedavg --local_epochs 5
 """
 
-import os
-import sys
-import copy
 import argparse
-import time
+import copy
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
-import numpy as np
-from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25DConfig,
-    SACycleGAN25D,
     create_model,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 from neuroscope.training.federated.fedavg import FedAvgAggregator
 from neuroscope.training.federated.strategies import (
@@ -126,7 +123,7 @@ class LocalClient:
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
 
-    def train_step(self, batch: Dict[str, torch.Tensor], prox_loss_fn=None) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor], prox_loss_fn=None) -> dict[str, float]:
         """single local training step."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -229,7 +226,7 @@ class LocalClient:
             "cycle": (loss_cycle_A + loss_cycle_B).item(),
         }
 
-    def train_local(self, epochs: int, prox_loss_fn=None) -> Dict[str, float]:
+    def train_local(self, epochs: int, prox_loss_fn=None) -> dict[str, float]:
         """train locally for e epochs. returns average losses."""
         self.model.train()
         total_losses = {"G_loss": 0, "D_loss": 0, "cycle": 0}
@@ -290,7 +287,7 @@ class FederatedTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
         eval_every_n_rounds: int = 5,
@@ -393,7 +390,7 @@ class FederatedTrainer:
     def _save_config(self):
         """save experiment configuration."""
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "aggregation_strategy": self.aggregation_strategy,
                 "n_clients": self.n_clients,
@@ -408,12 +405,12 @@ class FederatedTrainer:
 
     def _create_client_loaders(
         self, brats_dir, upenn_dir, batch_size, image_size, num_workers
-    ) -> List[DataLoader]:
+    ) -> list[DataLoader]:
         """create per-client data loaders (one per site)."""
         # for 2-client simulation, each client gets one site's data
         # both clients need paired data from their site for cyclegan training
         # we reuse the existing create_dataloaders which splits by site
-        train_loader, val_loader, _ = create_dataloaders(
+        train_loader, _val_loader, _ = create_dataloaders(
             brats_dir=brats_dir,
             upenn_dir=upenn_dir,
             batch_size=batch_size,
@@ -454,7 +451,7 @@ class FederatedTrainer:
         return ssim.item()
 
     @torch.no_grad()
-    def evaluate_global_model(self) -> Dict[str, float]:
+    def evaluate_global_model(self) -> dict[str, float]:
         """evaluate the global model on validation data."""
         self.global_model.eval()
         metrics = {"ssim_A2B": [], "ssim_B2A": []}
@@ -511,7 +508,7 @@ class FederatedTrainer:
         if round_idx % 10 == 0:
             torch.save(checkpoint, ckpt_dir / f"checkpoint_round_{round_idx}.pth")
 
-    def load_checkpoint(self, path: str = None):
+    def load_checkpoint(self, path: Optional[str] = None):
         """resume from a checkpoint. returns (start_round, best_ssim)."""
         if path is None:
             path = self.experiment_dir / "checkpoints" / "checkpoint_latest.pth"
@@ -653,7 +650,7 @@ class FederatedTrainer:
         with open(self.experiment_dir / "training_history.json", "w") as f:
             json.dump(self.history, f, indent=2, default=str)
 
-        print(f"\nfederated training complete!")
+        print("\nfederated training complete!")
         print(f"best ssim: {best_ssim:.4f}")
         print(f"checkpoints saved to: {self.experiment_dir / 'checkpoints'}")
 
@@ -698,9 +695,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     config = SACycleGAN25DConfig(

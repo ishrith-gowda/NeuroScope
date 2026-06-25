@@ -1,8 +1,8 @@
 """buffer for cyclegan replay memory."""
 
 import random
+
 import torch
-from typing import List, Optional, Union, Tuple
 
 
 class ReplayBuffer:
@@ -20,7 +20,7 @@ class ReplayBuffer:
             max_size: maximum number of images to store in buffer.
         """
         self.max_size = max_size
-        self.buffer: List[torch.Tensor] = []
+        self.buffer: list[torch.Tensor] = []
 
     def push_and_pop(self, images: torch.Tensor) -> torch.Tensor:
         """push new images to buffer and return same number of images.

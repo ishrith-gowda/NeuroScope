@@ -5,8 +5,10 @@ provides flexible optimizer creation with proper configuration
 for gan training scenarios.
 """
 
-from typing import Dict, List, Optional, Any, Iterator, Tuple
-from dataclasses import dataclass, field
+from collections.abc import Iterator
+from dataclasses import dataclass
+from typing import Any, Optional
+
 import torch
 import torch.nn as nn
 from torch.optim import Optimizer
@@ -20,7 +22,7 @@ class OptimizerConfig:
     lr: float = 2e-4
     weight_decay: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in self.__annotations__}
 
 
@@ -167,7 +169,7 @@ def create_gan_optimizers(
     lr_d: float = 2e-4,
     beta1: float = 0.5,
     beta2: float = 0.999,
-) -> Tuple[Optimizer, Optimizer]:
+) -> tuple[Optimizer, Optimizer]:
     """
     create optimizers for gan training.
 
@@ -205,7 +207,7 @@ def create_cyclegan_optimizers(
     lr_d: float = 2e-4,
     beta1: float = 0.5,
     beta2: float = 0.999,
-) -> Tuple[Optimizer, Optimizer]:
+) -> tuple[Optimizer, Optimizer]:
     """
     create optimizers for cyclegan training.
 
@@ -252,7 +254,7 @@ class TTUR:
         lr_d: float = 4e-4,
         beta1: float = 0.0,
         beta2: float = 0.9,
-    ) -> Tuple[Optimizer, Optimizer]:
+    ) -> tuple[Optimizer, Optimizer]:
         """
         create ttur optimizers.
 
@@ -285,7 +287,7 @@ class DifferentialLR:
     @staticmethod
     def create_param_groups(
         model: nn.Module, base_lr: float = 1e-4, layer_decay: float = 0.65, num_groups: int = 4
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         create parameter groups with differential learning rates.
 
@@ -396,11 +398,11 @@ class ExponentialMovingAverage:
                 param.data = self.backup[name]
         self.backup = {}
 
-    def state_dict(self) -> Dict[str, torch.Tensor]:
+    def state_dict(self) -> dict[str, torch.Tensor]:
         """return ema state dict."""
         return {"decay": self.decay, "shadow": self.shadow}
 
-    def load_state_dict(self, state_dict: Dict[str, Any]):
+    def load_state_dict(self, state_dict: dict[str, Any]):
         """load ema state dict."""
         self.decay = state_dict["decay"]
         self.shadow = state_dict["shadow"]

@@ -7,7 +7,6 @@ and model components.
 
 import pytest
 import torch
-import torch.nn as nn
 
 
 class TestResidualBlock:
@@ -216,11 +215,11 @@ class TestModelIntegration:
     @pytest.mark.integration
     def test_full_forward_pass(self):
         """test complete forward pass through model."""
-        from ..models import SAGenerator, MultiScaleDiscriminator
+        from ..models import MultiScaleDiscriminator, SAGenerator
 
         G_A2B = SAGenerator(4, 4, 32, 3)
         G_B2A = SAGenerator(4, 4, 32, 3)
-        D_A = MultiScaleDiscriminator(4, 32, 2)
+        MultiScaleDiscriminator(4, 32, 2)
         D_B = MultiScaleDiscriminator(4, 32, 2)
 
         # forward cycle
@@ -235,7 +234,7 @@ class TestModelIntegration:
 
         # discriminator
         d_fake_B = D_B(fake_B)
-        d_real_B = D_B(real_B)
+        D_B(real_B)
 
         assert rec_A.shape == real_A.shape
         assert rec_B.shape == real_B.shape

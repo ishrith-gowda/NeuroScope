@@ -14,32 +14,32 @@ professional-grade training pipeline with:
 author: neuroscope research team
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import Optional, Dict, Any, Tuple, List, Union
-from pathlib import Path
-from datetime import datetime
-import time
 import json
 import random
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 
 # neuroscope imports
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D,
     SACycleGAN25DConfig,
     create_model,
 )
-from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
+from neuroscope.training.callbacks.training_callbacks import CallbackState, EarlyStopping
+from neuroscope.training.figures import FigureGenerator
 from neuroscope.training.loggers import LoggerManager
 from neuroscope.training.samplers import SampleGenerator
-from neuroscope.training.figures import FigureGenerator
-from neuroscope.training.callbacks.training_callbacks import EarlyStopping, CallbackState
 
 
 @dataclass
@@ -115,12 +115,12 @@ class TrainingConfig:
     # resume
     resume_from: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """convert to dictionary."""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> "TrainingConfig":
+    def from_dict(cls, d: dict[str, Any]) -> "TrainingConfig":
         """create from dictionary."""
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
@@ -129,7 +129,7 @@ class TrainingConfig:
         """load from yaml file."""
         import yaml
 
-        with open(path, "r") as f:
+        with open(path) as f:
             d = yaml.safe_load(f)
         return cls.from_dict(d)
 
@@ -360,7 +360,7 @@ class ComprehensiveTrainer:
                 verbose=self.config.verbose > 0,
             )
 
-    def _init_history(self) -> Dict[str, List]:
+    def _init_history(self) -> dict[str, list]:
         """initialize training history."""
         return {
             "G_loss": [],
@@ -418,7 +418,7 @@ class ComprehensiveTrainer:
     # training loop
     # =========================================================================
 
-    def train_epoch(self) -> Dict[str, float]:
+    def train_epoch(self) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
 
@@ -612,7 +612,7 @@ class ComprehensiveTrainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """run validation."""
         self.model.eval()
 
@@ -659,7 +659,7 @@ class ComprehensiveTrainer:
     # checkpointing
     # =========================================================================
 
-    def save_checkpoint(self, is_best: bool = False, filename: str = None):
+    def save_checkpoint(self, is_best: bool = False, filename: Optional[str] = None):
         """save model checkpoint."""
         checkpoint = {
             "epoch": self.current_epoch,
@@ -879,7 +879,7 @@ class ComprehensiveTrainer:
                 self.figure_generator.plot_validation_metrics(val_history)
 
         # training complete
-        total_time = time.time() - training_start
+        time.time() - training_start
 
         final_metrics = {
             "best_ssim": self.best_metric,

@@ -14,36 +14,32 @@ author: neuroscope research team
 date: december 2025
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.nn.parallel import DataParallel
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import autocast, GradScaler
 import numpy as np
+import torch
+import torch.optim as optim
+import yaml
+from torch.cuda.amp import GradScaler, autocast
+from torch.nn.parallel import DataParallel
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D,
     SACycleGAN25DConfig,
     create_model,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 
 
@@ -102,7 +98,7 @@ class SACycleGAN25DTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
     ):
         self.config = config
         self.output_dir = Path(output_dir)
@@ -172,7 +168,7 @@ class SACycleGAN25DTrainer:
             num_workers=num_workers,
         )
 
-        print(f"\ndataset statistics:")
+        print("\ndataset statistics:")
         print(f"  training batches: {len(self.train_loader)}")
         print(f"  validation batches: {len(self.val_loader)}")
         print(f"  test batches: {len(self.test_loader)}")
@@ -283,7 +279,7 @@ class SACycleGAN25DTrainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """execute single training step with amp support."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -385,7 +381,7 @@ class SACycleGAN25DTrainer:
             "ssim_loss": loss_ssim.item(),
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
 
@@ -403,7 +399,7 @@ class SACycleGAN25DTrainer:
 
         pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}", ncols=120, leave=True)
 
-        for batch_idx, batch in enumerate(pbar):
+        for _batch_idx, batch in enumerate(pbar):
             losses = self.train_step(batch)
 
             # accumulate losses
@@ -437,7 +433,7 @@ class SACycleGAN25DTrainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """validate the model."""
         self.model.eval()
 
@@ -537,10 +533,10 @@ class SACycleGAN25DTrainer:
             fake_A = self.model.G_B2A(real_B)
 
             # log to tensorboard
-            self.writer.add_images(f"Samples/Real_A", batch["A_center"][:4, :1], epoch)
-            self.writer.add_images(f"Samples/Fake_B", fake_B[:4, :1], epoch)
-            self.writer.add_images(f"Samples/Real_B", batch["B_center"][:4, :1], epoch)
-            self.writer.add_images(f"Samples/Fake_A", fake_A[:4, :1], epoch)
+            self.writer.add_images("Samples/Real_A", batch["A_center"][:4, :1], epoch)
+            self.writer.add_images("Samples/Fake_B", fake_B[:4, :1], epoch)
+            self.writer.add_images("Samples/Real_B", batch["B_center"][:4, :1], epoch)
+            self.writer.add_images("Samples/Fake_A", fake_A[:4, :1], epoch)
 
     def train(self, epochs: int, validate_every: int = 5, save_every: int = 10):
         """full training loop."""
@@ -605,12 +601,12 @@ class SACycleGAN25DTrainer:
                 print(f"\n{'=' * 60}")
                 print(f"epoch {epoch + 1}/{epochs} summary ({epoch_time:.1f}s)")
                 print(f"{'=' * 60}")
-                print(f"train losses:")
+                print("train losses:")
                 print(f"  generator: {train_losses['G_loss']:.4f}")
                 print(f"  discriminator: {train_losses['D_loss']:.4f}")
                 print(f"  cycle: {train_losses['cycle_A'] + train_losses['cycle_B']:.4f}")
                 print(f"  identity: {train_losses['identity_A'] + train_losses['identity_B']:.4f}")
-                print(f"\nvalidation metrics:")
+                print("\nvalidation metrics:")
                 print(
                     f"  ssim a→b→a: {val_metrics['ssim_A2B']:.4f} ± {val_metrics['ssim_std_A2B']:.4f}"
                 )
@@ -657,7 +653,7 @@ class SACycleGAN25DTrainer:
 
 def load_config(config_path: str) -> dict:
     """load configuration from yaml file."""
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 

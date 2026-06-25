@@ -10,8 +10,6 @@ reference:
     mlsys 2020.
 """
 
-import copy
-from typing import Dict, List, Optional
 import torch
 import torch.nn as nn
 
@@ -76,7 +74,7 @@ class FedProxAggregator(FedAvgAggregator):
 
         return (self.mu / 2) * prox_loss
 
-    def distribute_to_clients(self, client_models: List[nn.Module]) -> None:
+    def distribute_to_clients(self, client_models: list[nn.Module]) -> None:
         """distribute global model and take snapshot for proximal term."""
         self.snapshot_global_params()
         super().distribute_to_clients(client_models)
@@ -112,7 +110,7 @@ class ScaffoldAggregator(FedAvgAggregator):
             for _ in range(n_clients)
         ]
 
-    def compute_correction(self, client_idx: int) -> Dict[str, torch.Tensor]:
+    def compute_correction(self, client_idx: int) -> dict[str, torch.Tensor]:
         """
         compute gradient correction for a client.
 

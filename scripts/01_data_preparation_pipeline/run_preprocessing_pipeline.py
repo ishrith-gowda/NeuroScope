@@ -1,12 +1,11 @@
+import argparse
+import json
+import logging
 import subprocess
 import sys
-import shutil
-import json
+import threading
 import time
 from pathlib import Path
-import argparse
-import logging
-import threading
 
 from neuroscope_preprocessing_config import PATHS
 
@@ -57,7 +56,7 @@ def run_stage(entry, base_args, dry_run=False):
     if not script_path.exists():
         logging.error(f"Script not found: {script_path}")
         return False
-    cmd = [sys.executable, str(script_path)] + base_args + entry.get("args", [])
+    cmd = [sys.executable, str(script_path), *base_args, *entry.get("args", [])]
     logging.info(f"Running stage {entry['name']} -> {' '.join(cmd)}")
     if dry_run:
         return True
@@ -83,8 +82,6 @@ def run_stage(entry, base_args, dry_run=False):
         for line in stream:
             print(f"[{prefix}] {line.rstrip()}")
             last_output_time = time.time()
-
-    import threading
 
     stdout_thread = threading.Thread(target=print_output, args=(process.stdout, entry["name"]))
     stderr_thread = threading.Thread(
@@ -127,10 +124,7 @@ def check_outputs(entry):
         if out_name == "slice_bias_assessment.json":
             candidate = PATHS["slice_bias_assessment"]
         # special case for n4_diagnostic_analysis.json which doesn't exist in paths
-        elif out_name == "n4_diagnostic_analysis.json":
-            candidate = PATHS["preprocessed_dir"] / out_name
-        # other json results go to preprocessed_dir root; images validated per subject
-        elif out_name.endswith(".json"):
+        elif out_name == "n4_diagnostic_analysis.json" or out_name.endswith(".json"):
             candidate = PATHS["preprocessed_dir"] / out_name
         else:
             candidate = PATHS["preprocessed_dir"] / out_name
@@ -223,7 +217,7 @@ def main():
             )
             summary.append({stage["name"]: "failed"})
             if args.stop_on_fail:
-                logging.error(f"Stopping pipeline due to failure (--stop-on-fail)")
+                logging.error("Stopping pipeline due to failure (--stop-on-fail)")
                 break
         else:
             # re-check outputs
@@ -241,7 +235,7 @@ def main():
                 )
 
             if not produced and args.stop_on_fail:
-                logging.error(f"Stopping pipeline due to missing outputs (--stop-on-fail)")
+                logging.error("Stopping pipeline due to missing outputs (--stop-on-fail)")
                 break
 
     # create final report

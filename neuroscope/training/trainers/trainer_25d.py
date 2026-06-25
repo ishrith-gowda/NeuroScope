@@ -10,33 +10,28 @@ usage:
 author: neuroscope research team
 """
 
-import os
-import sys
 import argparse
-import time
 import json
+import sys
+import time
 from pathlib import Path
-from datetime import datetime
-from typing import Dict, Optional, Tuple
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler, autocast
 import numpy as np
+import torch
+import torch.optim as optim
+from torch.cuda.amp import GradScaler
 from tqdm import tqdm
 
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from unified.data.dataset_25d import create_dataloaders
 from unified.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D,
     SACycleGAN25DConfig,
     create_model,
 )
-from unified.data.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
-from unified.models.losses import CombinedLoss, LSGANLoss
+
+from unified.models.losses import CombinedLoss
 
 
 class ReplayBuffer:
@@ -190,7 +185,7 @@ class Trainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
 
@@ -207,7 +202,7 @@ class Trainer:
 
         pbar = tqdm(self.train_loader, desc=f"Epoch {epoch}", ncols=100, leave=True)
 
-        for batch_idx, batch in enumerate(pbar):
+        for _batch_idx, batch in enumerate(pbar):
             real_A = batch["A"].to(self.device)  # [b, 12, h, w]
             real_B = batch["B"].to(self.device)
             center_A = batch["A_center"].to(self.device)  # [b, 4, h, w]
@@ -319,7 +314,7 @@ class Trainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """validate the model."""
         self.model.eval()
 
@@ -471,7 +466,7 @@ class Trainer:
 
         total_time = time.time() - start_time
         print("\n" + "=" * 60)
-        print(f"training complete!")
+        print("training complete!")
         print(f"total time: {total_time / 3600:.2f} hours")
         print(f"best validation ssim: {self.best_val_ssim:.4f}")
         print("=" * 60)

@@ -19,24 +19,20 @@ references:
 
 import argparse
 import json
-import os
-import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Callable, Union
-from dataclasses import dataclass, asdict
 import warnings
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Callable
 
 import numpy as np
 from scipy import stats
 from scipy.stats import (
-    ttest_rel,
-    ttest_ind,
-    wilcoxon,
+    levene,
     mannwhitneyu,
     shapiro,
-    levene,
-    kruskal,
-    f_oneway,
+    ttest_ind,
+    ttest_rel,
+    wilcoxon,
 )
 
 
@@ -68,7 +64,7 @@ class BootstrapCI:
     method: str
 
 
-def check_normality(data: np.ndarray, alpha: float = 0.05) -> Tuple[bool, float]:
+def check_normality(data: np.ndarray, alpha: float = 0.05) -> tuple[bool, float]:
     """
     check normality using shapiro-wilk test.
 
@@ -81,17 +77,17 @@ def check_normality(data: np.ndarray, alpha: float = 0.05) -> Tuple[bool, float]
     if len(data) > 5000:
         data = np.random.choice(data, 5000, replace=False)
 
-    stat, p = shapiro(data)
+    _stat, p = shapiro(data)
     return p > alpha, p
 
 
-def check_homogeneity(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> Tuple[bool, float]:
+def check_homogeneity(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> tuple[bool, float]:
     """
     check homogeneity of variances using levene's test.
 
     returns (is_homogeneous, p_value).
     """
-    stat, p = levene(x, y)
+    _stat, p = levene(x, y)
     return p > alpha, p
 
 
@@ -261,7 +257,7 @@ def paired_t_test(
     diff = x - y
 
     stat, p = ttest_rel(x, y, alternative=alternative)
-    d = compute_cohens_d_paired(x, y)
+    compute_cohens_d_paired(x, y)
     g = compute_hedges_g(x, y, paired=True)
 
     # ci for mean difference
@@ -291,7 +287,7 @@ def independent_t_test(
     perform independent samples t-test with effect size.
     """
     stat, p = ttest_ind(x, y, equal_var=equal_var)
-    d = compute_cohens_d_independent(x, y)
+    compute_cohens_d_independent(x, y)
     g = compute_hedges_g(x, y, paired=False)
 
     # ci for difference in means
@@ -329,7 +325,7 @@ def wilcoxon_test(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> Statisti
     # remove zero differences
     non_zero = diff != 0
     if np.sum(non_zero) < 10:
-        warnings.warn("fewer than 10 non-zero differences for wilcoxon test")
+        warnings.warn("fewer than 10 non-zero differences for wilcoxon test", stacklevel=2)
 
     stat, p = wilcoxon(x, y, alternative="two-sided")
 
@@ -381,8 +377,8 @@ def mann_whitney_test(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> Stat
 
 
 def bonferroni_correction(
-    p_values: List[float], alpha: float = 0.05
-) -> Tuple[List[float], List[bool]]:
+    p_values: list[float], alpha: float = 0.05
+) -> tuple[list[float], list[bool]]:
     """
     apply bonferroni correction for multiple comparisons.
     """
@@ -392,7 +388,7 @@ def bonferroni_correction(
     return adjusted_p, significant
 
 
-def holm_correction(p_values: List[float], alpha: float = 0.05) -> Tuple[List[float], List[bool]]:
+def holm_correction(p_values: list[float], alpha: float = 0.05) -> tuple[list[float], list[bool]]:
     """
     apply holm-bonferroni step-down correction.
 
@@ -417,8 +413,8 @@ def holm_correction(p_values: List[float], alpha: float = 0.05) -> Tuple[List[fl
 
 
 def benjamini_hochberg_correction(
-    p_values: List[float], alpha: float = 0.05
-) -> Tuple[List[float], List[bool]]:
+    p_values: list[float], alpha: float = 0.05
+) -> tuple[list[float], list[bool]]:
     """
     apply benjamini-hochberg fdr correction.
 
@@ -455,7 +451,7 @@ def select_test(
     """
     if paired:
         diff = x - y
-        is_normal, norm_p = check_normality(diff, alpha)
+        is_normal, _norm_p = check_normality(diff, alpha)
 
         if is_normal:
             return paired_t_test(x, y, alpha)
@@ -475,12 +471,12 @@ def select_test(
 
 
 def compute_comprehensive_statistics(
-    raw_metrics: Dict[str, np.ndarray],
-    harmonized_metrics: Dict[str, np.ndarray],
+    raw_metrics: dict[str, np.ndarray],
+    harmonized_metrics: dict[str, np.ndarray],
     paired: bool = True,
     alpha: float = 0.05,
     correction_method: str = "holm",
-) -> Dict:
+) -> dict:
     """
     compute comprehensive statistics for all metrics.
 
@@ -496,7 +492,7 @@ def compute_comprehensive_statistics(
     p_values = []
     metric_names = []
 
-    for metric_name in raw_metrics.keys():
+    for metric_name in raw_metrics:
         if metric_name not in harmonized_metrics:
             continue
 
@@ -576,7 +572,7 @@ def compute_comprehensive_statistics(
     return results
 
 
-def format_result_for_publication(result: Dict, metric_name: str) -> str:
+def format_result_for_publication(result: dict, metric_name: str) -> str:
     """
     format statistical result for publication.
 
@@ -694,8 +690,8 @@ def main():
             # bootstrap ci for the reduction
             # simulate from the accuracies (using binomial approximation)
             n_test = 318  # from our evaluation
-            raw_correct = int(raw_acc * n_test)
-            harm_correct = int(harm_acc * n_test)
+            int(raw_acc * n_test)
+            int(harm_acc * n_test)
 
             # generate simulated accuracies
             np.random.seed(42)

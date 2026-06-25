@@ -5,9 +5,10 @@ this module provides various convolution block patterns used throughout
 the architecture.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional, Type, Tuple, Union
 
 
 class ConvBlock(nn.Module):
@@ -32,7 +33,7 @@ class ConvBlock(nn.Module):
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 1,
-        norm_layer: Optional[Type[nn.Module]] = nn.InstanceNorm2d,
+        norm_layer: Optional[type[nn.Module]] = nn.InstanceNorm2d,
         activation: Optional[nn.Module] = None,
         bias: bool = False,
     ):
@@ -86,7 +87,7 @@ class ConvTransposeBlock(nn.Module):
         stride: int = 2,
         padding: int = 1,
         output_padding: int = 0,
-        norm_layer: Optional[Type[nn.Module]] = nn.InstanceNorm2d,
+        norm_layer: Optional[type[nn.Module]] = nn.InstanceNorm2d,
         activation: Optional[nn.Module] = None,
     ):
         super().__init__()
@@ -135,7 +136,7 @@ class UpsampleConvBlock(nn.Module):
         out_channels: int,
         scale_factor: int = 2,
         mode: str = "bilinear",
-        norm_layer: Optional[Type[nn.Module]] = nn.InstanceNorm2d,
+        norm_layer: Optional[type[nn.Module]] = nn.InstanceNorm2d,
     ):
         super().__init__()
 
@@ -175,7 +176,7 @@ class DownsampleConvBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        norm_layer: Optional[Type[nn.Module]] = nn.InstanceNorm2d,
+        norm_layer: Optional[type[nn.Module]] = nn.InstanceNorm2d,
         use_spectral_norm: bool = False,
     ):
         super().__init__()
@@ -218,7 +219,7 @@ class SeparableConvBlock(nn.Module):
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 1,
-        norm_layer: Optional[Type[nn.Module]] = nn.InstanceNorm2d,
+        norm_layer: Optional[type[nn.Module]] = nn.InstanceNorm2d,
     ):
         super().__init__()
 
