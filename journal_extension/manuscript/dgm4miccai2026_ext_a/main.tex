@@ -46,11 +46,13 @@ metrics (FID/KID, domain-classifier confusion), brain-masked \emph{windowed}
 structural similarity, and \emph{downstream} cross-site glioma sub-region
 segmentation (Dice/HD95), ablating the contrastive weight
 $\lambda_{\mathrm{NCE}}\in\{0,0.1,0.5,1.0,2.0\}$ at a matched fine-tuning budget.
-Across a matched-budget sweep, $\lambda_{\mathrm{NCE}}{=}0.5$ minimizes Fr\'echet
-distance to the target site ($47.3$ vs.\ $51.8$ for the cycle-only control) and
-monotonically improves brain-masked structural preservation ($0.29\!\to\!0.44$),
-confirming that patch-contrastive alignment resolves a content-preservation
-failure of pure cycle-consistency. Yet under a corrected, training-consistent
+Across a matched-budget, two-seed sweep, a moderate contrastive weight robustly
+improves over pure cycle-consistency: it lowers Fr\'echet distance to a broad
+optimum ($\lambda_{\mathrm{NCE}}\!\in\![0.5,2.0]$) while the cycle-only control is
+both the worst and the least stable arm, monotonically and significantly improves
+brain-masked structural preservation ($0.27\!\to\!0.44$; paired $p{<}10^{-15}$),
+and directly sharpens the tissue boundaries cycle-consistency over-smooths
+($p{<}10^{-80}$). Yet under a corrected, training-consistent
 protocol the cross-site segmentation gap is already small (cross-site Dice
 $\approx$ within-site) and image harmonization does not close it, degrading a
 real-image-trained segmenter uniformly across $\lambda_{\mathrm{NCE}}$. Distributional
@@ -251,43 +253,59 @@ baseline is left to future work.
 
 \section{Results}
 \label{sec:results}
-\paragraph{The contrastive weight has an interior optimum.}
-Table~\ref{tab:harm} and Fig.~\ref{fig:sweep} summarize the
-$\lambda_{\mathrm{NCE}}$ sweep. Three findings are consistent. First, Fr\'echet
-distance to the target site is \emph{non-monotone} in $\lambda_{\mathrm{NCE}}$
-with a clear minimum at $0.5$ ($\mathrm{FID}_{A\to B}{=}47.3$, versus $51.8$ for
-the cycle-only control and $48.2$ at $\lambda_{\mathrm{NCE}}{=}2.0$): a moderate
-contrastive term improves distributional alignment, while over-weighting erodes
-it---the regime predicted if cycle-consistency supplies the global appearance
-anchor and PatchNCE acts as a complement rather than a replacement. Second,
+\paragraph{Patch-contrastive alignment robustly improves over cycle-consistency.}
+Table~\ref{tab:harm} reports the sweep against the base SA-CycleGAN;
+Fig.~\ref{fig:sweep} shows per-arm variability over two training seeds. Four
+findings hold. First, every fine-tuned arm improves on the base backbone, and the
+cycle-only control ($\lambda_{\mathrm{NCE}}{=}0$) is the worst \emph{and least
+stable} of them ($\mathrm{FID}_{A\to B}{=}54.8{\pm}3.0$ across seeds), whereas the
+hybrid arms are tightly clustered ($\pm0.1$--$0.7$): the contrastive term does not
+merely lower the mean, it stabilizes training. Second, adding PatchNCE reduces
+$\mathrm{FID}_{A\to B}$ to a \emph{broad} optimum over
+$\lambda_{\mathrm{NCE}}\!\in\![0.5,2.0]$ ($48.0{\pm}0.7$ at the best mean,
+$\lambda{=}0.5$), with the unbiased KID and both translation directions agreeing
+on the ordering; the precise weight within this region is not critical. Third,
 brain-masked structural preservation between source and harmonized image rises
-\emph{monotonically} with $\lambda_{\mathrm{NCE}}$ ($0.29\!\to\!0.44$), confirming
-that patch-contrastive alignment tightens the local content preservation that
-pure cycle-consistency leaves loose. Third, all hybrid arms drive the domain
-classifier to chance ($\approx0.50$), whereas the cycle-only control
-\emph{overshoots} below chance ($0.41$), consistent with an appearance-leaking
-equilibrium that the contrastive term regularizes. Cycle-reconstruction
-similarity stays high throughout ($\approx0.71$), so these gains do not trade off
-against cycle consistency. The operating point $\lambda_{\mathrm{NCE}}{=}0.5$
-jointly optimizes distributional match and content preservation.
+\emph{monotonically} with $\lambda_{\mathrm{NCE}}$ ($0.27\!\to\!0.44$), and the
+hybrid's advantage over the cycle-only control is highly significant at the
+subject level (paired Wilcoxon $p{<}10^{-15}$, $n{=}88$). Fourth, all hybrid arms
+drive the domain classifier to chance, whereas the cycle-only control
+\emph{overshoots} below chance, consistent with an appearance-leaking equilibrium
+that the contrastive term regularizes. We adopt $\lambda_{\mathrm{NCE}}{=}0.5$
+(best mean FID, a moderate weight below the CUT/FastCUT regime), noting that
+$[0.5,2.0]$ is statistically equivalent on FID.
+
+\paragraph{The contrastive term directly counteracts boundary over-smoothing.}
+The mechanism we posit---cycle-consistency over-smoothing tissue boundaries,
+PatchNCE sharpening them---makes a falsifiable prediction we test directly. On the
+\emph{same} subjects ($n{=}515$ paired), the hybrid's harmonized volumes have
+significantly higher brain-masked gradient magnitude than the cycle-only control's
+($+4.4\%$, paired Wilcoxon $p{<}10^{-80}$)---i.e.\ sharper tissue boundaries---while
+carrying \emph{lower} high-frequency Laplacian energy. Together these indicate the
+hybrid produces sharper \emph{coherent} edges with \emph{less} high-frequency
+noise, whereas the cycle-only equilibrium hides source signal in noise-like
+high-frequency content: direct, quantitative support for the over-smoothing
+hypothesis.
 
 \begin{table}[t]
 \centering
-\caption{Harmonization metrics across the contrastive-weight sweep ($A\!\to\!B$,
-subject-level). Domain-classifier accuracy is reported raw$\to$harmonized
-(chance $=0.5$); FID and the source$\leftrightarrow$harmonized masked windowed
-structural similarity are the primary axes. Best FID in bold.}
+\caption{Harmonization metrics across the contrastive-weight sweep (single seed),
+with the base SA-CycleGAN backbone for reference. Domain-classifier accuracy is
+raw$\to$harmonized (chance $=0.5$); we report both FID directions and the unbiased
+KID alongside the source$\leftrightarrow$harmonized masked windowed structural
+similarity. FID-optimal arm in bold.}
 \label{tab:harm}
 \input{table_ext_a_harmonization}
 \end{table}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figs/fig_ext_a_lambda_sweep.pdf}
-  \caption{Sweep trends. Left: domain-classifier accuracy reaches chance for
-  $\lambda_{\mathrm{NCE}}\!\ge\!0.5$. Center: $\mathrm{FID}_{A\to B}$ has an
-  interior minimum at $\lambda_{\mathrm{NCE}}{=}0.5$. Right: cycle-reconstruction
-  SSIM remains high across the sweep.}
+  \includegraphics[width=\linewidth]{figs/fig_ext_a_multiseed.pdf}
+  \caption{Contrastive-weight sweep over two training seeds (mean$\pm$std). Left:
+  $\mathrm{FID}_{A\to B}$---the cycle-only control ($\lambda{=}0$) is worst and by
+  far the most variable, while the hybrid reaches a broad, tight optimum over
+  $[0.5,2.0]$. Right: brain-masked structural preservation rises monotonically and
+  stably with $\lambda_{\mathrm{NCE}}$.}
   \label{fig:sweep}
 \end{figure}
 
@@ -302,7 +320,8 @@ and the reverse direction behaves similarly ($0.77$ cross-site versus $0.86$
 within-site). There is therefore little domain gap for image harmonization to
 recover. The second observation is that harmonization does \emph{not} recover it
 and in fact lowers Dice in both directions ($-53\%$ for $A\!\to\!B$, $-37\%$ for
-$B\!\to\!A$ at $\lambda_{\mathrm{NCE}}{=}0.5$). The effect is systematic rather
+$B\!\to\!A$ at $\lambda_{\mathrm{NCE}}{=}0.5$) and worsens boundary localization
+(HD95 rising $6\times$ and $3\times$; Table~\ref{tab:down}). The effect is systematic rather
 than specific to one arm: the cycle-only control degrades by a comparable margin
 ($-42\%$ in both directions), so the loss is a property of image harmonization
 under this protocol, not of the contrastive term.
@@ -314,15 +333,15 @@ subject-level, $\lambda_{\mathrm{NCE}}{=}0.5$). Within-site scores bound the
 achievable transfer. The already-small raw cross-site gap is not recovered by
 harmonization.}
 \label{tab:down}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-direction & raw Dice & harm.\ Dice & $\Delta$ & rel.\ \% \\
+direction & raw Dice & harm.\ Dice & $\Delta$ & raw HD95 & harm HD95 \\
 \midrule
-BraTS\,$\to$\,UPenn (train $A$, test $B$) & 0.776 & 0.363 & $-0.414$ & $-53.3$ \\
-UPenn\,$\to$\,BraTS (train $B$, test $A$) & 0.765 & 0.479 & $-0.286$ & $-37.4$ \\
+BraTS\,$\to$\,UPenn (train $A$, test $B$) & 0.776 & 0.363 & $-0.414$ & 5.1 & 31.4 \\
+UPenn\,$\to$\,BraTS (train $B$, test $A$) & 0.765 & 0.479 & $-0.286$ & 4.1 & 12.1 \\
 \midrule
-within-site BraTS & \multicolumn{4}{c}{0.765} \\
-within-site UPenn & \multicolumn{4}{c}{0.855} \\
+within-site BraTS & \multicolumn{5}{c}{0.765} \\
+within-site UPenn & \multicolumn{5}{c}{0.855} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -351,14 +370,16 @@ FLAIR cue that delineates whole-tumor). This is a train/test shift introduced
 \section{Discussion and Limitations}
 \label{sec:discuss}
 \paragraph{The mechanism question.}
-The sweep supports the complementarity hypothesis: adding a moderate
-patch-contrastive term to cycle-consistency improves both distributional
-alignment (interior FID optimum at $\lambda_{\mathrm{NCE}}{=}0.5$) and local
-structural preservation (monotone in $\lambda_{\mathrm{NCE}}$), while
-over-weighting degrades distributional match---the signature of a complement that
-should not be allowed to dominate. The cycle-only control's below-chance domain
-classifier is the appearance-leaking equilibrium made measurable, and the
-contrastive term regularizes it.
+The evidence supports the complementarity hypothesis on three independent axes. A
+moderate patch-contrastive term improves distributional alignment (a broad FID
+optimum over $[0.5,2.0]$, robust across seeds) and local structural preservation
+(monotone in $\lambda_{\mathrm{NCE}}$, paired $p{<}10^{-15}$); it \emph{directly}
+sharpens the tissue boundaries cycle-consistency over-smooths (paired
+$p{<}10^{-80}$); and it \emph{stabilizes} training, the cycle-only control being
+both the worst and the most seed-variable arm. The cycle-only control's
+below-chance domain classifier and its noise-like high-frequency content are the
+appearance-leaking equilibrium made measurable, and the contrastive term
+regularizes both.
 
 \paragraph{Distributional quality $\ne$ downstream utility.}
 Our central negative result is methodological rather than a defect of the model.
@@ -375,8 +396,8 @@ metrics and task utility are distinct axes, and downstream evaluation must be
 reported even, and especially, when it disagrees with distribution metrics.
 
 \paragraph{Limitations.}
-(i) A single fine-tuning seed per arm; the FID ordering is consistent but per-arm
-variance is not estimated. (ii) Two-site, single-disease (glioma) scope: the
+(i) Two fine-tuning seeds per arm bound seed variance and confirm the ordering,
+but a larger seed budget would tighten the flat-optimum boundary. (ii) Two-site, single-disease (glioma) scope: the
 small raw cross-site gap need not generalize to larger cross-scanner shifts where
 harmonization is known to help, and testing that regime is the natural next
 experiment. (iii) The downstream segmenter is trained only on real images; a
@@ -391,8 +412,8 @@ within our design but not against pure CUT.
 We presented a mechanism study of cycle-consistent, patch-contrastive MRI
 harmonization on multi-site glioma data. A controlled contrastive-weight sweep
 shows that PatchNCE complements cycle-consistency---improving distributional
-alignment with an interior optimum at $\lambda_{\mathrm{NCE}}{=}0.5$ and
-monotonically tightening structural preservation---without sacrificing cycle
+alignment with a broad, seed-robust optimum over $\lambda_{\mathrm{NCE}}\!\in\![0.5,2.0]$
+and monotonically, significantly tightening structural preservation---without sacrificing cycle
 consistency. Under a corrected, training-consistent downstream protocol, however,
 the cross-site segmentation gap is already small and image harmonization does not
 close it, uniformly across $\lambda_{\mathrm{NCE}}$. We conclude that
