@@ -34,8 +34,8 @@ import yaml
 project_root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(project_root))
 
-from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer  # noqa: E402
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig  # noqa: E402
+from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig
 
 MODALITY_NAMES: list[str] = ["FLAIR", "T1", "T1ce", "T2"]
 LAMBDA_VALUES: list[float] = [0.1, 0.5, 1.0, 2.0]

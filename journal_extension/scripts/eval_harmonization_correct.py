@@ -47,8 +47,8 @@ from skimage.metrics import structural_similarity as ssim_fn
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from neuroscope.data.datasets.dataset_25d import create_dataloaders  # noqa: E402
-from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
+from neuroscope.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25DConfig,
     create_model,
 )

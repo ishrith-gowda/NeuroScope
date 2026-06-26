@@ -131,7 +131,7 @@ class ConsoleLogger:
 {self._color("  neuroscope - 2.5d sa-cyclegan training", colors.bold + colors.cyan)}
 {self._color("  " + "=" * 66, colors.cyan)}
 {self._color(f"  experiment: {self.experiment_name}", colors.white)}
-{self._color(f"  started: {datetime.now().strftime("%y-%m-%d %h:%m:%s")}", colors.gray)}
+{self._color(f"  started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", colors.gray)}
 {self._color("=" * 70, colors.cyan)}
 """
         self._write(banner)

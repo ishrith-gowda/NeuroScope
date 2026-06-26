@@ -35,9 +35,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from train_multi_domain import MultiDomainMRIDataset  # noqa: E402
+from train_multi_domain import MultiDomainMRIDataset
 
-from neuroscope.models.architectures.sa_cyclegan_25d_multidomain import (  # noqa: E402
+from neuroscope.models.architectures.sa_cyclegan_25d_multidomain import (
     MultiDomainConfig,
     MultiDomainSACycleGAN25D,
 )

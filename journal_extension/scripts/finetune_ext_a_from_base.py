@@ -43,8 +43,8 @@ import torch.nn as nn
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer  # noqa: E402
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig  # noqa: E402
+from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig
 
 
 def _unwrap(module: nn.Module) -> nn.Module:

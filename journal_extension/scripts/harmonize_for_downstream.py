@@ -38,8 +38,8 @@ import torch
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from neuroscope.data.datasets.dataset_25d import MRIDataset25D  # noqa: E402
-from neuroscope.models.architectures.sa_cyclegan_25d import (  # noqa: E402
+from neuroscope.data.datasets.dataset_25d import MRIDataset25D
+from neuroscope.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25DConfig,
     create_model,
 )
