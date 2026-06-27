@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: question / discussion
+    url: https://github.com/ishrith-gowda/SA-CycleGAN-2.5D/discussions
+    about: for general questions and discussion, please use github discussions.
+  - name: report a security vulnerability
+    url: https://github.com/ishrith-gowda/SA-CycleGAN-2.5D/security/advisories/new
+    about: please report security issues privately (see SECURITY.md), not as public issues.

@@ -1,0 +1,36 @@
+# codeql static analysis (security + quality). results appear in the security tab.
+# this workflow is advisory and is intentionally not a required status check.
+
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # weekly, monday 06:00 utc
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: analyze (python)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: initialize codeql
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-and-quality
+      - name: perform codeql analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
