@@ -1,0 +1,39 @@
+# keep the docker build context small: exclude vcs, caches, and large data/outputs
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# large data / model artifacts (not needed in the image; governed by tcia)
+data
+PKG*
+preprocessed
+preprocessed_registered
+experiments
+experiments_from_gpu
+baseline_training_progress
+results
+evaluation_results
+figures
+runs
+mlruns
+checkpoints
+arxiv
+huggingface
+*.nii.gz
+*.dcm
+*.pth
+*.pt
+*.npy
+*.npz
+
+# agent / editor tooling
+.claude
+.claude-flow
+.mcp.json

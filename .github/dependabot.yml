@@ -10,6 +10,11 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+    # batch all python updates into a single pr to reduce noise
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
       - "automated"
@@ -31,6 +36,11 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # batch all github-actions updates into a single pr
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
       - "ci"
       - "automated"
