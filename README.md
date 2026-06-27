@@ -3,7 +3,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2603.17219-b31b1b.svg)](https://arxiv.org/abs/2603.17219)
 [![python version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![pytorch](https://img.shields.io/badge/pytorch-1.11%2B-red.svg)](https://pytorch.org)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 self-attention cyclegan with tri-planar context for multi-site mri harmonization. unsupervised domain adaptation framework for standardizing multi-institutional glioblastoma mri scans (t1, t1ce, t2, flair) across different scanner protocols.
 
@@ -762,4 +762,4 @@ compute resources provided by chameleon cloud.
 
 ## license
 
-this project is licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/). see [LICENSE](LICENSE) for details.
+this project is licensed under the [MIT License](https://opensource.org/licenses/MIT). see [LICENSE](LICENSE) for details.
