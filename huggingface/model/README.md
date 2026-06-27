@@ -1,7 +1,5 @@
 ---
-license: other
-license_name: cc-by-nc-nd-4.0
-license_link: https://creativecommons.org/licenses/by-nc-nd/4.0/
+license: mit
 pipeline_tag: image-to-image
 tags:
   - medical-imaging
@@ -55,7 +53,7 @@ model-index:
 
 [![arXiv](https://img.shields.io/badge/arXiv-2603.17219-b31b1b.svg)](https://arxiv.org/abs/2603.17219)
 [![GitHub](https://img.shields.io/badge/GitHub-SA--CycleGAN--2.5D-black?logo=github)](https://github.com/ishrith-gowda/SA-CycleGAN-2.5D)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MICCAI 2026](https://img.shields.io/badge/Under%20Review-MICCAI%202026-blue)](https://arxiv.org/abs/2603.17219)
 
 **Authors:** [Ishrith Gowda](https://github.com/ishrith-gowda) (UC Berkeley EECS), Chunwei Liu (Purdue University)
