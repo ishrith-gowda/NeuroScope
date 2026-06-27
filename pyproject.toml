@@ -185,7 +185,7 @@ ignore = [
 "neuroscope/models/backbones/**" = ["F401"]  # optional torchvision backbones imported for availability
 
 [tool.ruff.lint.isort]
-known-first-party = ["neuroscope"]
+known-first-party = ["neuroscope", "unified"]  # 'unified' = legacy package name; pin so import-sort is deterministic across machines/CI
 
 # ---------------------------------------------------------------------------
 # flake8 (configured via .flake8 file since pyproject.toml not supported)

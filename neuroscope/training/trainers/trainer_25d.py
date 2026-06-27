@@ -30,7 +30,6 @@ from unified.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25DConfig,
     create_model,
 )
-
 from unified.models.losses import CombinedLoss
 
 
