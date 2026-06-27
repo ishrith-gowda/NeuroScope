@@ -1,0 +1,21 @@
+# validates that the Dockerfile builds (cpu image). advisory: not a required check.
+name: docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build docker image
+        run: docker build -t neuroscope:ci .
