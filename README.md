@@ -238,33 +238,30 @@ pip install -e ".[extended]"
 
 ## project structure
 
-sa-cyclegan-2.5d is structured as a modular python package with clear separation of concerns:
+the repository has two main parts: an installable library (`neuroscope/`) and the journal-extension research pipeline (`journal_extension/`) that produced the published results. the top-level `scripts/` tree is the earlier conference pipeline and is retained but superseded.
 
 ```
-neuroscope/
-├── neuroscope/                # main package
-│   ├── core/                  # core functionality
-│   │   ├── config/            # configuration management
-│   │   └── logging/           # logging utilities
-│   ├── data/                  # data handling
-│   │   ├── loaders/           # data loaders
-│   │   └── transforms/        # data transformations
-│   ├── models/                # model implementations
-│   │   ├── components/        # model components
-│   │   └── implementations/   # complete model implementations
-│   ├── preprocessing/         # preprocessing utilities
-│   │   ├── bias_correction/   # bias field correction
-│   │   └── registration/      # image registration
-│   ├── trainers/              # training orchestration
-│   ├── evaluation/            # evaluation metrics and tools
-│   ├── utils/                 # utility functions
-│   └── visualization/         # visualization utilities
-├── scripts/                   # utility and command-line scripts
-│   └── cli/                   # command-line interface
-├── configs/                   # configuration files
-├── tests/                     # test suite
-└── docs/                      # documentation
+.
+├── neuroscope/                 # installable library (imported by the pipeline)
+│   ├── data/                   # 2.5d datasets and loaders
+│   ├── models/                 # sa-cyclegan-2.5d architectures, losses, baselines
+│   ├── training/               # training infrastructure
+│   ├── evaluation/             # evaluation metrics
+│   └── tests/                  # unit + integration tests
+├── journal_extension/          # canonical research pipeline (extensions a–e)
+│   ├── scripts/                # training + evaluation entrypoints (e.g. train_hybrid_nce.py)
+│   ├── configs/                # experiment yaml configs
+│   ├── results/                # aggregated result tables
+│   ├── figures/                # manuscript figures
+│   └── manuscript/             # latex sources
+├── scripts/                    # legacy pre-journal pipeline (superseded)
+├── docs/                       # data availability, reproducibility, guides
+├── tests/                      # metric unit tests (the ci gate)
+├── Dockerfile, .devcontainer/  # container + dev environment
+└── pyproject.toml, uv.lock     # packaging + pinned environment
 ```
+
+to reproduce the published results, use `journal_extension/scripts/` — see [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md). the installable `neuroscope` package provides the models and data loaders those scripts import.
 
 ## preprocessing pipeline
 
