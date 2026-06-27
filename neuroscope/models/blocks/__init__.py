@@ -12,23 +12,23 @@ modules:
 
 import torch.nn as nn
 
-# residual blocks
-from .residual import (
-    ResidualBlock,
-    PreActResidualBlock,
-    BottleneckResidualBlock,
-    SEResidualBlock,
-    DenseResidualBlock,
-    DenseBlock,
-)
-
 # convolution blocks
 from .conv import (
     ConvBlock,
     ConvTransposeBlock,
-    UpsampleConvBlock,
     DownsampleConvBlock,
     SeparableConvBlock,
+    UpsampleConvBlock,
+)
+
+# residual blocks
+from .residual import (
+    BottleneckResidualBlock,
+    DenseBlock,
+    DenseResidualBlock,
+    PreActResidualBlock,
+    ResidualBlock,
+    SEResidualBlock,
 )
 
 # aliases
@@ -37,11 +37,11 @@ DownsampleBlock = DownsampleConvBlock
 
 # normalization layers
 from .normalization import (
-    AdaptiveInstanceNorm2d,
-    LayerNorm2d,
-    GroupNorm2d,
     SPADE,
+    AdaptiveInstanceNorm2d,
     ConditionalBatchNorm2d,
+    GroupNorm2d,
+    LayerNorm2d,
 )
 
 # aliases for compatibility
@@ -50,25 +50,25 @@ AdaptiveInstanceNorm = AdaptiveInstanceNorm2d
 PixelShuffleBlock = UpsampleBlock  # alias
 
 __all__ = [
-    # residual
-    'ResidualBlock',
-    'PreActResidualBlock', 
-    'BottleneckResidualBlock',
-    'SEResidualBlock',
-    'DenseResidualBlock',
-    'DenseBlock',
-    # convolution
-    'ConvBlock',
-    'ConvTransposeBlock',
-    'DownsampleBlock',
-    'UpsampleBlock',
-    'SeparableConvBlock',
-    'PixelShuffleBlock',
+    "SPADE",
+    "AdaptiveInstanceNorm",
     # normalization
-    'AdaptiveInstanceNorm2d',
-    'AdaptiveInstanceNorm',
-    'LayerNorm2d',
-    'GroupNorm2d',
-    'SPADE',
-    'ConditionalBatchNorm2d',
+    "AdaptiveInstanceNorm2d",
+    "BottleneckResidualBlock",
+    "ConditionalBatchNorm2d",
+    # convolution
+    "ConvBlock",
+    "ConvTransposeBlock",
+    "DenseBlock",
+    "DenseResidualBlock",
+    "DownsampleBlock",
+    "GroupNorm2d",
+    "LayerNorm2d",
+    "PixelShuffleBlock",
+    "PreActResidualBlock",
+    # residual
+    "ResidualBlock",
+    "SEResidualBlock",
+    "SeparableConvBlock",
+    "UpsampleBlock",
 ]

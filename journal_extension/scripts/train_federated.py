@@ -17,36 +17,33 @@ usage:
     python train_federated.py --aggregation_strategy fedavg --local_epochs 5
 """
 
-import os
-import sys
-import copy
 import argparse
-import time
+import copy
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
-import numpy as np
-from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import (
     SACycleGAN25DConfig,
-    SACycleGAN25D,
     create_model,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 from neuroscope.training.federated.fedavg import FedAvgAggregator
 from neuroscope.training.federated.strategies import (
@@ -126,7 +123,7 @@ class LocalClient:
         self.fake_A_buffer = ReplayBuffer()
         self.fake_B_buffer = ReplayBuffer()
 
-    def train_step(self, batch: Dict[str, torch.Tensor], prox_loss_fn=None) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor], prox_loss_fn=None) -> dict[str, float]:
         """single local training step."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -172,9 +169,12 @@ class LocalClient:
             )
 
             loss_G = (
-                loss_gan_A2B + loss_gan_B2A
-                + loss_cycle_A + loss_cycle_B
-                + loss_idt_A + loss_idt_B
+                loss_gan_A2B
+                + loss_gan_B2A
+                + loss_cycle_A
+                + loss_cycle_B
+                + loss_idt_A
+                + loss_idt_B
                 + loss_ssim
             )
 
@@ -226,7 +226,7 @@ class LocalClient:
             "cycle": (loss_cycle_A + loss_cycle_B).item(),
         }
 
-    def train_local(self, epochs: int, prox_loss_fn=None) -> Dict[str, float]:
+    def train_local(self, epochs: int, prox_loss_fn=None) -> dict[str, float]:
         """train locally for e epochs. returns average losses."""
         self.model.train()
         total_losses = {"G_loss": 0, "D_loss": 0, "cycle": 0}
@@ -287,7 +287,7 @@ class FederatedTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
         eval_every_n_rounds: int = 5,
@@ -303,7 +303,9 @@ class FederatedTrainer:
         self.eval_every_n_rounds = eval_every_n_rounds
 
         if experiment_name is None:
-            experiment_name = f"federated_{aggregation_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            experiment_name = (
+                f"federated_{aggregation_strategy}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
         self.experiment_name = experiment_name
         self.experiment_dir = self.output_dir / experiment_name
         self.experiment_dir.mkdir(parents=True, exist_ok=True)
@@ -335,9 +337,7 @@ class FederatedTrainer:
             print(f"fedprox mu: {fedprox_mu}")
 
         runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
-        self.writer = SummaryWriter(
-            log_dir=str(runs_dir / experiment_name)
-        )
+        self.writer = SummaryWriter(log_dir=str(runs_dir / experiment_name))
 
         # create global model
         self.global_model = create_model(config).to(self.device)
@@ -390,7 +390,7 @@ class FederatedTrainer:
     def _save_config(self):
         """save experiment configuration."""
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "aggregation_strategy": self.aggregation_strategy,
                 "n_clients": self.n_clients,
@@ -405,12 +405,12 @@ class FederatedTrainer:
 
     def _create_client_loaders(
         self, brats_dir, upenn_dir, batch_size, image_size, num_workers
-    ) -> List[DataLoader]:
+    ) -> list[DataLoader]:
         """create per-client data loaders (one per site)."""
         # for 2-client simulation, each client gets one site's data
         # both clients need paired data from their site for cyclegan training
         # we reuse the existing create_dataloaders which splits by site
-        train_loader, val_loader, _ = create_dataloaders(
+        train_loader, _val_loader, _ = create_dataloaders(
             brats_dir=brats_dir,
             upenn_dir=upenn_dir,
             batch_size=batch_size,
@@ -451,7 +451,7 @@ class FederatedTrainer:
         return ssim.item()
 
     @torch.no_grad()
-    def evaluate_global_model(self) -> Dict[str, float]:
+    def evaluate_global_model(self) -> dict[str, float]:
         """evaluate the global model on validation data."""
         self.global_model.eval()
         metrics = {"ssim_A2B": [], "ssim_B2A": []}
@@ -508,7 +508,7 @@ class FederatedTrainer:
         if round_idx % 10 == 0:
             torch.save(checkpoint, ckpt_dir / f"checkpoint_round_{round_idx}.pth")
 
-    def load_checkpoint(self, path: str = None):
+    def load_checkpoint(self, path: Optional[str] = None):
         """resume from a checkpoint. returns (start_round, best_ssim)."""
         if path is None:
             path = self.experiment_dir / "checkpoints" / "checkpoint_latest.pth"
@@ -521,7 +521,9 @@ class FederatedTrainer:
         self.history = checkpoint.get("history", self.history)
         start_round = checkpoint["round"] + 1
         best_ssim = checkpoint.get("best_ssim", 0.0)
-        print(f"  resumed at round {start_round}/{self.communication_rounds}, best_ssim={best_ssim:.4f}")
+        print(
+            f"  resumed at round {start_round}/{self.communication_rounds}, best_ssim={best_ssim:.4f}"
+        )
         return start_round, best_ssim
 
     def train(self, resume: bool = False):
@@ -568,8 +570,10 @@ class FederatedTrainer:
                 )
 
             # aggregate client updates
-            dataset_sizes = [len(self.client_loaders[i % len(self.client_loaders)].dataset)
-                            for i in range(self.n_clients)]
+            dataset_sizes = [
+                len(self.client_loaders[i % len(self.client_loaders)].dataset)
+                for i in range(self.n_clients)
+            ]
             self.aggregator.aggregate(client_models, dataset_sizes)
 
             # scaffold control variate update
@@ -578,17 +582,12 @@ class FederatedTrainer:
                     n_local_steps = self.local_epochs * len(
                         self.client_loaders[i % len(self.client_loaders)]
                     )
-                    self.aggregator.update_controls(
-                        i, client_models[i], self.lr_G, n_local_steps
-                    )
+                    self.aggregator.update_controls(i, client_models[i], self.lr_G, n_local_steps)
 
             round_time = time.time() - round_start
 
             # log average client losses
-            avg_losses = {
-                k: np.mean([cl[k] for cl in round_losses])
-                for k in round_losses[0]
-            }
+            avg_losses = {k: np.mean([cl[k] for cl in round_losses]) for k in round_losses[0]}
             for k, v in avg_losses.items():
                 self.writer.add_scalar(f"federated/{k}", v, round_idx)
 
@@ -617,22 +616,29 @@ class FederatedTrainer:
                     best_ssim = mean_ssim
                     self.save_checkpoint(round_idx, best_ssim)
                     torch.save(
-                        {"round": round_idx, "global_model_state_dict": self.global_model.state_dict(),
-                         "best_ssim": best_ssim},
+                        {
+                            "round": round_idx,
+                            "global_model_state_dict": self.global_model.state_dict(),
+                            "best_ssim": best_ssim,
+                        },
                         self.experiment_dir / "checkpoints" / "checkpoint_best.pth",
                     )
                     print(f"  *** new best ssim: {mean_ssim:.4f} ***")
 
-                self.history["global_metrics"].append({
-                    "round": round_idx,
-                    "metrics": metrics,
-                })
+                self.history["global_metrics"].append(
+                    {
+                        "round": round_idx,
+                        "metrics": metrics,
+                    }
+                )
 
-            self.history["rounds"].append({
-                "round": round_idx,
-                "avg_losses": avg_losses,
-                "time": round_time,
-            })
+            self.history["rounds"].append(
+                {
+                    "round": round_idx,
+                    "avg_losses": avg_losses,
+                    "time": round_time,
+                }
+            )
 
             # save latest every round (each round is ~2hrs, minimize lost progress)
             self.save_checkpoint(round_idx, best_ssim)
@@ -644,7 +650,7 @@ class FederatedTrainer:
         with open(self.experiment_dir / "training_history.json", "w") as f:
             json.dump(self.history, f, indent=2, default=str)
 
-        print(f"\nfederated training complete!")
+        print("\nfederated training complete!")
         print(f"best ssim: {best_ssim:.4f}")
         print(f"checkpoints saved to: {self.experiment_dir / 'checkpoints'}")
 
@@ -660,8 +666,12 @@ def parse_args():
     parser.add_argument("--n_clients", type=int, default=2)
     parser.add_argument("--local_epochs", type=int, default=5)
     parser.add_argument("--communication_rounds", type=int, default=40)
-    parser.add_argument("--aggregation_strategy", type=str, default="fedavg",
-                        choices=["fedavg", "fedprox", "scaffold"])
+    parser.add_argument(
+        "--aggregation_strategy",
+        type=str,
+        default="fedavg",
+        choices=["fedavg", "fedprox", "scaffold"],
+    )
     parser.add_argument("--share_discriminators", action="store_true")
     parser.add_argument("--fedprox_mu", type=float, default=0.01)
     parser.add_argument("--batch_size", type=int, default=16)
@@ -674,8 +684,7 @@ def parse_args():
     parser.add_argument("--n_residual_blocks", type=int, default=9)
     parser.add_argument("--eval_every_n_rounds", type=int, default=5)
     parser.add_argument("--experiment_name", type=str, default=None)
-    parser.add_argument("--resume", action="store_true",
-                        help="resume from latest checkpoint")
+    parser.add_argument("--resume", action="store_true", help="resume from latest checkpoint")
     return parser.parse_args()
 
 
@@ -686,9 +695,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     config = SACycleGAN25DConfig(

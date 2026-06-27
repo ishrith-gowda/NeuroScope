@@ -19,10 +19,9 @@ from .domain_classifier import (
     DomainClassifier,
     MRIDomainDataset,
     NiftiDomainDataset,
-    train_domain_classifier,
     evaluate_domain_classifier,
+    train_domain_classifier,
 )
-
 from .feature_distribution_analysis import (
     FeatureExtractor,
     compute_fid,
@@ -30,27 +29,26 @@ from .feature_distribution_analysis import (
     compute_mmd,
     compute_sliced_wasserstein,
 )
-
 from .unet_segmentation import (
-    UNet2D,
-    DiceLoss,
     CombinedLoss,
+    DiceLoss,
+    UNet2D,
     compute_dice_score,
 )
 
 __all__ = [
-    'DomainClassifier',
-    'MRIDomainDataset',
-    'NiftiDomainDataset',
-    'train_domain_classifier',
-    'evaluate_domain_classifier',
-    'FeatureExtractor',
-    'compute_fid',
-    'compute_kid',
-    'compute_mmd',
-    'compute_sliced_wasserstein',
-    'UNet2D',
-    'DiceLoss',
-    'CombinedLoss',
-    'compute_dice_score',
+    "CombinedLoss",
+    "DiceLoss",
+    "DomainClassifier",
+    "FeatureExtractor",
+    "MRIDomainDataset",
+    "NiftiDomainDataset",
+    "UNet2D",
+    "compute_dice_score",
+    "compute_fid",
+    "compute_kid",
+    "compute_mmd",
+    "compute_sliced_wasserstein",
+    "evaluate_domain_classifier",
+    "train_domain_classifier",
 ]

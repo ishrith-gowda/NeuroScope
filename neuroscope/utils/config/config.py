@@ -5,370 +5,344 @@ yaml-based configuration with schema validation
 and hierarchical merging.
 """
 
-from typing import Dict, Any, List, Optional, Union, Type, TypeVar
-from dataclasses import dataclass, field, asdict
-from pathlib import Path
 import copy
 import json
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Optional, TypeVar, Union
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class ModelConfig:
     """model configuration."""
-    name: str = 'sa_cyclegan'
-    
+
+    name: str = "sa_cyclegan"
+
     # generator
-    generator_type: str = 'sa_generator'
+    generator_type: str = "sa_generator"
     generator_channels: int = 64
     generator_blocks: int = 9
     use_attention: bool = True
     attention_heads: int = 8
-    
+
     # discriminator
-    discriminator_type: str = 'multiscale'
+    discriminator_type: str = "multiscale"
     discriminator_scales: int = 3
     discriminator_layers: int = 4
     use_spectral_norm: bool = True
-    
+
     # input/output
     in_channels: int = 4
     out_channels: int = 4
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class DataConfig:
     """data configuration."""
+
     # datasets
-    source_dataset: str = 'brats'
-    target_dataset: str = 'upenn'
-    data_root: str = './preprocessed'
-    
+    source_dataset: str = "brats"
+    target_dataset: str = "upenn"
+    data_root: str = "./preprocessed"
+
     # preprocessing
-    crop_size: List[int] = field(default_factory=lambda: [128, 128, 128])
+    crop_size: list[int] = field(default_factory=lambda: [128, 128, 128])
     normalize: bool = True
     augment: bool = True
-    
+
     # loading
     batch_size: int = 2
     num_workers: int = 4
     pin_memory: bool = True
     prefetch_factor: int = 2
-    
+
     # split
     train_ratio: float = 0.7
     val_ratio: float = 0.15
     test_ratio: float = 0.15
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class LossConfig:
     """loss configuration."""
+
     # adversarial
-    adversarial_type: str = 'lsgan'
+    adversarial_type: str = "lsgan"
     adversarial_weight: float = 1.0
-    
+
     # cycle consistency
     cycle_weight: float = 10.0
-    
+
     # identity
     identity_weight: float = 5.0
-    
+
     # perceptual
     use_perceptual: bool = True
     perceptual_weight: float = 1.0
-    perceptual_layers: List[str] = field(
-        default_factory=lambda: ['relu1_2', 'relu2_2', 'relu3_4']
-    )
-    
+    perceptual_layers: list[str] = field(default_factory=lambda: ["relu1_2", "relu2_2", "relu3_4"])
+
     # contrastive (patchnce)
     use_contrastive: bool = True
     contrastive_weight: float = 1.0
-    nce_layers: List[int] = field(default_factory=lambda: [0, 4, 8, 12, 16])
-    
+    nce_layers: list[int] = field(default_factory=lambda: [0, 4, 8, 12, 16])
+
     # tumor preservation
     use_tumor_preservation: bool = True
     tumor_weight: float = 2.0
-    
+
     # ssim
     use_ssim: bool = True
     ssim_weight: float = 1.0
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class OptimizerConfig:
     """optimizer configuration."""
+
     # generator
     generator_lr: float = 2e-4
-    generator_betas: List[float] = field(default_factory=lambda: [0.5, 0.999])
-    
+    generator_betas: list[float] = field(default_factory=lambda: [0.5, 0.999])
+
     # discriminator
     discriminator_lr: float = 2e-4
-    discriminator_betas: List[float] = field(default_factory=lambda: [0.5, 0.999])
-    
+    discriminator_betas: list[float] = field(default_factory=lambda: [0.5, 0.999])
+
     # weight decay
     weight_decay: float = 0.0
-    
+
     # scheduler
-    scheduler_type: str = 'linear_warmup_cosine'
+    scheduler_type: str = "linear_warmup_cosine"
     warmup_epochs: int = 5
     min_lr: float = 1e-6
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class TrainingConfig:
     """training configuration."""
+
     # duration
     epochs: int = 200
     steps_per_epoch: Optional[int] = None
-    
+
     # checkpointing
-    checkpoint_dir: str = './checkpoints'
+    checkpoint_dir: str = "./checkpoints"
     save_every: int = 10
     keep_last: int = 5
-    
+
     # validation
     val_every: int = 5
     val_samples: int = 4
-    
+
     # mixed precision
     use_amp: bool = True
-    amp_dtype: str = 'float16'
-    
+    amp_dtype: str = "float16"
+
     # gradient
     gradient_clip: Optional[float] = 1.0
     accumulation_steps: int = 1
-    
+
     # ema
     use_ema: bool = True
     ema_decay: float = 0.999
-    
+
     # logging
     log_every: int = 100
     use_tensorboard: bool = True
     use_wandb: bool = False
-    
+
     # reproducibility
     seed: int = 42
     deterministic: bool = False
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class EvaluationConfig:
     """evaluation configuration."""
+
     # metrics
     compute_ssim: bool = True
     compute_psnr: bool = True
     compute_fid: bool = True
     compute_lpips: bool = True
-    
+
     # statistical
     significance_level: float = 0.05
     bootstrap_samples: int = 1000
-    
+
     # output
-    output_dir: str = './results'
+    output_dir: str = "./results"
     save_predictions: bool = True
     generate_report: bool = True
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
 @dataclass
 class ExperimentConfig:
     """complete experiment configuration."""
-    name: str = 'default'
-    description: str = ''
-    
+
+    name: str = "default"
+    description: str = ""
+
     model: ModelConfig = field(default_factory=ModelConfig)
     data: DataConfig = field(default_factory=DataConfig)
     loss: LossConfig = field(default_factory=LossConfig)
     optimizer: OptimizerConfig = field(default_factory=OptimizerConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)
     evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return {
-            'name': self.name,
-            'description': self.description,
-            'model': self.model.to_dict(),
-            'data': self.data.to_dict(),
-            'loss': self.loss.to_dict(),
-            'optimizer': self.optimizer.to_dict(),
-            'training': self.training.to_dict(),
-            'evaluation': self.evaluation.to_dict()
+            "name": self.name,
+            "description": self.description,
+            "model": self.model.to_dict(),
+            "data": self.data.to_dict(),
+            "loss": self.loss.to_dict(),
+            "optimizer": self.optimizer.to_dict(),
+            "training": self.training.to_dict(),
+            "evaluation": self.evaluation.to_dict(),
         }
 
 
 class ConfigManager:
     """
     manage configuration loading, validation, and merging.
-    
+
     supports yaml files with hierarchical inheritance.
     """
-    
-    def __init__(self, config_dir: Union[str, Path] = None):
+
+    def __init__(self, config_dir: Optional[Union[str, Path]] = None):
         """
         args:
             config_dir: directory containing config files
         """
         self.config_dir = Path(config_dir) if config_dir else None
-        self._loaded_configs: Dict[str, Dict] = {}
-    
-    def load_yaml(self, path: Union[str, Path]) -> Dict:
+        self._loaded_configs: dict[str, dict] = {}
+
+    def load_yaml(self, path: Union[str, Path]) -> dict:
         """
         load yaml configuration file.
-        
+
         args:
             path: path to yaml file
-            
+
         returns:
             configuration dictionary
         """
         import yaml
-        
+
         path = Path(path)
-        
-        with open(path, 'r') as f:
+
+        with open(path) as f:
             config = yaml.safe_load(f) or {}
-        
+
         # handle inheritance
-        if 'base' in config:
-            base_path = config.pop('base')
+        if "base" in config:
+            base_path = config.pop("base")
             if not Path(base_path).is_absolute():
                 base_path = path.parent / base_path
-            
+
             base_config = self.load_yaml(base_path)
             config = self._deep_merge(base_config, config)
-        
+
         return config
-    
-    def _deep_merge(
-        self,
-        base: Dict,
-        override: Dict
-    ) -> Dict:
+
+    def _deep_merge(self, base: dict, override: dict) -> dict:
         """
         deep merge two dictionaries.
-        
+
         args:
             base: base dictionary
             override: override dictionary
-            
+
         returns:
             merged dictionary
         """
         result = copy.deepcopy(base)
-        
+
         for key, value in override.items():
-            if (
-                key in result and 
-                isinstance(result[key], dict) and 
-                isinstance(value, dict)
-            ):
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = copy.deepcopy(value)
-        
+
         return result
-    
-    def dict_to_config(
-        self,
-        config_dict: Dict,
-        config_class: Type[T] = ExperimentConfig
-    ) -> T:
+
+    def dict_to_config(self, config_dict: dict, config_class: type[T] = ExperimentConfig) -> T:
         """
         convert dictionary to config dataclass.
-        
+
         args:
             config_dict: configuration dictionary
             config_class: target config class
-            
+
         returns:
             config instance
         """
         if config_class == ExperimentConfig:
             return ExperimentConfig(
-                name=config_dict.get('name', 'default'),
-                description=config_dict.get('description', ''),
-                model=self._dict_to_dataclass(
-                    config_dict.get('model', {}), ModelConfig
-                ),
-                data=self._dict_to_dataclass(
-                    config_dict.get('data', {}), DataConfig
-                ),
-                loss=self._dict_to_dataclass(
-                    config_dict.get('loss', {}), LossConfig
-                ),
+                name=config_dict.get("name", "default"),
+                description=config_dict.get("description", ""),
+                model=self._dict_to_dataclass(config_dict.get("model", {}), ModelConfig),
+                data=self._dict_to_dataclass(config_dict.get("data", {}), DataConfig),
+                loss=self._dict_to_dataclass(config_dict.get("loss", {}), LossConfig),
                 optimizer=self._dict_to_dataclass(
-                    config_dict.get('optimizer', {}), OptimizerConfig
+                    config_dict.get("optimizer", {}), OptimizerConfig
                 ),
-                training=self._dict_to_dataclass(
-                    config_dict.get('training', {}), TrainingConfig
-                ),
+                training=self._dict_to_dataclass(config_dict.get("training", {}), TrainingConfig),
                 evaluation=self._dict_to_dataclass(
-                    config_dict.get('evaluation', {}), EvaluationConfig
-                )
+                    config_dict.get("evaluation", {}), EvaluationConfig
+                ),
             )
-        
+
         return self._dict_to_dataclass(config_dict, config_class)
-    
-    def _dict_to_dataclass(
-        self,
-        data: Dict,
-        cls: Type[T]
-    ) -> T:
+
+    def _dict_to_dataclass(self, data: dict, cls: type[T]) -> T:
         """convert dict to dataclass instance."""
         import dataclasses
-        
+
         field_names = {f.name for f in dataclasses.fields(cls)}
         filtered_data = {k: v for k, v in data.items() if k in field_names}
-        
+
         return cls(**filtered_data)
-    
-    def load_config(
-        self,
-        path: Union[str, Path]
-    ) -> ExperimentConfig:
+
+    def load_config(self, path: Union[str, Path]) -> ExperimentConfig:
         """
         load and parse configuration file.
-        
+
         args:
             path: path to config file
-            
+
         returns:
             experimentconfig instance
         """
         config_dict = self.load_yaml(path)
         return self.dict_to_config(config_dict)
-    
+
     def save_config(
-        self,
-        config: Union[ExperimentConfig, Dict],
-        path: Union[str, Path],
-        format: str = 'yaml'
+        self, config: Union[ExperimentConfig, dict], path: Union[str, Path], format: str = "yaml"
     ):
         """
         save configuration to file.
-        
+
         args:
             config: configuration to save
             path: output path
@@ -376,63 +350,57 @@ class ConfigManager:
         """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        
-        if hasattr(config, 'to_dict'):
+
+        if hasattr(config, "to_dict"):
             config = config.to_dict()
-        
-        if format == 'yaml':
+
+        if format == "yaml":
             import yaml
-            with open(path, 'w') as f:
+
+            with open(path, "w") as f:
                 yaml.dump(config, f, default_flow_style=False, sort_keys=False)
         else:
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 json.dump(config, f, indent=2)
-    
-    def validate_config(
-        self,
-        config: ExperimentConfig
-    ) -> List[str]:
+
+    def validate_config(self, config: ExperimentConfig) -> list[str]:
         """
         validate configuration.
-        
+
         args:
             config: configuration to validate
-            
+
         returns:
             list of validation errors (empty if valid)
         """
         errors = []
-        
+
         # model validation
         if config.model.generator_blocks < 1:
             errors.append("generator_blocks must be >= 1")
-        
+
         if config.model.in_channels < 1:
             errors.append("in_channels must be >= 1")
-        
+
         # data validation
         if config.data.batch_size < 1:
             errors.append("batch_size must be >= 1")
-        
-        split_sum = (
-            config.data.train_ratio + 
-            config.data.val_ratio + 
-            config.data.test_ratio
-        )
+
+        split_sum = config.data.train_ratio + config.data.val_ratio + config.data.test_ratio
         if abs(split_sum - 1.0) > 0.01:
             errors.append(f"Split ratios must sum to 1.0, got {split_sum}")
-        
+
         # training validation
         if config.training.epochs < 1:
             errors.append("epochs must be >= 1")
-        
+
         if config.training.save_every < 1:
             errors.append("save_every must be >= 1")
-        
+
         # loss validation
         if config.loss.cycle_weight < 0:
             errors.append("cycle_weight must be >= 0")
-        
+
         return errors
 
 
@@ -447,10 +415,7 @@ def load_config(path: Union[str, Path]) -> ExperimentConfig:
     return manager.load_config(path)
 
 
-def save_config(
-    config: Union[ExperimentConfig, Dict],
-    path: Union[str, Path]
-):
+def save_config(config: Union[ExperimentConfig, dict], path: Union[str, Path]):
     """convenience function to save config."""
     manager = ConfigManager()
     manager.save_config(config, path)

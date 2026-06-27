@@ -9,43 +9,45 @@ this script creates side-by-side comparison images showing:
 - difference maps highlighting changes
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import sys
 
-import torch
-import torch.nn.functional as F
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from matplotlib.colors import Normalize
-from pathlib import Path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
 import argparse
-from tqdm import tqdm
 import random
+from pathlib import Path
 
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from tqdm import tqdm
+
 from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25D, SACycleGAN25DConfig
 
 # publication-quality settings (matching gold standard)
-plt.rcParams.update({
-    'text.usetex': True,
-    'font.family': 'serif',
-    'font.serif': ['Computer Modern Roman'],
-    'font.size': 12,
-    'axes.titlesize': 14,
-    'axes.labelsize': 14,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'legend.fontsize': 11,
-    'figure.titlesize': 18,
-    'figure.dpi': 300,
-    'savefig.dpi': 300,
-    'savefig.bbox': 'tight',
-    'savefig.pad_inches': 0.02,
-    'axes.grid': True,
-    'grid.alpha': 0.3,
-})
+plt.rcParams.update(
+    {
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "font.size": 12,
+        "axes.titlesize": 14,
+        "axes.labelsize": 14,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 11,
+        "figure.titlesize": 18,
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.02,
+        "axes.grid": True,
+        "grid.alpha": 0.3,
+    }
+)
 
 
 def load_model(checkpoint_path: Path, model_type: str, device: torch.device) -> torch.nn.Module:
@@ -78,11 +80,11 @@ def load_model(checkpoint_path: Path, model_type: str, device: torch.device) -> 
     model = SACycleGAN25D(config)
 
     # load state dict with dataparallel handling
-    state_dict = checkpoint['model_state_dict']
+    state_dict = checkpoint["model_state_dict"]
     new_state_dict = {}
     for k, v in state_dict.items():
-        new_key = k.replace('.module.', '.')
-        if new_key.startswith('module.'):
+        new_key = k.replace(".module.", ".")
+        if new_key.startswith("module."):
             new_key = new_key[7:]
         new_state_dict[new_key] = v
 
@@ -95,10 +97,7 @@ def load_model(checkpoint_path: Path, model_type: str, device: torch.device) -> 
 
 
 def generate_translations(
-    model: torch.nn.Module,
-    real_A: torch.Tensor,
-    real_B: torch.Tensor,
-    device: torch.device
+    model: torch.nn.Module, real_A: torch.Tensor, real_B: torch.Tensor, device: torch.device
 ) -> dict:
     """
     generate all translation outputs from the model.
@@ -133,12 +132,12 @@ def generate_translations(
         rec_B = model.G_A2B(fake_A_3slice)
 
     return {
-        'real_A': real_A.cpu(),
-        'real_B': real_B.cpu(),
-        'fake_B': fake_B.cpu(),
-        'fake_A': fake_A.cpu(),
-        'rec_A': rec_A.cpu(),
-        'rec_B': rec_B.cpu(),
+        "real_A": real_A.cpu(),
+        "real_B": real_B.cpu(),
+        "fake_B": fake_B.cpu(),
+        "fake_A": fake_A.cpu(),
+        "rec_A": rec_A.cpu(),
+        "rec_B": rec_B.cpu(),
     }
 
 
@@ -172,53 +171,66 @@ def create_translation_figure(
     attention_outputs: dict,
     output_path: Path,
     sample_idx: int,
-    modality: str = 'T1'
+    modality: str = "T1",
 ) -> None:
     """
     create comprehensive translation comparison figure.
 
     shows input, translations, and reconstructions for both models.
     """
-    modality_idx = {'T1': 0, 'T1CE': 1, 'T2': 2, 'FLAIR': 3}[modality]
+    modality_idx = {"T1": 0, "T1CE": 1, "T2": 2, "FLAIR": 3}[modality]
 
     fig = plt.figure(figsize=(16, 11))
     gs = gridspec.GridSpec(4, 6, figure=fig, hspace=0.15, wspace=0.05)
 
     # row labels
-    row_labels = ['Input', 'Translated', 'Reconstructed', 'Difference']
 
     # a->b direction (top half)
-    fig.text(0.02, 0.77, r'A$\rightarrow$B$\rightarrow$A\\(BraTS)', fontsize=12, fontweight='bold',
-             rotation=90, va='center', ha='center')
+    fig.text(
+        0.02,
+        0.77,
+        r"A$\rightarrow$B$\rightarrow$A\\(BraTS)",
+        fontsize=12,
+        fontweight="bold",
+        rotation=90,
+        va="center",
+        ha="center",
+    )
 
     # b->a direction (bottom half)
-    fig.text(0.02, 0.27, r'B$\rightarrow$A$\rightarrow$B\\(UPenn)', fontsize=12, fontweight='bold',
-             rotation=90, va='center', ha='center')
-
-    images_to_show = []
+    fig.text(
+        0.02,
+        0.27,
+        r"B$\rightarrow$A$\rightarrow$B\\(UPenn)",
+        fontsize=12,
+        fontweight="bold",
+        rotation=90,
+        va="center",
+        ha="center",
+    )
 
     # a->b->a direction
     # row 0: input a
-    real_A = tensor_to_image(baseline_outputs['real_A'], modality_idx)
+    real_A = tensor_to_image(baseline_outputs["real_A"], modality_idx)
 
     # row 1: fake b (baseline vs attention)
-    fake_B_base = tensor_to_image(baseline_outputs['fake_B'], modality_idx)
-    fake_B_attn = tensor_to_image(attention_outputs['fake_B'], modality_idx)
+    fake_B_base = tensor_to_image(baseline_outputs["fake_B"], modality_idx)
+    fake_B_attn = tensor_to_image(attention_outputs["fake_B"], modality_idx)
 
     # row 2: reconstructed a
-    rec_A_base = tensor_to_image(baseline_outputs['rec_A'], modality_idx)
-    rec_A_attn = tensor_to_image(attention_outputs['rec_A'], modality_idx)
+    rec_A_base = tensor_to_image(baseline_outputs["rec_A"], modality_idx)
+    rec_A_attn = tensor_to_image(attention_outputs["rec_A"], modality_idx)
 
     # row 3: difference maps
     diff_A_base = np.abs(real_A - rec_A_base)
     diff_A_attn = np.abs(real_A - rec_A_attn)
 
     # b->a->b direction
-    real_B = tensor_to_image(baseline_outputs['real_B'], modality_idx)
-    fake_A_base = tensor_to_image(baseline_outputs['fake_A'], modality_idx)
-    fake_A_attn = tensor_to_image(attention_outputs['fake_A'], modality_idx)
-    rec_B_base = tensor_to_image(baseline_outputs['rec_B'], modality_idx)
-    rec_B_attn = tensor_to_image(attention_outputs['rec_B'], modality_idx)
+    real_B = tensor_to_image(baseline_outputs["real_B"], modality_idx)
+    fake_A_base = tensor_to_image(baseline_outputs["fake_A"], modality_idx)
+    fake_A_attn = tensor_to_image(attention_outputs["fake_A"], modality_idx)
+    rec_B_base = tensor_to_image(baseline_outputs["rec_B"], modality_idx)
+    rec_B_attn = tensor_to_image(attention_outputs["rec_B"], modality_idx)
     diff_B_base = np.abs(real_B - rec_B_base)
     diff_B_attn = np.abs(real_B - rec_B_attn)
 
@@ -226,30 +238,30 @@ def create_translation_figure(
     # a->b->a section (rows 0-1)
     # row 0: input a, fake b baseline, fake b attention
     ax = fig.add_subplot(gs[0, 0:2])
-    ax.imshow(real_A, cmap='gray')
-    ax.set_title(f'Input A ({modality})', fontsize=12)
-    ax.axis('off')
+    ax.imshow(real_A, cmap="gray")
+    ax.set_title(f"Input A ({modality})", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[0, 2:4])
-    ax.imshow(fake_B_base, cmap='gray')
-    ax.set_title(r'$\rightarrow$B (Baseline)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(fake_B_base, cmap="gray")
+    ax.set_title(r"$\rightarrow$B (Baseline)", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[0, 4:6])
-    ax.imshow(fake_B_attn, cmap='gray')
-    ax.set_title(r'$\rightarrow$B (SA-CycleGAN)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(fake_B_attn, cmap="gray")
+    ax.set_title(r"$\rightarrow$B (SA-CycleGAN)", fontsize=12)
+    ax.axis("off")
 
     # row 1: reconstructed a
     ax = fig.add_subplot(gs[1, 0:2])
-    ax.imshow(rec_A_base, cmap='gray')
-    ax.set_title('Rec A (Baseline)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(rec_A_base, cmap="gray")
+    ax.set_title("Rec A (Baseline)", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[1, 2:4])
-    ax.imshow(rec_A_attn, cmap='gray')
-    ax.set_title('Rec A (SA-CycleGAN)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(rec_A_attn, cmap="gray")
+    ax.set_title("Rec A (SA-CycleGAN)", fontsize=12)
+    ax.axis("off")
 
     # difference maps
     ax = fig.add_subplot(gs[1, 4:6])
@@ -257,64 +269,65 @@ def create_translation_figure(
     diff_combined = diff_combined / (diff_combined.max() + 1e-8) * 2  # enhance visibility
     diff_combined = np.clip(diff_combined, 0, 1)
     ax.imshow(diff_combined)
-    ax.set_title('Diff (R=Base, G=Attn)', fontsize=12)
-    ax.axis('off')
+    ax.set_title("Diff (R=Base, G=Attn)", fontsize=12)
+    ax.axis("off")
 
     # b->a->b section (rows 2-3)
     ax = fig.add_subplot(gs[2, 0:2])
-    ax.imshow(real_B, cmap='gray')
-    ax.set_title(f'Input B ({modality})', fontsize=12)
-    ax.axis('off')
+    ax.imshow(real_B, cmap="gray")
+    ax.set_title(f"Input B ({modality})", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[2, 2:4])
-    ax.imshow(fake_A_base, cmap='gray')
-    ax.set_title(r'$\rightarrow$A (Baseline)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(fake_A_base, cmap="gray")
+    ax.set_title(r"$\rightarrow$A (Baseline)", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[2, 4:6])
-    ax.imshow(fake_A_attn, cmap='gray')
-    ax.set_title(r'$\rightarrow$A (SA-CycleGAN)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(fake_A_attn, cmap="gray")
+    ax.set_title(r"$\rightarrow$A (SA-CycleGAN)", fontsize=12)
+    ax.axis("off")
 
     # row 3: reconstructed b
     ax = fig.add_subplot(gs[3, 0:2])
-    ax.imshow(rec_B_base, cmap='gray')
-    ax.set_title('Rec B (Baseline)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(rec_B_base, cmap="gray")
+    ax.set_title("Rec B (Baseline)", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[3, 2:4])
-    ax.imshow(rec_B_attn, cmap='gray')
-    ax.set_title('Rec B (SA-CycleGAN)', fontsize=12)
-    ax.axis('off')
+    ax.imshow(rec_B_attn, cmap="gray")
+    ax.set_title("Rec B (SA-CycleGAN)", fontsize=12)
+    ax.axis("off")
 
     ax = fig.add_subplot(gs[3, 4:6])
     diff_combined = np.stack([diff_B_base, diff_B_attn, np.zeros_like(diff_B_base)], axis=-1)
     diff_combined = diff_combined / (diff_combined.max() + 1e-8) * 2
     diff_combined = np.clip(diff_combined, 0, 1)
     ax.imshow(diff_combined)
-    ax.set_title('Diff (R=Base, G=Attn)', fontsize=12)
-    ax.axis('off')
+    ax.set_title("Diff (R=Base, G=Attn)", fontsize=12)
+    ax.axis("off")
 
     # main title
-    fig.suptitle(f'Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, Sample {sample_idx})',
-                fontsize=16, fontweight='bold', y=0.98)
+    fig.suptitle(
+        f"Visual Comparison: Baseline vs SA-CycleGAN ({modality} Modality, Sample {sample_idx})",
+        fontsize=16,
+        fontweight="bold",
+        y=0.98,
+    )
 
     # pdf only
-    fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
+    fig.savefig(output_path.with_suffix(".pdf"), format="pdf", bbox_inches="tight")
 
     plt.close(fig)
 
 
 def create_multimodality_figure(
-    baseline_outputs: dict,
-    attention_outputs: dict,
-    output_path: Path,
-    sample_idx: int
+    baseline_outputs: dict, attention_outputs: dict, output_path: Path, sample_idx: int
 ) -> None:
     """
     create figure showing all 4 modalities for a single sample.
     """
-    modalities = ['T1', 'T1CE', 'T2', 'FLAIR']
+    modalities = ["T1", "T1CE", "T2", "FLAIR"]
 
     fig, axes = plt.subplots(4, 6, figsize=(16, 11))
     plt.subplots_adjust(hspace=0.12, wspace=0.05)
@@ -323,74 +336,79 @@ def create_multimodality_figure(
         mod_idx = i
 
         # extract images
-        real_A = tensor_to_image(baseline_outputs['real_A'], mod_idx)
-        fake_B_base = tensor_to_image(baseline_outputs['fake_B'], mod_idx)
-        fake_B_attn = tensor_to_image(attention_outputs['fake_B'], mod_idx)
-        rec_A_base = tensor_to_image(baseline_outputs['rec_A'], mod_idx)
-        rec_A_attn = tensor_to_image(attention_outputs['rec_A'], mod_idx)
-        diff_base = np.abs(real_A - rec_A_base)
+        real_A = tensor_to_image(baseline_outputs["real_A"], mod_idx)
+        fake_B_base = tensor_to_image(baseline_outputs["fake_B"], mod_idx)
+        fake_B_attn = tensor_to_image(attention_outputs["fake_B"], mod_idx)
+        rec_A_base = tensor_to_image(baseline_outputs["rec_A"], mod_idx)
+        rec_A_attn = tensor_to_image(attention_outputs["rec_A"], mod_idx)
+        np.abs(real_A - rec_A_base)
         diff_attn = np.abs(real_A - rec_A_attn)
 
         # plot row
-        axes[i, 0].imshow(real_A, cmap='gray')
-        axes[i, 0].set_ylabel(mod, fontsize=12, fontweight='bold')
+        axes[i, 0].imshow(real_A, cmap="gray")
+        axes[i, 0].set_ylabel(mod, fontsize=12, fontweight="bold")
         if i == 0:
-            axes[i, 0].set_title('Input A', fontsize=12)
-        axes[i, 0].axis('off')
+            axes[i, 0].set_title("Input A", fontsize=12)
+        axes[i, 0].axis("off")
 
-        axes[i, 1].imshow(fake_B_base, cmap='gray')
+        axes[i, 1].imshow(fake_B_base, cmap="gray")
         if i == 0:
-            axes[i, 1].set_title(r'$\rightarrow$B (Base)', fontsize=12)
-        axes[i, 1].axis('off')
+            axes[i, 1].set_title(r"$\rightarrow$B (Base)", fontsize=12)
+        axes[i, 1].axis("off")
 
-        axes[i, 2].imshow(fake_B_attn, cmap='gray')
+        axes[i, 2].imshow(fake_B_attn, cmap="gray")
         if i == 0:
-            axes[i, 2].set_title(r'$\rightarrow$B (Attn)', fontsize=12)
-        axes[i, 2].axis('off')
+            axes[i, 2].set_title(r"$\rightarrow$B (Attn)", fontsize=12)
+        axes[i, 2].axis("off")
 
-        axes[i, 3].imshow(rec_A_base, cmap='gray')
+        axes[i, 3].imshow(rec_A_base, cmap="gray")
         if i == 0:
-            axes[i, 3].set_title('Rec (Base)', fontsize=12)
-        axes[i, 3].axis('off')
+            axes[i, 3].set_title("Rec (Base)", fontsize=12)
+        axes[i, 3].axis("off")
 
-        axes[i, 4].imshow(rec_A_attn, cmap='gray')
+        axes[i, 4].imshow(rec_A_attn, cmap="gray")
         if i == 0:
-            axes[i, 4].set_title('Rec (Attn)', fontsize=12)
-        axes[i, 4].axis('off')
+            axes[i, 4].set_title("Rec (Attn)", fontsize=12)
+        axes[i, 4].axis("off")
 
-        axes[i, 5].imshow(diff_attn, cmap='hot', vmin=0, vmax=0.3)
+        axes[i, 5].imshow(diff_attn, cmap="hot", vmin=0, vmax=0.3)
         if i == 0:
-            axes[i, 5].set_title('|Diff| (Attn)', fontsize=12)
-        axes[i, 5].axis('off')
+            axes[i, 5].set_title("|Diff| (Attn)", fontsize=12)
+        axes[i, 5].axis("off")
 
-    fig.suptitle(f'Multi-Modality Translation: A$\\rightarrow$B$\\rightarrow$A Direction (Sample {sample_idx})',
-                fontsize=16, fontweight='bold', y=0.98)
+    fig.suptitle(
+        f"Multi-Modality Translation: A$\\rightarrow$B$\\rightarrow$A Direction (Sample {sample_idx})",
+        fontsize=16,
+        fontweight="bold",
+        y=0.98,
+    )
 
     # pdf only
-    fig.savefig(output_path.with_suffix('.pdf'), format='pdf', bbox_inches='tight')
+    fig.savefig(output_path.with_suffix(".pdf"), format="pdf", bbox_inches="tight")
 
     plt.close(fig)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='generate visual examples for sa-cyclegan paper'
+    parser = argparse.ArgumentParser(description="generate visual examples for sa-cyclegan paper")
+    parser.add_argument(
+        "--baseline-checkpoint", type=str, required=True, help="path to baseline model checkpoint"
     )
-    parser.add_argument('--baseline-checkpoint', type=str, required=True,
-                       help='path to baseline model checkpoint')
-    parser.add_argument('--attention-checkpoint', type=str, required=True,
-                       help='path to attention model checkpoint')
-    parser.add_argument('--brats-dir', type=str, required=True,
-                       help='path to brats preprocessed data')
-    parser.add_argument('--upenn-dir', type=str, required=True,
-                       help='path to upenn preprocessed data')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory for figures')
-    parser.add_argument('--device', type=str, default='cuda',
-                       choices=['cuda', 'mps', 'cpu'])
-    parser.add_argument('--num-samples', type=int, default=5,
-                       help='number of samples to generate')
-    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument(
+        "--attention-checkpoint", type=str, required=True, help="path to attention model checkpoint"
+    )
+    parser.add_argument(
+        "--brats-dir", type=str, required=True, help="path to brats preprocessed data"
+    )
+    parser.add_argument(
+        "--upenn-dir", type=str, required=True, help="path to upenn preprocessed data"
+    )
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="output directory for figures"
+    )
+    parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "mps", "cpu"])
+    parser.add_argument("--num-samples", type=int, default=5, help="number of samples to generate")
+    parser.add_argument("--seed", type=int, default=42)
 
     args = parser.parse_args()
 
@@ -403,59 +421,55 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # setup device
-    if args.device == 'cuda' and torch.cuda.is_available():
-        device = torch.device('cuda')
-    elif args.device == 'mps' and torch.backends.mps.is_available():
-        device = torch.device('mps')
+    if args.device == "cuda" and torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif args.device == "mps" and torch.backends.mps.is_available():
+        device = torch.device("mps")
     else:
-        device = torch.device('cpu')
+        device = torch.device("cpu")
 
-    print(f'[visual] device: {device}')
+    print(f"[visual] device: {device}")
 
     # load models
-    print('[visual] loading baseline model...')
-    baseline_model = load_model(Path(args.baseline_checkpoint), 'baseline', device)
+    print("[visual] loading baseline model...")
+    baseline_model = load_model(Path(args.baseline_checkpoint), "baseline", device)
 
-    print('[visual] loading attention model...')
-    attention_model = load_model(Path(args.attention_checkpoint), 'attention', device)
+    print("[visual] loading attention model...")
+    attention_model = load_model(Path(args.attention_checkpoint), "attention", device)
 
     # load dataset
-    print('[visual] loading dataset...')
+    print("[visual] loading dataset...")
     dataset = UnpairedMRIDataset25D(
-        domain_a_dir=args.brats_dir,
-        domain_b_dir=args.upenn_dir,
-        cache_in_memory=False
+        domain_a_dir=args.brats_dir, domain_b_dir=args.upenn_dir, cache_in_memory=False
     )
 
     # select random samples
     indices = random.sample(range(len(dataset)), min(args.num_samples, len(dataset)))
 
-    print(f'[visual] generating {len(indices)} visual examples...')
+    print(f"[visual] generating {len(indices)} visual examples...")
 
-    for i, idx in enumerate(tqdm(indices, desc='generating visuals')):
+    for i, idx in enumerate(tqdm(indices, desc="generating visuals")):
         sample = dataset[idx]
-        real_A = sample['A'].unsqueeze(0)
-        real_B = sample['B'].unsqueeze(0)
+        real_A = sample["A"].unsqueeze(0)
+        real_B = sample["B"].unsqueeze(0)
 
         # generate translations
         baseline_outputs = generate_translations(baseline_model, real_A, real_B, device)
         attention_outputs = generate_translations(attention_model, real_A, real_B, device)
 
         # create figures for each modality
-        for modality in ['T1', 'T1CE', 'T2', 'FLAIR']:
-            output_path = output_dir / f'visual_sample_{i:02d}_{modality}'
+        for modality in ["T1", "T1CE", "T2", "FLAIR"]:
+            output_path = output_dir / f"visual_sample_{i:02d}_{modality}"
             create_translation_figure(
                 baseline_outputs, attention_outputs, output_path, idx, modality
             )
 
         # create multi-modality figure
-        output_path = output_dir / f'visual_sample_{i:02d}_all_modalities'
-        create_multimodality_figure(
-            baseline_outputs, attention_outputs, output_path, idx
-        )
+        output_path = output_dir / f"visual_sample_{i:02d}_all_modalities"
+        create_multimodality_figure(baseline_outputs, attention_outputs, output_path, idx)
 
-    print(f'[visual] saved {len(indices) * 5} figures to {output_dir}')
+    print(f"[visual] saved {len(indices) * 5} figures to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

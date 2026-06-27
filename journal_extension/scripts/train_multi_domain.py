@@ -13,24 +13,23 @@ usage:
     python train_multi_domain.py --n_domains 4 --style_dim 256
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
 from torch.nn.parallel import DataParallel
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
-import numpy as np
 from tqdm import tqdm
 
 # add project root to path
@@ -61,12 +60,12 @@ class MultiDomainMRIDataset(Dataset):
 
     def __init__(
         self,
-        data_dirs: Dict[str, str],
-        domain_names: List[str],
-        image_size: Tuple[int, int] = (128, 128),
+        data_dirs: dict[str, str],
+        domain_names: list[str],
+        image_size: tuple[int, int] = (128, 128),
         split: str = "train",
         domain_split_file: Optional[str] = None,
-        slice_range: Tuple[int, int] = (30, 125),
+        slice_range: tuple[int, int] = (30, 125),
         cache_volumes: bool = True,
     ):
         """
@@ -80,6 +79,7 @@ class MultiDomainMRIDataset(Dataset):
             cache_volumes: cache volumes in memory for faster loading
         """
         import nibabel as nib
+
         self.nib = nib
 
         self.data_dirs = data_dirs
@@ -88,7 +88,7 @@ class MultiDomainMRIDataset(Dataset):
         self.slice_range = slice_range
         self.cache_volumes = cache_volumes
         self.domain_to_id = {name: i for i, name in enumerate(domain_names)}
-        self._cache: Dict[str, np.ndarray] = {}
+        self._cache: dict[str, np.ndarray] = {}
 
         # load domain split if provided
         domain_subjects = None
@@ -98,7 +98,7 @@ class MultiDomainMRIDataset(Dataset):
             print(f"loaded domain split from {domain_split_file}")
 
         # collect subjects per domain
-        self.domain_subject_dirs: Dict[str, List[Path]] = {}
+        self.domain_subject_dirs: dict[str, list[Path]] = {}
         for domain_name in domain_names:
             domain_dir = Path(data_dirs[domain_name])
             if not domain_dir.exists():
@@ -137,11 +137,11 @@ class MultiDomainMRIDataset(Dataset):
         rng.shuffle(self.samples)
         n = len(self.samples)
         if split == "train":
-            self.samples = self.samples[:int(0.8 * n)]
+            self.samples = self.samples[: int(0.8 * n)]
         elif split == "val":
-            self.samples = self.samples[int(0.8 * n):int(0.9 * n)]
+            self.samples = self.samples[int(0.8 * n) : int(0.9 * n)]
         elif split == "test":
-            self.samples = self.samples[int(0.9 * n):]
+            self.samples = self.samples[int(0.9 * n) :]
 
         # print summary
         print(f"\nmulti-domain dataset ({split}): {len(self.samples)} samples")
@@ -152,10 +152,7 @@ class MultiDomainMRIDataset(Dataset):
 
     def _has_all_modalities(self, subj_dir: Path) -> bool:
         """check if subject has all 4 modalities."""
-        return all(
-            (subj_dir / f"{mod}.nii.gz").exists()
-            for mod in self.MODALITIES
-        )
+        return all((subj_dir / f"{mod}.nii.gz").exists() for mod in self.MODALITIES)
 
     def _load_volume(self, subj_dir: Path) -> np.ndarray:
         """load all modalities for a subject. returns [4, d, h, w]."""
@@ -185,8 +182,7 @@ class MultiDomainMRIDataset(Dataset):
 
         if self.image_size and tensor.shape[-2:] != tuple(self.image_size):
             tensor = torch.nn.functional.interpolate(
-                tensor.unsqueeze(0), size=self.image_size,
-                mode="bilinear", align_corners=False
+                tensor.unsqueeze(0), size=self.image_size, mode="bilinear", align_corners=False
             ).squeeze(0)
         return tensor
 
@@ -201,7 +197,7 @@ class MultiDomainMRIDataset(Dataset):
         volume = self._load_volume(subj_dir)  # [4, d, h, w]
 
         # extract 2.5d triplet: [4, 3, h, w] -> [12, h, w]
-        triplet = volume[:, slice_idx - 1:slice_idx + 2, :, :]  # [4, 3, h, w]
+        triplet = volume[:, slice_idx - 1 : slice_idx + 2, :, :]  # [4, 3, h, w]
         input_25d = triplet.reshape(-1, triplet.shape[2], triplet.shape[3])  # [12, h, w]
 
         # center slice as target: [4, h, w]
@@ -211,8 +207,8 @@ class MultiDomainMRIDataset(Dataset):
         target_tensor = self._normalize_and_resize(center)
 
         return {
-            "input": input_tensor,        # [12, h, w]
-            "target": target_tensor,       # [4, h, w]
+            "input": input_tensor,  # [12, h, w]
+            "target": target_tensor,  # [4, h, w]
             "domain_id": torch.tensor(domain_id, dtype=torch.long),
             "domain_name": domain_name,
         }
@@ -247,8 +243,8 @@ class MultiDomainTrainer:
     def __init__(
         self,
         config: MultiDomainConfig,
-        data_dirs: Dict[str, str],
-        domain_names: List[str],
+        data_dirs: dict[str, str],
+        domain_names: list[str],
         output_dir: str,
         batch_size: int = 16,
         image_size: int = 128,
@@ -258,7 +254,7 @@ class MultiDomainTrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         lambda_cls: float = 1.0,
         lambda_rec: float = 10.0,
         scheduler_type: str = "cosine",
@@ -266,7 +262,7 @@ class MultiDomainTrainer:
         min_lr: float = 1e-6,
         gradient_clip_norm: float = 1.0,
         use_amp: bool = True,
-        domain_split_file: str = None,
+        domain_split_file: Optional[str] = None,
     ):
         setup_torch_performance()
         self.config = config
@@ -313,9 +309,7 @@ class MultiDomainTrainer:
 
         # tensorboard
         runs_dir = Path("/data/runs") if Path("/data/runs").exists() else PROJECT_ROOT / "runs"
-        self.writer = SummaryWriter(
-            log_dir=str(runs_dir / experiment_name)
-        )
+        self.writer = SummaryWriter(log_dir=str(runs_dir / experiment_name))
 
         # create model
         self.model = MultiDomainSACycleGAN25D(config)
@@ -330,14 +324,14 @@ class MultiDomainTrainer:
             self.model.discriminator = DataParallel(self.model.discriminator)
 
         # create datasets and dataloaders
-        loader_kwargs = dict(
-            batch_size=batch_size,
-            num_workers=num_workers,
-            pin_memory=True,
-            prefetch_factor=4 if num_workers > 0 else None,
-            persistent_workers=num_workers > 0,
-            drop_last=True,
-        )
+        loader_kwargs = {
+            "batch_size": batch_size,
+            "num_workers": num_workers,
+            "pin_memory": True,
+            "prefetch_factor": 4 if num_workers > 0 else None,
+            "persistent_workers": num_workers > 0,
+            "drop_last": True,
+        }
         self.train_dataset = MultiDomainMRIDataset(
             data_dirs=data_dirs,
             domain_names=domain_names,
@@ -382,6 +376,7 @@ class MultiDomainTrainer:
                 self.opt_D, T_max=200, eta_min=min_lr
             )
         else:
+
             def lambda_rule(epoch, total_epochs=200):
                 decay_start = total_epochs // 2
                 if epoch < decay_start:
@@ -417,7 +412,7 @@ class MultiDomainTrainer:
 
     def _save_config(self, init_args: dict):
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "lambda_cls": self.lambda_cls,
                 "lambda_rec": self.lambda_rec,
@@ -449,7 +444,7 @@ class MultiDomainTrainer:
             targets[i] = np.random.choice(choices)
         return targets
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """single training step for multi-domain model."""
         real = batch["input"].to(self.device)
         src_domain = batch["domain_id"].to(self.device)
@@ -460,7 +455,7 @@ class MultiDomainTrainer:
             n_repeats = 12 // real.size(1)
             real = real.repeat(1, n_repeats, 1, 1)[:, :12]
 
-        center = real[:, :4]  # center slice (first 4 channels)
+        center = batch["target"].to(self.device)  # 4-modality center slice [b,4,h,w]
         tgt_domain = self._sample_target_domains(src_domain)
 
         # ================================================================
@@ -544,7 +539,7 @@ class MultiDomainTrainer:
             "idt_loss": loss_idt.item(),
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         self.model.train()
         epoch_losses = {"G_loss": 0, "D_loss": 0, "G_cls": 0, "rec_loss": 0}
 
@@ -560,12 +555,14 @@ class MultiDomainTrainer:
                 for k, v in losses.items():
                     self.writer.add_scalar(f"train/{k}", v, self.global_step)
 
-            pbar.set_postfix({
-                "G": f'{losses["G_loss"]:.3f}',
-                "D": f'{losses["D_loss"]:.3f}',
-                "cls": f'{losses["G_cls"]:.3f}',
-                "rec": f'{losses["rec_loss"]:.3f}',
-            })
+            pbar.set_postfix(
+                {
+                    "G": f"{losses['G_loss']:.3f}",
+                    "D": f"{losses['D_loss']:.3f}",
+                    "cls": f"{losses['G_cls']:.3f}",
+                    "rec": f"{losses['rec_loss']:.3f}",
+                }
+            )
 
         n = len(self.train_loader)
         for key in epoch_losses:
@@ -660,9 +657,7 @@ class MultiDomainTrainer:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="train multi-domain sa-cyclegan-2.5d with adain"
-    )
+    parser = argparse.ArgumentParser(description="train multi-domain sa-cyclegan-2.5d with adain")
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--epochs", type=int, default=200)
@@ -690,9 +685,7 @@ def main():
         with open(args.config) as f:
             cfg = yaml.safe_load(f)
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     config = MultiDomainConfig(

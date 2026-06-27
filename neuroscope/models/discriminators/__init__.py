@@ -8,77 +8,74 @@ adversarial training in image-to-image translation.
 # base classes
 from .base import (
     BaseDiscriminator,
-    PatchDiscriminator,
-    MultiScaleDiscriminatorBase,
     ConditionalDiscriminator,
-    ProjectionDiscriminator,
     FeatureMatchingDiscriminator,
-)
-
-# patch discriminators
-from .patch import (
-    NLayerPatchDiscriminator,
-    PixelDiscriminator,
-    DeepPatchDiscriminator,
-    ResidualPatchDiscriminator,
-    DilatedPatchDiscriminator,
-    AttentionPatchDiscriminator,
+    MultiScaleDiscriminatorBase,
+    PatchDiscriminator,
+    ProjectionDiscriminator,
 )
 
 # multi-scale discriminators
 from .multiscale import (
+    AdaptiveMultiScaleDiscriminator,
+    DualScaleDiscriminator,
     MultiScaleDiscriminator,
+    ProgressiveMultiScaleDiscriminator,
     PyramidDiscriminator,
     SharedEncoderMultiScaleDiscriminator,
-    AdaptiveMultiScaleDiscriminator,
-    ProgressiveMultiScaleDiscriminator,
-    DualScaleDiscriminator,
+)
+
+# patch discriminators
+from .patch import (
+    AttentionPatchDiscriminator,
+    DeepPatchDiscriminator,
+    DilatedPatchDiscriminator,
+    NLayerPatchDiscriminator,
+    PixelDiscriminator,
+    ResidualPatchDiscriminator,
 )
 
 # spectral normalization discriminators
 from .spectral import (
-    SpectralNormDiscriminator,
-    SNResNetDiscriminator,
-    SNProjectionDiscriminator,
     SNMultiScaleDiscriminator,
+    SNProjectionDiscriminator,
+    SNResNetDiscriminator,
     SNSelfAttentionDiscriminator,
     SNUNetDiscriminator,
+    SpectralNormDiscriminator,
 )
 
 # aliases for compatibility
 PatchGANDiscriminator = NLayerPatchDiscriminator
 
 __all__ = [
+    "AdaptiveMultiScaleDiscriminator",
+    "AttentionPatchDiscriminator",
     # base
-    'BaseDiscriminator',
-    'PatchDiscriminator',
-    'MultiScaleDiscriminatorBase',
-    'ConditionalDiscriminator',
-    'ProjectionDiscriminator',
-    'FeatureMatchingDiscriminator',
-    
-    # patch
-    'NLayerPatchDiscriminator',
-    'PatchGANDiscriminator',
-    'PixelDiscriminator',
-    'DeepPatchDiscriminator',
-    'ResidualPatchDiscriminator',
-    'DilatedPatchDiscriminator',
-    'AttentionPatchDiscriminator',
-    
+    "BaseDiscriminator",
+    "ConditionalDiscriminator",
+    "DeepPatchDiscriminator",
+    "DilatedPatchDiscriminator",
+    "DualScaleDiscriminator",
+    "FeatureMatchingDiscriminator",
     # multi-scale
-    'MultiScaleDiscriminator',
-    'PyramidDiscriminator',
-    'SharedEncoderMultiScaleDiscriminator',
-    'AdaptiveMultiScaleDiscriminator',
-    'ProgressiveMultiScaleDiscriminator',
-    'DualScaleDiscriminator',
-    
+    "MultiScaleDiscriminator",
+    "MultiScaleDiscriminatorBase",
+    # patch
+    "NLayerPatchDiscriminator",
+    "PatchDiscriminator",
+    "PatchGANDiscriminator",
+    "PixelDiscriminator",
+    "ProgressiveMultiScaleDiscriminator",
+    "ProjectionDiscriminator",
+    "PyramidDiscriminator",
+    "ResidualPatchDiscriminator",
+    "SNMultiScaleDiscriminator",
+    "SNProjectionDiscriminator",
+    "SNResNetDiscriminator",
+    "SNSelfAttentionDiscriminator",
+    "SNUNetDiscriminator",
+    "SharedEncoderMultiScaleDiscriminator",
     # spectral
-    'SpectralNormDiscriminator',
-    'SNResNetDiscriminator',
-    'SNProjectionDiscriminator',
-    'SNMultiScaleDiscriminator',
-    'SNSelfAttentionDiscriminator',
-    'SNUNetDiscriminator',
+    "SpectralNormDiscriminator",
 ]

@@ -19,19 +19,16 @@ derived regions:
 
 import argparse
 import json
-import os
-import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
-from scipy import ndimage
 from skimage.transform import resize
 from tqdm import tqdm
 
 
-def load_nifti(filepath: Path) -> Tuple[np.ndarray, np.ndarray]:
+def load_nifti(filepath: Path) -> tuple[np.ndarray, np.ndarray]:
     """
     load nifti file and return data with affine matrix.
 
@@ -53,7 +50,7 @@ def save_nifti(data: np.ndarray, affine: np.ndarray, filepath: Path) -> None:
     nib.save(img, str(filepath))
 
 
-def convert_labels_to_regions(seg: np.ndarray) -> Dict[str, np.ndarray]:
+def convert_labels_to_regions(seg: np.ndarray) -> dict[str, np.ndarray]:
     """
     convert brats segmentation labels to clinically relevant regions.
 
@@ -69,19 +66,19 @@ def convert_labels_to_regions(seg: np.ndarray) -> Dict[str, np.ndarray]:
     et = (seg == 4).astype(np.uint8)  # enhancing tumor
 
     return {
-        'wt': wt,  # whole tumor
-        'tc': tc,  # tumor core
-        'et': et,  # enhancing tumor
-        'full': seg.astype(np.uint8)  # full multi-class
+        "wt": wt,  # whole tumor
+        "tc": tc,  # tumor core
+        "et": et,  # enhancing tumor
+        "full": seg.astype(np.uint8),  # full multi-class
     }
 
 
 def extract_slices_with_tumor(
-    modalities: Dict[str, np.ndarray],
+    modalities: dict[str, np.ndarray],
     segmentation: np.ndarray,
-    slice_range: Tuple[int, int] = (30, 125),
-    min_tumor_pixels: int = 100
-) -> List[Dict]:
+    slice_range: tuple[int, int] = (30, 125),
+    min_tumor_pixels: int = 100,
+) -> list[dict]:
     """
     extract 2d slices that contain tumor for training.
 
@@ -105,8 +102,8 @@ def extract_slices_with_tumor(
 
         if tumor_pixels >= min_tumor_pixels:
             slice_data = {
-                'slice_idx': z,
-                'tumor_pixels': int(tumor_pixels),
+                "slice_idx": z,
+                "tumor_pixels": int(tumor_pixels),
             }
 
             # extract modality slices
@@ -114,20 +111,21 @@ def extract_slices_with_tumor(
                 slice_data[mod_name] = mod_data[:, :, z]
 
             # extract segmentation
-            slice_data['seg'] = seg_slice
+            slice_data["seg"] = seg_slice
 
             # compute region masks
             regions = convert_labels_to_regions(seg_slice)
             for region_name, region_mask in regions.items():
-                slice_data[f'seg_{region_name}'] = region_mask
+                slice_data[f"seg_{region_name}"] = region_mask
 
             slices.append(slice_data)
 
     return slices
 
 
-def resize_slice(data: np.ndarray, target_size: Tuple[int, int],
-                 is_label: bool = False) -> np.ndarray:
+def resize_slice(
+    data: np.ndarray, target_size: tuple[int, int], is_label: bool = False
+) -> np.ndarray:
     """
     resize 2d slice to target size.
 
@@ -140,8 +138,9 @@ def resize_slice(data: np.ndarray, target_size: Tuple[int, int],
         resized array
     """
     order = 0 if is_label else 3  # nearest for labels, cubic for images
-    resized = resize(data, target_size, order=order, preserve_range=True,
-                    anti_aliasing=not is_label)
+    resized = resize(
+        data, target_size, order=order, preserve_range=True, anti_aliasing=not is_label
+    )
     return resized
 
 
@@ -178,10 +177,10 @@ def normalize_intensity(data: np.ndarray, mask: Optional[np.ndarray] = None) -> 
 def process_brats_subject(
     subject_dir: Path,
     output_dir: Path,
-    target_size: Tuple[int, int] = (128, 128),
-    slice_range: Tuple[int, int] = (30, 125),
-    min_tumor_pixels: int = 50
-) -> Optional[Dict]:
+    target_size: tuple[int, int] = (128, 128),
+    slice_range: tuple[int, int] = (30, 125),
+    min_tumor_pixels: int = 50,
+) -> Optional[dict]:
     """
     process a single brats subject.
 
@@ -199,57 +198,55 @@ def process_brats_subject(
 
     # find modality files - brats naming convention
     modality_files = {
-        't1': None,
-        't1ce': None,  # or t1gd
-        't2': None,
-        'flair': None,
-        'seg': None
+        "t1": None,
+        "t1ce": None,  # or t1gd
+        "t2": None,
+        "flair": None,
+        "seg": None,
     }
 
     for f in subject_dir.iterdir():
         fname = f.name.lower()
-        if f.suffix == '.gz' or f.suffix == '.nii':
-            if 't1ce' in fname or 't1gd' in fname or 't1_gd' in fname:
-                modality_files['t1ce'] = f
-            elif 't1' in fname and 'ce' not in fname and 'gd' not in fname:
-                modality_files['t1'] = f
-            elif 't2' in fname and 'flair' not in fname:
-                modality_files['t2'] = f
-            elif 'flair' in fname:
-                modality_files['flair'] = f
-            elif 'seg' in fname:
-                modality_files['seg'] = f
+        if f.suffix == ".gz" or f.suffix == ".nii":
+            if "t1ce" in fname or "t1gd" in fname or "t1_gd" in fname:
+                modality_files["t1ce"] = f
+            elif "t1" in fname and "ce" not in fname and "gd" not in fname:
+                modality_files["t1"] = f
+            elif "t2" in fname and "flair" not in fname:
+                modality_files["t2"] = f
+            elif "flair" in fname:
+                modality_files["flair"] = f
+            elif "seg" in fname:
+                modality_files["seg"] = f
 
     # check if segmentation exists
-    if modality_files['seg'] is None:
-        print(f'[warning] no segmentation found for {subject_id}')
+    if modality_files["seg"] is None:
+        print(f"[warning] no segmentation found for {subject_id}")
         return None
 
     # check if all modalities exist
-    missing_mods = [k for k, v in modality_files.items() if v is None and k != 'seg']
+    missing_mods = [k for k, v in modality_files.items() if v is None and k != "seg"]
     if missing_mods:
-        print(f'[warning] missing modalities for {subject_id}: {missing_mods}')
+        print(f"[warning] missing modalities for {subject_id}: {missing_mods}")
         return None
 
     # load all modalities
     modalities = {}
     affine = None
-    for mod_name in ['t1', 't1ce', 't2', 'flair']:
+    for mod_name in ["t1", "t1ce", "t2", "flair"]:
         data, aff = load_nifti(modality_files[mod_name])
         modalities[mod_name] = data
         if affine is None:
             affine = aff
 
     # load segmentation
-    seg_data, _ = load_nifti(modality_files['seg'])
+    seg_data, _ = load_nifti(modality_files["seg"])
 
     # extract slices with tumor
-    slices = extract_slices_with_tumor(
-        modalities, seg_data, slice_range, min_tumor_pixels
-    )
+    slices = extract_slices_with_tumor(modalities, seg_data, slice_range, min_tumor_pixels)
 
     if len(slices) == 0:
-        print(f'[warning] no tumor slices found for {subject_id}')
+        print(f"[warning] no tumor slices found for {subject_id}")
         return None
 
     # create subject output directory
@@ -258,53 +255,53 @@ def process_brats_subject(
 
     # save processed slices
     subject_info = {
-        'subject_id': subject_id,
-        'n_slices': len(slices),
-        'slice_indices': [],
-        'tumor_pixels': []
+        "subject_id": subject_id,
+        "n_slices": len(slices),
+        "slice_indices": [],
+        "tumor_pixels": [],
     }
 
-    for i, slice_data in enumerate(slices):
-        slice_idx = slice_data['slice_idx']
-        subject_info['slice_indices'].append(slice_idx)
-        subject_info['tumor_pixels'].append(slice_data['tumor_pixels'])
+    for _i, slice_data in enumerate(slices):
+        slice_idx = slice_data["slice_idx"]
+        subject_info["slice_indices"].append(slice_idx)
+        subject_info["tumor_pixels"].append(slice_data["tumor_pixels"])
 
         # stack modalities for input (4 channels)
-        stacked = np.stack([
-            resize_slice(normalize_intensity(slice_data['t1']), target_size),
-            resize_slice(normalize_intensity(slice_data['t1ce']), target_size),
-            resize_slice(normalize_intensity(slice_data['t2']), target_size),
-            resize_slice(normalize_intensity(slice_data['flair']), target_size),
-        ], axis=0)
+        stacked = np.stack(
+            [
+                resize_slice(normalize_intensity(slice_data["t1"]), target_size),
+                resize_slice(normalize_intensity(slice_data["t1ce"]), target_size),
+                resize_slice(normalize_intensity(slice_data["t2"]), target_size),
+                resize_slice(normalize_intensity(slice_data["flair"]), target_size),
+            ],
+            axis=0,
+        )
 
         # resize segmentation
-        seg_resized = resize_slice(slice_data['seg'], target_size, is_label=True)
+        seg_resized = resize_slice(slice_data["seg"], target_size, is_label=True)
 
         # resize region masks
-        seg_wt = resize_slice(slice_data['seg_wt'], target_size, is_label=True)
-        seg_tc = resize_slice(slice_data['seg_tc'], target_size, is_label=True)
-        seg_et = resize_slice(slice_data['seg_et'], target_size, is_label=True)
+        seg_wt = resize_slice(slice_data["seg_wt"], target_size, is_label=True)
+        seg_tc = resize_slice(slice_data["seg_tc"], target_size, is_label=True)
+        seg_et = resize_slice(slice_data["seg_et"], target_size, is_label=True)
 
         # save as numpy arrays
-        np.save(subject_output / f'slice_{slice_idx:03d}_input.npy', stacked.astype(np.float32))
-        np.save(subject_output / f'slice_{slice_idx:03d}_seg.npy', seg_resized.astype(np.uint8))
-        np.save(subject_output / f'slice_{slice_idx:03d}_seg_wt.npy', seg_wt.astype(np.uint8))
-        np.save(subject_output / f'slice_{slice_idx:03d}_seg_tc.npy', seg_tc.astype(np.uint8))
-        np.save(subject_output / f'slice_{slice_idx:03d}_seg_et.npy', seg_et.astype(np.uint8))
+        np.save(subject_output / f"slice_{slice_idx:03d}_input.npy", stacked.astype(np.float32))
+        np.save(subject_output / f"slice_{slice_idx:03d}_seg.npy", seg_resized.astype(np.uint8))
+        np.save(subject_output / f"slice_{slice_idx:03d}_seg_wt.npy", seg_wt.astype(np.uint8))
+        np.save(subject_output / f"slice_{slice_idx:03d}_seg_tc.npy", seg_tc.astype(np.uint8))
+        np.save(subject_output / f"slice_{slice_idx:03d}_seg_et.npy", seg_et.astype(np.uint8))
 
     # save subject info
-    with open(subject_output / 'info.json', 'w') as f:
+    with open(subject_output / "info.json", "w") as f:
         json.dump(subject_info, f, indent=2)
 
     return subject_info
 
 
 def create_splits(
-    subjects: List[str],
-    train_ratio: float = 0.7,
-    val_ratio: float = 0.15,
-    seed: int = 42
-) -> Dict[str, List[str]]:
+    subjects: list[str], train_ratio: float = 0.7, val_ratio: float = 0.15, seed: int = 42
+) -> dict[str, list[str]]:
     """
     create train/val/test splits.
 
@@ -326,33 +323,38 @@ def create_splits(
     n_val = int(n * val_ratio)
 
     train_idx = indices[:n_train]
-    val_idx = indices[n_train:n_train + n_val]
-    test_idx = indices[n_train + n_val:]
+    val_idx = indices[n_train : n_train + n_val]
+    test_idx = indices[n_train + n_val :]
 
     return {
-        'train': [subjects[i] for i in train_idx],
-        'val': [subjects[i] for i in val_idx],
-        'test': [subjects[i] for i in test_idx]
+        "train": [subjects[i] for i in train_idx],
+        "val": [subjects[i] for i in val_idx],
+        "test": [subjects[i] for i in test_idx],
     }
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='prepare brats segmentation data for downstream evaluation'
+        description="prepare brats segmentation data for downstream evaluation"
     )
-    parser.add_argument('--input-dir', type=str, required=True,
-                       help='path to raw brats data directory')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory for processed data')
-    parser.add_argument('--target-size', type=int, nargs=2, default=[128, 128],
-                       help='target slice size (h, w)')
-    parser.add_argument('--slice-range', type=int, nargs=2, default=[30, 125],
-                       help='axial slice range to extract')
-    parser.add_argument('--min-tumor-pixels', type=int, default=50,
-                       help='minimum tumor pixels per slice')
-    parser.add_argument('--train-ratio', type=float, default=0.7)
-    parser.add_argument('--val-ratio', type=float, default=0.15)
-    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument(
+        "--input-dir", type=str, required=True, help="path to raw brats data directory"
+    )
+    parser.add_argument(
+        "--output-dir", type=str, required=True, help="output directory for processed data"
+    )
+    parser.add_argument(
+        "--target-size", type=int, nargs=2, default=[128, 128], help="target slice size (h, w)"
+    )
+    parser.add_argument(
+        "--slice-range", type=int, nargs=2, default=[30, 125], help="axial slice range to extract"
+    )
+    parser.add_argument(
+        "--min-tumor-pixels", type=int, default=50, help="minimum tumor pixels per slice"
+    )
+    parser.add_argument("--train-ratio", type=float, default=0.7)
+    parser.add_argument("--val-ratio", type=float, default=0.15)
+    parser.add_argument("--seed", type=int, default=42)
 
     args = parser.parse_args()
 
@@ -363,12 +365,12 @@ def main():
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print('[segdata] preparing brats segmentation data')
-    print(f'[segdata] input: {input_dir}')
-    print(f'[segdata] output: {output_dir}')
-    print(f'[segdata] target size: {target_size}')
-    print(f'[segdata] slice range: {slice_range}')
-    print('=' * 60)
+    print("[segdata] preparing brats segmentation data")
+    print(f"[segdata] input: {input_dir}")
+    print(f"[segdata] output: {output_dir}")
+    print(f"[segdata] target size: {target_size}")
+    print(f"[segdata] slice range: {slice_range}")
+    print("=" * 60)
 
     # find all subjects
     subjects = []
@@ -376,53 +378,50 @@ def main():
         if d.is_dir():
             subjects.append(d)
 
-    print(f'[segdata] found {len(subjects)} subjects')
+    print(f"[segdata] found {len(subjects)} subjects")
 
     # process subjects
     processed_subjects = []
     total_slices = 0
 
-    for subject_dir in tqdm(subjects, desc='processing subjects'):
+    for subject_dir in tqdm(subjects, desc="processing subjects"):
         info = process_brats_subject(
-            subject_dir, output_dir, target_size, slice_range,
-            args.min_tumor_pixels
+            subject_dir, output_dir, target_size, slice_range, args.min_tumor_pixels
         )
         if info is not None:
-            processed_subjects.append(info['subject_id'])
-            total_slices += info['n_slices']
+            processed_subjects.append(info["subject_id"])
+            total_slices += info["n_slices"]
 
-    print(f'[segdata] processed {len(processed_subjects)} subjects')
-    print(f'[segdata] total slices: {total_slices}')
+    print(f"[segdata] processed {len(processed_subjects)} subjects")
+    print(f"[segdata] total slices: {total_slices}")
 
     # create splits
-    splits = create_splits(
-        processed_subjects, args.train_ratio, args.val_ratio, args.seed
-    )
+    splits = create_splits(processed_subjects, args.train_ratio, args.val_ratio, args.seed)
 
-    print(f'[segdata] train: {len(splits["train"])} subjects')
-    print(f'[segdata] val: {len(splits["val"])} subjects')
-    print(f'[segdata] test: {len(splits["test"])} subjects')
+    print(f"[segdata] train: {len(splits['train'])} subjects")
+    print(f"[segdata] val: {len(splits['val'])} subjects")
+    print(f"[segdata] test: {len(splits['test'])} subjects")
 
     # save splits
-    with open(output_dir / 'splits.json', 'w') as f:
+    with open(output_dir / "splits.json", "w") as f:
         json.dump(splits, f, indent=2)
 
     # save metadata
     metadata = {
-        'n_subjects': len(processed_subjects),
-        'n_slices': total_slices,
-        'target_size': target_size,
-        'slice_range': slice_range,
-        'min_tumor_pixels': args.min_tumor_pixels,
-        'splits': {k: len(v) for k, v in splits.items()}
+        "n_subjects": len(processed_subjects),
+        "n_slices": total_slices,
+        "target_size": target_size,
+        "slice_range": slice_range,
+        "min_tumor_pixels": args.min_tumor_pixels,
+        "splits": {k: len(v) for k, v in splits.items()},
     }
 
-    with open(output_dir / 'metadata.json', 'w') as f:
+    with open(output_dir / "metadata.json", "w") as f:
         json.dump(metadata, f, indent=2)
 
-    print('=' * 60)
-    print(f'[segdata] done. data saved to {output_dir}')
+    print("=" * 60)
+    print(f"[segdata] done. data saved to {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

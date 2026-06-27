@@ -21,9 +21,9 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,15 +61,17 @@ def main():
     with open(args.config) as f:
         cfg = yaml.safe_load(f) or {}
 
-    domain_names = cfg.get("domain_names", ["brats", "upenn_3t_triotim",
-                                            "upenn_3t_other", "upenn_15t"])
+    domain_names = cfg.get(
+        "domain_names", ["brats", "upenn_3t_triotim", "upenn_3t_other", "upenn_15t"]
+    )
     n_domains = len(domain_names)
     print(f"loaded config; domains: {domain_names}")
 
     # try to import the multi-domain trainer module to fetch model class
     try:
         from journal_extension.scripts.train_multi_domain import (  # type: ignore
-            MultiDomainTrainer, MultiDomainConfig
+            MultiDomainConfig,
+            MultiDomainTrainer,
         )
     except Exception as e:
         print(f"could not import multi-domain trainer: {e}")
@@ -112,25 +114,28 @@ def main():
     trainer.model.eval()
 
     # collect a few sample cases (one volume per source domain)
-    cases: List[Dict] = []
+    cases: list[dict] = []
     seen_domains = set()
     with torch.no_grad():
         for batch in trainer.train_loader:
-            src = int(batch["domain"][0].item())
+            src = int(batch["domain_id"][0].item())
             if src in seen_domains:
                 continue
             seen_domains.add(src)
-            cases.append({
-                "source_domain": src,
-                "image": batch["image"][0].cpu(),
-                "image_3slice": batch["image_3slice"][0].cpu()
-                if "image_3slice" in batch else None,
-            })
+            cases.append(
+                {
+                    "source_domain": src,
+                    "image": batch["target"][0].cpu(),  # 4-ch center slice (reference)
+                    "image_3slice": batch["input"][0].cpu()  # 12-ch 2.5d generator input
+                    if "input" in batch
+                    else None,
+                }
+            )
             if len(cases) >= n_domains:
                 break
 
-    matrix_metrics: Dict[str, Dict] = {}
-    matrix_arrays: Dict[str, np.ndarray] = {}
+    matrix_metrics: dict[str, dict] = {}
+    matrix_arrays: dict[str, np.ndarray] = {}
 
     with torch.no_grad():
         for case_i, case in enumerate(cases):
@@ -150,28 +155,32 @@ def main():
                 ref = case["image"].numpy()
                 fake = matrix_arrays[key]
                 mae = float(np.mean(np.abs(normalise(ref) - normalise(fake))))
-                matrix_metrics[key] = {"mae": mae,
-                                       "src": int(src), "tgt": int(tgt),
-                                       "case": int(case_i)}
+                matrix_metrics[key] = {
+                    "mae": mae,
+                    "src": int(src),
+                    "tgt": int(tgt),
+                    "case": int(case_i),
+                }
 
     np.savez_compressed(out_dir / "n_by_n_matrix.npz", **matrix_arrays)
     (out_dir / "matrix_metrics.json").write_text(json.dumps(matrix_metrics, indent=2))
 
     # produce per-modality grid figure
-    plt.rcParams.update({
-        "font.family": "serif",
-        "font.size": 9,
-        "savefig.dpi": 300,
-        "savefig.bbox": "tight",
-    })
+    plt.rcParams.update(
+        {
+            "font.family": "serif",
+            "font.size": 9,
+            "savefig.dpi": 300,
+            "savefig.bbox": "tight",
+        }
+    )
 
     if not cases:
         print("no cases collected; skipping figure.")
         return
 
     n_cases = len(cases)
-    fig, axes = plt.subplots(n_cases, n_domains, figsize=(2.0 * n_domains,
-                                                          2.0 * n_cases))
+    fig, axes = plt.subplots(n_cases, n_domains, figsize=(2.0 * n_domains, 2.0 * n_cases))
     if n_cases == 1:
         axes = np.array([axes])
     for ci, case in enumerate(cases):
@@ -183,13 +192,16 @@ def main():
                 ax.imshow(img, cmap="gray", vmin=0, vmax=1)
             else:
                 ax.set_facecolor("#E5E7EB")
-            ax.set_xticks([]); ax.set_yticks([])
+            ax.set_xticks([])
+            ax.set_yticks([])
             if ci == 0:
                 ax.set_title(f"$\\rightarrow$ {domain_names[tj]}", fontsize=8)
             if tj == 0:
                 ax.set_ylabel(domain_names[case["source_domain"]], fontsize=8)
-    fig.suptitle(f"Extension C: $N{{\\times}}N$ Domain Translation Matrix "
-                 f"(modality {args.modality_index})", fontsize=11)
+    fig.suptitle(
+        f"Extension C: $N{{\\times}}N$ Domain Translation Matrix (modality {args.modality_index})",
+        fontsize=11,
+    )
     fig.tight_layout()
     fig.savefig(out_dir / f"fig_multidomain_matrix_modality{args.modality_index}.pdf")
     fig.savefig(out_dir / f"fig_multidomain_matrix_modality{args.modality_index}.png")

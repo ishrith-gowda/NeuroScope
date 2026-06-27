@@ -11,63 +11,62 @@ date: january 2026
 
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
 import numpy as np
+import seaborn as sns
 
 # use agg backend for non-interactive rendering
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 
 # use matplotlib default style, then configure
-plt.style.use('default')
+plt.style.use("default")
 
 # configure matplotlib for latex rendering and publication quality
 # matching your exact working configuration with proper font hierarchy
-plt.rcParams.update({
-    'text.usetex': True,
-    'text.latex.preamble': r'\usepackage{amsmath}\usepackage{amssymb}',
-    'font.family': 'serif',
-    'font.serif': ['Computer Modern Roman'],
-    'font.size': 12,
-    'axes.labelsize': 14,
-    'axes.titlesize': 14,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'legend.fontsize': 11,
-    'figure.titlesize': 18,
-
-    # high resolution output
-    'figure.dpi': 300,
-    'savefig.dpi': 300,
-    'savefig.bbox': 'tight',
-    'savefig.pad_inches': 0.1,
-
-    # aesthetics
-    'axes.grid': True,
-    'grid.alpha': 0.3,
-    'grid.linestyle': '--',
-    'lines.linewidth': 2,
-    'axes.axisbelow': True,
-    'savefig.format': 'pdf',
-})
+plt.rcParams.update(
+    {
+        "text.usetex": True,
+        "text.latex.preamble": r"\usepackage{amsmath}\usepackage{amssymb}",
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "font.size": 12,
+        "axes.labelsize": 14,
+        "axes.titlesize": 14,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 11,
+        "figure.titlesize": 18,
+        # high resolution output
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.1,
+        # aesthetics
+        "axes.grid": True,
+        "grid.alpha": 0.3,
+        "grid.linestyle": "--",
+        "lines.linewidth": 2,
+        "axes.axisbelow": True,
+        "savefig.format": "pdf",
+    }
+)
 
 # define consistent color palette (colorblind-friendly)
-palette = sns.color_palette('colorblind')
+palette = sns.color_palette("colorblind")
 COLORS_LIST = palette
 
 # maintain backward compatibility with existing scripts
 COLORS = {
-    'primary': palette[0],    # blue
-    'secondary': palette[1],  # orange
-    'success': palette[2],    # green
-    'danger': palette[3],     # red
-    'warning': palette[4],    # purple
-    'info': palette[5],       # brown
-    'gray': palette[7],       # gray
+    "primary": palette[0],  # blue
+    "secondary": palette[1],  # orange
+    "success": palette[2],  # green
+    "danger": palette[3],  # red
+    "warning": palette[4],  # purple
+    "info": palette[5],  # brown
+    "gray": palette[7],  # gray
 }
 
 
-def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
+def get_figure_size(width="columnwidth", fraction=1.0, aspect_ratio="golden"):
     """
     calculate figure dimensions for publication.
 
@@ -81,8 +80,8 @@ def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
     """
     # ieee column widths
     widths = {
-        'columnwidth': 3.5,  # single column
-        'textwidth': 7.0,     # full width (two columns)
+        "columnwidth": 3.5,  # single column
+        "textwidth": 7.0,  # full width (two columns)
     }
 
     # get width in inches
@@ -94,9 +93,9 @@ def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
     fig_width = fig_width * fraction
 
     # calculate height based on aspect ratio
-    if aspect_ratio == 'golden':
+    if aspect_ratio == "golden":
         fig_height = fig_width / 1.618  # golden ratio
-    elif aspect_ratio == 'square':
+    elif aspect_ratio == "square":
         fig_height = fig_width
     elif isinstance(aspect_ratio, (int, float)):
         fig_height = fig_width / aspect_ratio
@@ -106,7 +105,7 @@ def get_figure_size(width='columnwidth', fraction=1.0, aspect_ratio='golden'):
     return (fig_width, fig_height)
 
 
-def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
+def save_figure(fig, filename, output_dir="figures/main", formats=None):
     """
     save figure in multiple formats with consistent settings.
 
@@ -116,9 +115,10 @@ def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
         output_dir: directory to save figures
         formats: list of formats to save ['pdf', 'png', 'pgf']
     """
-    import os
     from pathlib import Path
 
+    if formats is None:
+        formats = ["pdf"]
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -127,13 +127,13 @@ def save_figure(fig, filename, output_dir='figures/main', formats=['pdf']):
         fig.savefig(
             output_path,
             format=fmt,
-            bbox_inches='tight',
+            bbox_inches="tight",
             pad_inches=0.05,
         )
         print(f"saved: {output_path}")
 
 
-def add_statistical_annotation(ax, x1, x2, y, h, text, color='black'):
+def add_statistical_annotation(ax, x1, x2, y, h, text, color="black"):
     """
     add statistical significance annotation to plot.
 
@@ -145,11 +145,11 @@ def add_statistical_annotation(ax, x1, x2, y, h, text, color='black'):
         text: annotation text (*, **, ***, ns)
         color: bracket color
     """
-    ax.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=1.5, c=color)
-    ax.text((x1+x2)*0.5, y+h, text, ha='center', va='bottom', color=color, fontsize=10)
+    ax.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=1.5, c=color)
+    ax.text((x1 + x2) * 0.5, y + h, text, ha="center", va="bottom", color=color, fontsize=10)
 
 
-def create_colormap(name='viridis', reverse=False):
+def create_colormap(name="viridis", reverse=False):
     """
     get colormap suitable for medical images.
 
@@ -168,41 +168,41 @@ def create_colormap(name='viridis', reverse=False):
 
 # column widths for ieee format
 COLUMNWIDTH = 3.5  # inches
-TEXTWIDTH = 7.0    # inches
+TEXTWIDTH = 7.0  # inches
 
 # common figure sizes
 FIGURE_SIZES = {
-    'single': get_figure_size('columnwidth', 1.0),
-    'single_tall': get_figure_size('columnwidth', 1.0, aspect_ratio=1.0),
-    'double': get_figure_size('textwidth', 1.0),
-    'double_tall': get_figure_size('textwidth', 1.0, aspect_ratio=1.0),
+    "single": get_figure_size("columnwidth", 1.0),
+    "single_tall": get_figure_size("columnwidth", 1.0, aspect_ratio=1.0),
+    "double": get_figure_size("textwidth", 1.0),
+    "double_tall": get_figure_size("textwidth", 1.0, aspect_ratio=1.0),
 }
 
 # statistical significance markers
 SIGNIFICANCE = {
-    'ns': 'n.s.',
-    'p<0.05': r'$^*$',
-    'p<0.01': r'$^{**}$',
-    'p<0.001': r'$^{***}$',
+    "ns": "n.s.",
+    "p<0.05": r"$^*$",
+    "p<0.01": r"$^{**}$",
+    "p<0.001": r"$^{***}$",
 }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test latex rendering
     print("testing latex configuration...")
 
-    fig, ax = plt.subplots(figsize=FIGURE_SIZES['single'])
-    x = np.linspace(0, 2*np.pi, 100)
-    ax.plot(x, np.sin(x), label=r'$\sin(x)$')
-    ax.plot(x, np.cos(x), label=r'$\cos(x)$')
-    ax.set_xlabel(r'$x$ (radians)')
-    ax.set_ylabel(r'$f(x)$')
-    ax.set_title(r'Test Figure with LaTeX Rendering')
+    fig, ax = plt.subplots(figsize=FIGURE_SIZES["single"])
+    x = np.linspace(0, 2 * np.pi, 100)
+    ax.plot(x, np.sin(x), label=r"$\sin(x)$")
+    ax.plot(x, np.cos(x), label=r"$\cos(x)$")
+    ax.set_xlabel(r"$x$ (radians)")
+    ax.set_ylabel(r"$f(x)$")
+    ax.set_title(r"Test Figure with LaTeX Rendering")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    save_figure(fig, 'test_latex_rendering', output_dir='figures/main', formats=['pdf'])
+    save_figure(fig, "test_latex_rendering", output_dir="figures/main", formats=["pdf"])
     plt.close()
 
     print("latex configuration test complete!")
-    print(f"test figure saved to: figures/main/test_latex_rendering.pdf")
+    print("test figure saved to: figures/main/test_latex_rendering.pdf")

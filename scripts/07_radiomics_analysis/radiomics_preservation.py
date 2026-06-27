@@ -19,17 +19,18 @@ references:
 
 import argparse
 import json
-import numpy as np
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
-from scipy import stats
 import warnings
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+from scipy import stats
 
 
 @dataclass
 class PreservationMetrics:
     """container for feature preservation metrics."""
+
     pearson_r: float
     pearson_p: float
     ccc: float
@@ -81,7 +82,7 @@ def compute_ccc(x: np.ndarray, y: np.ndarray) -> float:
     return float(numerator / denominator)
 
 
-def compute_icc(x: np.ndarray, y: np.ndarray, icc_type: str = '2,1') -> float:
+def compute_icc(x: np.ndarray, y: np.ndarray, icc_type: str = "2,1") -> float:
     """
     compute intraclass correlation coefficient.
 
@@ -137,7 +138,7 @@ def compute_icc(x: np.ndarray, y: np.ndarray, icc_type: str = '2,1') -> float:
     return float(np.clip(icc, 0, 1))
 
 
-def bland_altman_analysis(x: np.ndarray, y: np.ndarray) -> Tuple[float, float, float, float]:
+def bland_altman_analysis(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]:
     """
     perform bland-altman analysis for method agreement.
 
@@ -171,8 +172,7 @@ def bland_altman_analysis(x: np.ndarray, y: np.ndarray) -> Tuple[float, float, f
 
 
 def compute_preservation_metrics(
-    original: np.ndarray,
-    harmonized: np.ndarray
+    original: np.ndarray, harmonized: np.ndarray
 ) -> PreservationMetrics:
     """
     compute all preservation metrics between original and harmonized features.
@@ -188,15 +188,20 @@ def compute_preservation_metrics(
     harmonized = np.asarray(harmonized).flatten()
 
     # remove invalid values
-    valid = ~(np.isnan(original) | np.isnan(harmonized) |
-              np.isinf(original) | np.isinf(harmonized))
+    valid = ~(np.isnan(original) | np.isnan(harmonized) | np.isinf(original) | np.isinf(harmonized))
     original = original[valid]
     harmonized = harmonized[valid]
 
     if len(original) < 3:
         return PreservationMetrics(
-            pearson_r=0.0, pearson_p=1.0, ccc=0.0, icc=0.0,
-            mean_diff=0.0, std_diff=0.0, loa_lower=0.0, loa_upper=0.0
+            pearson_r=0.0,
+            pearson_p=1.0,
+            ccc=0.0,
+            icc=0.0,
+            mean_diff=0.0,
+            std_diff=0.0,
+            loa_lower=0.0,
+            loa_upper=0.0,
         )
 
     # pearson correlation
@@ -221,7 +226,7 @@ def compute_preservation_metrics(
         mean_diff=mean_diff,
         std_diff=std_diff,
         loa_lower=loa_lower,
-        loa_upper=loa_upper
+        loa_upper=loa_upper,
     )
 
 
@@ -230,36 +235,29 @@ class RadiomicsPreservationAnalyzer:
     analyzer for radiomics feature preservation across harmonization.
     """
 
-    def __init__(self, feature_names: List[str]):
+    def __init__(self, feature_names: list[str]):
         self.feature_names = feature_names
         self.feature_categories = self._categorize_features(feature_names)
 
-    def _categorize_features(self, names: List[str]) -> Dict[str, List[int]]:
+    def _categorize_features(self, names: list[str]) -> dict[str, list[int]]:
         """categorize features by type."""
-        categories = {
-            'first_order': [],
-            'glcm': [],
-            'shape': [],
-            'other': []
-        }
+        categories = {"first_order": [], "glcm": [], "shape": [], "other": []}
 
         for i, name in enumerate(names):
-            if 'fo_' in name or 'first' in name.lower():
-                categories['first_order'].append(i)
-            elif 'glcm' in name.lower():
-                categories['glcm'].append(i)
-            elif 'shape' in name.lower():
-                categories['shape'].append(i)
+            if "fo_" in name or "first" in name.lower():
+                categories["first_order"].append(i)
+            elif "glcm" in name.lower():
+                categories["glcm"].append(i)
+            elif "shape" in name.lower():
+                categories["shape"].append(i)
             else:
-                categories['other'].append(i)
+                categories["other"].append(i)
 
         return categories
 
     def analyze_preservation(
-        self,
-        original_features: np.ndarray,
-        harmonized_features: np.ndarray
-    ) -> Dict:
+        self, original_features: np.ndarray, harmonized_features: np.ndarray
+    ) -> dict:
         """
         analyze feature preservation for all features.
 
@@ -273,11 +271,7 @@ class RadiomicsPreservationAnalyzer:
         n_samples, n_features = original_features.shape
         assert harmonized_features.shape == (n_samples, n_features)
 
-        results = {
-            'per_feature': {},
-            'per_category': {},
-            'overall': {}
-        }
+        results = {"per_feature": {}, "per_category": {}, "overall": {}}
 
         # per-feature metrics
         all_cccs = []
@@ -286,18 +280,17 @@ class RadiomicsPreservationAnalyzer:
 
         for i, name in enumerate(self.feature_names):
             metrics = compute_preservation_metrics(
-                original_features[:, i],
-                harmonized_features[:, i]
+                original_features[:, i], harmonized_features[:, i]
             )
-            results['per_feature'][name] = {
-                'pearson_r': metrics.pearson_r,
-                'pearson_p': metrics.pearson_p,
-                'ccc': metrics.ccc,
-                'icc': metrics.icc,
-                'mean_diff': metrics.mean_diff,
-                'std_diff': metrics.std_diff,
-                'loa_lower': metrics.loa_lower,
-                'loa_upper': metrics.loa_upper
+            results["per_feature"][name] = {
+                "pearson_r": metrics.pearson_r,
+                "pearson_p": metrics.pearson_p,
+                "ccc": metrics.ccc,
+                "icc": metrics.icc,
+                "mean_diff": metrics.mean_diff,
+                "std_diff": metrics.std_diff,
+                "loa_lower": metrics.loa_lower,
+                "loa_upper": metrics.loa_upper,
             }
 
             if not np.isnan(metrics.ccc):
@@ -317,38 +310,38 @@ class RadiomicsPreservationAnalyzer:
             cat_correlations = []
 
             for i in indices:
-                metrics = results['per_feature'][self.feature_names[i]]
-                if not np.isnan(metrics['ccc']):
-                    cat_cccs.append(metrics['ccc'])
-                if not np.isnan(metrics['icc']):
-                    cat_iccs.append(metrics['icc'])
-                if not np.isnan(metrics['pearson_r']):
-                    cat_correlations.append(metrics['pearson_r'])
+                metrics = results["per_feature"][self.feature_names[i]]
+                if not np.isnan(metrics["ccc"]):
+                    cat_cccs.append(metrics["ccc"])
+                if not np.isnan(metrics["icc"]):
+                    cat_iccs.append(metrics["icc"])
+                if not np.isnan(metrics["pearson_r"]):
+                    cat_correlations.append(metrics["pearson_r"])
 
-            results['per_category'][category] = {
-                'n_features': len(indices),
-                'mean_ccc': float(np.mean(cat_cccs)) if cat_cccs else 0.0,
-                'std_ccc': float(np.std(cat_cccs)) if cat_cccs else 0.0,
-                'mean_icc': float(np.mean(cat_iccs)) if cat_iccs else 0.0,
-                'std_icc': float(np.std(cat_iccs)) if cat_iccs else 0.0,
-                'mean_correlation': float(np.mean(cat_correlations)) if cat_correlations else 0.0,
-                'std_correlation': float(np.std(cat_correlations)) if cat_correlations else 0.0,
+            results["per_category"][category] = {
+                "n_features": len(indices),
+                "mean_ccc": float(np.mean(cat_cccs)) if cat_cccs else 0.0,
+                "std_ccc": float(np.std(cat_cccs)) if cat_cccs else 0.0,
+                "mean_icc": float(np.mean(cat_iccs)) if cat_iccs else 0.0,
+                "std_icc": float(np.std(cat_iccs)) if cat_iccs else 0.0,
+                "mean_correlation": float(np.mean(cat_correlations)) if cat_correlations else 0.0,
+                "std_correlation": float(np.std(cat_correlations)) if cat_correlations else 0.0,
             }
 
         # overall metrics
-        results['overall'] = {
-            'n_features': n_features,
-            'n_samples': n_samples,
-            'mean_ccc': float(np.mean(all_cccs)) if all_cccs else 0.0,
-            'std_ccc': float(np.std(all_cccs)) if all_cccs else 0.0,
-            'mean_icc': float(np.mean(all_iccs)) if all_iccs else 0.0,
-            'std_icc': float(np.std(all_iccs)) if all_iccs else 0.0,
-            'mean_correlation': float(np.mean(all_correlations)) if all_correlations else 0.0,
-            'std_correlation': float(np.std(all_correlations)) if all_correlations else 0.0,
-            'excellent_preservation': sum(1 for c in all_cccs if c > 0.9),
-            'good_preservation': sum(1 for c in all_cccs if 0.75 <= c <= 0.9),
-            'moderate_preservation': sum(1 for c in all_cccs if 0.5 <= c < 0.75),
-            'poor_preservation': sum(1 for c in all_cccs if c < 0.5),
+        results["overall"] = {
+            "n_features": n_features,
+            "n_samples": n_samples,
+            "mean_ccc": float(np.mean(all_cccs)) if all_cccs else 0.0,
+            "std_ccc": float(np.std(all_cccs)) if all_cccs else 0.0,
+            "mean_icc": float(np.mean(all_iccs)) if all_iccs else 0.0,
+            "std_icc": float(np.std(all_iccs)) if all_iccs else 0.0,
+            "mean_correlation": float(np.mean(all_correlations)) if all_correlations else 0.0,
+            "std_correlation": float(np.std(all_correlations)) if all_correlations else 0.0,
+            "excellent_preservation": sum(1 for c in all_cccs if c > 0.9),
+            "good_preservation": sum(1 for c in all_cccs if 0.75 <= c <= 0.9),
+            "moderate_preservation": sum(1 for c in all_cccs if 0.5 <= c < 0.75),
+            "poor_preservation": sum(1 for c in all_cccs if c < 0.5),
         }
 
         return results
@@ -359,9 +352,9 @@ def compare_methods_preservation(
     original_b: np.ndarray,
     harmonized_a: np.ndarray,
     harmonized_b: np.ndarray,
-    feature_names: List[str],
-    method_name: str = 'sa-cyclegan'
-) -> Dict:
+    feature_names: list[str],
+    method_name: str = "sa-cyclegan",
+) -> dict:
     """
     compare feature preservation between domains after harmonization.
 
@@ -383,100 +376,96 @@ def compare_methods_preservation(
     analyzer = RadiomicsPreservationAnalyzer(feature_names)
 
     results = {
-        'method': method_name,
-        'domain_a_preservation': analyzer.analyze_preservation(original_a, harmonized_a),
-        'domain_b_preservation': analyzer.analyze_preservation(original_b, harmonized_b),
+        "method": method_name,
+        "domain_a_preservation": analyzer.analyze_preservation(original_a, harmonized_a),
+        "domain_b_preservation": analyzer.analyze_preservation(original_b, harmonized_b),
     }
 
     # cross-domain alignment before harmonization
     # sample to match sizes
     n_common = min(len(original_a), len(original_b))
-    results['cross_domain_raw'] = analyzer.analyze_preservation(
-        original_a[:n_common],
-        original_b[:n_common]
+    results["cross_domain_raw"] = analyzer.analyze_preservation(
+        original_a[:n_common], original_b[:n_common]
     )
 
     # cross-domain alignment after harmonization
-    results['cross_domain_harmonized'] = analyzer.analyze_preservation(
-        harmonized_a[:n_common],
-        harmonized_b[:n_common]
+    results["cross_domain_harmonized"] = analyzer.analyze_preservation(
+        harmonized_a[:n_common], harmonized_b[:n_common]
     )
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='radiomics feature preservation analysis'
+    parser = argparse.ArgumentParser(description="radiomics feature preservation analysis")
+    parser.add_argument(
+        "--original-a", type=str, required=True, help="path to original domain a features"
     )
-    parser.add_argument('--original-a', type=str, required=True,
-                       help='path to original domain a features')
-    parser.add_argument('--original-b', type=str, required=True,
-                       help='path to original domain b features')
-    parser.add_argument('--harmonized-a', type=str, required=True,
-                       help='path to harmonized domain a features')
-    parser.add_argument('--harmonized-b', type=str, required=True,
-                       help='path to harmonized domain b features')
-    parser.add_argument('--feature-names', type=str,
-                       help='path to feature names json')
-    parser.add_argument('--output-dir', type=str, required=True,
-                       help='output directory')
-    parser.add_argument('--method-name', type=str, default='sa-cyclegan',
-                       help='name of harmonization method')
+    parser.add_argument(
+        "--original-b", type=str, required=True, help="path to original domain b features"
+    )
+    parser.add_argument(
+        "--harmonized-a", type=str, required=True, help="path to harmonized domain a features"
+    )
+    parser.add_argument(
+        "--harmonized-b", type=str, required=True, help="path to harmonized domain b features"
+    )
+    parser.add_argument("--feature-names", type=str, help="path to feature names json")
+    parser.add_argument("--output-dir", type=str, required=True, help="output directory")
+    parser.add_argument(
+        "--method-name", type=str, default="sa-cyclegan", help="name of harmonization method"
+    )
 
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f'[preservation] loading features...')
+    print("[preservation] loading features...")
 
     original_a = np.load(args.original_a)
     original_b = np.load(args.original_b)
     harmonized_a = np.load(args.harmonized_a)
     harmonized_b = np.load(args.harmonized_b)
 
-    print(f'[preservation] original a: {original_a.shape}')
-    print(f'[preservation] original b: {original_b.shape}')
-    print(f'[preservation] harmonized a: {harmonized_a.shape}')
-    print(f'[preservation] harmonized b: {harmonized_b.shape}')
+    print(f"[preservation] original a: {original_a.shape}")
+    print(f"[preservation] original b: {original_b.shape}")
+    print(f"[preservation] harmonized a: {harmonized_a.shape}")
+    print(f"[preservation] harmonized b: {harmonized_b.shape}")
 
     # load or generate feature names
     if args.feature_names and Path(args.feature_names).exists():
         with open(args.feature_names) as f:
             feature_names = json.load(f)
     else:
-        feature_names = [f'feature_{i}' for i in range(original_a.shape[1])]
+        feature_names = [f"feature_{i}" for i in range(original_a.shape[1])]
 
     # run analysis
-    print(f'[preservation] analyzing feature preservation...')
+    print("[preservation] analyzing feature preservation...")
     results = compare_methods_preservation(
-        original_a, original_b,
-        harmonized_a, harmonized_b,
-        feature_names,
-        args.method_name
+        original_a, original_b, harmonized_a, harmonized_b, feature_names, args.method_name
     )
 
     # save results
-    with open(output_dir / 'preservation_results.json', 'w') as f:
+    with open(output_dir / "preservation_results.json", "w") as f:
         json.dump(results, f, indent=2)
 
     # print summary
-    print('=' * 60)
-    print(f'[preservation] {args.method_name} results:')
-    print('=' * 60)
-    print(f"  domain a preservation:")
+    print("=" * 60)
+    print(f"[preservation] {args.method_name} results:")
+    print("=" * 60)
+    print("  domain a preservation:")
     print(f"    mean ccc: {results['domain_a_preservation']['overall']['mean_ccc']:.4f}")
     print(f"    mean icc: {results['domain_a_preservation']['overall']['mean_icc']:.4f}")
-    print(f"  domain b preservation:")
+    print("  domain b preservation:")
     print(f"    mean ccc: {results['domain_b_preservation']['overall']['mean_ccc']:.4f}")
     print(f"    mean icc: {results['domain_b_preservation']['overall']['mean_icc']:.4f}")
-    print(f"  cross-domain alignment (raw):")
+    print("  cross-domain alignment (raw):")
     print(f"    mean ccc: {results['cross_domain_raw']['overall']['mean_ccc']:.4f}")
-    print(f"  cross-domain alignment (harmonized):")
+    print("  cross-domain alignment (harmonized):")
     print(f"    mean ccc: {results['cross_domain_harmonized']['overall']['mean_ccc']:.4f}")
-    print('=' * 60)
+    print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

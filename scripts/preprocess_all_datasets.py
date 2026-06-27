@@ -31,27 +31,21 @@ usage:
 import argparse
 import json
 import logging
-import multiprocessing as mp
-import os
-import shutil
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import nibabel as nib
 import numpy as np
-import torch
 from scipy import ndimage
-from skimage import exposure
 from tqdm import tqdm
 
 # suppress warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -61,9 +55,9 @@ class MRIPreprocessor:
 
     def __init__(
         self,
-        target_resolution: Tuple[float, float, float] = (1.0, 1.0, 1.0),
-        target_size: Optional[Tuple[int, int, int]] = None,
-        normalization_method: str = 'zscore',
+        target_resolution: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        target_size: Optional[tuple[int, int, int]] = None,
+        normalization_method: str = "zscore",
         bias_correction: bool = True,
         skull_strip: bool = True,
         register_to_mni: bool = False,
@@ -86,7 +80,7 @@ class MRIPreprocessor:
         self.skull_strip = skull_strip
         self.register_to_mni = register_to_mni
 
-    def load_nifti(self, filepath: Path) -> Tuple[np.ndarray, nib.Nifti1Image]:
+    def load_nifti(self, filepath: Path) -> tuple[np.ndarray, nib.Nifti1Image]:
         """load nifti file and return data + header."""
         img = nib.load(str(filepath))
         data = img.get_fdata()
@@ -100,15 +94,15 @@ class MRIPreprocessor:
     def resample_to_resolution(
         self,
         data: np.ndarray,
-        current_res: Tuple[float, float, float],
-        target_res: Tuple[float, float, float]
+        current_res: tuple[float, float, float],
+        target_res: tuple[float, float, float],
     ) -> np.ndarray:
         """resample volume to target resolution."""
         zoom_factors = [c / t for c, t in zip(current_res, target_res)]
         resampled = ndimage.zoom(data, zoom_factors, order=3)
         return resampled
 
-    def resize_to_shape(self, data: np.ndarray, target_shape: Tuple[int, int, int]) -> np.ndarray:
+    def resize_to_shape(self, data: np.ndarray, target_shape: tuple[int, int, int]) -> np.ndarray:
         """resize volume to target shape with center cropping/padding."""
         current_shape = data.shape
 
@@ -128,7 +122,7 @@ class MRIPreprocessor:
                 pad_before = abs(diff) // 2
                 pad_after = abs(diff) - pad_before
                 pad_width[i] = (pad_before, pad_after)
-                processed = np.pad(processed, pad_width, mode='constant', constant_values=0)
+                processed = np.pad(processed, pad_width, mode="constant", constant_values=0)
 
         return processed
 
@@ -176,7 +170,7 @@ class MRIPreprocessor:
         stripped = data * mask
         return stripped
 
-    def normalize_intensity(self, data: np.ndarray, method: str = 'zscore') -> np.ndarray:
+    def normalize_intensity(self, data: np.ndarray, method: str = "zscore") -> np.ndarray:
         """
         normalize intensity values.
 
@@ -187,19 +181,19 @@ class MRIPreprocessor:
         # only normalize non-zero voxels (outside background)
         mask = data > 0
 
-        if method == 'zscore':
+        if method == "zscore":
             mean = np.mean(data[mask])
             std = np.std(data[mask])
             normalized = np.zeros_like(data)
             normalized[mask] = (data[mask] - mean) / (std + 1e-8)
 
-        elif method == 'minmax':
+        elif method == "minmax":
             min_val = np.min(data[mask])
             max_val = np.max(data[mask])
             normalized = np.zeros_like(data)
             normalized[mask] = (data[mask] - min_val) / (max_val - min_val + 1e-8)
 
-        elif method == 'percentile':
+        elif method == "percentile":
             p1, p99 = np.percentile(data[mask], [1, 99])
             normalized = np.clip(data, p1, p99)
             normalized = (normalized - p1) / (p99 - p1 + 1e-8)
@@ -210,24 +204,21 @@ class MRIPreprocessor:
         return normalized
 
     def preprocess_volume(
-        self,
-        filepath: Path,
-        output_path: Path,
-        metadata: Dict = None
-    ) -> Dict:
+        self, filepath: Path, output_path: Path, metadata: Optional[dict] = None
+    ) -> dict:
         """
         complete preprocessing pipeline for a single volume.
 
         returns:
             dictionary with preprocessing statistics
         """
-        stats = {'filepath': str(filepath), 'success': False}
+        stats = {"filepath": str(filepath), "success": False}
 
         try:
             # load data
             data, img = self.load_nifti(filepath)
-            stats['original_shape'] = data.shape
-            stats['original_resolution'] = img.header.get_zooms()[:3]
+            stats["original_shape"] = data.shape
+            stats["original_resolution"] = img.header.get_zooms()[:3]
 
             # get current resolution
             current_res = img.header.get_zooms()[:3]
@@ -256,17 +247,17 @@ class MRIPreprocessor:
             self.save_nifti(data, img.affine, output_path)
 
             # calculate statistics
-            stats['final_shape'] = data.shape
-            stats['final_resolution'] = self.target_resolution
-            stats['mean_intensity'] = float(np.mean(data[data > 0]))
-            stats['std_intensity'] = float(np.std(data[data > 0]))
-            stats['min_intensity'] = float(np.min(data))
-            stats['max_intensity'] = float(np.max(data))
-            stats['success'] = True
+            stats["final_shape"] = data.shape
+            stats["final_resolution"] = self.target_resolution
+            stats["mean_intensity"] = float(np.mean(data[data > 0]))
+            stats["std_intensity"] = float(np.std(data[data > 0]))
+            stats["min_intensity"] = float(np.min(data))
+            stats["max_intensity"] = float(np.max(data))
+            stats["success"] = True
 
         except Exception as e:
             logger.error(f"Error processing {filepath}: {e}")
-            stats['error'] = str(e)
+            stats["error"] = str(e)
 
         return stats
 
@@ -279,7 +270,7 @@ class DatasetPreprocessor:
         input_dir: Path,
         output_dir: Path,
         preprocessor: MRIPreprocessor,
-        modalities: List[str] = None,
+        modalities: Optional[list[str]] = None,
         num_workers: int = 4,
     ):
         """
@@ -295,15 +286,15 @@ class DatasetPreprocessor:
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
         self.preprocessor = preprocessor
-        self.modalities = modalities or ['T1', 'T2', 'FLAIR', 'T1CE']
+        self.modalities = modalities or ["T1", "T2", "FLAIR", "T1CE"]
         self.num_workers = num_workers
 
     def preprocess_brats(self):
         """preprocess brats dataset."""
         logger.info("Preprocessing BraTS dataset...")
 
-        dataset_dir = self.input_dir / 'brats'
-        output_dir = self.output_dir / 'brats'
+        dataset_dir = self.input_dir / "brats"
+        output_dir = self.output_dir / "brats"
 
         # find all subject directories
         subject_dirs = sorted([d for d in dataset_dir.iterdir() if d.is_dir()])
@@ -329,21 +320,21 @@ class DatasetPreprocessor:
 
                 # preprocess
                 stats = self.preprocessor.preprocess_volume(input_file, output_file)
-                stats['subject_id'] = subject_id
-                stats['modality'] = modality
-                stats['dataset'] = 'brats'
+                stats["subject_id"] = subject_id
+                stats["modality"] = modality
+                stats["dataset"] = "brats"
                 all_stats.append(stats)
 
         # save statistics
-        self._save_statistics(all_stats, output_dir / 'preprocessing_stats.json')
+        self._save_statistics(all_stats, output_dir / "preprocessing_stats.json")
         logger.info(f"BraTS preprocessing complete. Saved to {output_dir}")
 
     def preprocess_upenn_gbm(self):
         """preprocess upenn-gbm dataset."""
         logger.info("Preprocessing UPenn-GBM dataset...")
 
-        dataset_dir = self.input_dir / 'upenn_gbm'
-        output_dir = self.output_dir / 'upenn_gbm'
+        dataset_dir = self.input_dir / "upenn_gbm"
+        output_dir = self.output_dir / "upenn_gbm"
 
         # find all subject directories
         subject_dirs = sorted([d for d in dataset_dir.iterdir() if d.is_dir()])
@@ -369,57 +360,57 @@ class DatasetPreprocessor:
 
                 # preprocess
                 stats = self.preprocessor.preprocess_volume(input_file, output_file)
-                stats['subject_id'] = subject_id
-                stats['modality'] = modality
-                stats['dataset'] = 'upenn_gbm'
+                stats["subject_id"] = subject_id
+                stats["modality"] = modality
+                stats["dataset"] = "upenn_gbm"
                 all_stats.append(stats)
 
-        self._save_statistics(all_stats, output_dir / 'preprocessing_stats.json')
+        self._save_statistics(all_stats, output_dir / "preprocessing_stats.json")
         logger.info(f"UPenn-GBM preprocessing complete. Saved to {output_dir}")
 
     def preprocess_ixi(self):
         """preprocess ixi dataset."""
         logger.info("Preprocessing IXI dataset...")
 
-        dataset_dir = self.input_dir / 'ixi'
-        output_dir = self.output_dir / 'ixi'
+        dataset_dir = self.input_dir / "ixi"
+        output_dir = self.output_dir / "ixi"
 
         all_stats = []
 
         # ixi has separate directories for each modality
-        for modality in ['T1', 'T2', 'PD']:
-            modality_dir = dataset_dir / f'IXI-{modality}'
+        for modality in ["T1", "T2", "PD"]:
+            modality_dir = dataset_dir / f"IXI-{modality}"
 
             if not modality_dir.exists():
                 logger.warning(f"Directory not found: {modality_dir}")
                 continue
 
             # find all nifti files
-            nifti_files = sorted(modality_dir.glob('*.nii.gz'))
+            nifti_files = sorted(modality_dir.glob("*.nii.gz"))
             logger.info(f"Found {len(nifti_files)} {modality} scans")
 
             for input_file in tqdm(nifti_files, desc=f"Processing IXI {modality}"):
                 # extract subject id from filename
-                subject_id = input_file.stem.split('-')[0]  # e.g., ixi002
+                subject_id = input_file.stem.split("-")[0]  # e.g., ixi002
 
                 output_file = output_dir / subject_id / f"{modality}.nii.gz"
 
                 # preprocess
                 stats = self.preprocessor.preprocess_volume(input_file, output_file)
-                stats['subject_id'] = subject_id
-                stats['modality'] = modality
-                stats['dataset'] = 'ixi'
+                stats["subject_id"] = subject_id
+                stats["modality"] = modality
+                stats["dataset"] = "ixi"
                 all_stats.append(stats)
 
-        self._save_statistics(all_stats, output_dir / 'preprocessing_stats.json')
+        self._save_statistics(all_stats, output_dir / "preprocessing_stats.json")
         logger.info(f"IXI preprocessing complete. Saved to {output_dir}")
 
     def preprocess_oasis3(self):
         """preprocess oasis-3 dataset."""
         logger.info("Preprocessing OASIS-3 dataset...")
 
-        dataset_dir = self.input_dir / 'oasis3'
-        output_dir = self.output_dir / 'oasis3'
+        dataset_dir = self.input_dir / "oasis3"
+        output_dir = self.output_dir / "oasis3"
 
         # find all subject directories
         subject_dirs = sorted([d for d in dataset_dir.iterdir() if d.is_dir()])
@@ -432,7 +423,7 @@ class DatasetPreprocessor:
 
             # oasis-3 has nested directory structure
             # find anat directory
-            anat_dirs = list(subject_dir.rglob('anat'))
+            anat_dirs = list(subject_dir.rglob("anat"))
 
             if not anat_dirs:
                 continue
@@ -440,7 +431,7 @@ class DatasetPreprocessor:
             anat_dir = anat_dirs[0]
 
             # process t1 and t2 if available
-            for modality in ['T1', 'T2', 'FLAIR']:
+            for modality in ["T1", "T2", "FLAIR"]:
                 pattern = f"*{modality}w*.nii.gz"
                 matching_files = list(anat_dir.glob(pattern))
 
@@ -452,23 +443,23 @@ class DatasetPreprocessor:
 
                 # preprocess
                 stats = self.preprocessor.preprocess_volume(input_file, output_file)
-                stats['subject_id'] = subject_id
-                stats['modality'] = modality
-                stats['dataset'] = 'oasis3'
+                stats["subject_id"] = subject_id
+                stats["modality"] = modality
+                stats["dataset"] = "oasis3"
                 all_stats.append(stats)
 
-        self._save_statistics(all_stats, output_dir / 'preprocessing_stats.json')
+        self._save_statistics(all_stats, output_dir / "preprocessing_stats.json")
         logger.info(f"OASIS-3 preprocessing complete. Saved to {output_dir}")
 
-    def _save_statistics(self, stats: List[Dict], output_path: Path):
+    def _save_statistics(self, stats: list[dict], output_path: Path):
         """save preprocessing statistics to json file."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(stats, f, indent=2)
 
         # print summary
-        successful = sum(1 for s in stats if s.get('success', False))
+        successful = sum(1 for s in stats if s.get("success", False))
         logger.info(f"Processed {successful}/{len(stats)} volumes successfully")
 
 
@@ -477,7 +468,7 @@ def create_data_splits(
     train_ratio: float = 0.7,
     val_ratio: float = 0.15,
     test_ratio: float = 0.15,
-    seed: int = 42
+    seed: int = 42,
 ):
     """
     create train/val/test splits for a dataset.
@@ -505,18 +496,14 @@ def create_data_splits(
 
     # split
     train_ids = subject_ids[:n_train]
-    val_ids = subject_ids[n_train:n_train + n_val]
-    test_ids = subject_ids[n_train + n_val:]
+    val_ids = subject_ids[n_train : n_train + n_val]
+    test_ids = subject_ids[n_train + n_val :]
 
     # save splits
-    splits = {
-        'train': train_ids,
-        'val': val_ids,
-        'test': test_ids
-    }
+    splits = {"train": train_ids, "val": val_ids, "test": test_ids}
 
-    split_file = dataset_dir / 'data_splits.json'
-    with open(split_file, 'w') as f:
+    split_file = dataset_dir / "data_splits.json"
+    with open(split_file, "w") as f:
         json.dump(splits, f, indent=2)
 
     logger.info(f"Data splits saved to {split_file}")
@@ -526,113 +513,75 @@ def create_data_splits(
 def main():
     """main execution function."""
     parser = argparse.ArgumentParser(
-        description='Preprocess neuroimaging datasets for NeuroScope',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        description="Preprocess neuroimaging datasets for NeuroScope",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
-        '--datasets',
-        nargs='+',
-        choices=['brats', 'upenn_gbm', 'ixi', 'oasis3', 'all'],
-        default=['all'],
-        help='Datasets to preprocess'
+        "--datasets",
+        nargs="+",
+        choices=["brats", "upenn_gbm", "ixi", "oasis3", "all"],
+        default=["all"],
+        help="Datasets to preprocess",
     )
 
     parser.add_argument(
-        '--input-dir',
-        type=str,
-        required=True,
-        help='Root directory containing raw datasets'
+        "--input-dir", type=str, required=True, help="Root directory containing raw datasets"
     )
 
     parser.add_argument(
-        '--output-dir',
-        type=str,
-        required=True,
-        help='Output directory for preprocessed data'
+        "--output-dir", type=str, required=True, help="Output directory for preprocessed data"
     )
 
     parser.add_argument(
-        '--target-resolution',
+        "--target-resolution",
         nargs=3,
         type=float,
         default=[1.0, 1.0, 1.0],
-        help='Target voxel resolution (mm)'
+        help="Target voxel resolution (mm)",
     )
 
     parser.add_argument(
-        '--target-size',
+        "--target-size",
         nargs=3,
         type=int,
         default=None,
-        help='Target volume size (H W D). If not specified, keeps original size after resampling'
+        help="Target volume size (H W D). If not specified, keeps original size after resampling",
     )
 
     parser.add_argument(
-        '--modalities',
-        nargs='+',
-        default=['T1', 'T1CE', 'T2', 'FLAIR'],
-        help='MRI modalities to process'
+        "--modalities",
+        nargs="+",
+        default=["T1", "T1CE", "T2", "FLAIR"],
+        help="MRI modalities to process",
     )
 
     parser.add_argument(
-        '--normalization',
-        choices=['zscore', 'minmax', 'percentile'],
-        default='zscore',
-        help='Intensity normalization method'
+        "--normalization",
+        choices=["zscore", "minmax", "percentile"],
+        default="zscore",
+        help="Intensity normalization method",
     )
 
-    parser.add_argument(
-        '--no-bias-correction',
-        action='store_true',
-        help='Skip N4 bias correction'
-    )
+    parser.add_argument("--no-bias-correction", action="store_true", help="Skip N4 bias correction")
 
-    parser.add_argument(
-        '--no-skull-strip',
-        action='store_true',
-        help='Skip skull stripping'
-    )
+    parser.add_argument("--no-skull-strip", action="store_true", help="Skip skull stripping")
 
-    parser.add_argument(
-        '--num-workers',
-        type=int,
-        default=4,
-        help='Number of parallel workers'
-    )
+    parser.add_argument("--num-workers", type=int, default=4, help="Number of parallel workers")
 
-    parser.add_argument(
-        '--create-splits',
-        action='store_true',
-        help='Create train/val/test splits'
-    )
+    parser.add_argument("--create-splits", action="store_true", help="Create train/val/test splits")
 
-    parser.add_argument(
-        '--train-ratio',
-        type=float,
-        default=0.7,
-        help='Training set ratio'
-    )
+    parser.add_argument("--train-ratio", type=float, default=0.7, help="Training set ratio")
 
-    parser.add_argument(
-        '--val-ratio',
-        type=float,
-        default=0.15,
-        help='Validation set ratio'
-    )
+    parser.add_argument("--val-ratio", type=float, default=0.15, help="Validation set ratio")
 
-    parser.add_argument(
-        '--test-ratio',
-        type=float,
-        default=0.15,
-        help='Test set ratio'
-    )
+    parser.add_argument("--test-ratio", type=float, default=0.15, help="Test set ratio")
 
     args = parser.parse_args()
 
     # handle 'all' option
-    if 'all' in args.datasets:
-        args.datasets = ['brats', 'upenn_gbm', 'ixi', 'oasis3']
+    if "all" in args.datasets:
+        args.datasets = ["brats", "upenn_gbm", "ixi", "oasis3"]
 
     # initialize preprocessor
     preprocessor = MRIPreprocessor(
@@ -659,13 +608,13 @@ def main():
     logger.info(f"Normalization: {args.normalization}")
 
     for dataset in args.datasets:
-        if dataset == 'brats':
+        if dataset == "brats":
             dataset_preprocessor.preprocess_brats()
-        elif dataset == 'upenn_gbm':
+        elif dataset == "upenn_gbm":
             dataset_preprocessor.preprocess_upenn_gbm()
-        elif dataset == 'ixi':
+        elif dataset == "ixi":
             dataset_preprocessor.preprocess_ixi()
-        elif dataset == 'oasis3':
+        elif dataset == "oasis3":
             dataset_preprocessor.preprocess_oasis3()
 
         # create data splits if requested
@@ -676,14 +625,14 @@ def main():
                     dataset_dir,
                     train_ratio=args.train_ratio,
                     val_ratio=args.val_ratio,
-                    test_ratio=args.test_ratio
+                    test_ratio=args.test_ratio,
                 )
 
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("All preprocessing complete!")
     logger.info(f"Preprocessed data saved to: {args.output_dir}")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

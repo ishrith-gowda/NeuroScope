@@ -6,23 +6,23 @@ with deep learning-based harmonization.
 """
 
 from .baseline_methods import (
-    NormalizationConfig,
-    ZScoreNormalizer,
-    IntensityRangeNormalizer,
     HistogramMatcher,
+    IntensityRangeNormalizer,
+    NormalizationConfig,
     NyulNormalizer,
     WhiteStripeNormalizer,
+    ZScoreNormalizer,
     apply_baseline_harmonization,
     evaluate_baseline_method,
 )
 
 __all__ = [
-    'NormalizationConfig',
-    'ZScoreNormalizer',
-    'IntensityRangeNormalizer',
-    'HistogramMatcher',
-    'NyulNormalizer',
-    'WhiteStripeNormalizer',
-    'apply_baseline_harmonization',
-    'evaluate_baseline_method',
+    "HistogramMatcher",
+    "IntensityRangeNormalizer",
+    "NormalizationConfig",
+    "NyulNormalizer",
+    "WhiteStripeNormalizer",
+    "ZScoreNormalizer",
+    "apply_baseline_harmonization",
+    "evaluate_baseline_method",
 ]

@@ -19,14 +19,12 @@ from __future__ import annotations
 import itertools
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy import stats
 
-
-LAMBDAS: List[float] = [0.1, 0.5, 1.0, 2.0]
-METRICS: List[str] = [
+LAMBDAS: list[float] = [0.1, 0.5, 1.0, 2.0]
+METRICS: list[str] = [
     "ssim_A2B",
     "ssim_B2A",
     "ssim_global_A2B",
@@ -38,8 +36,8 @@ METRICS: List[str] = [
 ]
 
 
-def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
-    out: Dict[float, Dict[str, np.ndarray]] = {}
+def load_per_slice(results_dir: Path) -> dict[float, dict[str, np.ndarray]]:
+    out: dict[float, dict[str, np.ndarray]] = {}
     for lam in LAMBDAS:
         path = results_dir / f"test_results_lambda{lam}.json"
         if not path.exists():
@@ -48,9 +46,7 @@ def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
             payload = json.load(f)
         per_slice = payload.get("per_slice", {})
         out[lam] = {
-            m: np.asarray(per_slice.get(m, []), dtype=np.float64)
-            for m in METRICS
-            if m in per_slice
+            m: np.asarray(per_slice.get(m, []), dtype=np.float64) for m in METRICS if m in per_slice
         }
     return out
 
@@ -61,7 +57,7 @@ def cohens_d(a: np.ndarray, b: np.ndarray) -> float:
     return float(diff.mean() / s) if s > 0 else 0.0
 
 
-def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> Tuple[float, float]:
+def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> tuple[float, float]:
     rng = np.random.default_rng(seed)
     n = len(diff)
     if n == 0:
@@ -72,9 +68,9 @@ def bootstrap_ci(diff: np.ndarray, n_boot: int = 2000, seed: int = 17) -> Tuple[
     return float(lo), float(hi)
 
 
-def pairwise_compare(per_slice: Dict[float, Dict[str, np.ndarray]]) -> List[Dict]:
+def pairwise_compare(per_slice: dict[float, dict[str, np.ndarray]]) -> list[dict]:
     """run all pairwise comparisons across lambdas for every metric."""
-    results: List[Dict] = []
+    results: list[dict] = []
     pairs = list(itertools.combinations(sorted(per_slice.keys()), 2))
     for metric in METRICS:
         for la, lb in pairs:
@@ -89,31 +85,33 @@ def pairwise_compare(per_slice: Dict[float, Dict[str, np.ndarray]]) -> List[Dict
             t_stat, t_p = stats.ttest_rel(a, b)
             d = cohens_d(a, b)
             ci_lo, ci_hi = bootstrap_ci(a - b)
-            results.append({
-                "metric": metric,
-                "lambda_a": la,
-                "lambda_b": lb,
-                "n": len(a),
-                "mean_a": float(a.mean()),
-                "mean_b": float(b.mean()),
-                "mean_diff": float((a - b).mean()),
-                "wilcoxon_stat": float(w_stat),
-                "wilcoxon_p": float(w_p),
-                "ttest_stat": float(t_stat),
-                "ttest_p": float(t_p),
-                "cohens_d": d,
-                "ci95_lower": ci_lo,
-                "ci95_upper": ci_hi,
-            })
+            results.append(
+                {
+                    "metric": metric,
+                    "lambda_a": la,
+                    "lambda_b": lb,
+                    "n": len(a),
+                    "mean_a": float(a.mean()),
+                    "mean_b": float(b.mean()),
+                    "mean_diff": float((a - b).mean()),
+                    "wilcoxon_stat": float(w_stat),
+                    "wilcoxon_p": float(w_p),
+                    "ttest_stat": float(t_stat),
+                    "ttest_p": float(t_p),
+                    "cohens_d": d,
+                    "ci95_lower": ci_lo,
+                    "ci95_upper": ci_hi,
+                }
+            )
     return results
 
 
-def apply_bonferroni(rows: List[Dict], alpha: float = 0.05) -> List[Dict]:
+def apply_bonferroni(rows: list[dict], alpha: float = 0.05) -> list[dict]:
     """add bonferroni-corrected significance flag based on within-metric pairs."""
-    by_metric: Dict[str, List[Dict]] = {}
+    by_metric: dict[str, list[dict]] = {}
     for r in rows:
         by_metric.setdefault(r["metric"], []).append(r)
-    for metric, group in by_metric.items():
+    for _metric, group in by_metric.items():
         n = len(group)
         adjusted = alpha / max(n, 1)
         for r in group:
@@ -122,7 +120,7 @@ def apply_bonferroni(rows: List[Dict], alpha: float = 0.05) -> List[Dict]:
     return rows
 
 
-def write_latex(rows: List[Dict], out_path: Path) -> None:
+def write_latex(rows: list[dict], out_path: Path) -> None:
     """compact pairwise table for the manuscript."""
     primary_metrics = [
         ("ssim_global_A2B", "SSIM (A$\\to$B, global)"),
@@ -134,15 +132,19 @@ def write_latex(rows: List[Dict], out_path: Path) -> None:
     lines = []
     lines.append("\\begin{table*}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Pairwise statistical comparison across $\\lambda_{\\mathrm{NCE}}$ "
-                 "values on the held-out test set (5{,}265 slices). "
-                 "Wilcoxon signed-rank $p$-values are reported with Bonferroni correction across "
-                 "the six pairs per metric ($\\alpha_{\\mathrm{adj}}{=}0.0083$). "
-                 "Significant differences are marked $\\dagger$.}")
+    lines.append(
+        "\\caption{Pairwise statistical comparison across $\\lambda_{\\mathrm{NCE}}$ "
+        "values on the held-out test set (5{,}265 slices). "
+        "Wilcoxon signed-rank $p$-values are reported with Bonferroni correction across "
+        "the six pairs per metric ($\\alpha_{\\mathrm{adj}}{=}0.0083$). "
+        "Significant differences are marked $\\dagger$.}"
+    )
     lines.append("\\label{tab:patchnce_pairwise_significance}")
     lines.append("\\begin{tabular}{l l c c c c c}")
     lines.append("\\toprule")
-    lines.append("Metric & Pair & Mean A & Mean B & $\\Delta$ Mean & Cohen's $d$ & Wilcoxon $p$ \\\\")
+    lines.append(
+        "Metric & Pair & Mean A & Mean B & $\\Delta$ Mean & Cohen's $d$ & Wilcoxon $p$ \\\\"
+    )
     lines.append("\\midrule")
     for metric_key, metric_name in primary_metrics:
         for r in rows:

@@ -13,16 +13,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-LAMBDAS: List[float] = [0.1, 0.5, 1.0, 2.0]
-LAMBDA_COLORS: Dict[float, str] = {
+LAMBDAS: list[float] = [0.1, 0.5, 1.0, 2.0]
+LAMBDA_COLORS: dict[float, str] = {
     0.1: "#9CA3AF",
     0.5: "#059669",
     1.0: "#2563EB",
@@ -50,8 +49,8 @@ PUB_STYLE = {
 }
 
 
-def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
-    out: Dict[float, Dict[str, np.ndarray]] = {}
+def load_per_slice(results_dir: Path) -> dict[float, dict[str, np.ndarray]]:
+    out: dict[float, dict[str, np.ndarray]] = {}
     for lam in LAMBDAS:
         path = results_dir / f"test_results_lambda{lam}.json"
         if not path.exists():
@@ -59,13 +58,12 @@ def load_per_slice(results_dir: Path) -> Dict[float, Dict[str, np.ndarray]]:
         with open(path) as f:
             payload = json.load(f)
         out[lam] = {
-            k: np.asarray(v, dtype=np.float64)
-            for k, v in payload.get("per_slice", {}).items()
+            k: np.asarray(v, dtype=np.float64) for k, v in payload.get("per_slice", {}).items()
         }
     return out
 
 
-def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_box(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     metrics = [
         ("ssim_global_A2B", "Global SSIM (A$\\to$B)", (0.93, 1.0)),
         ("ssim_global_B2A", "Global SSIM (B$\\to$A)", (0.93, 1.0)),
@@ -84,8 +82,13 @@ def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
             data.append(arr)
             labels.append(f"$\\lambda$={lam}")
             cols.append(LAMBDA_COLORS[lam])
-        bp = ax.boxplot(data, tick_labels=labels, patch_artist=True, showfliers=False,
-                        medianprops=dict(color="black", linewidth=1.0))
+        bp = ax.boxplot(
+            data,
+            tick_labels=labels,
+            patch_artist=True,
+            showfliers=False,
+            medianprops={"color": "black", "linewidth": 1.0},
+        )
         for patch, c in zip(bp["boxes"], cols):
             patch.set_facecolor(c)
             patch.set_alpha(0.55)
@@ -93,18 +96,21 @@ def fig_box(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
         if ylim:
             ax.set_ylim(ylim)
         ax.grid(True, axis="y", alpha=0.3)
-    fig.suptitle("Per-Slice Test-Set Robustness Across $\\lambda_{\\mathrm{NCE}}$",
-                 fontsize=12, y=1.04)
+    fig.suptitle(
+        "Per-Slice Test-Set Robustness Across $\\lambda_{\\mathrm{NCE}}$", fontsize=12, y=1.04
+    )
     fig.tight_layout()
     fig.savefig(out_dir / "fig_patchnce_per_slice_box.pdf")
     fig.savefig(out_dir / "fig_patchnce_per_slice_box.png")
     plt.close(fig)
 
 
-def fig_cdf(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_cdf(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(10.0, 3.8))
-    keys = [("ssim_global_A2B", "Global SSIM (A$\\to$B)"),
-            ("ssim_global_B2A", "Global SSIM (B$\\to$A)")]
+    keys = [
+        ("ssim_global_A2B", "Global SSIM (A$\\to$B)"),
+        ("ssim_global_B2A", "Global SSIM (B$\\to$A)"),
+    ]
     for ax, (key, title) in zip(axes, keys):
         for lam in sorted(per_slice.keys()):
             arr = per_slice[lam].get(key)
@@ -124,15 +130,17 @@ def fig_cdf(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> Non
     plt.close(fig)
 
 
-def fig_diff_violin(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_diff_violin(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     """paired differences relative to lambda=1.0 baseline."""
     if 1.0 not in per_slice:
         return
 
-    keys = [("ssim_global_A2B", "$\\Delta$ SSIM A$\\to$B"),
-            ("ssim_global_B2A", "$\\Delta$ SSIM B$\\to$A"),
-            ("psnr_A2B", "$\\Delta$ PSNR A$\\to$B"),
-            ("psnr_B2A", "$\\Delta$ PSNR B$\\to$A")]
+    keys = [
+        ("ssim_global_A2B", "$\\Delta$ SSIM A$\\to$B"),
+        ("ssim_global_B2A", "$\\Delta$ SSIM B$\\to$A"),
+        ("psnr_A2B", "$\\Delta$ PSNR A$\\to$B"),
+        ("psnr_B2A", "$\\Delta$ PSNR B$\\to$A"),
+    ]
 
     fig, axes = plt.subplots(1, 4, figsize=(13.0, 3.6))
     for ax, (key, title) in zip(axes, keys):
@@ -164,15 +172,16 @@ def fig_diff_violin(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path
         ax.set_title(f"{title} vs $\\lambda$=1.0")
         ax.set_ylabel(title)
         ax.grid(True, axis="y", alpha=0.3)
-    fig.suptitle("Paired Per-Slice Differences Relative to $\\lambda$=1.0 Baseline",
-                 fontsize=12, y=1.04)
+    fig.suptitle(
+        "Paired Per-Slice Differences Relative to $\\lambda$=1.0 Baseline", fontsize=12, y=1.04
+    )
     fig.tight_layout()
     fig.savefig(out_dir / "fig_patchnce_diff_violin.pdf")
     fig.savefig(out_dir / "fig_patchnce_diff_violin.png")
     plt.close(fig)
 
 
-def fig_scatter_pairs(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Path) -> None:
+def fig_scatter_pairs(per_slice: dict[float, dict[str, np.ndarray]], out_dir: Path) -> None:
     """4x4 scatter matrix of pairwise per-slice correlations on the global ssim."""
     keys = sorted(per_slice.keys())
     if len(keys) < 2:
@@ -189,15 +198,15 @@ def fig_scatter_pairs(per_slice: Dict[float, Dict[str, np.ndarray]], out_dir: Pa
                 continue
             ax.scatter(a, b, s=4, alpha=0.25, color=LAMBDA_COLORS[lb])
             ax.plot([0.92, 1.0], [0.92, 1.0], "k--", linewidth=0.8, alpha=0.5)
-            ax.set_xlim(0.92, 1.0); ax.set_ylim(0.92, 1.0)
+            ax.set_xlim(0.92, 1.0)
+            ax.set_ylim(0.92, 1.0)
             if i == n - 1:
                 ax.set_xlabel(f"$\\lambda$={lb}")
             if j == 0:
                 ax.set_ylabel(f"$\\lambda$={la}")
             if i == j:
                 ax.set_facecolor("#F3F4F6")
-    fig.suptitle("Per-Slice Global SSIM (A$\\to$B): Pairwise Scatter",
-                 fontsize=12, y=1.0)
+    fig.suptitle("Per-Slice Global SSIM (A$\\to$B): Pairwise Scatter", fontsize=12, y=1.0)
     fig.tight_layout()
     fig.savefig(out_dir / "fig_patchnce_scatter_pairs.pdf")
     fig.savefig(out_dir / "fig_patchnce_scatter_pairs.png")

@@ -43,8 +43,8 @@ import torch.nn as nn
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig  # noqa: E402
-from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer  # noqa: E402
+from journal_extension.scripts.train_hybrid_nce import HybridNCETrainer
+from neuroscope.models.architectures.sa_cyclegan_25d import SACycleGAN25DConfig
 
 
 def _unwrap(module: nn.Module) -> nn.Module:
@@ -52,9 +52,9 @@ def _unwrap(module: nn.Module) -> nn.Module:
     target = module
     for _ in range(4):
         if isinstance(target, nn.DataParallel):
-            target = cast(nn.Module, target.module)
+            target = cast("nn.Module", target.module)
         elif hasattr(target, "_orig_mod"):
-            target = cast(nn.Module, getattr(target, "_orig_mod"))
+            target = cast("nn.Module", target._orig_mod)
         else:
             break
     return target
@@ -102,21 +102,29 @@ def warm_start_from_base(trainer: HybridNCETrainer, base_ckpt_path: str) -> None
 
 def parse_args():
     p = argparse.ArgumentParser(description="warm-start fine-tune ext a from base checkpoint")
-    p.add_argument("--base_checkpoint", default=None,
-                   help="base sa-cyclegan checkpoint to warm-start from (fresh runs)")
-    p.add_argument("--resume", default=None,
-                   help="checkpoint to resume an interrupted run (restores model/opt/sched/scaler/epoch)")
+    p.add_argument(
+        "--base_checkpoint",
+        default=None,
+        help="base sa-cyclegan checkpoint to warm-start from (fresh runs)",
+    )
+    p.add_argument(
+        "--resume",
+        default=None,
+        help="checkpoint to resume an interrupted run (restores model/opt/sched/scaler/epoch)",
+    )
     p.add_argument("--brats_dir", required=True)
     p.add_argument("--upenn_dir", required=True)
     p.add_argument("--output_dir", required=True)
     p.add_argument("--experiment_name", required=True)
-    p.add_argument("--lambda_nce", type=float, default=0.5,
-                   help="0.5 = hybrid arm; 0.0 = cycle-only control")
+    p.add_argument(
+        "--lambda_nce", type=float, default=0.5, help="0.5 = hybrid arm; 0.0 = cycle-only control"
+    )
     p.add_argument("--epochs", type=int, default=40)
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--image_size", type=int, default=128)
-    p.add_argument("--lr_G", type=float, default=2e-5,
-                   help="lower lr for fine-tuning a converged backbone")
+    p.add_argument(
+        "--lr_G", type=float, default=2e-5, help="lower lr for fine-tuning a converged backbone"
+    )
     p.add_argument("--lr_D", type=float, default=2e-5)
     p.add_argument("--num_workers", type=int, default=16)
     p.add_argument("--warmup_epochs", type=int, default=2)
@@ -126,8 +134,11 @@ def parse_args():
     p.add_argument("--n_residual_blocks", type=int, default=9)
     p.add_argument("--ngf", type=int, default=64)
     p.add_argument("--ndf", type=int, default=64)
-    p.add_argument("--smoke_test", action="store_true",
-                   help="construct, warm-start, run a single train step, and exit")
+    p.add_argument(
+        "--smoke_test",
+        action="store_true",
+        help="construct, warm-start, run a single train step, and exit",
+    )
     return p.parse_args()
 
 

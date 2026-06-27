@@ -1,11 +1,13 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 import numpy as np
 import SimpleITK as sitk
 
 # ---- intensity / mri helpers -------------------------------------------------
+
 
 def is_probable_mri_image(image: sitk.Image) -> bool:
     try:
@@ -14,11 +16,10 @@ def is_probable_mri_image(image: sitk.Image) -> bool:
         # reject near-binary or extremely low variation
         if len(unique_vals) <= 4 and np.all(np.isin(unique_vals, [0, 1, 2, 3])):
             return False
-        if arr.std() < 0.005:
-            return False
-        return True
+        return not arr.std() < 0.005
     except Exception:
         return False
+
 
 def verify_mri_path(path: Path) -> bool:
     if not path.exists():
@@ -29,7 +30,9 @@ def verify_mri_path(path: Path) -> bool:
     except Exception:
         return False
 
+
 # ---- brain mask utilities (unified) -----------------------------------------
+
 
 def generate_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -> sitk.Image:
     """unified robust brain mask creation used across scripts.
@@ -56,34 +59,40 @@ def generate_brain_mask(image: sitk.Image, background_threshold: float = 0.01) -
         pass
     return mask
 
+
 # ---- json helpers -----------------------------------------------------------
 
-def write_json_with_schema(data: Dict[str, Any], path: Path, schema: Optional[Dict[str, Any]] = None, summary: bool = False) -> None:
+
+def write_json_with_schema(
+    data: dict[str, Any], path: Path, schema: Optional[dict[str, Any]] = None, summary: bool = False
+) -> None:
     """write json after optional lightweight schema validation.
     schema (if provided) format: {'required_keys': [...]} for shallow validation.
     if summary=true, trims large subtrees where possible.
     """
     if schema:
-        missing = [k for k in schema.get('required_keys', []) if k not in data]
+        missing = [k for k in schema.get("required_keys", []) if k not in data]
         if missing:
             logging.warning("JSON missing expected top-level keys: %s", missing)
     if summary:
         data = generate_summary_view(data)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         json.dump(data, f, indent=2, sort_keys=True)
     logging.info("Wrote JSON: %s (summary=%s)", path, summary)
 
 
-def generate_summary_view(data: Dict[str, Any]) -> Dict[str, Any]:
+def generate_summary_view(data: dict[str, Any]) -> dict[str, Any]:
     summary = dict(data)
     # drop or shrink heavy fields if present
-    for heavy_key in ['detailed_results', 'processing_details', 'detailed_diagnoses']:
+    for heavy_key in ["detailed_results", "processing_details", "detailed_diagnoses"]:
         if heavy_key in summary:
             summary[heavy_key] = f"omitted_in_summary (see full file for {heavy_key})"
     return summary
 
+
 # ---- n4 support utilities ---------------------------------------------------
+
 
 def evaluate_bias_need(image: sitk.Image, mask: sitk.Image) -> float:
     """return median slice cv to decide if n4 is warranted."""
@@ -102,27 +111,31 @@ def evaluate_bias_need(image: sitk.Image, mask: sitk.Image) -> float:
     return float(np.median(cvs))
 
 
-def acceptable_n4_change(orig_stats: Dict[str, float], corr_stats: Dict[str, float]) -> bool:
+def acceptable_n4_change(orig_stats: dict[str, float], corr_stats: dict[str, float]) -> bool:
     """decide if corrected stats are acceptable relative to original."""
     try:
-        range_ratio = corr_stats['range'] / max(1e-6, orig_stats['range'])
-        mean_ratio = corr_stats['mean'] / max(1e-6, orig_stats['mean'])
+        range_ratio = corr_stats["range"] / max(1e-6, orig_stats["range"])
+        mean_ratio = corr_stats["mean"] / max(1e-6, orig_stats["mean"])
         if not (0.4 < range_ratio < 2.5):
             return False
-        if not (0.4 < mean_ratio < 2.0):
-            return False
-        return True
+        return 0.4 < mean_ratio < 2.0
     except KeyError:
         return False
 
+
 # ---- small stat helpers -----------------------------------------------------
 
-def basic_intensity_stats(image: sitk.Image, mask: Optional[sitk.Image] = None) -> Dict[str, float]:
+
+def basic_intensity_stats(image: sitk.Image, mask: Optional[sitk.Image] = None) -> dict[str, float]:
     arr = sitk.GetArrayFromImage(image).astype(np.float32)
     if mask is not None:
         m = sitk.GetArrayFromImage(mask).astype(bool)
         arr = arr[m]
     arr = arr[np.isfinite(arr)]
     if arr.size == 0:
-        return {'mean': 0.0, 'std': 0.0, 'range': 0.0}
-    return {'mean': float(arr.mean()), 'std': float(arr.std()), 'range': float(arr.max() - arr.min())}
+        return {"mean": 0.0, "std": 0.0, "range": 0.0}
+    return {
+        "mean": float(arr.mean()),
+        "std": float(arr.std()),
+        "range": float(arr.max() - arr.min()),
+    }

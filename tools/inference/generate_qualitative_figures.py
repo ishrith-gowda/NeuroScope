@@ -8,22 +8,23 @@ usage:
     python generate_qualitative_figures.py --inference_dir results/inference
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 # add project root
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from scripts.figures.latex_figure_config import COLORS, save_figure
+from scripts.figures.latex_figure_config import save_figure
 
 
 def load_inference_results(inference_dir: Path, category: str):
     """load inference results for a category"""
-    inference_file = inference_dir / f'inference_{category}.npz'
+    inference_file = inference_dir / f"inference_{category}.npz"
 
     if not inference_file.exists():
         print(f"warning: {inference_file} not found")
@@ -35,7 +36,7 @@ def load_inference_results(inference_dir: Path, category: str):
 
 def load_attention_results(inference_dir: Path, category: str):
     """load attention maps for a category"""
-    attention_file = inference_dir / f'attention_{category}.npz'
+    attention_file = inference_dir / f"attention_{category}.npz"
 
     if not attention_file.exists():
         print(f"warning: {attention_file} not found")
@@ -75,7 +76,7 @@ def generate_comparison_grid(
     ssim_scores: list,
     output_path: Path,
     n_samples: int = 5,
-    modality_idx: int = 0
+    modality_idx: int = 0,
 ):
     """
     figure: input | generated | reconstructed comparison grid
@@ -92,7 +93,7 @@ def generate_comparison_grid(
         n_samples: number of samples to show
         modality_idx: which modality to visualize (0=t1, 1=t1ce, 2=t2, 3=flair)
     """
-    modality_names = ['T1', 'T1ce', 'T2', 'FLAIR']
+    modality_names = ["T1", "T1ce", "T2", "FLAIR"]
     modality_name = modality_names[modality_idx]
 
     fig, axes = plt.subplots(n_samples, 3, figsize=(7, n_samples * 2))
@@ -113,29 +114,39 @@ def generate_comparison_grid(
         reconstructed_img = normalize_for_display(reconstructed_a[row, modality_idx])
 
         # plot
-        axes[row, 0].imshow(input_img, cmap='gray', vmin=0, vmax=1)
-        axes[row, 0].axis('off')
+        axes[row, 0].imshow(input_img, cmap="gray", vmin=0, vmax=1)
+        axes[row, 0].axis("off")
         if row == 0:
-            axes[row, 0].set_title(r'\textbf{(a)} Input ($A$)')
+            axes[row, 0].set_title(r"\textbf{(a)} Input ($A$)")
 
-        axes[row, 1].imshow(generated_img, cmap='gray', vmin=0, vmax=1)
-        axes[row, 1].axis('off')
+        axes[row, 1].imshow(generated_img, cmap="gray", vmin=0, vmax=1)
+        axes[row, 1].axis("off")
         if row == 0:
-            axes[row, 1].set_title(r'\textbf{(b)} Generated ($\hat{B}$)')
+            axes[row, 1].set_title(r"\textbf{(b)} Generated ($\hat{B}$)")
 
-        axes[row, 2].imshow(reconstructed_img, cmap='gray', vmin=0, vmax=1)
-        axes[row, 2].axis('off')
+        axes[row, 2].imshow(reconstructed_img, cmap="gray", vmin=0, vmax=1)
+        axes[row, 2].axis("off")
         if row == 0:
-            axes[row, 2].set_title(r'\textbf{(c)} Reconstructed ($\hat{A}$)')
+            axes[row, 2].set_title(r"\textbf{(c)} Reconstructed ($\hat{A}$)")
 
         # add ssim score as ylabel
         if ssim_scores and row < len(ssim_scores):
-            axes[row, 0].text(-0.1, 0.5, f'SSIM: {ssim_scores[row]:.3f}',
-                            transform=axes[row, 0].transAxes,
-                            rotation=90, va='center', ha='right', fontsize=9)
+            axes[row, 0].text(
+                -0.1,
+                0.5,
+                f"SSIM: {ssim_scores[row]:.3f}",
+                transform=axes[row, 0].transAxes,
+                rotation=90,
+                va="center",
+                ha="right",
+                fontsize=9,
+            )
 
-    plt.suptitle(f'$A \\rightarrow B \\rightarrow A$ Cycle Comparison ({modality_name})',
-                fontsize=12, y=0.995)
+    plt.suptitle(
+        f"$A \\rightarrow B \\rightarrow A$ Cycle Comparison ({modality_name})",
+        fontsize=12,
+        y=0.995,
+    )
     plt.tight_layout()
 
     save_figure(fig, output_path.stem, output_dir=output_path.parent)
@@ -145,10 +156,7 @@ def generate_comparison_grid(
 
 
 def generate_multimodality_grid(
-    inputs_a: np.ndarray,
-    generated_b: np.ndarray,
-    case_idx: int,
-    output_path: Path
+    inputs_a: np.ndarray, generated_b: np.ndarray, case_idx: int, output_path: Path
 ):
     """
     figure: show all 4 modalities for a single case
@@ -160,7 +168,7 @@ def generate_multimodality_grid(
     t2        img       img
     flair     img       img
     """
-    modality_names = ['T1', 'T1ce', 'T2', 'FLAIR']
+    modality_names = ["T1", "T1ce", "T2", "FLAIR"]
 
     fig, axes = plt.subplots(4, 2, figsize=(4, 7))
 
@@ -170,18 +178,18 @@ def generate_multimodality_grid(
     for mod_idx, mod_name in enumerate(modality_names):
         # input
         input_img = normalize_for_display(input_slice[mod_idx])
-        axes[mod_idx, 0].imshow(input_img, cmap='gray', vmin=0, vmax=1)
-        axes[mod_idx, 0].axis('off')
+        axes[mod_idx, 0].imshow(input_img, cmap="gray", vmin=0, vmax=1)
+        axes[mod_idx, 0].axis("off")
         axes[mod_idx, 0].set_ylabel(mod_name, fontsize=10)
 
         # generated
         generated_img = normalize_for_display(generated_b[case_idx, mod_idx])
-        axes[mod_idx, 1].imshow(generated_img, cmap='gray', vmin=0, vmax=1)
-        axes[mod_idx, 1].axis('off')
+        axes[mod_idx, 1].imshow(generated_img, cmap="gray", vmin=0, vmax=1)
+        axes[mod_idx, 1].axis("off")
 
     # column titles
-    axes[0, 0].set_title(r'\textbf{Input ($A$)}', fontsize=11)
-    axes[0, 1].set_title(r'\textbf{Generated ($\hat{B}$)}', fontsize=11)
+    axes[0, 0].set_title(r"\textbf{Input ($A$)}", fontsize=11)
+    axes[0, 1].set_title(r"\textbf{Generated ($\hat{B}$)}", fontsize=11)
 
     plt.tight_layout()
 
@@ -195,7 +203,7 @@ def generate_attention_overlay(
     input_img: np.ndarray,
     attention_map: np.ndarray,
     output_path: Path,
-    title: str = 'Attention Heatmap'
+    title: str = "Attention Heatmap",
 ):
     """
     figure: attention heatmap overlay on input image
@@ -216,28 +224,31 @@ def generate_attention_overlay(
     # resize attention to match input if needed
     if attention_map.shape != input_norm.shape:
         from scipy.ndimage import zoom
-        zoom_factors = (input_norm.shape[0] / attention_map.shape[0],
-                       input_norm.shape[1] / attention_map.shape[1])
+
+        zoom_factors = (
+            input_norm.shape[0] / attention_map.shape[0],
+            input_norm.shape[1] / attention_map.shape[1],
+        )
         attention_map = zoom(attention_map, zoom_factors, order=1)
 
     attention_norm = normalize_for_display(attention_map)
 
     # original image
-    ax1.imshow(input_norm, cmap='gray')
-    ax1.axis('off')
-    ax1.set_title(r'\textbf{(a)} Original')
+    ax1.imshow(input_norm, cmap="gray")
+    ax1.axis("off")
+    ax1.set_title(r"\textbf{(a)} Original")
 
     # attention heatmap
-    im2 = ax2.imshow(attention_norm, cmap='hot')
-    ax2.axis('off')
-    ax2.set_title(r'\textbf{(b)} Attention')
+    im2 = ax2.imshow(attention_norm, cmap="hot")
+    ax2.axis("off")
+    ax2.set_title(r"\textbf{(b)} Attention")
     plt.colorbar(im2, ax=ax2, fraction=0.046)
 
     # overlay
-    ax3.imshow(input_norm, cmap='gray')
-    ax3.imshow(attention_norm, cmap='hot', alpha=0.5)
-    ax3.axis('off')
-    ax3.set_title(r'\textbf{(c)} Overlay')
+    ax3.imshow(input_norm, cmap="gray")
+    ax3.imshow(attention_norm, cmap="hot", alpha=0.5)
+    ax3.axis("off")
+    ax3.set_title(r"\textbf{(c)} Overlay")
 
     plt.suptitle(title, fontsize=11, y=0.98)
     plt.tight_layout()
@@ -257,7 +268,7 @@ def generate_cycle_consistency_demo(
     reconstructed_b: np.ndarray,
     case_idx: int,
     modality_idx: int,
-    output_path: Path
+    output_path: Path,
 ):
     """
     figure: bidirectional cycle consistency demonstration
@@ -265,7 +276,7 @@ def generate_cycle_consistency_demo(
     top row: a → b → a
     bottom row: b → a → b
     """
-    modality_names = ['T1', 'T1ce', 'T2', 'FLAIR']
+    modality_names = ["T1", "T1ce", "T2", "FLAIR"]
     modality_name = modality_names[modality_idx]
 
     fig, axes = plt.subplots(2, 4, figsize=(7, 3.5))
@@ -288,51 +299,64 @@ def generate_cycle_consistency_demo(
     diff_b = np.abs(input_b - rec_b)
 
     # top row: a → b → a
-    axes[0, 0].imshow(input_a, cmap='gray')
-    axes[0, 0].axis('off')
-    axes[0, 0].set_title(r'$A$', fontsize=10)
+    axes[0, 0].imshow(input_a, cmap="gray")
+    axes[0, 0].axis("off")
+    axes[0, 0].set_title(r"$A$", fontsize=10)
 
-    axes[0, 1].imshow(gen_b, cmap='gray')
-    axes[0, 1].axis('off')
-    axes[0, 1].set_title(r'$G_{A2B}(A) = \hat{B}$', fontsize=10)
+    axes[0, 1].imshow(gen_b, cmap="gray")
+    axes[0, 1].axis("off")
+    axes[0, 1].set_title(r"$G_{A2B}(A) = \hat{B}$", fontsize=10)
 
-    axes[0, 2].imshow(rec_a, cmap='gray')
-    axes[0, 2].axis('off')
-    axes[0, 2].set_title(r'$G_{B2A}(\hat{B}) = \hat{A}$', fontsize=10)
+    axes[0, 2].imshow(rec_a, cmap="gray")
+    axes[0, 2].axis("off")
+    axes[0, 2].set_title(r"$G_{B2A}(\hat{B}) = \hat{A}$", fontsize=10)
 
-    im03 = axes[0, 3].imshow(diff_a, cmap='hot')
-    axes[0, 3].axis('off')
-    axes[0, 3].set_title(r'$|A - \hat{A}|$', fontsize=10)
+    im03 = axes[0, 3].imshow(diff_a, cmap="hot")
+    axes[0, 3].axis("off")
+    axes[0, 3].set_title(r"$|A - \hat{A}|$", fontsize=10)
     plt.colorbar(im03, ax=axes[0, 3], fraction=0.046)
 
     # bottom row: b → a → b
-    axes[1, 0].imshow(input_b, cmap='gray')
-    axes[1, 0].axis('off')
-    axes[1, 0].set_title(r'$B$', fontsize=10)
+    axes[1, 0].imshow(input_b, cmap="gray")
+    axes[1, 0].axis("off")
+    axes[1, 0].set_title(r"$B$", fontsize=10)
 
-    axes[1, 1].imshow(gen_a, cmap='gray')
-    axes[1, 1].axis('off')
-    axes[1, 1].set_title(r'$G_{B2A}(B) = \hat{A}$', fontsize=10)
+    axes[1, 1].imshow(gen_a, cmap="gray")
+    axes[1, 1].axis("off")
+    axes[1, 1].set_title(r"$G_{B2A}(B) = \hat{A}$", fontsize=10)
 
-    axes[1, 2].imshow(rec_b, cmap='gray')
-    axes[1, 2].axis('off')
-    axes[1, 2].set_title(r'$G_{A2B}(\hat{A}) = \hat{B}$', fontsize=10)
+    axes[1, 2].imshow(rec_b, cmap="gray")
+    axes[1, 2].axis("off")
+    axes[1, 2].set_title(r"$G_{A2B}(\hat{A}) = \hat{B}$", fontsize=10)
 
-    im13 = axes[1, 3].imshow(diff_b, cmap='hot')
-    axes[1, 3].axis('off')
-    axes[1, 3].set_title(r'$|B - \hat{B}|$', fontsize=10)
+    im13 = axes[1, 3].imshow(diff_b, cmap="hot")
+    axes[1, 3].axis("off")
+    axes[1, 3].set_title(r"$|B - \hat{B}|$", fontsize=10)
     plt.colorbar(im13, ax=axes[1, 3], fraction=0.046)
 
     # row labels
-    axes[0, 0].text(-0.2, 0.5, r'$A \rightarrow B \rightarrow A$',
-                   transform=axes[0, 0].transAxes,
-                   rotation=90, va='center', ha='right', fontsize=10)
-    axes[1, 0].text(-0.2, 0.5, r'$B \rightarrow A \rightarrow B$',
-                   transform=axes[1, 0].transAxes,
-                   rotation=90, va='center', ha='right', fontsize=10)
+    axes[0, 0].text(
+        -0.2,
+        0.5,
+        r"$A \rightarrow B \rightarrow A$",
+        transform=axes[0, 0].transAxes,
+        rotation=90,
+        va="center",
+        ha="right",
+        fontsize=10,
+    )
+    axes[1, 0].text(
+        -0.2,
+        0.5,
+        r"$B \rightarrow A \rightarrow B$",
+        transform=axes[1, 0].transAxes,
+        rotation=90,
+        va="center",
+        ha="right",
+        fontsize=10,
+    )
 
-    plt.suptitle(f'Cycle Consistency Demonstration ({modality_name})',
-                fontsize=12, y=0.98)
+    plt.suptitle(f"Cycle Consistency Demonstration ({modality_name})", fontsize=12, y=0.98)
     plt.tight_layout()
 
     save_figure(fig, output_path.stem, output_dir=output_path.parent)
@@ -342,15 +366,22 @@ def generate_cycle_consistency_demo(
 
 
 def main():
-    parser = argparse.ArgumentParser(description='generate qualitative figures')
-    parser.add_argument('--inference_dir', type=str,
-                       default='results/inference',
-                       help='directory containing inference results')
-    parser.add_argument('--output_dir', type=str,
-                       default='figures/qualitative',
-                       help='output directory for figures')
-    parser.add_argument('--modality', type=int, default=1,
-                       help='modality index to visualize (0=t1, 1=t1ce, 2=t2, 3=flair)')
+    parser = argparse.ArgumentParser(description="generate qualitative figures")
+    parser.add_argument(
+        "--inference_dir",
+        type=str,
+        default="results/inference",
+        help="directory containing inference results",
+    )
+    parser.add_argument(
+        "--output_dir", type=str, default="figures/qualitative", help="output directory for figures"
+    )
+    parser.add_argument(
+        "--modality",
+        type=int,
+        default=1,
+        help="modality index to visualize (0=t1, 1=t1ce, 2=t2, 3=flair)",
+    )
 
     args = parser.parse_args()
 
@@ -366,119 +397,118 @@ def main():
     print(f"visualizing modality: {['T1', 'T1ce', 'T2', 'FLAIR'][args.modality]}")
 
     # process best cases
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("generating figures for best cases")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    best_data = load_inference_results(inference_dir, 'best')
+    best_data = load_inference_results(inference_dir, "best")
     if best_data is not None:
         # comparison grid
         generate_comparison_grid(
-            best_data['inputs_a'],
-            best_data['generated_b'],
-            best_data['reconstructed_a'],
-            best_data['ssim_a2b'].tolist(),
-            output_dir / 'fig_best_comparison',
+            best_data["inputs_a"],
+            best_data["generated_b"],
+            best_data["reconstructed_a"],
+            best_data["ssim_a2b"].tolist(),
+            output_dir / "fig_best_comparison",
             n_samples=5,
-            modality_idx=args.modality
+            modality_idx=args.modality,
         )
 
         # multimodality grid for best case
         generate_multimodality_grid(
-            best_data['inputs_a'],
-            best_data['generated_b'],
+            best_data["inputs_a"],
+            best_data["generated_b"],
             case_idx=0,
-            output_path=output_dir / 'fig_best_multimodality'
+            output_path=output_dir / "fig_best_multimodality",
         )
 
         # cycle consistency demo
         generate_cycle_consistency_demo(
-            best_data['inputs_a'],
-            best_data['generated_b'],
-            best_data['reconstructed_a'],
-            best_data['inputs_b'],
-            best_data['generated_a'],
-            best_data['reconstructed_b'],
+            best_data["inputs_a"],
+            best_data["generated_b"],
+            best_data["reconstructed_a"],
+            best_data["inputs_b"],
+            best_data["generated_a"],
+            best_data["reconstructed_b"],
             case_idx=0,
             modality_idx=args.modality,
-            output_path=output_dir / 'fig_best_cycle_consistency'
+            output_path=output_dir / "fig_best_cycle_consistency",
         )
 
     # process worst cases
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("generating figures for worst cases")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    worst_data = load_inference_results(inference_dir, 'worst')
+    worst_data = load_inference_results(inference_dir, "worst")
     if worst_data is not None:
         generate_comparison_grid(
-            worst_data['inputs_a'],
-            worst_data['generated_b'],
-            worst_data['reconstructed_a'],
-            worst_data['ssim_a2b'].tolist(),
-            output_dir / 'fig_worst_comparison',
+            worst_data["inputs_a"],
+            worst_data["generated_b"],
+            worst_data["reconstructed_a"],
+            worst_data["ssim_a2b"].tolist(),
+            output_dir / "fig_worst_comparison",
             n_samples=5,
-            modality_idx=args.modality
+            modality_idx=args.modality,
         )
 
         generate_multimodality_grid(
-            worst_data['inputs_a'],
-            worst_data['generated_b'],
+            worst_data["inputs_a"],
+            worst_data["generated_b"],
             case_idx=0,
-            output_path=output_dir / 'fig_worst_multimodality'
+            output_path=output_dir / "fig_worst_multimodality",
         )
 
     # process median cases
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("generating figures for median cases")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    median_data = load_inference_results(inference_dir, 'median')
+    median_data = load_inference_results(inference_dir, "median")
     if median_data is not None:
         generate_comparison_grid(
-            median_data['inputs_a'],
-            median_data['generated_b'],
-            median_data['reconstructed_a'],
-            median_data['ssim_a2b'].tolist(),
-            output_dir / 'fig_median_comparison',
+            median_data["inputs_a"],
+            median_data["generated_b"],
+            median_data["reconstructed_a"],
+            median_data["ssim_a2b"].tolist(),
+            output_dir / "fig_median_comparison",
             n_samples=3,
-            modality_idx=args.modality
+            modality_idx=args.modality,
         )
 
     # process attention maps if available
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("generating attention visualizations")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    attention_data = load_attention_results(inference_dir, 'best')
+    attention_data = load_attention_results(inference_dir, "best")
     if attention_data is not None and best_data is not None:
         # find spatial attention maps
-        spatial_attention_keys = [k for k in attention_data.keys()
-                                 if 'spatial' in k.lower() and 'case0' in k]
+        spatial_attention_keys = [
+            k for k in attention_data if "spatial" in k.lower() and "case0" in k
+        ]
 
         if spatial_attention_keys:
             # use first spatial attention map
             attn_key = spatial_attention_keys[0]
             attention_map = attention_data[attn_key]
 
-            input_img = extract_center_slice_modalities(
-                best_data['inputs_a'][0]
-            )[args.modality]
+            input_img = extract_center_slice_modalities(best_data["inputs_a"][0])[args.modality]
 
             generate_attention_overlay(
                 input_img,
                 attention_map,
-                output_dir / 'fig_best_attention_overlay',
-                title='Spatial Attention (Best Case)'
+                output_dir / "fig_best_attention_overlay",
+                title="Spatial Attention (Best Case)",
             )
         else:
             print("no spatial attention maps found in results")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("qualitative figure generation complete")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"figures saved to: {output_dir}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

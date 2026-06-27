@@ -16,13 +16,10 @@ usage:
 """
 
 import argparse
-import json
 import logging
-import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -35,15 +32,14 @@ from tqdm import tqdm
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from neuroscope.models.components.generators import ResnetGenerator
-from neuroscope.models.components.discriminators import PatchGANDiscriminator
-from neuroscope.models.losses.cycle_losses import CycleLoss, IdentityLoss
 from neuroscope.data.medical_dataset import MedicalImageDataset
+from neuroscope.models.components.discriminators import PatchGANDiscriminator
+from neuroscope.models.components.generators import ResnetGenerator
+from neuroscope.models.losses.cycle_losses import CycleLoss, IdentityLoss
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -116,10 +112,10 @@ class BaselineCycleGAN(nn.Module):
         rec_b = self.G_AB(fake_a)
 
         return {
-            'fake_b': fake_b,
-            'fake_a': fake_a,
-            'rec_a': rec_a,
-            'rec_b': rec_b,
+            "fake_b": fake_b,
+            "fake_a": fake_a,
+            "rec_a": rec_a,
+            "rec_b": rec_b,
         }
 
 
@@ -128,7 +124,7 @@ class BaselineCycleGANTrainer:
 
     def __init__(
         self,
-        config: Dict,
+        config: dict,
         output_dir: Path,
         use_wandb: bool = False,
         use_mlflow: bool = False,
@@ -148,18 +144,18 @@ class BaselineCycleGANTrainer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.use_amp = mixed_precision and torch.cuda.is_available()
         self.scaler = GradScaler() if self.use_amp else None
 
         # initialize model
         self.model = BaselineCycleGAN(
-            input_nc=config.get('input_channels', 4),
-            output_nc=config.get('output_channels', 4),
-            ngf=config.get('ngf', 64),
-            ndf=config.get('ndf', 64),
-            n_residual_blocks=config.get('n_residual_blocks', 9),
-            use_spectral_norm=config.get('use_spectral_norm', True),
+            input_nc=config.get("input_channels", 4),
+            output_nc=config.get("output_channels", 4),
+            ngf=config.get("ngf", 64),
+            ndf=config.get("ndf", 64),
+            n_residual_blocks=config.get("n_residual_blocks", 9),
+            use_spectral_norm=config.get("use_spectral_norm", True),
         ).to(self.device)
 
         # multi-gpu support
@@ -169,54 +165,49 @@ class BaselineCycleGANTrainer:
 
         # loss functions
         self.criterion_gan = nn.MSELoss()
-        self.criterion_cycle = CycleLoss(loss_type='l1')
-        self.criterion_identity = IdentityLoss(loss_type='l1')
+        self.criterion_cycle = CycleLoss(loss_type="l1")
+        self.criterion_identity = IdentityLoss(loss_type="l1")
 
         # loss weights
-        self.lambda_cycle = config.get('lambda_cycle', 10.0)
-        self.lambda_identity = config.get('lambda_identity', 0.5)
+        self.lambda_cycle = config.get("lambda_cycle", 10.0)
+        self.lambda_identity = config.get("lambda_identity", 0.5)
 
         # optimizers
-        lr = config.get('lr', 0.0002)
-        betas = config.get('betas', (0.5, 0.999))
+        lr = config.get("lr", 0.0002)
+        betas = config.get("betas", (0.5, 0.999))
 
         self.optimizer_G = optim.Adam(
             list(self.model.G_AB.parameters()) + list(self.model.G_BA.parameters()),
             lr=lr,
-            betas=betas
+            betas=betas,
         )
 
         self.optimizer_D = optim.Adam(
             list(self.model.D_A.parameters()) + list(self.model.D_B.parameters()),
             lr=lr,
-            betas=betas
+            betas=betas,
         )
 
         # learning rate schedulers
         self.scheduler_G = optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer_G,
-            T_max=config.get('epochs', 200),
-            eta_min=1e-6
+            self.optimizer_G, T_max=config.get("epochs", 200), eta_min=1e-6
         )
 
         self.scheduler_D = optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer_D,
-            T_max=config.get('epochs', 200),
-            eta_min=1e-6
+            self.optimizer_D, T_max=config.get("epochs", 200), eta_min=1e-6
         )
 
         # tensorboard
-        self.writer = SummaryWriter(log_dir=str(self.output_dir / 'logs' / 'tensorboard'))
+        self.writer = SummaryWriter(log_dir=str(self.output_dir / "logs" / "tensorboard"))
 
         # weights & biases
         self.use_wandb = use_wandb
         if use_wandb:
             try:
                 import wandb
+
                 wandb.init(
-                    project='neuroscope-baseline-cyclegan',
-                    config=config,
-                    dir=str(self.output_dir)
+                    project="neuroscope-baseline-cyclegan", config=config, dir=str(self.output_dir)
                 )
                 self.wandb = wandb
             except ImportError:
@@ -228,7 +219,8 @@ class BaselineCycleGANTrainer:
         if use_mlflow:
             try:
                 import mlflow
-                mlflow.set_tracking_uri(str(self.output_dir / 'mlruns'))
+
+                mlflow.set_tracking_uri(str(self.output_dir / "mlruns"))
                 mlflow.start_run()
                 mlflow.log_params(config)
                 self.mlflow = mlflow
@@ -239,31 +231,31 @@ class BaselineCycleGANTrainer:
         # training state
         self.epoch = 0
         self.global_step = 0
-        self.best_fid = float('inf')
+        self.best_fid = float("inf")
 
-    def train_epoch(self, dataloader_a: DataLoader, dataloader_b: DataLoader) -> Dict:
+    def train_epoch(self, dataloader_a: DataLoader, dataloader_b: DataLoader) -> dict:
         """train for one epoch."""
         self.model.train()
 
         metrics = {
-            'loss_G': 0.0,
-            'loss_D': 0.0,
-            'loss_cycle': 0.0,
-            'loss_identity': 0.0,
-            'loss_gan_g': 0.0,
+            "loss_G": 0.0,
+            "loss_D": 0.0,
+            "loss_cycle": 0.0,
+            "loss_identity": 0.0,
+            "loss_gan_g": 0.0,
         }
 
         # iterate over both dataloaders
         for batch_a, batch_b in tqdm(
             zip(dataloader_a, dataloader_b),
             total=min(len(dataloader_a), len(dataloader_b)),
-            desc=f"Epoch {self.epoch}"
+            desc=f"Epoch {self.epoch}",
         ):
             # get images
-            real_a = batch_a['image'].to(self.device)
-            real_b = batch_b['image'].to(self.device)
+            real_a = batch_a["image"].to(self.device)
+            real_b = batch_b["image"].to(self.device)
 
-            batch_size = real_a.size(0)
+            real_a.size(0)
 
             # ===== train generators =====
             self.optimizer_G.zero_grad()
@@ -271,10 +263,10 @@ class BaselineCycleGANTrainer:
             with autocast(enabled=self.use_amp):
                 # forward pass
                 outputs = self.model(real_a, real_b)
-                fake_a = outputs['fake_a']
-                fake_b = outputs['fake_b']
-                rec_a = outputs['rec_a']
-                rec_b = outputs['rec_b']
+                fake_a = outputs["fake_a"]
+                fake_b = outputs["fake_b"]
+                rec_a = outputs["rec_a"]
+                rec_b = outputs["rec_b"]
 
                 # identity loss
                 idt_a = self.model.G_BA(real_a)
@@ -285,16 +277,10 @@ class BaselineCycleGANTrainer:
 
                 # gan loss
                 pred_fake_a = self.model.D_A(fake_a)
-                loss_gan_a = self.criterion_gan(
-                    pred_fake_a,
-                    torch.ones_like(pred_fake_a)
-                )
+                loss_gan_a = self.criterion_gan(pred_fake_a, torch.ones_like(pred_fake_a))
 
                 pred_fake_b = self.model.D_B(fake_b)
-                loss_gan_b = self.criterion_gan(
-                    pred_fake_b,
-                    torch.ones_like(pred_fake_b)
-                )
+                loss_gan_b = self.criterion_gan(pred_fake_b, torch.ones_like(pred_fake_b))
 
                 loss_gan_g = (loss_gan_a + loss_gan_b) / 2
 
@@ -305,9 +291,9 @@ class BaselineCycleGANTrainer:
 
                 # total generator loss
                 loss_G = (
-                    loss_gan_g +
-                    self.lambda_cycle * loss_cycle +
-                    self.lambda_identity * loss_identity
+                    loss_gan_g
+                    + self.lambda_cycle * loss_cycle
+                    + self.lambda_identity * loss_identity
                 )
 
             # backward pass for generators
@@ -324,31 +310,19 @@ class BaselineCycleGANTrainer:
             with autocast(enabled=self.use_amp):
                 # discriminator a
                 pred_real_a = self.model.D_A(real_a)
-                loss_real_a = self.criterion_gan(
-                    pred_real_a,
-                    torch.ones_like(pred_real_a)
-                )
+                loss_real_a = self.criterion_gan(pred_real_a, torch.ones_like(pred_real_a))
 
                 pred_fake_a = self.model.D_A(fake_a.detach())
-                loss_fake_a = self.criterion_gan(
-                    pred_fake_a,
-                    torch.zeros_like(pred_fake_a)
-                )
+                loss_fake_a = self.criterion_gan(pred_fake_a, torch.zeros_like(pred_fake_a))
 
                 loss_D_a = (loss_real_a + loss_fake_a) / 2
 
                 # discriminator b
                 pred_real_b = self.model.D_B(real_b)
-                loss_real_b = self.criterion_gan(
-                    pred_real_b,
-                    torch.ones_like(pred_real_b)
-                )
+                loss_real_b = self.criterion_gan(pred_real_b, torch.ones_like(pred_real_b))
 
                 pred_fake_b = self.model.D_B(fake_b.detach())
-                loss_fake_b = self.criterion_gan(
-                    pred_fake_b,
-                    torch.zeros_like(pred_fake_b)
-                )
+                loss_fake_b = self.criterion_gan(pred_fake_b, torch.zeros_like(pred_fake_b))
 
                 loss_D_b = (loss_real_b + loss_fake_b) / 2
 
@@ -365,11 +339,11 @@ class BaselineCycleGANTrainer:
                 self.optimizer_D.step()
 
             # update metrics
-            metrics['loss_G'] += loss_G.item()
-            metrics['loss_D'] += loss_D.item()
-            metrics['loss_cycle'] += loss_cycle.item()
-            metrics['loss_identity'] += loss_identity.item()
-            metrics['loss_gan_g'] += loss_gan_g.item()
+            metrics["loss_G"] += loss_G.item()
+            metrics["loss_D"] += loss_D.item()
+            metrics["loss_cycle"] += loss_cycle.item()
+            metrics["loss_identity"] += loss_identity.item()
+            metrics["loss_gan_g"] += loss_gan_g.item()
 
             self.global_step += 1
 
@@ -380,28 +354,28 @@ class BaselineCycleGANTrainer:
 
         return metrics
 
-    def save_checkpoint(self, metrics: Dict, is_best: bool = False):
+    def save_checkpoint(self, metrics: dict, is_best: bool = False):
         """save model checkpoint."""
         checkpoint = {
-            'epoch': self.epoch,
-            'global_step': self.global_step,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_G_state_dict': self.optimizer_G.state_dict(),
-            'optimizer_D_state_dict': self.optimizer_D.state_dict(),
-            'scheduler_G_state_dict': self.scheduler_G.state_dict(),
-            'scheduler_D_state_dict': self.scheduler_D.state_dict(),
-            'metrics': metrics,
-            'config': self.config,
+            "epoch": self.epoch,
+            "global_step": self.global_step,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_G_state_dict": self.optimizer_G.state_dict(),
+            "optimizer_D_state_dict": self.optimizer_D.state_dict(),
+            "scheduler_G_state_dict": self.scheduler_G.state_dict(),
+            "scheduler_D_state_dict": self.scheduler_D.state_dict(),
+            "metrics": metrics,
+            "config": self.config,
         }
 
         # save latest checkpoint
-        checkpoint_path = self.output_dir / 'checkpoints' / f'epoch_{self.epoch}.pth'
+        checkpoint_path = self.output_dir / "checkpoints" / f"epoch_{self.epoch}.pth"
         checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(checkpoint, checkpoint_path)
 
         # save best checkpoint
         if is_best:
-            best_path = self.output_dir / 'checkpoints' / 'best_model.pth'
+            best_path = self.output_dir / "checkpoints" / "best_model.pth"
             torch.save(checkpoint, best_path)
             logger.info(f"Saved best model to {best_path}")
 
@@ -449,14 +423,14 @@ class BaselineCycleGANTrainer:
 
             # tensorboard logging
             for key, value in metrics.items():
-                self.writer.add_scalar(f'train/{key}', value, epoch)
+                self.writer.add_scalar(f"train/{key}", value, epoch)
 
-            self.writer.add_scalar('lr/generator', self.scheduler_G.get_last_lr()[0], epoch)
-            self.writer.add_scalar('lr/discriminator', self.scheduler_D.get_last_lr()[0], epoch)
+            self.writer.add_scalar("lr/generator", self.scheduler_G.get_last_lr()[0], epoch)
+            self.writer.add_scalar("lr/discriminator", self.scheduler_D.get_last_lr()[0], epoch)
 
             # w&b logging
             if self.use_wandb:
-                self.wandb.log({**metrics, 'epoch': epoch})
+                self.wandb.log({**metrics, "epoch": epoch})
 
             # mlflow logging
             if self.use_mlflow:
@@ -479,80 +453,66 @@ class BaselineCycleGANTrainer:
 
 def main():
     """main execution function."""
-    parser = argparse.ArgumentParser(description='Train baseline CycleGAN')
+    parser = argparse.ArgumentParser(description="Train baseline CycleGAN")
 
     # data arguments
-    parser.add_argument('--dataset-a', type=str, required=True,
-                        help='Path to domain A dataset')
-    parser.add_argument('--dataset-b', type=str, required=True,
-                        help='Path to domain B dataset')
+    parser.add_argument("--dataset-a", type=str, required=True, help="Path to domain A dataset")
+    parser.add_argument("--dataset-b", type=str, required=True, help="Path to domain B dataset")
 
     # model arguments
-    parser.add_argument('--input-channels', type=int, default=4,
-                        help='Number of input channels')
-    parser.add_argument('--output-channels', type=int, default=4,
-                        help='Number of output channels')
-    parser.add_argument('--ngf', type=int, default=64,
-                        help='Number of generator filters')
-    parser.add_argument('--ndf', type=int, default=64,
-                        help='Number of discriminator filters')
-    parser.add_argument('--n-residual-blocks', type=int, default=9,
-                        help='Number of residual blocks')
+    parser.add_argument("--input-channels", type=int, default=4, help="Number of input channels")
+    parser.add_argument("--output-channels", type=int, default=4, help="Number of output channels")
+    parser.add_argument("--ngf", type=int, default=64, help="Number of generator filters")
+    parser.add_argument("--ndf", type=int, default=64, help="Number of discriminator filters")
+    parser.add_argument(
+        "--n-residual-blocks", type=int, default=9, help="Number of residual blocks"
+    )
 
     # training arguments
-    parser.add_argument('--epochs', type=int, default=200,
-                        help='Number of epochs')
-    parser.add_argument('--batch-size', type=int, default=4,
-                        help='Batch size')
-    parser.add_argument('--lr', type=float, default=0.0002,
-                        help='Learning rate')
-    parser.add_argument('--lambda-cycle', type=float, default=10.0,
-                        help='Cycle loss weight')
-    parser.add_argument('--lambda-identity', type=float, default=0.5,
-                        help='Identity loss weight')
+    parser.add_argument("--epochs", type=int, default=200, help="Number of epochs")
+    parser.add_argument("--batch-size", type=int, default=4, help="Batch size")
+    parser.add_argument("--lr", type=float, default=0.0002, help="Learning rate")
+    parser.add_argument("--lambda-cycle", type=float, default=10.0, help="Cycle loss weight")
+    parser.add_argument("--lambda-identity", type=float, default=0.5, help="Identity loss weight")
 
     # system arguments
-    parser.add_argument('--output-dir', type=str, required=True,
-                        help='Output directory')
-    parser.add_argument('--num-workers', type=int, default=4,
-                        help='Number of data loading workers')
-    parser.add_argument('--mixed-precision', action='store_true',
-                        help='Use mixed precision training')
-    parser.add_argument('--use-wandb', action='store_true',
-                        help='Use Weights & Biases logging')
-    parser.add_argument('--use-mlflow', action='store_true',
-                        help='Use MLflow logging')
-    parser.add_argument('--save-freq', type=int, default=10,
-                        help='Save checkpoint every N epochs')
+    parser.add_argument("--output-dir", type=str, required=True, help="Output directory")
+    parser.add_argument("--num-workers", type=int, default=4, help="Number of data loading workers")
+    parser.add_argument(
+        "--mixed-precision", action="store_true", help="Use mixed precision training"
+    )
+    parser.add_argument("--use-wandb", action="store_true", help="Use Weights & Biases logging")
+    parser.add_argument("--use-mlflow", action="store_true", help="Use MLflow logging")
+    parser.add_argument("--save-freq", type=int, default=10, help="Save checkpoint every N epochs")
 
     args = parser.parse_args()
 
     # create configuration
     config = {
-        'input_channels': args.input_channels,
-        'output_channels': args.output_channels,
-        'ngf': args.ngf,
-        'ndf': args.ndf,
-        'n_residual_blocks': args.n_residual_blocks,
-        'lr': args.lr,
-        'epochs': args.epochs,
-        'batch_size': args.batch_size,
-        'lambda_cycle': args.lambda_cycle,
-        'lambda_identity': args.lambda_identity,
-        'use_spectral_norm': True,
+        "input_channels": args.input_channels,
+        "output_channels": args.output_channels,
+        "ngf": args.ngf,
+        "ndf": args.ndf,
+        "n_residual_blocks": args.n_residual_blocks,
+        "lr": args.lr,
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "lambda_cycle": args.lambda_cycle,
+        "lambda_identity": args.lambda_identity,
+        "use_spectral_norm": True,
     }
 
     # create datasets
     logger.info("Loading datasets...")
     dataset_a = MedicalImageDataset(
         root_dir=args.dataset_a,
-        split='train',
+        split="train",
         transform=None,  # add transforms as needed
     )
 
     dataset_b = MedicalImageDataset(
         root_dir=args.dataset_b,
-        split='train',
+        split="train",
         transform=None,
     )
 
@@ -591,5 +551,5 @@ def main():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

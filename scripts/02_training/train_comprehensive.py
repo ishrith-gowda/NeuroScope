@@ -8,76 +8,75 @@ with the full logging, sampling, and figure generation infrastructure.
 usage:
     # using yaml config
     python train_comprehensive.py --config ../../../neuroscope/config/experiments/train_sa_cyclegan_25d.yaml
-    
+
     # quick debug run
     python train_comprehensive.py --debug
-    
+
     # command line overrides
     python train_comprehensive.py --epochs 50 --batch_size 2 --lr 1e-4
-    
+
     # resume training
     python train_comprehensive.py --resume /path/to/checkpoint.pth
 
 author: neuroscope research team
 """
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
-from datetime import datetime
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+
 import torch
-import numpy as np
-import random
 
 
 def set_environment():
     """configure environment for optimal training."""
     # reduce memory fragmentation
-    os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
+    os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
 
     # for reproducibility
-    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
     # fix macos malloc stack logging warnings
-    os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-    os.environ['MallocStackLogging'] = '0'
+    os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
+    os.environ["MALLOCSTACKLOGGING"] = "0"
 
     # suppress unhelpful warnings
     import warnings
-    warnings.filterwarnings('ignore', category=UserWarning)
-    
+
+    warnings.filterwarnings("ignore", category=UserWarning)
+
 
 def print_banner():
     """print simple training header."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("neuroscope - 2.5d sa-cyclegan training")
-    print("="*60)
+    print("=" * 60)
 
 
 def get_device_info():
     """get device information."""
     if torch.cuda.is_available():
-        device = torch.device('cuda')
+        device = torch.device("cuda")
         name = torch.cuda.get_device_name(0)
         memory = torch.cuda.get_device_properties(0).total_memory / 1e9
         return device, f"{name} ({memory:.1f}GB)"
     elif torch.backends.mps.is_available():
-        device = torch.device('mps')
+        device = torch.device("mps")
         return device, "Apple Silicon MPS"
     else:
-        return torch.device('cpu'), "CPU"
+        return torch.device("cpu"), "CPU"
 
 
 def create_debug_config():
     """create minimal debug configuration."""
     from neuroscope.training.trainers.comprehensive_trainer import TrainingConfig
-    
+
     return TrainingConfig(
         experiment_name="debug_run",
         epochs=2,
@@ -88,14 +87,14 @@ def create_debug_config():
         figure_every=1,
         log_every_n_steps=1,
         verbose=3,
-        early_stopping=False
+        early_stopping=False,
     )
 
 
-def create_config_from_args(args) -> 'TrainingConfig':
+def create_config_from_args(args) -> "TrainingConfig":
     """create configuration from command line arguments."""
     from neuroscope.training.trainers.comprehensive_trainer import TrainingConfig
-    
+
     if args.config:
         config = TrainingConfig.from_yaml(args.config)
         print(f"loaded config from: {args.config}")
@@ -105,7 +104,7 @@ def create_config_from_args(args) -> 'TrainingConfig':
     else:
         config = TrainingConfig()
         print("using default configuration")
-    
+
     # command line overrides
     if args.epochs is not None:
         config.epochs = args.epochs
@@ -125,8 +124,9 @@ def create_config_from_args(args) -> 'TrainingConfig':
 
     # macos-specific fix: reduce num_workers to avoid fork issues
     import platform
-    if platform.system() == 'Darwin':  # macos
-        if hasattr(config, 'num_workers') and config.num_workers > 2:
+
+    if platform.system() == "Darwin":  # macos
+        if hasattr(config, "num_workers") and config.num_workers > 2:
             print(f"macos detected: reducing num_workers from {config.num_workers} to 2")
             config.num_workers = 2
 
@@ -149,7 +149,7 @@ def verify_data_paths(config):
         brats_nifti = list(brats_path.glob("**/*.nii.gz"))
         print(f"   brats: {len(brats_subjects)} subjects, {len(brats_nifti)} nifti files")
         if len(brats_subjects) == 0:
-            print(f"   warning: no subject folders found in brats directory")
+            print("   warning: no subject folders found in brats directory")
 
     if not upenn_path.exists():
         print(f"   upenn directory not found: {upenn_path}")
@@ -160,16 +160,16 @@ def verify_data_paths(config):
         upenn_nifti = list(upenn_path.glob("**/*.nii.gz"))
         print(f"   upenn: {len(upenn_subjects)} subjects, {len(upenn_nifti)} nifti files")
         if len(upenn_subjects) == 0:
-            print(f"   warning: no subject folders found in upenn directory")
+            print("   warning: no subject folders found in upenn directory")
 
     return True
 
 
 def print_config_summary(config):
     """print configuration summary."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("configuration summary")
-    print("="*60)
+    print("=" * 60)
 
     print(f"\nexperiment: {config.experiment_name}")
     print(f"seed: {config.seed}")
@@ -199,7 +199,7 @@ def print_config_summary(config):
     print(f"   lambda_gradient: {config.lambda_gradient}")
 
     print(f"\noutput: {config.output_dir}")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 def main():
@@ -211,48 +211,41 @@ def main():
 examples:
     # train with yaml config
     python train_comprehensive.py --config path/to/config.yaml
-    
+
     # quick debug run
     python train_comprehensive.py --debug
-    
+
     # override settings
     python train_comprehensive.py --epochs 50 --batch_size 8 --lr 1e-4
-    
+
     # resume training
     python train_comprehensive.py --resume experiments/run_001/checkpoints/latest.pth
-        """
+        """,
     )
-    
+
     # config
-    parser.add_argument('--config', type=str, default=None,
-                       help='Path to YAML config file')
-    parser.add_argument('--debug', action='store_true',
-                       help='Run quick debug training (2 epochs)')
-    
+    parser.add_argument("--config", type=str, default=None, help="Path to YAML config file")
+    parser.add_argument("--debug", action="store_true", help="Run quick debug training (2 epochs)")
+
     # overrides
-    parser.add_argument('--epochs', type=int, default=None,
-                       help='Number of training epochs')
-    parser.add_argument('--batch_size', type=int, default=None,
-                       help='Batch size')
-    parser.add_argument('--lr', type=float, default=None,
-                       help='Learning rate for G and D')
-    parser.add_argument('--resume', type=str, default=None,
-                       help='Path to checkpoint to resume from')
-    parser.add_argument('--seed', type=int, default=None,
-                       help='Random seed')
-    parser.add_argument('--experiment_name', type=str, default=None,
-                       help='Experiment name')
-    parser.add_argument('--output_dir', type=str, default=None,
-                       help='Output directory')
-    
+    parser.add_argument("--epochs", type=int, default=None, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=None, help="Batch size")
+    parser.add_argument("--lr", type=float, default=None, help="Learning rate for G and D")
+    parser.add_argument(
+        "--resume", type=str, default=None, help="Path to checkpoint to resume from"
+    )
+    parser.add_argument("--seed", type=int, default=None, help="Random seed")
+    parser.add_argument("--experiment_name", type=str, default=None, help="Experiment name")
+    parser.add_argument("--output_dir", type=str, default=None, help="Output directory")
+
     args = parser.parse_args()
-    
+
     # setup
     set_environment()
     print_banner()
 
     # device info
-    device, device_name = get_device_info()
+    _device, device_name = get_device_info()
     print(f"device: {device_name}")
     print(f"python: {sys.version.split()[0]}")
     print(f"pytorch: {torch.__version__}")
@@ -271,7 +264,7 @@ examples:
     # confirm
     if not args.debug:
         response = input("start training? [y/n]: ").strip().lower()
-        if response and response != 'y':
+        if response and response != "y":
             print("training cancelled.")
             sys.exit(0)
 
@@ -287,23 +280,23 @@ examples:
     print(f"   trainable: {trainer.trainable_params:,}")
 
     # data summary
-    print(f"\ndataset splits:")
+    print("\ndataset splits:")
     print(f"   train: {trainer.train_samples:,} samples")
     print(f"   valid: {trainer.val_samples:,} samples")
     print(f"   test: {trainer.test_samples:,} samples")
 
     # start training
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("starting training")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     try:
         final_metrics = trainer.train()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("training complete")
-        print("="*60)
-        print(f"\nfinal results:")
+        print("=" * 60)
+        print("\nfinal results:")
         for k, v in final_metrics.items():
             print(f"   {k}: {v:.4f}")
         print(f"\nresults saved to: {trainer.run_dir}")
@@ -316,6 +309,7 @@ examples:
     except Exception as e:
         print(f"\ntraining failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -323,5 +317,5 @@ examples:
         trainer.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

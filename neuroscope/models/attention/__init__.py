@@ -11,53 +11,50 @@ modules:
     multi_head: multi-head attention variants
 """
 
-from .self_attention import (
-    SelfAttention2d,
-    EfficientSelfAttention2d,
-    MultiScaleSelfAttention,
-    EfficientSelfAttention,
-    SelfAttention,
-)
-
 from .channel_attention import (
     ChannelAttention,
-    SqueezeExcitation,
     EfficientChannelAttention,
     GlobalContextBlock,
+    SqueezeExcitation,
 )
-
+from .multi_head import (
+    CrossAttention2d,
+    MultiHeadSelfAttention2d,
+    WindowedMultiHeadAttention,
+)
+from .self_attention import (
+    EfficientSelfAttention,
+    EfficientSelfAttention2d,
+    MultiScaleSelfAttention,
+    SelfAttention,
+    SelfAttention2d,
+)
 from .spatial_attention import (
-    SpatialAttention,
     CBAM,
     CoordinateAttention,
     PolarizedSelfAttention,
-)
-
-from .multi_head import (
-    MultiHeadSelfAttention2d,
-    CrossAttention2d,
-    WindowedMultiHeadAttention,
+    SpatialAttention,
 )
 
 __all__ = [
-    # self-attention
-    "SelfAttention2d",
-    "SelfAttention",
-    "EfficientSelfAttention2d",
-    "EfficientSelfAttention",
-    "MultiScaleSelfAttention",
+    "CBAM",
     # channel attention
     "ChannelAttention",
-    "SqueezeExcitation",
-    "EfficientChannelAttention",
-    "GlobalContextBlock",
-    # spatial attention
-    "SpatialAttention",
-    "CBAM",
     "CoordinateAttention",
-    "PolarizedSelfAttention",
+    "CrossAttention2d",
+    "EfficientChannelAttention",
+    "EfficientSelfAttention",
+    "EfficientSelfAttention2d",
+    "GlobalContextBlock",
     # multi-head
     "MultiHeadSelfAttention2d",
-    "CrossAttention2d",
+    "MultiScaleSelfAttention",
+    "PolarizedSelfAttention",
+    "SelfAttention",
+    # self-attention
+    "SelfAttention2d",
+    # spatial attention
+    "SpatialAttention",
+    "SqueezeExcitation",
     "WindowedMultiHeadAttention",
 ]

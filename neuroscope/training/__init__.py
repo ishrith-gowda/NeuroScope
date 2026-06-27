@@ -21,11 +21,11 @@ subpackages:
 #   from neuroscope.training.callbacks import earlystopping
 
 __all__ = [
-    'trainers',
-    'optimizers', 
-    'schedulers',
-    'callbacks',
-    'loggers',
-    'samplers',
-    'figures',
+    "callbacks",
+    "figures",
+    "loggers",
+    "optimizers",
+    "samplers",
+    "schedulers",
+    "trainers",
 ]

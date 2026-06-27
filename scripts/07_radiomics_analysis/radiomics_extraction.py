@@ -15,22 +15,26 @@ references:
 - zwanenburg et al. (2020): image biomarker standardisation initiative
 """
 
-import numpy as np
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from scipy import ndimage, stats
 import warnings
+from dataclasses import dataclass, field
+from typing import Optional
+
+import numpy as np
+from scipy import ndimage, stats
 
 
 @dataclass
 class RadiomicsConfig:
     """configuration for radiomics feature extraction."""
+
     # first-order settings
     bin_width: float = 25.0  # intensity bin width for discretization
 
     # glcm settings
-    glcm_distances: List[int] = field(default_factory=lambda: [1, 2, 3])
-    glcm_angles: List[float] = field(default_factory=lambda: [0, np.pi/4, np.pi/2, 3*np.pi/4])
+    glcm_distances: list[int] = field(default_factory=lambda: [1, 2, 3])
+    glcm_angles: list[float] = field(
+        default_factory=lambda: [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
+    )
 
     # mask settings
     intensity_threshold: float = 0.01  # minimum intensity for brain mask
@@ -46,7 +50,7 @@ class FirstOrderFeatures:
     """
 
     @staticmethod
-    def extract(image: np.ndarray, mask: Optional[np.ndarray] = None) -> Dict[str, float]:
+    def extract(image: np.ndarray, mask: Optional[np.ndarray] = None) -> dict[str, float]:
         """
         extract first-order features from image.
 
@@ -64,55 +68,74 @@ class FirstOrderFeatures:
         values = image[mask].flatten()
 
         if len(values) < 10:
-            return {k: 0.0 for k in [
-                'mean', 'median', 'std', 'variance', 'skewness', 'kurtosis',
-                'min', 'max', 'range', 'iqr', 'mad', 'energy', 'entropy',
-                'uniformity', 'percentile_10', 'percentile_90', 'robust_mean'
-            ]}
+            return dict.fromkeys(
+                [
+                    "mean",
+                    "median",
+                    "std",
+                    "variance",
+                    "skewness",
+                    "kurtosis",
+                    "min",
+                    "max",
+                    "range",
+                    "iqr",
+                    "mad",
+                    "energy",
+                    "entropy",
+                    "uniformity",
+                    "percentile_10",
+                    "percentile_90",
+                    "robust_mean",
+                ],
+                0.0,
+            )
 
         features = {}
 
         # basic statistics
-        features['mean'] = float(np.mean(values))
-        features['median'] = float(np.median(values))
-        features['std'] = float(np.std(values))
-        features['variance'] = float(np.var(values))
+        features["mean"] = float(np.mean(values))
+        features["median"] = float(np.median(values))
+        features["std"] = float(np.std(values))
+        features["variance"] = float(np.var(values))
 
         # higher-order moments
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            features['skewness'] = float(stats.skew(values))
-            features['kurtosis'] = float(stats.kurtosis(values))
+            features["skewness"] = float(stats.skew(values))
+            features["kurtosis"] = float(stats.kurtosis(values))
 
         # range statistics
-        features['min'] = float(np.min(values))
-        features['max'] = float(np.max(values))
-        features['range'] = features['max'] - features['min']
+        features["min"] = float(np.min(values))
+        features["max"] = float(np.max(values))
+        features["range"] = features["max"] - features["min"]
 
         # robust statistics
         q1, q3 = np.percentile(values, [25, 75])
-        features['iqr'] = float(q3 - q1)
-        features['mad'] = float(np.median(np.abs(values - features['median'])))
+        features["iqr"] = float(q3 - q1)
+        features["mad"] = float(np.median(np.abs(values - features["median"])))
 
         # energy and entropy
-        features['energy'] = float(np.sum(values ** 2))
+        features["energy"] = float(np.sum(values**2))
 
         # histogram-based entropy
         hist, _ = np.histogram(values, bins=64, density=True)
         hist = hist[hist > 0]  # remove zeros
-        features['entropy'] = float(-np.sum(hist * np.log2(hist + 1e-10)))
+        features["entropy"] = float(-np.sum(hist * np.log2(hist + 1e-10)))
 
         # uniformity (sum of squared probabilities)
         hist_norm = hist / (np.sum(hist) + 1e-10)
-        features['uniformity'] = float(np.sum(hist_norm ** 2))
+        features["uniformity"] = float(np.sum(hist_norm**2))
 
         # percentiles
-        features['percentile_10'] = float(np.percentile(values, 10))
-        features['percentile_90'] = float(np.percentile(values, 90))
+        features["percentile_10"] = float(np.percentile(values, 10))
+        features["percentile_90"] = float(np.percentile(values, 90))
 
         # robust mean (mean of values within 10-90 percentile)
-        robust_mask = (values >= features['percentile_10']) & (values <= features['percentile_90'])
-        features['robust_mean'] = float(np.mean(values[robust_mask])) if np.any(robust_mask) else features['mean']
+        robust_mask = (values >= features["percentile_10"]) & (values <= features["percentile_90"])
+        features["robust_mean"] = (
+            float(np.mean(values[robust_mask])) if np.any(robust_mask) else features["mean"]
+        )
 
         return features
 
@@ -126,8 +149,9 @@ class GLCMFeatures:
     """
 
     @staticmethod
-    def compute_glcm(image: np.ndarray, distance: int = 1, angle: float = 0,
-                     levels: int = 32) -> np.ndarray:
+    def compute_glcm(
+        image: np.ndarray, distance: int = 1, angle: float = 0, levels: int = 32
+    ) -> np.ndarray:
         """
         compute gray level co-occurrence matrix.
 
@@ -145,7 +169,9 @@ class GLCMFeatures:
         if image_max - image_min < 1e-10:
             return np.eye(levels) / levels
 
-        discretized = ((image - image_min) / (image_max - image_min + 1e-10) * (levels - 1)).astype(int)
+        discretized = ((image - image_min) / (image_max - image_min + 1e-10) * (levels - 1)).astype(
+            int
+        )
         discretized = np.clip(discretized, 0, levels - 1)
 
         # compute offset based on angle
@@ -173,7 +199,7 @@ class GLCMFeatures:
         return glcm
 
     @staticmethod
-    def extract_from_glcm(glcm: np.ndarray) -> Dict[str, float]:
+    def extract_from_glcm(glcm: np.ndarray) -> dict[str, float]:
         """
         extract haralick texture features from glcm.
 
@@ -186,12 +212,12 @@ class GLCMFeatures:
         features = {}
 
         # marginal distributions
-        px = np.sum(glcm, axis=1)
-        py = np.sum(glcm, axis=0)
+        np.sum(glcm, axis=1)
+        np.sum(glcm, axis=0)
 
         # indices
         levels = glcm.shape[0]
-        i_indices, j_indices = np.meshgrid(range(levels), range(levels), indexing='ij')
+        i_indices, j_indices = np.meshgrid(range(levels), range(levels), indexing="ij")
 
         # mean and std of marginals
         mu_x = np.sum(i_indices * glcm)
@@ -200,47 +226,55 @@ class GLCMFeatures:
         sigma_y = np.sqrt(np.sum(((j_indices - mu_y) ** 2) * glcm))
 
         # contrast (measure of local variation)
-        features['contrast'] = float(np.sum(((i_indices - j_indices) ** 2) * glcm))
+        features["contrast"] = float(np.sum(((i_indices - j_indices) ** 2) * glcm))
 
         # dissimilarity
-        features['dissimilarity'] = float(np.sum(np.abs(i_indices - j_indices) * glcm))
+        features["dissimilarity"] = float(np.sum(np.abs(i_indices - j_indices) * glcm))
 
         # homogeneity (inverse difference moment)
-        features['homogeneity'] = float(np.sum(glcm / (1 + (i_indices - j_indices) ** 2)))
+        features["homogeneity"] = float(np.sum(glcm / (1 + (i_indices - j_indices) ** 2)))
 
         # energy (angular second moment)
-        features['energy'] = float(np.sum(glcm ** 2))
+        features["energy"] = float(np.sum(glcm**2))
 
         # entropy
         glcm_nz = glcm[glcm > 0]
-        features['entropy'] = float(-np.sum(glcm_nz * np.log2(glcm_nz + 1e-10)))
+        features["entropy"] = float(-np.sum(glcm_nz * np.log2(glcm_nz + 1e-10)))
 
         # correlation
         if sigma_x > 0 and sigma_y > 0:
-            features['correlation'] = float(
+            features["correlation"] = float(
                 np.sum((i_indices - mu_x) * (j_indices - mu_y) * glcm) / (sigma_x * sigma_y)
             )
         else:
-            features['correlation'] = 0.0
+            features["correlation"] = 0.0
 
         # cluster shade
-        features['cluster_shade'] = float(
+        features["cluster_shade"] = float(
             np.sum(((i_indices + j_indices - mu_x - mu_y) ** 3) * glcm)
         )
 
         # cluster prominence
-        features['cluster_prominence'] = float(
+        features["cluster_prominence"] = float(
             np.sum(((i_indices + j_indices - mu_x - mu_y) ** 4) * glcm)
         )
 
         return features
 
     @staticmethod
-    def extract(image: np.ndarray, mask: Optional[np.ndarray] = None,
-                distances: List[int] = [1], angles: List[float] = [0]) -> Dict[str, float]:
+    def extract(
+        image: np.ndarray,
+        mask: Optional[np.ndarray] = None,
+        distances: Optional[list[int]] = None,
+        angles: Optional[list[float]] = None,
+    ) -> dict[str, float]:
         """
         extract averaged glcm features across distances and angles.
         """
+        if angles is None:
+            angles = [0]
+        if distances is None:
+            distances = [1]
         if mask is not None:
             # apply mask
             image = image.copy()
@@ -259,9 +293,9 @@ class GLCMFeatures:
             return {}
 
         averaged = {}
-        for key in all_features[0].keys():
+        for key in all_features[0]:
             values = [f[key] for f in all_features]
-            averaged[f'glcm_{key}'] = float(np.mean(values))
+            averaged[f"glcm_{key}"] = float(np.mean(values))
 
         return averaged
 
@@ -275,7 +309,9 @@ class ShapeFeatures:
     """
 
     @staticmethod
-    def extract(mask: np.ndarray, voxel_spacing: Tuple[float, ...] = (1.0, 1.0)) -> Dict[str, float]:
+    def extract(
+        mask: np.ndarray, voxel_spacing: tuple[float, ...] = (1.0, 1.0)
+    ) -> dict[str, float]:
         """
         extract shape features from binary mask.
 
@@ -290,27 +326,31 @@ class ShapeFeatures:
 
         if not np.any(mask):
             return {
-                'area': 0.0, 'perimeter': 0.0, 'compactness': 0.0,
-                'eccentricity': 0.0, 'solidity': 0.0, 'extent': 0.0
+                "area": 0.0,
+                "perimeter": 0.0,
+                "compactness": 0.0,
+                "eccentricity": 0.0,
+                "solidity": 0.0,
+                "extent": 0.0,
             }
 
         # area (number of pixels * voxel area)
         voxel_area = np.prod(voxel_spacing)
-        features['area'] = float(np.sum(mask) * voxel_area)
+        features["area"] = float(np.sum(mask) * voxel_area)
 
         # perimeter estimation using gradient
         gradient_x = ndimage.sobel(mask.astype(float), axis=0)
         gradient_y = ndimage.sobel(mask.astype(float), axis=1)
-        perimeter_img = np.sqrt(gradient_x ** 2 + gradient_y ** 2)
-        features['perimeter'] = float(np.sum(perimeter_img > 0))
+        perimeter_img = np.sqrt(gradient_x**2 + gradient_y**2)
+        features["perimeter"] = float(np.sum(perimeter_img > 0))
 
         # compactness (circularity): 4*pi*area / perimeter^2
-        if features['perimeter'] > 0:
-            features['compactness'] = float(
-                4 * np.pi * features['area'] / (features['perimeter'] ** 2)
+        if features["perimeter"] > 0:
+            features["compactness"] = float(
+                4 * np.pi * features["area"] / (features["perimeter"] ** 2)
             )
         else:
-            features['compactness'] = 0.0
+            features["compactness"] = 0.0
 
         # eccentricity using moments
         moments = ndimage.measurements.moments(mask.astype(float))
@@ -319,36 +359,39 @@ class ShapeFeatures:
             cy = moments[0, 1] / moments[0, 0]
 
             # central moments
-            mu20 = moments[2, 0] / moments[0, 0] - cx ** 2
-            mu02 = moments[0, 2] / moments[0, 0] - cy ** 2
+            mu20 = moments[2, 0] / moments[0, 0] - cx**2
+            mu02 = moments[0, 2] / moments[0, 0] - cy**2
             mu11 = moments[1, 1] / moments[0, 0] - cx * cy
 
             # eigenvalues of covariance matrix
-            delta = np.sqrt((mu20 - mu02) ** 2 + 4 * mu11 ** 2)
+            delta = np.sqrt((mu20 - mu02) ** 2 + 4 * mu11**2)
             lambda1 = (mu20 + mu02 + delta) / 2
             lambda2 = (mu20 + mu02 - delta) / 2
 
             if lambda1 > 0:
-                features['eccentricity'] = float(np.sqrt(1 - lambda2 / lambda1))
+                features["eccentricity"] = float(np.sqrt(1 - lambda2 / lambda1))
             else:
-                features['eccentricity'] = 0.0
+                features["eccentricity"] = 0.0
         else:
-            features['eccentricity'] = 0.0
+            features["eccentricity"] = 0.0
 
         # solidity: area / convex hull area (approximated)
         # using morphological closing as approximation
         closed = ndimage.binary_closing(mask, iterations=5)
         convex_area = np.sum(closed) * voxel_area
-        features['solidity'] = float(features['area'] / (convex_area + 1e-10))
+        features["solidity"] = float(features["area"] / (convex_area + 1e-10))
 
         # extent: area / bounding box area
         coords = np.where(mask)
         if len(coords[0]) > 0:
-            bbox_area = (coords[0].max() - coords[0].min() + 1) * \
-                       (coords[1].max() - coords[1].min() + 1) * voxel_area
-            features['extent'] = float(features['area'] / (bbox_area + 1e-10))
+            bbox_area = (
+                (coords[0].max() - coords[0].min() + 1)
+                * (coords[1].max() - coords[1].min() + 1)
+                * voxel_area
+            )
+            features["extent"] = float(features["area"] / (bbox_area + 1e-10))
         else:
-            features['extent'] = 0.0
+            features["extent"] = 0.0
 
         return features
 
@@ -381,7 +424,9 @@ class RadiomicsExtractor:
 
         return mask
 
-    def extract_slice(self, image: np.ndarray, mask: Optional[np.ndarray] = None) -> Dict[str, float]:
+    def extract_slice(
+        self, image: np.ndarray, mask: Optional[np.ndarray] = None
+    ) -> dict[str, float]:
         """
         extract all radiomics features from a single slice.
 
@@ -399,24 +444,23 @@ class RadiomicsExtractor:
 
         # first-order features
         fo_features = self.first_order.extract(image, mask)
-        features.update({f'fo_{k}': v for k, v in fo_features.items()})
+        features.update({f"fo_{k}": v for k, v in fo_features.items()})
 
         # glcm features
         glcm_features = self.glcm.extract(
-            image, mask,
-            distances=self.config.glcm_distances,
-            angles=self.config.glcm_angles
+            image, mask, distances=self.config.glcm_distances, angles=self.config.glcm_angles
         )
         features.update(glcm_features)
 
         # shape features
         shape_features = self.shape.extract(mask)
-        features.update({f'shape_{k}': v for k, v in shape_features.items()})
+        features.update({f"shape_{k}": v for k, v in shape_features.items()})
 
         return features
 
-    def extract_multimodal(self, images: Dict[str, np.ndarray],
-                          mask: Optional[np.ndarray] = None) -> Dict[str, float]:
+    def extract_multimodal(
+        self, images: dict[str, np.ndarray], mask: Optional[np.ndarray] = None
+    ) -> dict[str, float]:
         """
         extract features from multiple modalities.
 
@@ -431,7 +475,7 @@ class RadiomicsExtractor:
 
         for modality, image in images.items():
             features = self.extract_slice(image, mask)
-            all_features.update({f'{modality}_{k}': v for k, v in features.items()})
+            all_features.update({f"{modality}_{k}": v for k, v in features.items()})
 
         return all_features
 
@@ -439,9 +483,9 @@ class RadiomicsExtractor:
 def extract_radiomics_from_dataset(
     data_dir: str,
     output_path: str,
-    modalities: List[str] = ['t1', 't1gd', 't2', 'flair'],
-    max_samples: int = 500
-) -> Dict[str, np.ndarray]:
+    modalities: Optional[list[str]] = None,
+    max_samples: int = 500,
+) -> dict[str, np.ndarray]:
     """
     extract radiomics features from a dataset directory.
 
@@ -454,10 +498,10 @@ def extract_radiomics_from_dataset(
     returns:
         dictionary of extracted feature arrays
     """
-    import os
-    import glob
     from pathlib import Path
 
+    if modalities is None:
+        modalities = ["t1", "t1gd", "t2", "flair"]
     data_path = Path(data_dir)
     extractor = RadiomicsExtractor()
 
@@ -467,16 +511,17 @@ def extract_radiomics_from_dataset(
     # find all subject directories or npy files
     subjects = sorted([d for d in data_path.iterdir() if d.is_dir()])[:max_samples]
 
-    print(f'[radiomics] processing {len(subjects)} subjects...')
+    print(f"[radiomics] processing {len(subjects)} subjects...")
 
     for i, subject_dir in enumerate(subjects):
         try:
             # load modalities
             images = {}
             for mod in modalities:
-                mod_file = subject_dir / f'{mod}.nii.gz'
+                mod_file = subject_dir / f"{mod}.nii.gz"
                 if mod_file.exists():
                     import nibabel as nib
+
                     img = nib.load(str(mod_file))
                     data = img.get_fdata()
                     # take middle slice
@@ -489,35 +534,31 @@ def extract_radiomics_from_dataset(
                 sample_ids.append(subject_dir.name)
 
             if (i + 1) % 20 == 0:
-                print(f'[radiomics] processed {i + 1}/{len(subjects)} subjects')
+                print(f"[radiomics] processed {i + 1}/{len(subjects)} subjects")
 
         except Exception as e:
-            print(f'[radiomics] error processing {subject_dir}: {e}')
+            print(f"[radiomics] error processing {subject_dir}: {e}")
             continue
 
     if not all_features:
-        print('[radiomics] no features extracted!')
+        print("[radiomics] no features extracted!")
         return {}
 
     # convert to numpy arrays
     feature_names = list(all_features[0].keys())
     feature_matrix = np.array([[f.get(name, 0) for name in feature_names] for f in all_features])
 
-    print(f'[radiomics] extracted {len(feature_names)} features from {len(all_features)} samples')
+    print(f"[radiomics] extracted {len(feature_names)} features from {len(all_features)} samples")
 
     # save
     np.save(output_path, feature_matrix)
 
-    return {
-        'features': feature_matrix,
-        'feature_names': feature_names,
-        'sample_ids': sample_ids
-    }
+    return {"features": feature_matrix, "feature_names": feature_names, "sample_ids": sample_ids}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test extraction
-    print('[radiomics] testing feature extraction...')
+    print("[radiomics] testing feature extraction...")
 
     # create synthetic test image
     np.random.seed(42)
@@ -527,7 +568,7 @@ if __name__ == '__main__':
     extractor = RadiomicsExtractor()
     features = extractor.extract_slice(test_image)
 
-    print(f'[radiomics] extracted {len(features)} features:')
+    print(f"[radiomics] extracted {len(features)} features:")
     for name, value in sorted(features.items())[:10]:
-        print(f'  {name}: {value:.4f}')
-    print('  ...')
+        print(f"  {name}: {value:.4f}")
+    print("  ...")

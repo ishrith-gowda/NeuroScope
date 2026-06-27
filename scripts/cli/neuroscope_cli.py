@@ -7,342 +7,204 @@ neuroscope functionality including preprocessing, training, and evaluation.
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
-from neuroscope.core.logging import get_logger, configure_logging
 from neuroscope.config import (
-    get_default_training_config,
-    get_default_preprocessing_config,
     get_default_evaluation_config,
-    validate_config
+    get_default_preprocessing_config,
+    get_default_training_config,
+    validate_config,
 )
+from neuroscope.core.logging import configure_logging, get_logger
 
 logger = get_logger(__name__)
 
 
 def create_parser() -> argparse.ArgumentParser:
     """create the main argument parser.
-    
+
     returns:
         configured argument parser
     """
     parser = argparse.ArgumentParser(
-        prog='neuroscope',
-        description='NeuroScope: Domain-aware standardization of multimodal glioma MRI',
+        prog="neuroscope",
+        description="NeuroScope: Domain-aware standardization of multimodal glioma MRI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 examples:
   # preprocess data
   neuroscope preprocess --input-dir /path/to/raw --output-dir /path/to/processed
-  
+
   # train cyclegan model
   neuroscope train --config config.json --data-root /path/to/data
-  
+
   # evaluate model
   neuroscope evaluate --model-path /path/to/model --data-path /path/to/test/data
-  
+
   # run full pipeline
   neuroscope pipeline --input-dir /path/to/raw --output-dir /path/to/results
-        """
+        """,
     )
-    
+
     # global arguments
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Enable verbose logging'
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default="INFO",
+        help="Set logging level",
     )
-    
-    parser.add_argument(
-        '--log-level',
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-        default='INFO',
-        help='Set logging level'
-    )
-    
-    parser.add_argument(
-        '--log-dir',
-        type=Path,
-        help='Directory for log files'
-    )
-    
+
+    parser.add_argument("--log-dir", type=Path, help="Directory for log files")
+
     # subcommands
-    subparsers = parser.add_subparsers(
-        dest='command',
-        help='Available commands',
-        required=True
-    )
-    
+    subparsers = parser.add_subparsers(dest="command", help="Available commands", required=True)
+
     # preprocessing command
-    preprocess_parser = subparsers.add_parser(
-        'preprocess',
-        help='Preprocess medical imaging data'
-    )
+    preprocess_parser = subparsers.add_parser("preprocess", help="Preprocess medical imaging data")
     _add_preprocess_args(preprocess_parser)
-    
+
     # training command
-    train_parser = subparsers.add_parser(
-        'train',
-        help='Train CycleGAN model'
-    )
+    train_parser = subparsers.add_parser("train", help="Train CycleGAN model")
     _add_train_args(train_parser)
-    
+
     # evaluation command
-    eval_parser = subparsers.add_parser(
-        'evaluate',
-        help='Evaluate trained model'
-    )
+    eval_parser = subparsers.add_parser("evaluate", help="Evaluate trained model")
     _add_evaluate_args(eval_parser)
-    
+
     # pipeline command
     pipeline_parser = subparsers.add_parser(
-        'pipeline',
-        help='Run complete preprocessing and training pipeline'
+        "pipeline", help="Run complete preprocessing and training pipeline"
     )
     _add_pipeline_args(pipeline_parser)
-    
+
     # configuration command
-    config_parser = subparsers.add_parser(
-        'config',
-        help='Configuration management'
-    )
+    config_parser = subparsers.add_parser("config", help="Configuration management")
     _add_config_args(config_parser)
-    
+
     return parser
 
 
 def _add_preprocess_args(parser: argparse.ArgumentParser):
     """add preprocessing arguments to parser."""
     parser.add_argument(
-        '--input-dir',
-        type=Path,
-        required=True,
-        help='Input directory containing raw data'
+        "--input-dir", type=Path, required=True, help="Input directory containing raw data"
     )
-    
+
     parser.add_argument(
-        '--output-dir',
-        type=Path,
-        required=True,
-        help='Output directory for preprocessed data'
+        "--output-dir", type=Path, required=True, help="Output directory for preprocessed data"
     )
-    
+
+    parser.add_argument("--config", type=Path, help="Preprocessing configuration file")
+
+    parser.add_argument("--metadata-file", type=Path, help="Metadata file path")
+
     parser.add_argument(
-        '--config',
-        type=Path,
-        help='Preprocessing configuration file'
+        "--max-workers", type=int, default=4, help="Maximum number of parallel workers"
     )
-    
+
+    parser.add_argument("--force", action="store_true", help="Force reprocessing of existing files")
+
     parser.add_argument(
-        '--metadata-file',
-        type=Path,
-        help='Metadata file path'
-    )
-    
-    parser.add_argument(
-        '--max-workers',
-        type=int,
-        default=4,
-        help='Maximum number of parallel workers'
-    )
-    
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Force reprocessing of existing files'
-    )
-    
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Print planned actions without executing'
+        "--dry-run", action="store_true", help="Print planned actions without executing"
     )
 
 
 def _add_train_args(parser: argparse.ArgumentParser):
     """add training arguments to parser."""
     parser.add_argument(
-        '--data-root',
-        type=Path,
-        required=True,
-        help='Root directory containing preprocessed data'
+        "--data-root", type=Path, required=True, help="Root directory containing preprocessed data"
     )
-    
-    parser.add_argument(
-        '--config',
-        type=Path,
-        help='Training configuration file'
-    )
-    
-    parser.add_argument(
-        '--metadata-json',
-        type=Path,
-        help='Metadata JSON file'
-    )
-    
-    parser.add_argument(
-        '--n-epochs',
-        type=int,
-        help='Number of training epochs'
-    )
-    
-    parser.add_argument(
-        '--batch-size',
-        type=int,
-        help='Training batch size'
-    )
-    
-    parser.add_argument(
-        '--lr',
-        type=float,
-        help='Learning rate'
-    )
-    
-    parser.add_argument(
-        '--checkpoint-dir',
-        type=Path,
-        help='Directory for model checkpoints'
-    )
-    
-    parser.add_argument(
-        '--resume',
-        type=Path,
-        help='Resume training from checkpoint'
-    )
-    
-    parser.add_argument(
-        '--device',
-        choices=['cpu', 'cuda', 'mps'],
-        help='Training device'
-    )
+
+    parser.add_argument("--config", type=Path, help="Training configuration file")
+
+    parser.add_argument("--metadata-json", type=Path, help="Metadata JSON file")
+
+    parser.add_argument("--n-epochs", type=int, help="Number of training epochs")
+
+    parser.add_argument("--batch-size", type=int, help="Training batch size")
+
+    parser.add_argument("--lr", type=float, help="Learning rate")
+
+    parser.add_argument("--checkpoint-dir", type=Path, help="Directory for model checkpoints")
+
+    parser.add_argument("--resume", type=Path, help="Resume training from checkpoint")
+
+    parser.add_argument("--device", choices=["cpu", "cuda", "mps"], help="Training device")
 
 
 def _add_evaluate_args(parser: argparse.ArgumentParser):
     """add evaluation arguments to parser."""
+    parser.add_argument("--model-path", type=Path, required=True, help="Path to trained model")
+
+    parser.add_argument("--data-path", type=Path, required=True, help="Path to test data")
+
+    parser.add_argument("--output-dir", type=Path, help="Output directory for evaluation results")
+
     parser.add_argument(
-        '--model-path',
-        type=Path,
-        required=True,
-        help='Path to trained model'
+        "--metrics",
+        nargs="+",
+        default=["mse", "mae", "ssim", "psnr"],
+        help="Evaluation metrics to compute",
     )
-    
-    parser.add_argument(
-        '--data-path',
-        type=Path,
-        required=True,
-        help='Path to test data'
-    )
-    
-    parser.add_argument(
-        '--output-dir',
-        type=Path,
-        help='Output directory for evaluation results'
-    )
-    
-    parser.add_argument(
-        '--metrics',
-        nargs='+',
-        default=['mse', 'mae', 'ssim', 'psnr'],
-        help='Evaluation metrics to compute'
-    )
-    
-    parser.add_argument(
-        '--batch-size',
-        type=int,
-        default=8,
-        help='Evaluation batch size'
-    )
-    
-    parser.add_argument(
-        '--visualize',
-        action='store_true',
-        help='Generate visualizations'
-    )
+
+    parser.add_argument("--batch-size", type=int, default=8, help="Evaluation batch size")
+
+    parser.add_argument("--visualize", action="store_true", help="Generate visualizations")
 
 
 def _add_pipeline_args(parser: argparse.ArgumentParser):
     """add pipeline arguments to parser."""
     parser.add_argument(
-        '--input-dir',
-        type=Path,
-        required=True,
-        help='Input directory containing raw data'
+        "--input-dir", type=Path, required=True, help="Input directory containing raw data"
     )
-    
+
     parser.add_argument(
-        '--output-dir',
-        type=Path,
-        required=True,
-        help='Output directory for results'
+        "--output-dir", type=Path, required=True, help="Output directory for results"
     )
-    
-    parser.add_argument(
-        '--config',
-        type=Path,
-        help='Pipeline configuration file'
-    )
-    
-    parser.add_argument(
-        '--skip-preprocessing',
-        action='store_true',
-        help='Skip preprocessing step'
-    )
-    
-    parser.add_argument(
-        '--skip-training',
-        action='store_true',
-        help='Skip training step'
-    )
-    
-    parser.add_argument(
-        '--skip-evaluation',
-        action='store_true',
-        help='Skip evaluation step'
-    )
+
+    parser.add_argument("--config", type=Path, help="Pipeline configuration file")
+
+    parser.add_argument("--skip-preprocessing", action="store_true", help="Skip preprocessing step")
+
+    parser.add_argument("--skip-training", action="store_true", help="Skip training step")
+
+    parser.add_argument("--skip-evaluation", action="store_true", help="Skip evaluation step")
 
 
 def _add_config_args(parser: argparse.ArgumentParser):
     """add configuration arguments to parser."""
     parser.add_argument(
-        '--generate',
-        choices=['training', 'preprocessing', 'evaluation', 'all'],
-        help='Generate default configuration file'
+        "--generate",
+        choices=["training", "preprocessing", "evaluation", "all"],
+        help="Generate default configuration file",
     )
-    
-    parser.add_argument(
-        '--output',
-        type=Path,
-        help='Output file for generated configuration'
-    )
-    
-    parser.add_argument(
-        '--validate',
-        type=Path,
-        help='Validate configuration file'
-    )
+
+    parser.add_argument("--output", type=Path, help="Output file for generated configuration")
+
+    parser.add_argument("--validate", type=Path, help="Validate configuration file")
 
 
 def preprocess_command(args: argparse.Namespace):
     """handle preprocessing command."""
     from neuroscope.preprocessing.normalization import VolumePreprocessor
-    
+
     logger.info("Starting preprocessing pipeline")
-    
+
     # load configuration
     if args.config:
         config = load_config_file(args.config)
     else:
         config = get_default_preprocessing_config()
-    
+
     # update config with command line arguments
     if args.max_workers:
-        config['parallel_processing']['max_workers'] = args.max_workers
-    
+        config["parallel_processing"]["max_workers"] = args.max_workers
+
     # initialize preprocessor
-    preprocessor = VolumePreprocessor(
-        preprocessing_steps=config.get('preprocessing_steps', [])
-    )
-    
+    preprocessor = VolumePreprocessor(preprocessing_steps=config.get("preprocessing_steps", []))
+
     # run preprocessing
     if args.dry_run:
         logger.info("Dry run mode - no files will be processed")
@@ -350,69 +212,67 @@ def preprocess_command(args: argparse.Namespace):
         logger.info(f"Would save results to: {args.output_dir}")
     else:
         results = preprocessor.batch_process(
-            input_dir=args.input_dir,
-            output_dir=args.output_dir,
-            file_pattern="*.nii.gz"
+            input_dir=args.input_dir, output_dir=args.output_dir, file_pattern="*.nii.gz"
         )
-        
+
         logger.info(f"Preprocessing completed. Processed {len(results)} files")
 
 
 def train_command(args: argparse.Namespace):
     """handle training command."""
-    from neuroscope.training.trainers import CycleGANTrainer
     from neuroscope.models.architectures import CycleGAN
     from neuroscope.training.optimizers import CycleGANOptimizer
-    
+    from neuroscope.training.trainers import CycleGANTrainer
+
     logger.info("Starting CycleGAN training")
-    
+
     # load configuration
     if args.config:
         config = load_config_file(args.config)
     else:
         config = get_default_training_config()
-    
+
     # update config with command line arguments
     if args.n_epochs:
-        config['training']['n_epochs'] = args.n_epochs
+        config["training"]["n_epochs"] = args.n_epochs
     if args.batch_size:
-        config['training']['batch_size'] = args.batch_size
+        config["training"]["batch_size"] = args.batch_size
     if args.lr:
-        config['generator_optimizer']['lr'] = args.lr
-        config['discriminator_optimizer']['lr'] = args.lr
-    
+        config["generator_optimizer"]["lr"] = args.lr
+        config["discriminator_optimizer"]["lr"] = args.lr
+
     # validate configuration
     if not validate_config(config):
         logger.error("Invalid configuration")
         sys.exit(1)
-    
+
     # initialize model
-    model = CycleGAN(**config['model'])
-    
+    model = CycleGAN(**config["model"])
+
     # initialize optimizer
     optimizer = CycleGANOptimizer(
-        generators={'G_A2B': model.G_A2B, 'G_B2A': model.G_B2A},
-        discriminators={'D_A': model.D_A, 'D_B': model.D_B},
-        config=config
+        generators={"G_A2B": model.G_A2B, "G_B2A": model.G_B2A},
+        discriminators={"D_A": model.D_A, "D_B": model.D_B},
+        config=config,
     )
-    
+
     # initialize trainer
-    trainer = CycleGANTrainer(model, optimizer, device='cuda', config=config)
-    
+    trainer = CycleGANTrainer(model, optimizer, device="cuda", config=config)
+
     # load checkpoint if resuming
     if args.resume:
         trainer.load_checkpoint(args.resume)
-    
+
     logger.info("Training configuration validated and model initialized")
 
 
 def evaluate_command(args: argparse.Namespace):
     """handle evaluation command."""
     logger.info("Starting model evaluation")
-    
+
     # load model
-    model = torch.load(args.model_path, map_location='cpu')
-    
+    torch.load(args.model_path, map_location="cpu")
+
     logger.info(f"Loaded model from: {args.model_path}")
     logger.info(f"Evaluating on data from: {args.data_path}")
 
@@ -420,81 +280,81 @@ def evaluate_command(args: argparse.Namespace):
 def pipeline_command(args: argparse.Namespace):
     """handle pipeline command."""
     logger.info("Starting complete NeuroScope pipeline")
-    
+
     # run preprocessing
     if not args.skip_preprocessing:
         logger.info("Running preprocessing step")
         preprocess_args = argparse.Namespace(
             input_dir=args.input_dir,
-            output_dir=args.output_dir / 'preprocessed',
+            output_dir=args.output_dir / "preprocessed",
             config=args.config,
             max_workers=4,
             force=False,
-            dry_run=False
+            dry_run=False,
         )
         preprocess_command(preprocess_args)
-    
+
     # run training
     if not args.skip_training:
         logger.info("Running training step")
         train_args = argparse.Namespace(
-            data_root=args.output_dir / 'preprocessed',
+            data_root=args.output_dir / "preprocessed",
             config=args.config,
             n_epochs=100,
             batch_size=8,
             lr=0.0002,
-            checkpoint_dir=args.output_dir / 'checkpoints',
+            checkpoint_dir=args.output_dir / "checkpoints",
             resume=None,
-            device='cuda'
+            device="cuda",
         )
         train_command(train_args)
-    
+
     # run evaluation
     if not args.skip_evaluation:
         logger.info("Running evaluation step")
         eval_args = argparse.Namespace(
-            model_path=args.output_dir / 'checkpoints' / 'best_model.pth',
-            data_path=args.output_dir / 'preprocessed',
-            output_dir=args.output_dir / 'evaluation',
-            metrics=['mse', 'mae', 'ssim', 'psnr'],
+            model_path=args.output_dir / "checkpoints" / "best_model.pth",
+            data_path=args.output_dir / "preprocessed",
+            output_dir=args.output_dir / "evaluation",
+            metrics=["mse", "mae", "ssim", "psnr"],
             batch_size=8,
-            visualize=True
+            visualize=True,
         )
         evaluate_command(eval_args)
-    
+
     logger.info("Pipeline completed successfully")
 
 
 def config_command(args: argparse.Namespace):
     """handle configuration command."""
     import json
-    
+
     if args.generate:
         logger.info(f"Generating {args.generate} configuration")
-        
-        if args.generate == 'training':
+
+        if args.generate == "training":
             config = get_default_training_config()
-        elif args.generate == 'preprocessing':
+        elif args.generate == "preprocessing":
             config = get_default_preprocessing_config()
-        elif args.generate == 'evaluation':
+        elif args.generate == "evaluation":
             config = get_default_evaluation_config()
-        elif args.generate == 'all':
+        elif args.generate == "all":
             config = {
-                'training': get_default_training_config(),
-                'preprocessing': get_default_preprocessing_config(),
-                'evaluation': get_default_evaluation_config()
+                "training": get_default_training_config(),
+                "preprocessing": get_default_preprocessing_config(),
+                "evaluation": get_default_evaluation_config(),
             }
-        
+
         # save configuration
         output_file = args.output or f"{args.generate}_config.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(config, f, indent=2)
-        
+
         logger.info(f"Configuration saved to: {output_file}")
-    
+
     elif args.validate:
         logger.info(f"Validating configuration: {args.validate}")
-        
+
         try:
             config = load_config_file(args.validate)
             if validate_config(config):
@@ -507,18 +367,18 @@ def config_command(args: argparse.Namespace):
             sys.exit(1)
 
 
-def load_config_file(config_path: Path) -> Dict[str, Any]:
+def load_config_file(config_path: Path) -> dict[str, Any]:
     """load configuration from json file.
-    
+
     args:
         config_path: path to configuration file
-        
+
     returns:
         configuration dictionary
     """
     import json
-    
-    with open(config_path, 'r') as f:
+
+    with open(config_path) as f:
         return json.load(f)
 
 
@@ -526,23 +386,20 @@ def main():
     """main cli entry point."""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     # configure logging
-    log_level = getattr(args, 'log_level', 'INFO')
-    configure_logging(
-        level=getattr(logging, log_level),
-        log_dir=getattr(args, 'log_dir', None)
-    )
-    
+    log_level = getattr(args, "log_level", "INFO")
+    configure_logging(level=getattr(logging, log_level), log_dir=getattr(args, "log_dir", None))
+
     # route to appropriate command handler
     command_handlers = {
-        'preprocess': preprocess_command,
-        'train': train_command,
-        'evaluate': evaluate_command,
-        'pipeline': pipeline_command,
-        'config': config_command
+        "preprocess": preprocess_command,
+        "train": train_command,
+        "evaluate": evaluate_command,
+        "pipeline": pipeline_command,
+        "config": config_command,
     }
-    
+
     handler = command_handlers.get(args.command)
     if handler:
         try:
@@ -551,6 +408,7 @@ def main():
             logger.error(f"Command failed: {e}")
             if args.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
     else:
@@ -558,5 +416,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -23,29 +23,30 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List, Sequence
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, Rectangle
-
 
 # ---------------------------------------------------------------------------
 # constants
 # ---------------------------------------------------------------------------
 
 
-LAMBDA_VALUES: List[float] = [0.1, 0.5, 1.0, 2.0]
-LAMBDA_LABELS: Dict[float, str] = {0.1: r"$\lambda_{\mathrm{NCE}}=0.1$",
-                                   0.5: r"$\lambda_{\mathrm{NCE}}=0.5$",
-                                   1.0: r"$\lambda_{\mathrm{NCE}}=1.0$",
-                                   2.0: r"$\lambda_{\mathrm{NCE}}=2.0$"}
+LAMBDA_VALUES: list[float] = [0.1, 0.5, 1.0, 2.0]
+LAMBDA_LABELS: dict[float, str] = {
+    0.1: r"$\lambda_{\mathrm{NCE}}=0.1$",
+    0.5: r"$\lambda_{\mathrm{NCE}}=0.5$",
+    1.0: r"$\lambda_{\mathrm{NCE}}=1.0$",
+    2.0: r"$\lambda_{\mathrm{NCE}}=2.0$",
+}
 
-LAMBDA_COLORS: Dict[float, str] = {
+LAMBDA_COLORS: dict[float, str] = {
     0.1: "#9CA3AF",
     0.5: "#059669",
     1.0: "#2563EB",
@@ -80,9 +81,9 @@ PUB_STYLE = {
 # ---------------------------------------------------------------------------
 
 
-def load_histories(results_dir: Path) -> Dict[float, Dict]:
+def load_histories(results_dir: Path) -> dict[float, dict]:
     """load per-lambda training_history.json files."""
-    histories: Dict[float, Dict] = {}
+    histories: dict[float, dict] = {}
     for lam in LAMBDA_VALUES:
         path = results_dir / f"lambda{lam}_history.json"
         if not path.exists():
@@ -93,7 +94,7 @@ def load_histories(results_dir: Path) -> Dict[float, Dict]:
     return histories
 
 
-def load_testset_summary(results_dir: Path) -> Dict[float, Dict]:
+def load_testset_summary(results_dir: Path) -> dict[float, dict]:
     """load test-set evaluation results if present."""
     summary_path = results_dir / "patchnce_testset_summary.json"
     if not summary_path.exists():
@@ -101,7 +102,7 @@ def load_testset_summary(results_dir: Path) -> Dict[float, Dict]:
         return {}
     with open(summary_path) as f:
         raw = json.load(f)
-    results: Dict[float, Dict] = {}
+    results: dict[float, dict] = {}
     for label, payload in raw.items():
         if not label.startswith("lambda"):
             continue
@@ -129,7 +130,7 @@ def smooth(values, window: int = 5) -> np.ndarray:
     return np.convolve(padded, kernel, mode="valid")[: len(arr)]
 
 
-def best_val_metrics(history: Dict) -> Dict[str, float]:
+def best_val_metrics(history: dict) -> dict[str, float]:
     """extract best val ssim and the corresponding psnr."""
     ssim_a2b = np.asarray(history["val"]["ssim_A2B"], dtype=np.float64)
     ssim_b2a = np.asarray(history["val"]["ssim_B2A"], dtype=np.float64)
@@ -147,7 +148,7 @@ def best_val_metrics(history: Dict) -> Dict[str, float]:
         "psnr_A2B": float(psnr_a2b[best_idx]),
         "psnr_B2A": float(psnr_b2a[best_idx]),
         "final_mean_ssim": float(mean_ssim[-1]),
-        "n_epochs": int(len(mean_ssim)),
+        "n_epochs": len(mean_ssim),
     }
 
 
@@ -162,7 +163,7 @@ def save_figure(fig, out_dir: Path, stem: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def fig_val_curves(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_val_curves(histories: dict[float, dict], out_dir: Path) -> None:
     """validation ssim and psnr learning curves for all four lambdas."""
     fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.0), sharex=True)
 
@@ -179,8 +180,13 @@ def fig_val_curves(histories: Dict[float, Dict], out_dir: Path) -> None:
                 continue
             vals = histories[lam]["val"][key]
             epochs = np.arange(len(vals))
-            ax.plot(epochs, smooth(vals, window=5),
-                    color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam], linewidth=1.6)
+            ax.plot(
+                epochs,
+                smooth(vals, window=5),
+                color=LAMBDA_COLORS[lam],
+                label=LAMBDA_LABELS[lam],
+                linewidth=1.6,
+            )
         ax.set_title(title)
         ax.set_xlabel("Epoch")
         ax.set_ylabel(ylabel)
@@ -188,22 +194,32 @@ def fig_val_curves(histories: Dict[float, Dict], out_dir: Path) -> None:
             ax.set_ylim(ylim)
         ax.set_xlim(0, 200)
 
-    handles = [Line2D([], [], color=LAMBDA_COLORS[l], label=LAMBDA_LABELS[l], linewidth=2.0)
-               for l in LAMBDA_VALUES if l in histories]
-    fig.legend(handles=handles, loc="lower center", ncol=len(handles),
-               bbox_to_anchor=(0.5, -0.01), frameon=False)
+    handles = [
+        Line2D([], [], color=LAMBDA_COLORS[l], label=LAMBDA_LABELS[l], linewidth=2.0)
+        for l in LAMBDA_VALUES
+        if l in histories
+    ]
+    fig.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=len(handles),
+        bbox_to_anchor=(0.5, -0.01),
+        frameon=False,
+    )
     fig.suptitle("PatchNCE Hybrid Loss: Validation Trajectories", fontsize=12, y=1.0)
     fig.tight_layout(rect=(0.0, 0.04, 1.0, 0.99))
     save_figure(fig, out_dir, "fig_patchnce_val_curves")
 
 
-def fig_loss_components(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_loss_components(histories: dict[float, dict], out_dir: Path) -> None:
     """four panel: G_loss, D_loss, cycle_loss, nce_loss across epochs."""
     fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.0), sharex=True)
-    keys = [("G_loss", "Generator Loss", "Loss"),
-            ("D_loss", "Discriminator Loss", "Loss"),
-            ("cycle_loss", "Cycle Reconstruction Loss", "Loss"),
-            ("nce_loss", "PatchNCE Loss (Pre-$\\lambda$ Scale)", "Loss")]
+    keys = [
+        ("G_loss", "Generator Loss", "Loss"),
+        ("D_loss", "Discriminator Loss", "Loss"),
+        ("cycle_loss", "Cycle Reconstruction Loss", "Loss"),
+        ("nce_loss", "PatchNCE Loss (Pre-$\\lambda$ Scale)", "Loss"),
+    ]
 
     for ax, (key, title, ylabel) in zip(axes.ravel(), keys):
         for lam in LAMBDA_VALUES:
@@ -213,8 +229,13 @@ def fig_loss_components(histories: Dict[float, Dict], out_dir: Path) -> None:
             if not vals:
                 continue
             epochs = np.arange(len(vals))
-            ax.plot(epochs, smooth(vals, window=5),
-                    color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam], linewidth=1.6)
+            ax.plot(
+                epochs,
+                smooth(vals, window=5),
+                color=LAMBDA_COLORS[lam],
+                label=LAMBDA_LABELS[lam],
+                linewidth=1.6,
+            )
         ax.set_title(title)
         ax.set_xlabel("Epoch")
         ax.set_ylabel(ylabel)
@@ -222,17 +243,26 @@ def fig_loss_components(histories: Dict[float, Dict], out_dir: Path) -> None:
         if "nce" in key.lower() or "cycle" in key.lower():
             ax.set_yscale("log")
 
-    handles = [Line2D([], [], color=LAMBDA_COLORS[l], label=LAMBDA_LABELS[l], linewidth=2.0)
-               for l in LAMBDA_VALUES if l in histories]
-    fig.legend(handles=handles, loc="lower center", ncol=len(handles),
-               bbox_to_anchor=(0.5, -0.01), frameon=False)
+    handles = [
+        Line2D([], [], color=LAMBDA_COLORS[l], label=LAMBDA_LABELS[l], linewidth=2.0)
+        for l in LAMBDA_VALUES
+        if l in histories
+    ]
+    fig.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=len(handles),
+        bbox_to_anchor=(0.5, -0.01),
+        frameon=False,
+    )
     fig.suptitle("PatchNCE Hybrid Loss: Training Loss Components", fontsize=12, y=1.0)
     fig.tight_layout(rect=(0.0, 0.04, 1.0, 0.99))
     save_figure(fig, out_dir, "fig_patchnce_loss_components")
 
 
-def fig_lambda_sweep(histories: Dict[float, Dict], testset: Dict[float, Dict],
-                     out_dir: Path) -> None:
+def fig_lambda_sweep(
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
+) -> None:
     """sweep plots: best mean ssim and psnr vs lambda."""
     lams = sorted(histories.keys())
     if not lams:
@@ -277,13 +307,12 @@ def fig_lambda_sweep(histories: Dict[float, Dict], testset: Dict[float, Dict],
     ax.legend(loc="lower right")
     ax.grid(True, which="both", alpha=0.3)
 
-    fig.suptitle("PatchNCE Hybrid Loss: $\\lambda_{\\mathrm{NCE}}$ Ablation",
-                 fontsize=12, y=1.02)
+    fig.suptitle("PatchNCE Hybrid Loss: $\\lambda_{\\mathrm{NCE}}$ Ablation", fontsize=12, y=1.02)
     fig.tight_layout()
     save_figure(fig, out_dir, "fig_patchnce_lambda_sweep")
 
 
-def fig_test_metrics(testset: Dict[float, Dict], out_dir: Path) -> None:
+def fig_test_metrics(testset: dict[float, dict], out_dir: Path) -> None:
     """test-set bar charts: ssim, psnr, mae, mmd, all per lambda."""
     if not testset:
         return
@@ -326,13 +355,12 @@ def fig_test_metrics(testset: Dict[float, Dict], out_dir: Path) -> None:
     ax.legend(loc="upper right")
     ax.grid(True, axis="y", alpha=0.3)
 
-    fig.suptitle("PatchNCE Hybrid Loss: Held-Out Test-Set Evaluation",
-                 fontsize=12, y=1.04)
+    fig.suptitle("PatchNCE Hybrid Loss: Held-Out Test-Set Evaluation", fontsize=12, y=1.04)
     fig.tight_layout()
     save_figure(fig, out_dir, "fig_patchnce_test_metrics")
 
 
-def fig_lr_schedule(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_lr_schedule(histories: dict[float, dict], out_dir: Path) -> None:
     """learning rate schedule visualization."""
     fig, ax = plt.subplots(figsize=(7.0, 3.0))
     for lam in LAMBDA_VALUES:
@@ -350,7 +378,7 @@ def fig_lr_schedule(histories: Dict[float, Dict], out_dir: Path) -> None:
     save_figure(fig, out_dir, "fig_patchnce_lr_schedule")
 
 
-def fig_epoch_times(histories: Dict[float, Dict], out_dir: Path) -> None:
+def fig_epoch_times(histories: dict[float, dict], out_dir: Path) -> None:
     """epoch wall-clock distribution per lambda."""
     fig, ax = plt.subplots(figsize=(7.0, 3.4))
     boxes = []
@@ -365,8 +393,13 @@ def fig_epoch_times(histories: Dict[float, Dict], out_dir: Path) -> None:
         boxes.append(times)
         labels.append(f"$\\lambda$={lam}")
         colors.append(LAMBDA_COLORS[lam])
-    bp = ax.boxplot(boxes, tick_labels=labels, patch_artist=True, showfliers=True,
-                    medianprops=dict(color="black", linewidth=1.0))
+    bp = ax.boxplot(
+        boxes,
+        tick_labels=labels,
+        patch_artist=True,
+        showfliers=True,
+        medianprops={"color": "black", "linewidth": 1.0},
+    )
     for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)
         patch.set_alpha(0.55)
@@ -385,16 +418,18 @@ def fig_architecture(out_dir: Path) -> None:
     ax.axis("off")
 
     def block(x, y, w, h, label, color):
-        rect = Rectangle((x, y), w, h, linewidth=1.2,
-                         edgecolor="#1F2937", facecolor=color, alpha=0.85)
+        rect = Rectangle(
+            (x, y), w, h, linewidth=1.2, edgecolor="#1F2937", facecolor=color, alpha=0.85
+        )
         ax.add_patch(rect)
-        ax.text(x + w / 2, y + h / 2, label, ha="center", va="center",
-                fontsize=9, weight="bold")
+        ax.text(x + w / 2, y + h / 2, label, ha="center", va="center", fontsize=9, weight="bold")
 
     def arrow(x1, y1, x2, y2, color="#1F2937", style="-|>"):
-        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2),
-                                     arrowstyle=style, color=color,
-                                     mutation_scale=12, linewidth=1.4))
+        ax.add_patch(
+            FancyArrowPatch(
+                (x1, y1), (x2, y2), arrowstyle=style, color=color, mutation_scale=12, linewidth=1.4
+            )
+        )
 
     # encoder/decoder paths
     block(0.2, 4.4, 1.4, 0.9, "Real A\n(BraTS)", "#DBEAFE")
@@ -422,8 +457,9 @@ def fig_architecture(out_dir: Path) -> None:
     # cycle arrows
     arrow(8.95, 4.4, 8.95, 1.6, color="#059669", style="->")
     arrow(8.95, 1.6, 8.95, 4.4, color="#059669", style="->")
-    ax.text(9.1, 3.0, "Cycle\nReconstruction", color="#059669", fontsize=8.5,
-            ha="left", va="center")
+    ax.text(
+        9.1, 3.0, "Cycle\nReconstruction", color="#059669", fontsize=8.5, ha="left", va="center"
+    )
 
     # patchnce branches
     block(2.4, 2.7, 1.5, 0.7, "PatchNCE Heads\n(per-layer MLP)", "#FCD34D")
@@ -432,8 +468,15 @@ def fig_architecture(out_dir: Path) -> None:
     arrow(2.95, 4.4, 2.95, 3.4, color="#B45309", style="->")
     arrow(7.55, 4.4, 7.55, 3.4, color="#B45309", style="->")
     arrow(3.9, 3.05, 7.0, 3.05, color="#B45309", style="-|>")
-    ax.text(5.4, 3.25, "Contrastive InfoNCE\n($\\lambda_{\\mathrm{NCE}}$)", color="#B45309",
-            fontsize=8.5, ha="center", va="bottom")
+    ax.text(
+        5.4,
+        3.25,
+        "Contrastive InfoNCE\n($\\lambda_{\\mathrm{NCE}}$)",
+        color="#B45309",
+        fontsize=8.5,
+        ha="center",
+        va="bottom",
+    )
 
     # loss legend
     legend_handles = [
@@ -442,20 +485,24 @@ def fig_architecture(out_dir: Path) -> None:
         mpatches.Patch(color="#059669", label="Cycle Consistency"),
         mpatches.Patch(color="#B45309", label="PatchNCE Hybrid"),
     ]
-    ax.legend(handles=legend_handles, loc="lower center", ncol=4,
-              bbox_to_anchor=(0.5, -0.05), frameon=False)
-    ax.set_title("SA-CycleGAN-2.5D with PatchNCE Hybrid Loss",
-                 fontsize=12, pad=10)
+    ax.legend(
+        handles=legend_handles,
+        loc="lower center",
+        ncol=4,
+        bbox_to_anchor=(0.5, -0.05),
+        frameon=False,
+    )
+    ax.set_title("SA-CycleGAN-2.5D with PatchNCE Hybrid Loss", fontsize=12, pad=10)
 
     save_figure(fig, out_dir, "fig_patchnce_architecture")
 
 
-def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
-                      out_dir: Path) -> None:
+def fig_summary_panel(
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
+) -> None:
     """3 by 2 multi-panel summary suitable for the journal main figure."""
     fig = plt.figure(figsize=(11.0, 8.0))
-    gs = fig.add_gridspec(3, 2, hspace=0.5, wspace=0.35,
-                          height_ratios=[1.0, 1.0, 0.9])
+    gs = fig.add_gridspec(3, 2, hspace=0.5, wspace=0.35, height_ratios=[1.0, 1.0, 0.9])
 
     ax = fig.add_subplot(gs[0, 0])
     for lam in LAMBDA_VALUES:
@@ -464,10 +511,17 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
         ssim_a2b = np.asarray(histories[lam]["val"]["ssim_A2B"])
         ssim_b2a = np.asarray(histories[lam]["val"]["ssim_B2A"])
         mean_ssim = (ssim_a2b + ssim_b2a) / 2.0
-        ax.plot(np.arange(len(mean_ssim)), smooth(mean_ssim, 5),
-                color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam])
-    ax.set_xlim(0, 200); ax.set_ylim(0.95, 1.0)
-    ax.set_title("(a) Validation Mean SSIM"); ax.set_xlabel("Epoch"); ax.set_ylabel("SSIM")
+        ax.plot(
+            np.arange(len(mean_ssim)),
+            smooth(mean_ssim, 5),
+            color=LAMBDA_COLORS[lam],
+            label=LAMBDA_LABELS[lam],
+        )
+    ax.set_xlim(0, 200)
+    ax.set_ylim(0.95, 1.0)
+    ax.set_title("(a) Validation Mean SSIM")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("SSIM")
     ax.legend(loc="lower right", ncol=2, fontsize=8)
 
     ax = fig.add_subplot(gs[0, 1])
@@ -477,10 +531,16 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
         psnr_a2b = np.asarray(histories[lam]["val"]["psnr_A2B"])
         psnr_b2a = np.asarray(histories[lam]["val"]["psnr_B2A"])
         mean_psnr = (psnr_a2b + psnr_b2a) / 2.0
-        ax.plot(np.arange(len(mean_psnr)), smooth(mean_psnr, 5),
-                color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam])
+        ax.plot(
+            np.arange(len(mean_psnr)),
+            smooth(mean_psnr, 5),
+            color=LAMBDA_COLORS[lam],
+            label=LAMBDA_LABELS[lam],
+        )
     ax.set_xlim(0, 200)
-    ax.set_title("(b) Validation Mean PSNR"); ax.set_xlabel("Epoch"); ax.set_ylabel("PSNR (dB)")
+    ax.set_title("(b) Validation Mean PSNR")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("PSNR (dB)")
     ax.legend(loc="lower right", ncol=2, fontsize=8)
 
     ax = fig.add_subplot(gs[1, 0])
@@ -488,10 +548,14 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
         if lam not in histories:
             continue
         cyc = histories[lam]["train"].get("cycle_loss", [])
-        ax.plot(np.arange(len(cyc)), smooth(cyc, 5),
-                color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam])
-    ax.set_xlim(0, 200); ax.set_yscale("log")
-    ax.set_title("(c) Cycle Reconstruction Loss"); ax.set_xlabel("Epoch"); ax.set_ylabel("Loss")
+        ax.plot(
+            np.arange(len(cyc)), smooth(cyc, 5), color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam]
+        )
+    ax.set_xlim(0, 200)
+    ax.set_yscale("log")
+    ax.set_title("(c) Cycle Reconstruction Loss")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
     ax.legend(loc="upper right", ncol=2, fontsize=8)
 
     ax = fig.add_subplot(gs[1, 1])
@@ -499,10 +563,14 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
         if lam not in histories:
             continue
         nce = histories[lam]["train"].get("nce_loss", [])
-        ax.plot(np.arange(len(nce)), smooth(nce, 5),
-                color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam])
-    ax.set_xlim(0, 200); ax.set_yscale("log")
-    ax.set_title("(d) PatchNCE Loss"); ax.set_xlabel("Epoch"); ax.set_ylabel("Loss")
+        ax.plot(
+            np.arange(len(nce)), smooth(nce, 5), color=LAMBDA_COLORS[lam], label=LAMBDA_LABELS[lam]
+        )
+    ax.set_xlim(0, 200)
+    ax.set_yscale("log")
+    ax.set_title("(d) PatchNCE Loss")
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
     ax.legend(loc="upper right", ncol=2, fontsize=8)
 
     ax = fig.add_subplot(gs[2, 0])
@@ -511,7 +579,9 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
     if testset:
         test_means = [
             (testset[l]["ssim_A2B_mean"] + testset[l]["ssim_B2A_mean"]) / 2.0
-            if l in testset else np.nan for l in lams
+            if l in testset
+            else np.nan
+            for l in lams
         ]
     else:
         test_means = [np.nan] * len(lams)
@@ -520,8 +590,11 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
     width = 0.36
     ax.bar(x - width / 2, val_means, width, color="#2563EB", label="Validation")
     ax.bar(x + width / 2, test_means, width, color="#059669", label="Test")
-    ax.set_xticks(x); ax.set_xticklabels([f"$\\lambda$={l}" for l in lams])
-    ax.set_title("(e) Mean SSIM by Split"); ax.set_ylabel("Mean SSIM"); ax.set_ylim(0.95, 1.0)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"$\\lambda$={l}" for l in lams])
+    ax.set_title("(e) Mean SSIM by Split")
+    ax.set_ylabel("Mean SSIM")
+    ax.set_ylim(0.95, 1.0)
     ax.legend(loc="lower right")
 
     ax = fig.add_subplot(gs[2, 1])
@@ -529,14 +602,15 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
     for lam in lams:
         ets = histories[lam].get("epoch_times", [])
         times.append(np.mean(ets) if ets else 0.0)
-    ax.bar([f"$\\lambda$={l}" for l in lams], times,
-           color=[LAMBDA_COLORS[l] for l in lams])
-    ax.set_title("(f) Mean Epoch Time"); ax.set_ylabel("Seconds")
+    ax.bar([f"$\\lambda$={l}" for l in lams], times, color=[LAMBDA_COLORS[l] for l in lams])
+    ax.set_title("(f) Mean Epoch Time")
+    ax.set_ylabel("Seconds")
     for i, t in enumerate(times):
         ax.text(i, t + 5, f"{t:.0f}s", ha="center", fontsize=8.5)
 
-    fig.suptitle("Extension A: SA-CycleGAN-2.5D + PatchNCE Hybrid Loss --- Summary",
-                 fontsize=13, y=1.0)
+    fig.suptitle(
+        "Extension A: SA-CycleGAN-2.5D + PatchNCE Hybrid Loss --- Summary", fontsize=13, y=1.0
+    )
     save_figure(fig, out_dir, "fig_patchnce_summary_panel")
 
 
@@ -545,8 +619,7 @@ def fig_summary_panel(histories: Dict[float, Dict], testset: Dict[float, Dict],
 # ---------------------------------------------------------------------------
 
 
-def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict],
-                   out_dir: Path) -> None:
+def table_ablation(histories: dict[float, dict], testset: dict[float, dict], out_dir: Path) -> None:
     """ablation table: lambda vs val ssim/psnr (and test if available)."""
     lams = sorted(histories.keys())
     rows = []
@@ -565,32 +638,38 @@ def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict],
         }
         if lam in testset:
             t = testset[lam]
-            row.update({
-                "test_ssim_a2b": t["ssim_A2B_mean"],
-                "test_ssim_b2a": t["ssim_B2A_mean"],
-                "test_psnr_a2b": t["psnr_A2B_mean"],
-                "test_psnr_b2a": t["psnr_B2A_mean"],
-                "test_mae_a2b": t["mae_A2B_mean"],
-                "test_mae_b2a": t["mae_B2A_mean"],
-                "test_mmd_a2b": t["mmd_A2B"],
-                "test_mmd_b2a": t["mmd_B2A"],
-            })
+            row.update(
+                {
+                    "test_ssim_a2b": t["ssim_A2B_mean"],
+                    "test_ssim_b2a": t["ssim_B2A_mean"],
+                    "test_psnr_a2b": t["psnr_A2B_mean"],
+                    "test_psnr_b2a": t["psnr_B2A_mean"],
+                    "test_mae_a2b": t["mae_A2B_mean"],
+                    "test_mae_b2a": t["mae_B2A_mean"],
+                    "test_mmd_a2b": t["mmd_A2B"],
+                    "test_mmd_b2a": t["mmd_B2A"],
+                }
+            )
         rows.append(row)
 
     lines = []
     lines.append("\\begin{table}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Extension A ablation. Held-out validation and test metrics for "
-                 "SA-CycleGAN-2.5D with PatchNCE hybrid loss across $\\lambda_{\\mathrm{NCE}}$ "
-                 "values. Mean SSIM averages forward and reverse cycle.}")
+    lines.append(
+        "\\caption{Extension A ablation. Held-out validation and test metrics for "
+        "SA-CycleGAN-2.5D with PatchNCE hybrid loss across $\\lambda_{\\mathrm{NCE}}$ "
+        "values. Mean SSIM averages forward and reverse cycle.}"
+    )
     lines.append("\\label{tab:patchnce_ablation}")
     has_test = any("test_ssim_a2b" in r for r in rows)
     if has_test:
         lines.append("\\begin{tabular}{lcccccc}")
         lines.append("\\toprule")
-        lines.append("$\\lambda_{\\mathrm{NCE}}$ & Best Epoch & "
-                     "Val SSIM (mean) & Val PSNR (mean) & "
-                     "Test SSIM (mean) & Test PSNR (mean) & Test MMD (A$\\rightarrow$B) \\\\")
+        lines.append(
+            "$\\lambda_{\\mathrm{NCE}}$ & Best Epoch & "
+            "Val SSIM (mean) & Val PSNR (mean) & "
+            "Test SSIM (mean) & Test PSNR (mean) & Test MMD (A$\\rightarrow$B) \\\\"
+        )
         lines.append("\\midrule")
         best_idx = int(np.argmax([r["val_ssim_mean"] for r in rows]))
         for i, r in enumerate(rows):
@@ -606,9 +685,11 @@ def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict],
     else:
         lines.append("\\begin{tabular}{lccccc}")
         lines.append("\\toprule")
-        lines.append("$\\lambda_{\\mathrm{NCE}}$ & Best Epoch & "
-                     "SSIM (A$\\rightarrow$B) & SSIM (B$\\rightarrow$A) & "
-                     "PSNR (A$\\rightarrow$B, dB) & PSNR (B$\\rightarrow$A, dB) \\\\")
+        lines.append(
+            "$\\lambda_{\\mathrm{NCE}}$ & Best Epoch & "
+            "SSIM (A$\\rightarrow$B) & SSIM (B$\\rightarrow$A) & "
+            "PSNR (A$\\rightarrow$B, dB) & PSNR (B$\\rightarrow$A, dB) \\\\"
+        )
         lines.append("\\midrule")
         best_idx = int(np.argmax([r["val_ssim_mean"] for r in rows]))
         for i, r in enumerate(rows):
@@ -624,7 +705,7 @@ def table_ablation(histories: Dict[float, Dict], testset: Dict[float, Dict],
     (out_dir / "table_patchnce_ablation.tex").write_text("\n".join(lines) + "\n")
 
 
-def table_testset(testset: Dict[float, Dict], out_dir: Path) -> None:
+def table_testset(testset: dict[float, dict], out_dir: Path) -> None:
     """detailed test-set table including std and percentiles."""
     if not testset:
         return
@@ -633,16 +714,20 @@ def table_testset(testset: Dict[float, Dict], out_dir: Path) -> None:
     lines = []
     lines.append("\\begin{table*}[t]")
     lines.append("\\centering")
-    lines.append("\\caption{Detailed test-set evaluation of Extension A across all four "
-                 "$\\lambda_{\\mathrm{NCE}}$ values. Means $\\pm$ standard deviations on "
-                 "5{,}265 held-out 2.5D slices. MMD computed on global-average-pooled "
-                 "spatial features (lower is better).}")
+    lines.append(
+        "\\caption{Detailed test-set evaluation of Extension A across all four "
+        "$\\lambda_{\\mathrm{NCE}}$ values. Means $\\pm$ standard deviations on "
+        "5{,}265 held-out 2.5D slices. MMD computed on global-average-pooled "
+        "spatial features (lower is better).}"
+    )
     lines.append("\\label{tab:patchnce_testset}")
     lines.append("\\begin{tabular}{lcccccc}")
     lines.append("\\toprule")
-    lines.append("$\\lambda_{\\mathrm{NCE}}$ & SSIM (A$\\rightarrow$B) & SSIM (B$\\rightarrow$A) & "
-                 "PSNR (A$\\rightarrow$B) & PSNR (B$\\rightarrow$A) & "
-                 "MAE (A$\\rightarrow$B) & MMD (A$\\rightarrow$B) \\\\")
+    lines.append(
+        "$\\lambda_{\\mathrm{NCE}}$ & SSIM (A$\\rightarrow$B) & SSIM (B$\\rightarrow$A) & "
+        "PSNR (A$\\rightarrow$B) & PSNR (B$\\rightarrow$A) & "
+        "MAE (A$\\rightarrow$B) & MMD (A$\\rightarrow$B) \\\\"
+    )
     lines.append("\\midrule")
     for lam in lams:
         t = testset[lam]
@@ -666,16 +751,15 @@ def table_testset(testset: Dict[float, Dict], out_dir: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def write_aggregate(histories: Dict[float, Dict], testset: Dict[float, Dict],
-                    out_dir: Path) -> None:
+def write_aggregate(
+    histories: dict[float, dict], testset: dict[float, dict], out_dir: Path
+) -> None:
     """write a single json blob with the canonical extension a numbers."""
     lams = sorted(histories.keys())
     summary = {"lambdas": lams, "runs": {}}
     for lam in lams:
         m = best_val_metrics(histories[lam])
-        run: Dict = {"validation": m,
-                     "lambda_nce": lam,
-                     "n_epochs": m["n_epochs"]}
+        run: dict = {"validation": m, "lambda_nce": lam, "n_epochs": m["n_epochs"]}
         epoch_times = histories[lam].get("epoch_times", [])
         if epoch_times:
             run["epoch_time_mean"] = float(np.mean(epoch_times))
@@ -685,13 +769,15 @@ def write_aggregate(histories: Dict[float, Dict], testset: Dict[float, Dict],
         summary["runs"][f"lambda{lam}"] = run
 
     if histories:
-        best_lam = max(histories.keys(),
-                       key=lambda l: best_val_metrics(histories[l])["best_mean_ssim"])
+        best_lam = max(
+            histories.keys(), key=lambda l: best_val_metrics(histories[l])["best_mean_ssim"]
+        )
         summary["best_lambda_by_val_ssim"] = best_lam
     if testset:
-        best_test_lam = max(testset.keys(),
-                            key=lambda l: (testset[l]["ssim_A2B_mean"] +
-                                           testset[l]["ssim_B2A_mean"]) / 2.0)
+        best_test_lam = max(
+            testset.keys(),
+            key=lambda l: (testset[l]["ssim_A2B_mean"] + testset[l]["ssim_B2A_mean"]) / 2.0,
+        )
         summary["best_lambda_by_test_ssim"] = best_test_lam
 
     (out_dir / "patchnce_paper_results.json").write_text(json.dumps(summary, indent=2))

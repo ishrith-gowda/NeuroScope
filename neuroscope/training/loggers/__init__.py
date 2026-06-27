@@ -14,19 +14,18 @@ includes:
 author: neuroscope research team
 """
 
-from .tensorboard_logger import TensorBoardLogger
+from .console_logger import Colors, ConsoleLogger, colorize
 from .file_loggers import CSVLogger, JSONLogger, MetricsAggregator
-from .console_logger import ConsoleLogger, Colors, colorize
 from .manager import LoggerManager
-
+from .tensorboard_logger import TensorBoardLogger
 
 __all__ = [
-    'TensorBoardLogger',
-    'CSVLogger',
-    'JSONLogger',
-    'MetricsAggregator',
-    'ConsoleLogger',
-    'Colors',
-    'colorize',
-    'LoggerManager',
+    "CSVLogger",
+    "Colors",
+    "ConsoleLogger",
+    "JSONLogger",
+    "LoggerManager",
+    "MetricsAggregator",
+    "TensorBoardLogger",
+    "colorize",
 ]

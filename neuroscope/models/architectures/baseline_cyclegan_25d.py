@@ -10,11 +10,12 @@ identical to sa-cyclegan-2.5d except:
 this baseline proves whether attention mechanisms improve performance.
 """
 
+from dataclasses import dataclass
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Dict
-from dataclasses import dataclass
 
 
 @dataclass
@@ -47,6 +48,7 @@ class BaselineCycleGAN25DConfig:
 # =============================================================================
 # basic building blocks
 # =============================================================================
+
 
 class ResidualBlock(nn.Module):
     """standard residual block without attention."""
@@ -82,7 +84,9 @@ class UpsampleBlock(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
-        self.conv = nn.ConvTranspose2d(in_channels, out_channels, 3, stride=2, padding=1, output_padding=1)
+        self.conv = nn.ConvTranspose2d(
+            in_channels, out_channels, 3, stride=2, padding=1, output_padding=1
+        )
         self.norm = nn.InstanceNorm2d(out_channels)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -92,6 +96,7 @@ class UpsampleBlock(nn.Module):
 # =============================================================================
 # generator
 # =============================================================================
+
 
 class BaselineGenerator25D(nn.Module):
     """baseline 2.5d generator without attention mechanisms."""
@@ -104,7 +109,7 @@ class BaselineGenerator25D(nn.Module):
         self.initial = nn.Sequential(
             nn.Conv2d(config.input_channels, config.ngf, 7, padding=3),
             nn.InstanceNorm2d(config.ngf),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
         # encoder (downsampling)
@@ -112,10 +117,9 @@ class BaselineGenerator25D(nn.Module):
         self.down2 = DownsampleBlock(config.ngf * 2, config.ngf * 4)
 
         # residual blocks (bottleneck)
-        self.residual_blocks = nn.ModuleList([
-            ResidualBlock(config.ngf * 4)
-            for _ in range(config.n_residual_blocks)
-        ])
+        self.residual_blocks = nn.ModuleList(
+            [ResidualBlock(config.ngf * 4) for _ in range(config.n_residual_blocks)]
+        )
 
         # decoder (upsampling)
         self.up1 = UpsampleBlock(config.ngf * 4, config.ngf * 2)
@@ -123,8 +127,7 @@ class BaselineGenerator25D(nn.Module):
 
         # output convolution
         self.output = nn.Sequential(
-            nn.Conv2d(config.ngf, config.output_channels, 7, padding=3),
-            nn.Tanh()
+            nn.Conv2d(config.ngf, config.output_channels, 7, padding=3), nn.Tanh()
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -162,11 +165,17 @@ class BaselineGenerator25D(nn.Module):
 # discriminator
 # =============================================================================
 
+
 class ConvBlock(nn.Module):
     """convolutional block for discriminator."""
 
-    def __init__(self, in_channels: int, out_channels: int, use_norm: bool = True,
-                 use_spectral_norm: bool = False):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        use_norm: bool = True,
+        use_spectral_norm: bool = False,
+    ):
         super().__init__()
 
         conv = nn.Conv2d(in_channels, out_channels, 4, stride=2, padding=1)
@@ -190,27 +199,30 @@ class ConvBlock(nn.Module):
 class BaselineDiscriminator(nn.Module):
     """baseline patchgan discriminator without attention."""
 
-    def __init__(self, in_channels: int, ndf: int = 64, n_layers: int = 3,
-                 use_spectral_norm: bool = True):
+    def __init__(
+        self, in_channels: int, ndf: int = 64, n_layers: int = 3, use_spectral_norm: bool = True
+    ):
         super().__init__()
 
         layers = []
 
         # first layer (no normalization)
-        layers.append(ConvBlock(in_channels, ndf, use_norm=False,
-                               use_spectral_norm=use_spectral_norm))
+        layers.append(
+            ConvBlock(in_channels, ndf, use_norm=False, use_spectral_norm=use_spectral_norm)
+        )
 
         # intermediate layers
         nf_mult = 1
         for n in range(1, n_layers):
             nf_mult_prev = nf_mult
-            nf_mult = min(2 ** n, 8)
-            layers.append(ConvBlock(ndf * nf_mult_prev, ndf * nf_mult,
-                                   use_spectral_norm=use_spectral_norm))
+            nf_mult = min(2**n, 8)
+            layers.append(
+                ConvBlock(ndf * nf_mult_prev, ndf * nf_mult, use_spectral_norm=use_spectral_norm)
+            )
 
         # final layers
         nf_mult_prev = nf_mult
-        nf_mult = min(2 ** n_layers, 8)
+        nf_mult = min(2**n_layers, 8)
 
         conv = nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, 4, padding=1)
         if use_spectral_norm:
@@ -235,17 +247,25 @@ class BaselineDiscriminator(nn.Module):
 class MultiScaleDiscriminator(nn.Module):
     """multi-scale discriminator for better feature matching."""
 
-    def __init__(self, in_channels: int, ndf: int = 64, n_layers: int = 3,
-                 n_scales: int = 2, use_spectral_norm: bool = True):
+    def __init__(
+        self,
+        in_channels: int,
+        ndf: int = 64,
+        n_layers: int = 3,
+        n_scales: int = 2,
+        use_spectral_norm: bool = True,
+    ):
         super().__init__()
 
         self.n_scales = n_scales
 
         # create discriminators for each scale
-        self.discriminators = nn.ModuleList([
-            BaselineDiscriminator(in_channels, ndf, n_layers, use_spectral_norm)
-            for _ in range(n_scales)
-        ])
+        self.discriminators = nn.ModuleList(
+            [
+                BaselineDiscriminator(in_channels, ndf, n_layers, use_spectral_norm)
+                for _ in range(n_scales)
+            ]
+        )
 
         # downsampling for multi-scale
         self.downsample = nn.AvgPool2d(3, stride=2, padding=1, count_include_pad=False)
@@ -265,6 +285,7 @@ class MultiScaleDiscriminator(nn.Module):
 # =============================================================================
 # full baseline cyclegan model
 # =============================================================================
+
 
 class BaselineCycleGAN25D(nn.Module):
     """baseline 2.5d cyclegan without attention mechanisms."""
@@ -287,17 +308,17 @@ class BaselineCycleGAN25D(nn.Module):
             ndf=config.ndf,
             n_layers=config.n_disc_layers,
             n_scales=config.n_disc_scales,
-            use_spectral_norm=config.use_spectral_norm
+            use_spectral_norm=config.use_spectral_norm,
         )
         self.D_B = MultiScaleDiscriminator(
             in_channels=config.output_channels,
             ndf=config.ndf,
             n_layers=config.n_disc_layers,
             n_scales=config.n_disc_scales,
-            use_spectral_norm=config.use_spectral_norm
+            use_spectral_norm=config.use_spectral_norm,
         )
 
-    def forward(self, slices_a: torch.Tensor, slices_b: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, slices_a: torch.Tensor, slices_b: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         training forward pass.
 
@@ -318,12 +339,7 @@ class BaselineCycleGAN25D(nn.Module):
         fake_a_3slice = fake_a.repeat(1, 3, 1, 1)
         rec_b = self.G_A2B(fake_a_3slice)
 
-        return {
-            'fake_b': fake_b,
-            'fake_a': fake_a,
-            'rec_a': rec_a,
-            'rec_b': rec_b
-        }
+        return {"fake_b": fake_b, "fake_a": fake_a, "rec_a": rec_a, "rec_b": rec_b}
 
     @torch.no_grad()
     def translate_a2b(self, slices: torch.Tensor) -> torch.Tensor:
@@ -335,14 +351,14 @@ class BaselineCycleGAN25D(nn.Module):
         """translate from domain b to a."""
         return self.G_B2A(slices)
 
-    def get_parameter_count(self) -> Dict[str, int]:
+    def get_parameter_count(self) -> dict[str, int]:
         """get parameter counts for each component."""
         return {
-            'g_a2b': sum(p.numel() for p in self.G_A2B.parameters()),
-            'g_b2a': sum(p.numel() for p in self.G_B2A.parameters()),
-            'd_a': sum(p.numel() for p in self.D_A.parameters()),
-            'd_b': sum(p.numel() for p in self.D_B.parameters()),
-            'total': sum(p.numel() for p in self.parameters())
+            "g_a2b": sum(p.numel() for p in self.G_A2B.parameters()),
+            "g_b2a": sum(p.numel() for p in self.G_B2A.parameters()),
+            "d_a": sum(p.numel() for p in self.D_A.parameters()),
+            "d_b": sum(p.numel() for p in self.D_B.parameters()),
+            "total": sum(p.numel() for p in self.parameters()),
         }
 
 
@@ -350,7 +366,10 @@ class BaselineCycleGAN25D(nn.Module):
 # factory function
 # =============================================================================
 
-def create_baseline_model(config: Optional[BaselineCycleGAN25DConfig] = None) -> BaselineCycleGAN25D:
+
+def create_baseline_model(
+    config: Optional[BaselineCycleGAN25DConfig] = None,
+) -> BaselineCycleGAN25D:
     """create baseline cyclegan model."""
     model = BaselineCycleGAN25D(config)
 
@@ -362,13 +381,13 @@ def create_baseline_model(config: Optional[BaselineCycleGAN25DConfig] = None) ->
     print(f"generator b→a: {params['g_b2a']:,} parameters")
     print(f"discriminator a: {params['d_a']:,} parameters")
     print(f"discriminator b: {params['d_b']:,} parameters")
-    print(f"total: {params['total']:,} parameters ({params['total']/1e6:.2f}m)")
+    print(f"total: {params['total']:,} parameters ({params['total'] / 1e6:.2f}m)")
     print("=" * 60)
 
     return model
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # quick test
     config = BaselineCycleGAN25DConfig()
     model = create_baseline_model(config)

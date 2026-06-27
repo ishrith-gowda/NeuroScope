@@ -17,20 +17,16 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
-from scipy.stats import ttest_rel, wilcoxon
-import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import ttest_rel, wilcoxon
 
 # setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -46,11 +42,7 @@ class StatisticalComparator:
         """
         self.alpha = alpha
 
-    def paired_ttest(
-        self,
-        samples1: np.ndarray,
-        samples2: np.ndarray
-    ) -> Dict:
+    def paired_ttest(self, samples1: np.ndarray, samples2: np.ndarray) -> dict:
         """
         perform paired t-test.
 
@@ -64,20 +56,16 @@ class StatisticalComparator:
         t_stat, p_value = ttest_rel(samples1, samples2)
 
         result = {
-            't_statistic': float(t_stat),
-            'p_value': float(p_value),
-            'significant': p_value < self.alpha,
-            'mean_diff': float(np.mean(samples1 - samples2)),
-            'std_diff': float(np.std(samples1 - samples2)),
+            "t_statistic": float(t_stat),
+            "p_value": float(p_value),
+            "significant": p_value < self.alpha,
+            "mean_diff": float(np.mean(samples1 - samples2)),
+            "std_diff": float(np.std(samples1 - samples2)),
         }
 
         return result
 
-    def wilcoxon_test(
-        self,
-        samples1: np.ndarray,
-        samples2: np.ndarray
-    ) -> Dict:
+    def wilcoxon_test(self, samples1: np.ndarray, samples2: np.ndarray) -> dict:
         """
         perform wilcoxon signed-rank test (non-parametric).
 
@@ -92,28 +80,25 @@ class StatisticalComparator:
             stat, p_value = wilcoxon(samples1, samples2)
 
             result = {
-                'statistic': float(stat),
-                'p_value': float(p_value),
-                'significant': p_value < self.alpha,
-                'median_diff': float(np.median(samples1 - samples2)),
+                "statistic": float(stat),
+                "p_value": float(p_value),
+                "significant": p_value < self.alpha,
+                "median_diff": float(np.median(samples1 - samples2)),
             }
         except ValueError as e:
             logger.warning(f"wilcoxon test failed: {e}")
             result = {
-                'statistic': None,
-                'p_value': None,
-                'significant': None,
-                'median_diff': float(np.median(samples1 - samples2)),
+                "statistic": None,
+                "p_value": None,
+                "significant": None,
+                "median_diff": float(np.median(samples1 - samples2)),
             }
 
         return result
 
     def bootstrap_ci(
-        self,
-        samples: np.ndarray,
-        n_bootstrap: int = 10000,
-        ci_level: float = 0.95
-    ) -> Tuple[float, float]:
+        self, samples: np.ndarray, n_bootstrap: int = 10000, ci_level: float = 0.95
+    ) -> tuple[float, float]:
         """
         compute bootstrap confidence interval.
 
@@ -139,11 +124,7 @@ class StatisticalComparator:
 
         return float(lower), float(upper)
 
-    def cohens_d(
-        self,
-        samples1: np.ndarray,
-        samples2: np.ndarray
-    ) -> float:
+    def cohens_d(self, samples1: np.ndarray, samples2: np.ndarray) -> float:
         """
         compute cohen's d effect size.
 
@@ -166,10 +147,8 @@ class StatisticalComparator:
         return float(d)
 
     def bonferroni_correction(
-        self,
-        p_values: List[float],
-        alpha: Optional[float] = None
-    ) -> Tuple[List[bool], float]:
+        self, p_values: list[float], alpha: Optional[float] = None
+    ) -> tuple[list[bool], float]:
         """
         apply bonferroni correction for multiple comparisons.
 
@@ -191,10 +170,8 @@ class StatisticalComparator:
         return significant, adjusted_alpha
 
     def holm_bonferroni_correction(
-        self,
-        p_values: List[float],
-        alpha: Optional[float] = None
-    ) -> List[bool]:
+        self, p_values: list[float], alpha: Optional[float] = None
+    ) -> list[bool]:
         """
         apply holm-bonferroni correction (more powerful than bonferroni).
 
@@ -225,11 +202,11 @@ class StatisticalComparator:
 
     def compare_models(
         self,
-        model1_results: Dict,
-        model2_results: Dict,
+        model1_results: dict,
+        model2_results: dict,
         model1_name: str = "model 1",
-        model2_name: str = "model 2"
-    ) -> Dict:
+        model2_name: str = "model 2",
+    ) -> dict:
         """
         comprehensive statistical comparison between two models.
 
@@ -244,27 +221,23 @@ class StatisticalComparator:
         """
         logger.info(f"comparing {model1_name} vs {model2_name}")
 
-        comparison = {
-            'model1': model1_name,
-            'model2': model2_name,
-            'metrics': {}
-        }
+        comparison = {"model1": model1_name, "model2": model2_name, "metrics": {}}
 
         # get common metrics
-        metrics1 = set(model1_results.get('a2b', {}).keys())
-        metrics2 = set(model2_results.get('a2b', {}).keys())
+        metrics1 = set(model1_results.get("a2b", {}).keys())
+        metrics2 = set(model2_results.get("a2b", {}).keys())
         common_metrics = metrics1 & metrics2
 
         for metric in common_metrics:
-            if metric == 'fid':
+            if metric == "fid":
                 # fid is computed globally, not per-sample
                 continue
 
             logger.info(f"  testing {metric}...")
 
             # extract values
-            values1_a2b = np.array(model1_results['a2b'][metric].get('values', []))
-            values2_a2b = np.array(model2_results['a2b'][metric].get('values', []))
+            values1_a2b = np.array(model1_results["a2b"][metric].get("values", []))
+            values2_a2b = np.array(model2_results["a2b"][metric].get("values", []))
 
             if len(values1_a2b) == 0 or len(values2_a2b) == 0:
                 continue
@@ -284,17 +257,17 @@ class StatisticalComparator:
             # bootstrap ci for model 2
             ci_lower2, ci_upper2 = self.bootstrap_ci(values2_a2b)
 
-            comparison['metrics'][metric] = {
-                'model1_mean': float(np.mean(values1_a2b)),
-                'model1_std': float(np.std(values1_a2b)),
-                'model1_ci': [ci_lower1, ci_upper1],
-                'model2_mean': float(np.mean(values2_a2b)),
-                'model2_std': float(np.std(values2_a2b)),
-                'model2_ci': [ci_lower2, ci_upper2],
-                'ttest': ttest_result,
-                'wilcoxon': wilcoxon_result,
-                'cohens_d': effect_size,
-                'interpretation': self._interpret_effect_size(effect_size)
+            comparison["metrics"][metric] = {
+                "model1_mean": float(np.mean(values1_a2b)),
+                "model1_std": float(np.std(values1_a2b)),
+                "model1_ci": [ci_lower1, ci_upper1],
+                "model2_mean": float(np.mean(values2_a2b)),
+                "model2_std": float(np.std(values2_a2b)),
+                "model2_ci": [ci_lower2, ci_upper2],
+                "ttest": ttest_result,
+                "wilcoxon": wilcoxon_result,
+                "cohens_d": effect_size,
+                "interpretation": self._interpret_effect_size(effect_size),
             }
 
         return comparison
@@ -304,19 +277,15 @@ class StatisticalComparator:
         abs_d = abs(d)
 
         if abs_d < 0.2:
-            return 'negligible'
+            return "negligible"
         elif abs_d < 0.5:
-            return 'small'
+            return "small"
         elif abs_d < 0.8:
-            return 'medium'
+            return "medium"
         else:
-            return 'large'
+            return "large"
 
-    def generate_comparison_table(
-        self,
-        comparisons: List[Dict],
-        output_path: Path
-    ):
+    def generate_comparison_table(self, comparisons: list[dict], output_path: Path):
         """
         generate publication-ready comparison table.
 
@@ -327,21 +296,21 @@ class StatisticalComparator:
         rows = []
 
         for comp in comparisons:
-            model1 = comp['model1']
-            model2 = comp['model2']
+            model1 = comp["model1"]
+            model2 = comp["model2"]
 
-            for metric, results in comp['metrics'].items():
+            for metric, results in comp["metrics"].items():
                 row = {
-                    'comparison': f"{model1} vs {model2}",
-                    'metric': metric.upper(),
-                    f'{model1}_mean': f"{results['model1_mean']:.4f}",
-                    f'{model1}_std': f"{results['model1_std']:.4f}",
-                    f'{model2}_mean': f"{results['model2_mean']:.4f}",
-                    f'{model2}_std': f"{results['model2_std']:.4f}",
-                    'p_value': f"{results['ttest']['p_value']:.4e}",
-                    'significant': '✓' if results['ttest']['significant'] else '✗',
-                    'cohens_d': f"{results['cohens_d']:.3f}",
-                    'effect': results['interpretation']
+                    "comparison": f"{model1} vs {model2}",
+                    "metric": metric.upper(),
+                    f"{model1}_mean": f"{results['model1_mean']:.4f}",
+                    f"{model1}_std": f"{results['model1_std']:.4f}",
+                    f"{model2}_mean": f"{results['model2_mean']:.4f}",
+                    f"{model2}_std": f"{results['model2_std']:.4f}",
+                    "p_value": f"{results['ttest']['p_value']:.4e}",
+                    "significant": "✓" if results["ttest"]["significant"] else "✗",
+                    "cohens_d": f"{results['cohens_d']:.3f}",
+                    "effect": results["interpretation"],
                 }
 
                 rows.append(row)
@@ -349,21 +318,21 @@ class StatisticalComparator:
         df = pd.DataFrame(rows)
 
         # save as csv
-        df.to_csv(output_path.with_suffix('.csv'), index=False)
+        df.to_csv(output_path.with_suffix(".csv"), index=False)
 
         # save as latex
         latex_str = df.to_latex(index=False, escape=False)
-        output_path.with_suffix('.tex').write_text(latex_str)
+        output_path.with_suffix(".tex").write_text(latex_str)
 
         logger.info(f"comparison table saved to {output_path}")
 
     def plot_comparison(
         self,
-        model1_results: Dict,
-        model2_results: Dict,
+        model1_results: dict,
+        model2_results: dict,
         model1_name: str,
         model2_name: str,
-        output_dir: Path
+        output_dir: Path,
     ):
         """
         create visualization comparing two models.
@@ -377,32 +346,34 @@ class StatisticalComparator:
         """
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        metrics = ['ssim', 'psnr', 'mae', 'lpips']
+        metrics = ["ssim", "psnr", "mae", "lpips"]
 
         for metric in metrics:
-            if metric not in model1_results.get('a2b', {}):
+            if metric not in model1_results.get("a2b", {}):
                 continue
 
-            values1 = model1_results['a2b'][metric].get('values', [])
-            values2 = model2_results['a2b'][metric].get('values', [])
+            values1 = model1_results["a2b"][metric].get("values", [])
+            values2 = model2_results["a2b"][metric].get("values", [])
 
             if len(values1) == 0 or len(values2) == 0:
                 continue
 
             # create violin plot
-            fig, ax = plt.subplots(figsize=(8, 6))
+            _fig, ax = plt.subplots(figsize=(8, 6))
 
-            data = pd.DataFrame({
-                'model': [model1_name] * len(values1) + [model2_name] * len(values2),
-                'score': list(values1) + list(values2)
-            })
+            data = pd.DataFrame(
+                {
+                    "model": [model1_name] * len(values1) + [model2_name] * len(values2),
+                    "score": list(values1) + list(values2),
+                }
+            )
 
-            sns.violinplot(data=data, x='model', y='score', ax=ax)
-            ax.set_title(f'{metric.upper()} Comparison')
+            sns.violinplot(data=data, x="model", y="score", ax=ax)
+            ax.set_title(f"{metric.upper()} Comparison")
             ax.set_ylabel(metric.upper())
 
             plt.tight_layout()
-            plt.savefig(output_dir / f'{metric}_comparison.png', dpi=300)
+            plt.savefig(output_dir / f"{metric}_comparison.png", dpi=300)
             plt.close()
 
         logger.info(f"comparison plots saved to {output_dir}")
@@ -411,50 +382,26 @@ class StatisticalComparator:
 def main():
     """main execution function."""
     parser = argparse.ArgumentParser(
-        description='statistical significance testing for model comparisons'
+        description="statistical significance testing for model comparisons"
     )
 
     parser.add_argument(
-        '--model1',
-        type=str,
-        required=True,
-        help='path to model 1 evaluation results (json)'
+        "--model1", type=str, required=True, help="path to model 1 evaluation results (json)"
     )
 
     parser.add_argument(
-        '--model2',
-        type=str,
-        required=True,
-        help='path to model 2 evaluation results (json)'
+        "--model2", type=str, required=True, help="path to model 2 evaluation results (json)"
     )
 
-    parser.add_argument(
-        '--model1-name',
-        type=str,
-        default='model 1',
-        help='name for model 1'
-    )
+    parser.add_argument("--model1-name", type=str, default="model 1", help="name for model 1")
+
+    parser.add_argument("--model2-name", type=str, default="model 2", help="name for model 2")
 
     parser.add_argument(
-        '--model2-name',
-        type=str,
-        default='model 2',
-        help='name for model 2'
+        "--output-dir", type=str, required=True, help="output directory for results"
     )
 
-    parser.add_argument(
-        '--output-dir',
-        type=str,
-        required=True,
-        help='output directory for results'
-    )
-
-    parser.add_argument(
-        '--alpha',
-        type=float,
-        default=0.05,
-        help='significance level'
-    )
+    parser.add_argument("--alpha", type=float, default=0.05, help="significance level")
 
     args = parser.parse_args()
 
@@ -472,35 +419,25 @@ def main():
 
     # perform comparison
     comparison = comparator.compare_models(
-        model1_results,
-        model2_results,
-        args.model1_name,
-        args.model2_name
+        model1_results, model2_results, args.model1_name, args.model2_name
     )
 
     # save comparison
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    comparison_file = output_dir / 'statistical_comparison.json'
-    with open(comparison_file, 'w') as f:
+    comparison_file = output_dir / "statistical_comparison.json"
+    with open(comparison_file, "w") as f:
         json.dump(comparison, f, indent=2)
 
     logger.info(f"comparison saved to {comparison_file}")
 
     # generate table
-    comparator.generate_comparison_table(
-        [comparison],
-        output_dir / 'comparison_table'
-    )
+    comparator.generate_comparison_table([comparison], output_dir / "comparison_table")
 
     # generate plots
     comparator.plot_comparison(
-        model1_results,
-        model2_results,
-        args.model1_name,
-        args.model2_name,
-        output_dir / 'plots'
+        model1_results, model2_results, args.model1_name, args.model2_name, output_dir / "plots"
     )
 
     # print summary
@@ -508,10 +445,14 @@ def main():
     logger.info("statistical comparison summary")
     logger.info("=" * 80)
 
-    for metric, results in comparison['metrics'].items():
+    for metric, results in comparison["metrics"].items():
         logger.info(f"\n{metric.upper()}:")
-        logger.info(f"  {args.model1_name}: {results['model1_mean']:.4f} ± {results['model1_std']:.4f}")
-        logger.info(f"  {args.model2_name}: {results['model2_mean']:.4f} ± {results['model2_std']:.4f}")
+        logger.info(
+            f"  {args.model1_name}: {results['model1_mean']:.4f} ± {results['model1_std']:.4f}"
+        )
+        logger.info(
+            f"  {args.model2_name}: {results['model2_mean']:.4f} ± {results['model2_std']:.4f}"
+        )
         logger.info(f"  p-value: {results['ttest']['p_value']:.4e}")
         logger.info(f"  significant: {results['ttest']['significant']}")
         logger.info(f"  cohen's d: {results['cohens_d']:.3f} ({results['interpretation']})")
@@ -519,5 +460,5 @@ def main():
     logger.info("\n" + "=" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

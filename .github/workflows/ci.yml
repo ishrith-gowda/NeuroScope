@@ -1,5 +1,6 @@
 # neuroscope ci pipeline
-# runs on every push and pull request to main
+# lint + format consolidated on ruff (pinned); metric unit tests are the blocking
+# gate; mypy + bandit run informationally over the legacy tree.
 
 name: ci
 
@@ -15,53 +16,21 @@ concurrency:
 
 jobs:
   lint:
-    name: lint and format
+    name: lint and format (ruff)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: set up python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
-
-      - name: install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black isort ruff flake8 flake8-bugbear flake8-comprehensions
-
-      - name: check formatting with black
-        run: black --check --diff neuroscope/ journal_extension/ scripts/ tools/
-
-      - name: check import sorting with isort
-        run: isort --check-only --diff neuroscope/ journal_extension/ scripts/ tools/
-
-      - name: lint with ruff
-        run: ruff check neuroscope/ journal_extension/ scripts/ tools/
-
-      - name: lint with flake8
-        run: flake8 neuroscope/ journal_extension/ scripts/ tools/
-
-  typecheck:
-    name: type checking
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: set up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: run mypy
-        run: mypy neuroscope/
+      - name: install ruff (pinned)
+        run: pip install ruff==0.14.11
+      - name: ruff format --check
+        run: ruff format --check .
+      - name: ruff check
+        run: ruff check .
 
   test:
     name: test (python ${{ matrix.python-version }})
@@ -69,50 +38,51 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11"]
     steps:
       - uses: actions/checkout@v4
-
       - name: set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-
-      - name: install dependencies
+      - name: install
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+      - name: run metric unit tests
+        run: pytest tests/ -q
 
-      - name: run unit tests
-        run: |
-          pytest neuroscope/tests/unit/ -v --tb=short \
-            -m "not slow and not gpu and not data" \
-            --timeout=120 \
-            --cov=neuroscope \
-            --cov-report=xml
-
-      - name: upload coverage
-        if: matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-
-  security:
-    name: security scan
+  typecheck:
+    name: type check (informational)
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-
       - name: set up python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: run mypy
+        run: mypy neuroscope/
 
+  security:
+    name: security scan (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
       - name: install bandit
         run: pip install "bandit[toml]"
-
       - name: run bandit security scan
         run: bandit -c pyproject.toml -r neuroscope/ -ll

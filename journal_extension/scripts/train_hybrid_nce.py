@@ -14,34 +14,32 @@ usage:
     python train_hybrid_nce.py --lambda_nce 1.0 --nce_temperature 0.07
 """
 
-import os
-import sys
 import argparse
-import time
 import json
-import yaml
-from pathlib import Path
+import sys
+import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from pathlib import Path
+from typing import Optional
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.nn.parallel import DataParallel
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from torch.amp import autocast, GradScaler
 import numpy as np
+import torch
+import torch.optim as optim
+import yaml
+from torch.amp import GradScaler, autocast
+from torch.nn.parallel import DataParallel
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from neuroscope.data.datasets.dataset_25d import create_dataloaders
 from neuroscope.models.architectures.sa_cyclegan_25d import (
-    SACycleGAN25D, SACycleGAN25DConfig, create_model
+    SACycleGAN25DConfig,
+    create_model,
 )
-from neuroscope.data.datasets.dataset_25d import UnpairedMRIDataset25D, create_dataloaders
 from neuroscope.models.losses.combined_losses import CombinedLoss
 from neuroscope.models.losses.patchnce import MultiLayerPatchNCELoss
 
@@ -73,13 +71,13 @@ class ReplayBuffer:
 def setup_torch_performance():
     """configure torch for maximum gpu throughput."""
     # tf32 on ampere gpus (nvidia only, no-op on amd)
-    if hasattr(torch.backends, 'cuda'):
+    if hasattr(torch.backends, "cuda"):
         torch.backends.cuda.matmul.allow_tf32 = True
-    if hasattr(torch.backends, 'cudnn') and torch.backends.cudnn.is_available():
+    if hasattr(torch.backends, "cudnn") and torch.backends.cudnn.is_available():
         torch.backends.cudnn.allow_tf32 = True
         torch.backends.cudnn.benchmark = True
     # enable flash sdp for efficient attention (rocm 6.0+ on mi100)
-    if hasattr(torch.backends.cuda, 'enable_flash_sdp'):
+    if hasattr(torch.backends.cuda, "enable_flash_sdp"):
         torch.backends.cuda.enable_flash_sdp(True)
     # disable debug profiling for max speed
     torch.autograd.set_detect_anomaly(False)
@@ -111,7 +109,7 @@ class HybridNCETrainer:
         beta2: float = 0.999,
         num_workers: int = 4,
         device: str = "auto",
-        experiment_name: str = None,
+        experiment_name: Optional[str] = None,
         # patchnce hyperparameters
         lambda_nce: float = 1.0,
         nce_num_patches: int = 256,
@@ -134,6 +132,7 @@ class HybridNCETrainer:
 
         # determinism: seed everything that matters
         import random as _random
+
         _random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
@@ -182,8 +181,10 @@ class HybridNCETrainer:
         if self.use_multi_gpu:
             print(f"multi-gpu: {self.num_gpus} gpus (dataparallel)")
         elif self.num_gpus > 1 and torch.version.hip:
-            print(f"single-gpu mode: {self.num_gpus} gpus detected but dataparallel "
-                  f"disabled on rocm (miopen deadlock)")
+            print(
+                f"single-gpu mode: {self.num_gpus} gpus detected but dataparallel "
+                f"disabled on rocm (miopen deadlock)"
+            )
         print(f"experiment: {experiment_name}")
         print(f"lambda_nce: {lambda_nce}")
         print(f"nce_temperature: {nce_temperature}")
@@ -281,18 +282,15 @@ class HybridNCETrainer:
         else:
             # linear decay after 50%
             total_ep = self.epochs
+
             def lambda_rule(epoch, total_epochs=total_ep):
                 decay_start = total_epochs // 2
                 if epoch < decay_start:
                     return 1.0
                 return 1.0 - (epoch - decay_start) / (total_epochs - decay_start + 1)
 
-            self.scheduler_G = optim.lr_scheduler.LambdaLR(
-                self.opt_G, lr_lambda=lambda_rule
-            )
-            self.scheduler_D = optim.lr_scheduler.LambdaLR(
-                self.opt_D, lr_lambda=lambda_rule
-            )
+            self.scheduler_G = optim.lr_scheduler.LambdaLR(self.opt_G, lr_lambda=lambda_rule)
+            self.scheduler_D = optim.lr_scheduler.LambdaLR(self.opt_D, lr_lambda=lambda_rule)
 
         # loss functions (cycle, identity, ssim, gradient)
         self.losses = CombinedLoss(
@@ -340,7 +338,7 @@ class HybridNCETrainer:
     def _save_config(self, init_args: dict):
         """save experiment configuration."""
         config_dict = {
-            "model": {k: v for k, v in self.config.__dict__.items()},
+            "model": dict(self.config.__dict__.items()),
             "training": {
                 "lambda_nce": self.lambda_nce,
                 "scheduler_type": self.scheduler_type,
@@ -383,7 +381,7 @@ class HybridNCETrainer:
             return 100.0
         return 10 * np.log10(1.0 / mse)
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         """execute single training step with hybrid nce + cycle loss."""
         real_A = batch["A"].to(self.device)
         real_B = batch["B"].to(self.device)
@@ -552,7 +550,7 @@ class HybridNCETrainer:
             "nce_total": loss_nce.item(),
         }
 
-    def train_epoch(self, epoch: int) -> Dict[str, float]:
+    def train_epoch(self, epoch: int) -> dict[str, float]:
         """train for one epoch."""
         self.model.train()
         self.nce_loss_A2B.train()
@@ -574,7 +572,7 @@ class HybridNCETrainer:
             leave=True,
         )
 
-        for batch_idx, batch in enumerate(pbar):
+        for _batch_idx, batch in enumerate(pbar):
             losses = self.train_step(batch)
 
             for key in epoch_losses:
@@ -589,10 +587,10 @@ class HybridNCETrainer:
 
             pbar.set_postfix(
                 {
-                    "G": f'{losses["G_loss"]:.3f}',
-                    "D": f'{losses["D_loss"]:.3f}',
-                    "nce": f'{losses["nce_total"]:.3f}',
-                    "cyc": f'{losses["cycle_A"] + losses["cycle_B"]:.3f}',
+                    "G": f"{losses['G_loss']:.3f}",
+                    "D": f"{losses['D_loss']:.3f}",
+                    "nce": f"{losses['nce_total']:.3f}",
+                    "cyc": f"{losses['cycle_A'] + losses['cycle_B']:.3f}",
                 }
             )
 
@@ -603,7 +601,7 @@ class HybridNCETrainer:
         return epoch_losses
 
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """validate the model."""
         self.model.eval()
 
@@ -800,9 +798,7 @@ class HybridNCETrainer:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="train sa-cyclegan-2.5d with patchnce hybrid loss"
-    )
+    parser = argparse.ArgumentParser(description="train sa-cyclegan-2.5d with patchnce hybrid loss")
 
     # config file
     parser.add_argument("--config", type=str, default=None, help="path to yaml config")
@@ -835,12 +831,18 @@ def parse_args():
     parser.add_argument("--experiment_name", type=str, default=None)
 
     # determinism + extension d task-aware loss
-    parser.add_argument("--seed", type=int, default=42,
-                        help="random seed for reproducibility")
-    parser.add_argument("--task_aware_loss", action="store_true",
-                        help="use brain-mask-weighted cycle loss (extension d follow-up)")
-    parser.add_argument("--mask_weight_foreground", type=float, default=4.0,
-                        help="multiplicative weight applied to foreground voxels in cycle loss")
+    parser.add_argument("--seed", type=int, default=42, help="random seed for reproducibility")
+    parser.add_argument(
+        "--task_aware_loss",
+        action="store_true",
+        help="use brain-mask-weighted cycle loss (extension d follow-up)",
+    )
+    parser.add_argument(
+        "--mask_weight_foreground",
+        type=float,
+        default=4.0,
+        help="multiplicative weight applied to foreground voxels in cycle loss",
+    )
 
     return parser.parse_args()
 
@@ -854,9 +856,7 @@ def main():
             cfg = yaml.safe_load(f)
         # override args with config values
         for k, v in cfg.items():
-            if hasattr(args, k) and getattr(args, k) is None:
-                setattr(args, k, v)
-            elif not hasattr(args, k):
+            if (hasattr(args, k) and getattr(args, k) is None) or not hasattr(args, k):
                 setattr(args, k, v)
 
     # create model config
