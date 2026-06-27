@@ -153,3 +153,8 @@ PKG - */
 # local data/metadata
 data/
 cluster_backup/
+
+# agent / editor tooling (ruflo, claude-flow, mcp)
+.claude/
+.claude-flow/
+.mcp.json

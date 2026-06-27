@@ -1,0 +1,11 @@
+# code owners — automatically requested for review on matching paths.
+# see https://docs.github.com/articles/about-code-owners
+
+# default owner for everything in the repository
+*                       @ishrith-gowda
+
+# canonical research pipeline and manuscripts
+/journal_extension/     @ishrith-gowda
+
+# installable library
+/neuroscope/            @ishrith-gowda
