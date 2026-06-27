@@ -178,9 +178,9 @@ ignore = [
 # intentional sys.path / matplotlib-backend setup before imports
 "journal_extension/scripts/*" = ["E402"]
 "tools/**" = ["E402"]
-# top-level scripts/ is the legacy pre-journal_extension pipeline (superseded by
-# journal_extension/scripts/); relax the noisier rules on that dead tree.
-"scripts/**" = ["E402", "F401", "F811", "F841", "F821", "F403", "F405", "B007", "SIM", "C408"]
+# top-level scripts/ is the legacy pre-journal_extension pipeline; E402 is kept
+# for the intentional sys.path / matplotlib-backend setup before imports.
+"scripts/**" = ["E402"]
 # legacy training/logging pipeline (used by the unfinished Ext E federated
 # script); unused-import ignores pending the full legacy-lint repair pass.
 "neuroscope/training/**" = ["F401"]

@@ -25,6 +25,10 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from neuroscope.training.trainers.comprehensive_trainer import TrainingConfig
 
 # add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

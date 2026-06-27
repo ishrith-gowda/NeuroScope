@@ -25,7 +25,6 @@ protocol based on best practices from miccai, tmi, and neuroimage.
 
 import argparse
 import json
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,7 +34,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from scipy import ndimage, stats
+from scipy import stats
 from scipy.spatial.distance import directed_hausdorff
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
@@ -43,7 +42,7 @@ from tqdm import tqdm
 # add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from unet_segmentation import CombinedLoss, DiceLoss, UNet2D, compute_dice_score
+from unet_segmentation import CombinedLoss, UNet2D
 
 
 @dataclass

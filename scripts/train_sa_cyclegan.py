@@ -49,17 +49,11 @@ sys.path.insert(0, str(project_root))
 
 # import our novel architecture and losses
 try:
-    from neuroscope.models.architectures.sa_cyclegan import (
-        MultiScaleDiscriminator,
-        SACycleGAN,
-        SAGenerator,
-        create_sa_cyclegan,
-    )
+    from neuroscope.models.architectures.sa_cyclegan import create_sa_cyclegan
     from neuroscope.models.losses.advanced_losses import (
         ContrastiveLoss,
         ModalitySpecificLoss,
         PerceptualLoss,
-        TotalLoss,
         TumorPreservationLoss,
     )
 except ImportError:

@@ -5,9 +5,12 @@ neuroscope functionality including preprocessing, training, and evaluation.
 """
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 from typing import Any
+
+import torch
 
 from neuroscope.config import (
     get_default_evaluation_config,
