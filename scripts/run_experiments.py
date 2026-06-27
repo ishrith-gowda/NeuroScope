@@ -35,16 +35,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # import our modules
 try:
-    from evaluation.comprehensive_evaluation import (
-        AblationStudy,
-        EvaluationPipeline,
-        ImageQualityMetrics,
-        RadiomicsAnalysis,
-        StatisticalTests,
-    )
-
-    from neuroscope.models.architectures.sa_cyclegan import create_sa_cyclegan
-    from neuroscope.models.baselines import UNIT, ComBat, CUTGenerator, HistogramMatching
+    from evaluation.comprehensive_evaluation import StatisticalTests
 except ImportError as e:
     print(f"warning: could not import all modules: {e}")
 

@@ -41,15 +41,11 @@ usage:
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
@@ -61,15 +57,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # neuroscope imports
 from neuroscope.models.architectures.sa_cyclegan import SACycleGAN, SACycleGANConfig
-from neuroscope.models.implementations.cyclegan import CycleGAN
-from neuroscope.models.losses.advanced_losses import (
-    PatchNCELoss,
-    PerceptualLoss,
-)
-from neuroscope.models.losses.medical import (
-    AnatomicalConsistencyLoss,
-    TumorPreservationLoss,
-)
 
 # optional imports
 try:
