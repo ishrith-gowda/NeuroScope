@@ -291,4 +291,10 @@ fail_under = 0
 # ---------------------------------------------------------------------------
 [tool.bandit]
 exclude_dirs = ["neuroscope/tests", ".venv", "build", "dist"]
-skips = ["B101"]  # assert usage is fine in non-production code
+skips = [
+    "B101", # assert usage is fine in non-production code
+    # torch.load is used only on trusted internal checkpoints (our own training
+    # artifacts), never on untrusted input; weights_only=True is not viable for
+    # full checkpoints carrying optimizer/config state. see SECURITY.md.
+    "B614",
+]
