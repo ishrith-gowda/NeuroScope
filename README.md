@@ -10,6 +10,7 @@ self-attention cyclegan with tri-planar context for multi-site mri harmonization
 ## table of contents
 
 - [overview](#overview)
+- [reproducibility & data](#reproducibility--data-availability)
 - [technical background](#technical-background)
 - [methodology](#methodology)
 - [installation](#installation)
@@ -32,6 +33,13 @@ self-attention cyclegan with tri-planar context for multi-site mri harmonization
 sa-cyclegan-2.5d addresses the critical challenge of scanner-protocol heterogeneity in multi-institutional glioblastoma mri data. this framework implements an unsupervised image-to-image translation between BraTS-TCGA and UPenn-GBM datasets using a self-attention cyclegan architecture with tri-planar 2.5d context, optimized for volumetric medical data. by learning the mapping between domains, sa-cyclegan-2.5d enables harmonization of imaging features while preserving anatomical structures and pathologically-relevant information.
 
 the framework operates on four-channel 2d axial slices (t1, t1ce, t2, flair) with specialized handling for 3d context and inter-sequence relationships. this approach produces harmonized volumes suitable for downstream radiomics analysis, clinical feature extraction, and machine learning applications where scanner variability would otherwise introduce confounding effects.
+
+## reproducibility & data availability
+
+this is a public, reproducible research release.
+
+- **data:** trained on two de-identified TCIA cohorts — BraTS / TCGA-GBM and UPenn-GBM. see [`docs/DATA.md`](docs/DATA.md) for sources, access terms, and preprocessing.
+- **reproducing results:** see [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) for the environment (`uv.lock`, python 3.11), random seeds, and the canonical journal-extension pipeline under `journal_extension/`.
 
 ## technical background
 
