@@ -77,6 +77,14 @@ Repository = "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D"
 Issues = "https://github.com/ishrith-gowda/SA-CycleGAN-2.5D/issues"
 
 # ---------------------------------------------------------------------------
+# setuptools: only the importable neuroscope/ package is shipped. the repo root
+# also holds non-package dirs (journal_extension/, scripts/, results/, arxiv/,
+# ...), so scope discovery explicitly to avoid flat-layout ambiguity.
+# ---------------------------------------------------------------------------
+[tool.setuptools.packages.find]
+include = ["neuroscope*"]
+
+# ---------------------------------------------------------------------------
 # black
 # ---------------------------------------------------------------------------
 [tool.black]
