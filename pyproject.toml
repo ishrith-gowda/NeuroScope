@@ -134,11 +134,6 @@ exclude = [
     "preprocessed_registered",
     "arxiv",
     "*.egg-info",
-    # known-broken legacy files (genuine syntax errors; superseded by the
-    # journal_extension/ pipeline). flagged for deletion/repair; excluded so
-    # tooling runs cleanly on the rest of the tree.
-    "scripts/05_downstream_evaluation/downstream_evaluation.py",
-    "scripts/train_sa_cyclegan_complete.py",
 ]
 
 [tool.ruff.lint]
@@ -186,14 +181,13 @@ ignore = [
 # top-level scripts/ is the legacy pre-journal_extension pipeline (superseded by
 # journal_extension/scripts/); relax the noisier rules on that dead tree.
 "scripts/**" = ["E402", "F401", "F811", "F841", "F821", "F403", "F405", "B007", "SIM", "C408"]
-# legacy training/logging pipeline (referenced only by the unfinished Ext E
-# federated script); console_logger.py has a pre-existing undefined-`colors`
-# bug to be repaired when Ext E is resumed (TODO).
-"neuroscope/training/**" = ["F821", "F401"]
+# legacy training/logging pipeline (used by the unfinished Ext E federated
+# script); unused-import ignores pending the full legacy-lint repair pass.
+"neuroscope/training/**" = ["F401"]
 "neuroscope/models/backbones/**" = ["F401"]  # optional torchvision backbones imported for availability
 
 [tool.ruff.lint.isort]
-known-first-party = ["neuroscope", "unified"]  # 'unified' = legacy package name; pin so import-sort is deterministic across machines/CI
+known-first-party = ["neuroscope"]
 
 # ---------------------------------------------------------------------------
 # flake8 (configured via .flake8 file since pyproject.toml not supported)

@@ -45,7 +45,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import torch
@@ -60,46 +60,45 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # neuroscope imports
-from neuroscope.models.implementations.cyclegan import CycleGAN
 from neuroscope.models.architectures.sa_cyclegan import SACycleGAN, SACycleGANConfig
+from neuroscope.models.implementations.cyclegan import CycleGAN
 from neuroscope.models.losses.advanced_losses import (
-    PerceptualLoss,
     PatchNCELoss,
+    PerceptualLoss,
 )
 from neuroscope.models.losses.medical import (
-    TumorPreservationLoss,
     AnatomicalConsistencyLoss,
+    TumorPreservationLoss,
 )
 
 # optional imports
 try:
     import wandb
+
     HAS_WANDB = True
 except ImportError:
     HAS_WANDB = False
 
 try:
     import mlflow
+
     HAS_MLFLOW = True
 except ImportError:
     HAS_MLFLOW = False
 
 # setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-class SAC
-
-ycleGANTrainer:
+class SACycleGANTrainer:
     """complete trainer for sa-cyclegan with all features."""
 
     def __init__(
         self,
-        config: Dict,
+        config: dict,
         output_dir: Path,
         use_wandb: bool = False,
         use_mlflow: bool = False,
@@ -119,17 +118,17 @@ ycleGANTrainer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # create subdirectories
-        self.checkpoint_dir = self.output_dir / 'checkpoints'
+        self.checkpoint_dir = self.output_dir / "checkpoints"
         self.checkpoint_dir.mkdir(exist_ok=True)
 
-        self.samples_dir = self.output_dir / 'samples'
+        self.samples_dir = self.output_dir / "samples"
         self.samples_dir.mkdir(exist_ok=True)
 
-        self.logs_dir = self.output_dir / 'logs'
+        self.logs_dir = self.output_dir / "logs"
         self.logs_dir.mkdir(exist_ok=True)
 
         # device setup
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         logger.info(f"Using device: {self.device}")
 
         if torch.cuda.is_available():
@@ -143,23 +142,23 @@ ycleGANTrainer:
             logger.info("+ Automatic Mixed Precision enabled")
 
         # logging setup
-        self.writer = SummaryWriter(log_dir=str(self.logs_dir / 'tensorboard'))
+        self.writer = SummaryWriter(log_dir=str(self.logs_dir / "tensorboard"))
 
         self.use_wandb = use_wandb and HAS_WANDB
         self.use_mlflow = use_mlflow and HAS_MLFLOW
 
         if self.use_wandb:
             wandb.init(
-                project='neuroscope',
-                name=config.get('experiment_name', 'sa_cyclegan'),
+                project="neuroscope",
+                name=config.get("experiment_name", "sa_cyclegan"),
                 config=config,
-                dir=str(self.output_dir)
+                dir=str(self.output_dir),
             )
             logger.info("+ WandB logging enabled")
 
         if self.use_mlflow:
-            mlflow.set_tracking_uri(str(self.logs_dir / 'mlruns'))
-            mlflow.set_experiment(config.get('experiment_name', 'sa_cyclegan'))
+            mlflow.set_tracking_uri(str(self.logs_dir / "mlruns"))
+            mlflow.set_experiment(config.get("experiment_name", "sa_cyclegan"))
             mlflow.start_run()
             mlflow.log_params(config)
             logger.info("+ MLflow logging enabled")
@@ -176,10 +175,10 @@ ycleGANTrainer:
         # training state
         self.current_epoch = 0
         self.global_step = 0
-        self.best_metric = float('inf')
+        self.best_metric = float("inf")
 
         # save config
-        with open(self.output_dir / 'config.json', 'w') as f:
+        with open(self.output_dir / "config.json", "w") as f:
             json.dump(config, f, indent=2)
 
     def _create_model(self) -> SACycleGAN:
@@ -188,18 +187,18 @@ ycleGANTrainer:
 
         # create configuration
         model_config = SACycleGANConfig(
-            in_channels=self.config.get('in_channels', 4),
-            out_channels=self.config.get('out_channels', 4),
-            base_filters=self.config.get('base_filters', 64),
-            num_residual_blocks=self.config.get('num_residual_blocks', 9),
-            num_downsampling=self.config.get('num_downsampling', 2),
-            attention_type=self.config.get('attention_type', 'self'),
-            attention_positions=self.config.get('attention_positions', [2, 4, 6]),
-            use_spectral_norm=self.config.get('use_spectral_norm', True),
-            lambda_cycle=self.config.get('lambda_cycle', 10.0),
-            lambda_identity=self.config.get('lambda_identity', 5.0),
-            lambda_perceptual=self.config.get('lambda_perceptual', 1.0),
-            lambda_tumor=self.config.get('lambda_tumor', 2.0),
+            in_channels=self.config.get("in_channels", 4),
+            out_channels=self.config.get("out_channels", 4),
+            base_filters=self.config.get("base_filters", 64),
+            num_residual_blocks=self.config.get("num_residual_blocks", 9),
+            num_downsampling=self.config.get("num_downsampling", 2),
+            attention_type=self.config.get("attention_type", "self"),
+            attention_positions=self.config.get("attention_positions", [2, 4, 6]),
+            use_spectral_norm=self.config.get("use_spectral_norm", True),
+            lambda_cycle=self.config.get("lambda_cycle", 10.0),
+            lambda_identity=self.config.get("lambda_identity", 5.0),
+            lambda_perceptual=self.config.get("lambda_perceptual", 1.0),
+            lambda_tumor=self.config.get("lambda_tumor", 2.0),
         )
 
         model = SACycleGAN(model_config).to(self.device)
@@ -213,39 +212,31 @@ ycleGANTrainer:
 
         return model
 
-    def _create_optimizers(self) -> Tuple[optim.Optimizer, ...]:
+    def _create_optimizers(self) -> tuple[optim.Optimizer, ...]:
         """create optimizers for generators and discriminators."""
-        lr_g = self.config.get('lr_generator', 0.0002)
-        lr_d = self.config.get('lr_discriminator', 0.0002)
-        beta1 = self.config.get('beta1', 0.5)
-        beta2 = self.config.get('beta2', 0.999)
+        lr_g = self.config.get("lr_generator", 0.0002)
+        lr_d = self.config.get("lr_discriminator", 0.0002)
+        beta1 = self.config.get("beta1", 0.5)
+        beta2 = self.config.get("beta2", 0.999)
 
         optimizer_G = optim.Adam(
             list(self.model.G_A2B.parameters()) + list(self.model.G_B2A.parameters()),
             lr=lr_g,
-            betas=(beta1, beta2)
+            betas=(beta1, beta2),
         )
 
-        optimizer_D_A = optim.Adam(
-            self.model.D_A.parameters(),
-            lr=lr_d,
-            betas=(beta1, beta2)
-        )
+        optimizer_D_A = optim.Adam(self.model.D_A.parameters(), lr=lr_d, betas=(beta1, beta2))
 
-        optimizer_D_B = optim.Adam(
-            self.model.D_B.parameters(),
-            lr=lr_d,
-            betas=(beta1, beta2)
-        )
+        optimizer_D_B = optim.Adam(self.model.D_B.parameters(), lr=lr_d, betas=(beta1, beta2))
 
         logger.info(f"Optimizers created: LR_G={lr_g}, LR_D={lr_d}")
 
         return optimizer_G, optimizer_D_A, optimizer_D_B
 
-    def _create_schedulers(self) -> Tuple:
+    def _create_schedulers(self) -> tuple:
         """create learning rate schedulers."""
-        decay_epoch = self.config.get('decay_epoch', 100)
-        n_epochs = self.config.get('epochs', 200)
+        decay_epoch = self.config.get("decay_epoch", 100)
+        n_epochs = self.config.get("epochs", 200)
 
         def lambda_rule(epoch):
             lr_l = 1.0 - max(0, epoch - decay_epoch) / float(n_epochs - decay_epoch + 1)
@@ -262,36 +253,36 @@ ycleGANTrainer:
     def save_checkpoint(self, epoch: int, is_best: bool = False):
         """save training checkpoint."""
         checkpoint = {
-            'epoch': epoch,
-            'global_step': self.global_step,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_G_state_dict': self.optimizer_G.state_dict(),
-            'optimizer_D_A_state_dict': self.optimizer_D_A.state_dict(),
-            'optimizer_D_B_state_dict': self.optimizer_D_B.state_dict(),
-            'scheduler_G_state_dict': self.scheduler_G.state_dict(),
-            'scheduler_D_A_state_dict': self.scheduler_D_A.state_dict(),
-            'scheduler_D_B_state_dict': self.scheduler_D_B.state_dict(),
-            'best_metric': self.best_metric,
-            'config': self.config,
+            "epoch": epoch,
+            "global_step": self.global_step,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_G_state_dict": self.optimizer_G.state_dict(),
+            "optimizer_D_A_state_dict": self.optimizer_D_A.state_dict(),
+            "optimizer_D_B_state_dict": self.optimizer_D_B.state_dict(),
+            "scheduler_G_state_dict": self.scheduler_G.state_dict(),
+            "scheduler_D_A_state_dict": self.scheduler_D_A.state_dict(),
+            "scheduler_D_B_state_dict": self.scheduler_D_B.state_dict(),
+            "best_metric": self.best_metric,
+            "config": self.config,
         }
 
         if self.use_amp:
-            checkpoint['scaler_state_dict'] = self.scaler.state_dict()
+            checkpoint["scaler_state_dict"] = self.scaler.state_dict()
 
         # save latest
-        latest_path = self.checkpoint_dir / 'latest.pth'
+        latest_path = self.checkpoint_dir / "latest.pth"
         torch.save(checkpoint, latest_path)
         logger.info(f"Saved checkpoint: {latest_path}")
 
         # save periodic
-        if epoch % self.config.get('save_freq', 10) == 0:
-            epoch_path = self.checkpoint_dir / f'epoch_{epoch:03d}.pth'
+        if epoch % self.config.get("save_freq", 10) == 0:
+            epoch_path = self.checkpoint_dir / f"epoch_{epoch:03d}.pth"
             torch.save(checkpoint, epoch_path)
             logger.info(f"Saved periodic checkpoint: {epoch_path}")
 
         # save best
         if is_best:
-            best_path = self.checkpoint_dir / 'best.pth'
+            best_path = self.checkpoint_dir / "best.pth"
             torch.save(checkpoint, best_path)
             logger.info(f"+ New best model saved: {best_path}")
 
@@ -300,20 +291,20 @@ ycleGANTrainer:
         logger.info(f"Loading checkpoint: {checkpoint_path}")
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
 
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer_G.load_state_dict(checkpoint['optimizer_G_state_dict'])
-        self.optimizer_D_A.load_state_dict(checkpoint['optimizer_D_A_state_dict'])
-        self.optimizer_D_B.load_state_dict(checkpoint['optimizer_D_B_state_dict'])
-        self.scheduler_G.load_state_dict(checkpoint['scheduler_G_state_dict'])
-        self.scheduler_D_A.load_state_dict(checkpoint['scheduler_D_A_state_dict'])
-        self.scheduler_D_B.load_state_dict(checkpoint['scheduler_D_B_state_dict'])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer_G.load_state_dict(checkpoint["optimizer_G_state_dict"])
+        self.optimizer_D_A.load_state_dict(checkpoint["optimizer_D_A_state_dict"])
+        self.optimizer_D_B.load_state_dict(checkpoint["optimizer_D_B_state_dict"])
+        self.scheduler_G.load_state_dict(checkpoint["scheduler_G_state_dict"])
+        self.scheduler_D_A.load_state_dict(checkpoint["scheduler_D_A_state_dict"])
+        self.scheduler_D_B.load_state_dict(checkpoint["scheduler_D_B_state_dict"])
 
-        if self.use_amp and 'scaler_state_dict' in checkpoint:
-            self.scaler.load_state_dict(checkpoint['scaler_state_dict'])
+        if self.use_amp and "scaler_state_dict" in checkpoint:
+            self.scaler.load_state_dict(checkpoint["scaler_state_dict"])
 
-        self.current_epoch = checkpoint['epoch']
-        self.global_step = checkpoint['global_step']
-        self.best_metric = checkpoint['best_metric']
+        self.current_epoch = checkpoint["epoch"]
+        self.global_step = checkpoint["global_step"]
+        self.best_metric = checkpoint["best_metric"]
 
         logger.info(f"+ Resumed from epoch {self.current_epoch}, step {self.global_step}")
 
@@ -323,18 +314,18 @@ ycleGANTrainer:
 
         # statistics
         losses = {
-            'G_total': 0.0,
-            'G_adv': 0.0,
-            'G_cycle': 0.0,
-            'G_identity': 0.0,
-            'D_A': 0.0,
-            'D_B': 0.0,
+            "G_total": 0.0,
+            "G_adv": 0.0,
+            "G_cycle": 0.0,
+            "G_identity": 0.0,
+            "D_A": 0.0,
+            "D_B": 0.0,
         }
 
         pbar = tqdm(
             zip(dataloader_A, dataloader_B),
             total=min(len(dataloader_A), len(dataloader_B)),
-            desc=f'Epoch {epoch}/{self.config["epochs"]}'
+            desc=f"Epoch {epoch}/{self.config['epochs']}",
         )
 
         for i, (real_A, real_B) in enumerate(pbar):
@@ -357,13 +348,10 @@ ycleGANTrainer:
 
                 # compute generator losses
                 loss_dict = self.model.compute_generator_loss(
-                    real_A, real_B,
-                    fake_A, fake_B,
-                    rec_A, rec_B,
-                    idt_A, idt_B
+                    real_A, real_B, fake_A, fake_B, rec_A, rec_B, idt_A, idt_B
                 )
 
-                loss_G = loss_dict['total']
+                loss_G = loss_dict["total"]
 
             # backward pass
             if self.use_amp:
@@ -379,8 +367,7 @@ ycleGANTrainer:
 
             with autocast(enabled=self.use_amp):
                 loss_D_A, loss_D_B = self.model.compute_discriminator_loss(
-                    real_A, real_B,
-                    fake_A.detach(), fake_B.detach()
+                    real_A, real_B, fake_A.detach(), fake_B.detach()
                 )
 
                 loss_D = (loss_D_A + loss_D_B) * 0.5
@@ -396,18 +383,15 @@ ycleGANTrainer:
                 self.optimizer_D_B.step()
 
             # update statistics
-            losses['G_total'] += loss_dict['total'].item()
-            losses['G_adv'] += loss_dict.get('adversarial', 0)
-            losses['G_cycle'] += loss_dict.get('cycle', 0)
-            losses['G_identity'] += loss_dict.get('identity', 0)
-            losses['D_A'] += loss_D_A.item()
-            losses['D_B'] += loss_D_B.item()
+            losses["G_total"] += loss_dict["total"].item()
+            losses["G_adv"] += loss_dict.get("adversarial", 0)
+            losses["G_cycle"] += loss_dict.get("cycle", 0)
+            losses["G_identity"] += loss_dict.get("identity", 0)
+            losses["D_A"] += loss_D_A.item()
+            losses["D_B"] += loss_D_B.item()
 
             # update progress bar
-            pbar.set_postfix({
-                'G': f"{loss_G.item():.4f}",
-                'D': f"{loss_D.item():.4f}"
-            })
+            pbar.set_postfix({"G": f"{loss_G.item():.4f}", "D": f"{loss_D.item():.4f}"})
 
             self.global_step += 1
 
@@ -415,10 +399,10 @@ ycleGANTrainer:
             if self.global_step % 100 == 0:
                 for key, value in loss_dict.items():
                     if isinstance(value, torch.Tensor):
-                        self.writer.add_scalar(f'train/G_{key}', value.item(), self.global_step)
+                        self.writer.add_scalar(f"train/G_{key}", value.item(), self.global_step)
 
-                self.writer.add_scalar('train/D_A', loss_D_A.item(), self.global_step)
-                self.writer.add_scalar('train/D_B', loss_D_B.item(), self.global_step)
+                self.writer.add_scalar("train/D_A", loss_D_A.item(), self.global_step)
+                self.writer.add_scalar("train/D_B", loss_D_B.item(), self.global_step)
 
         # average losses
         num_batches = min(len(dataloader_A), len(dataloader_B))
@@ -434,7 +418,7 @@ ycleGANTrainer:
         logger.info(f"Batches per epoch: {min(len(dataloader_A), len(dataloader_B))}")
 
         start_epoch = self.current_epoch
-        n_epochs = self.config['epochs']
+        n_epochs = self.config["epochs"]
 
         for epoch in range(start_epoch, n_epochs):
             epoch_start_time = time.time()
@@ -469,41 +453,55 @@ ycleGANTrainer:
 
 def main():
     """main execution."""
-    parser = argparse.ArgumentParser(description='Train SA-CycleGAN')
+    parser = argparse.ArgumentParser(description="Train SA-CycleGAN")
 
     # dataset args
-    parser.add_argument('--dataset-a', type=str, required=True, help='Path to domain A dataset')
-    parser.add_argument('--dataset-b', type=str, required=True, help='Path to domain B dataset')
+    parser.add_argument("--dataset-a", type=str, required=True, help="Path to domain A dataset")
+    parser.add_argument("--dataset-b", type=str, required=True, help="Path to domain B dataset")
 
     # training args
-    parser.add_argument('--output-dir', type=str, default='./experiments/sa_cyclegan', help='Output directory')
-    parser.add_argument('--epochs', type=int, default=200, help='Number of epochs')
-    parser.add_argument('--batch-size', type=int, default=4, help='Batch size')
-    parser.add_argument('--num-workers', type=int, default=4, help='Number of data loading workers')
+    parser.add_argument(
+        "--output-dir", type=str, default="./experiments/sa_cyclegan", help="Output directory"
+    )
+    parser.add_argument("--epochs", type=int, default=200, help="Number of epochs")
+    parser.add_argument("--batch-size", type=int, default=4, help="Batch size")
+    parser.add_argument("--num-workers", type=int, default=4, help="Number of data loading workers")
 
     # model args
-    parser.add_argument('--in-channels', type=int, default=4, help='Input channels')
-    parser.add_argument('--base-filters', type=int, default=64, help='Base number of filters')
-    parser.add_argument('--num-residual-blocks', type=int, default=9, help='Number of residual blocks')
+    parser.add_argument("--in-channels", type=int, default=4, help="Input channels")
+    parser.add_argument("--base-filters", type=int, default=64, help="Base number of filters")
+    parser.add_argument(
+        "--num-residual-blocks", type=int, default=9, help="Number of residual blocks"
+    )
 
     # optimization args
-    parser.add_argument('--lr-generator', type=float, default=0.0002, help='Generator learning rate')
-    parser.add_argument('--lr-discriminator', type=float, default=0.0002, help='Discriminator learning rate')
-    parser.add_argument('--decay-epoch', type=int, default=100, help='Epoch to start LR decay')
+    parser.add_argument(
+        "--lr-generator", type=float, default=0.0002, help="Generator learning rate"
+    )
+    parser.add_argument(
+        "--lr-discriminator", type=float, default=0.0002, help="Discriminator learning rate"
+    )
+    parser.add_argument("--decay-epoch", type=int, default=100, help="Epoch to start LR decay")
 
     # loss weights
-    parser.add_argument('--lambda-cycle', type=float, default=10.0, help='Cycle consistency loss weight')
-    parser.add_argument('--lambda-identity', type=float, default=5.0, help='Identity loss weight')
-    parser.add_argument('--lambda-perceptual', type=float, default=1.0, help='Perceptual loss weight')
+    parser.add_argument(
+        "--lambda-cycle", type=float, default=10.0, help="Cycle consistency loss weight"
+    )
+    parser.add_argument("--lambda-identity", type=float, default=5.0, help="Identity loss weight")
+    parser.add_argument(
+        "--lambda-perceptual", type=float, default=1.0, help="Perceptual loss weight"
+    )
 
     # training features
-    parser.add_argument('--mixed-precision', action='store_true', help='Use automatic mixed precision')
-    parser.add_argument('--use-wandb', action='store_true', help='Enable Weights & Biases logging')
-    parser.add_argument('--use-mlflow', action='store_true', help='Enable MLflow logging')
+    parser.add_argument(
+        "--mixed-precision", action="store_true", help="Use automatic mixed precision"
+    )
+    parser.add_argument("--use-wandb", action="store_true", help="Enable Weights & Biases logging")
+    parser.add_argument("--use-mlflow", action="store_true", help="Enable MLflow logging")
 
     # checkpointing
-    parser.add_argument('--resume', type=str, help='Resume from checkpoint')
-    parser.add_argument('--save-freq', type=int, default=10, help='Checkpoint save frequency')
+    parser.add_argument("--resume", type=str, help="Resume from checkpoint")
+    parser.add_argument("--save-freq", type=int, default=10, help="Checkpoint save frequency")
 
     args = parser.parse_args()
 
@@ -541,5 +539,5 @@ def main():
     trainer.train(dataloader_A, dataloader_B)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

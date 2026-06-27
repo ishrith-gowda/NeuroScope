@@ -127,12 +127,12 @@ class ConsoleLogger:
             return
 
         banner = f"""
-{self._color("=" * 70, colors.cyan)}
-{self._color("  neuroscope - 2.5d sa-cyclegan training", colors.bold + colors.cyan)}
-{self._color("  " + "=" * 66, colors.cyan)}
-{self._color(f"  experiment: {self.experiment_name}", colors.white)}
-{self._color(f"  started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", colors.gray)}
-{self._color("=" * 70, colors.cyan)}
+{self._color("=" * 70, Colors.CYAN)}
+{self._color("  neuroscope - 2.5d sa-cyclegan training", Colors.BOLD + Colors.CYAN)}
+{self._color("  " + "=" * 66, Colors.CYAN)}
+{self._color(f"  experiment: {self.experiment_name}", Colors.WHITE)}
+{self._color(f"  started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", Colors.GRAY)}
+{self._color("=" * 70, Colors.CYAN)}
 """
         self._write(banner)
 
