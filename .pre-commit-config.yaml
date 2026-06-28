@@ -2,6 +2,10 @@
 # install: pre-commit install
 # run all: pre-commit run --all-files
 
+# pre-commit operates on source files only; output/data dirs are excluded
+# (consistent with the ruff exclude in pyproject.toml).
+exclude: '^(figures|results|evaluation_results|experiments|experiments_from_gpu|baseline_training_progress|arxiv|huggingface|preprocessed|preprocessed_registered|data|checkpoints|runs|mlruns|journal_extension/(figures|results|experiments))/'
+
 repos:
   # general file hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -31,11 +35,5 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  # security
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
-    hooks:
-      - id: bandit
-        args: [-c, pyproject.toml, --recursive, neuroscope/]
-        additional_dependencies: ["bandit[toml]"]
-        pass_filenames: false
+  # note: bandit security scanning runs in ci (the "security scan" job), not as a
+  # pre-commit hook, to avoid hook-version sync issues with newer bandit tests.

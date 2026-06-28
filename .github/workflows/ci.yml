@@ -72,9 +72,8 @@ jobs:
         run: mypy neuroscope/
 
   security:
-    name: security scan (informational)
+    name: security scan
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: set up python
@@ -86,3 +85,18 @@ jobs:
         run: pip install "bandit[toml]"
       - name: run bandit security scan
         run: bandit -c pyproject.toml -r neuroscope/ -ll
+
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: install pre-commit
+        run: pip install pre-commit
+      - name: run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
