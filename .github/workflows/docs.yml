@@ -1,0 +1,28 @@
+# validates that the sphinx documentation builds. advisory: not a required check.
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: install docs deps
+        run: pip install -r docs/requirements.txt
+      - name: build docs
+        run: sphinx-build -b html docs docs/_build/html
