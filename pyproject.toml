@@ -126,14 +126,41 @@ skip_glob = ["*.venv*", "preprocessed/*"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+# scope is explicit, not tied to .gitignore: our gitignore patterns (data/,
+# figures/, results/, ...) over-match tracked SOURCE dirs (e.g. neuroscope/data/),
+# which would silently hide them from linting. only non-source output/data/build
+# dirs are excluded, with root-anchored paths so source subdirs stay linted.
+respect-gitignore = false
 exclude = [
+    # build / environment
     ".venv",
     "build",
     "dist",
-    "preprocessed",
-    "preprocessed_registered",
-    "arxiv",
     "*.egg-info",
+    # raw + preprocessed data (root-anchored: neuroscope/data/ is still linted)
+    "/data",
+    "/preprocessed",
+    "/preprocessed_registered",
+    "PKG*",
+    # experiment + training artifacts (outputs, not source)
+    "/experiments",
+    "/experiments_from_gpu",
+    "/baseline_training_progress",
+    "/final_trained_model",
+    "/cluster_backup",
+    "/runs",
+    "/mlruns",
+    "/checkpoints",
+    # result / figure outputs
+    "/results",
+    "/evaluation_results",
+    "/figures",
+    "journal_extension/figures",
+    "journal_extension/results",
+    "journal_extension/experiments",
+    # publication staging
+    "/arxiv",
+    "/huggingface",
 ]
 
 [tool.ruff.lint]

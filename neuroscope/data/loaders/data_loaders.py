@@ -5,16 +5,19 @@ provides convenient factories for creating dataloaders with
 proper configuration for training, validation, and testing.
 """
 
-from typing import Optional, Dict, Any, Callable, List, Union
+import multiprocessing
 from dataclasses import dataclass
+from typing import Any, Callable, Optional
+
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
-import multiprocessing
 
 
 @dataclass
 class DataLoaderConfig:
     """configuration for dataloader creation."""
+
     batch_size: int = 8
     shuffle: bool = True
     num_workers: int = 4
@@ -22,12 +25,12 @@ class DataLoaderConfig:
     drop_last: bool = False
     prefetch_factor: int = 2
     persistent_workers: bool = False
-    
+
     def __post_init__(self):
         # auto-configure based on system
         if self.num_workers == -1:
             self.num_workers = min(4, multiprocessing.cpu_count() // 2)
-        
+
         # disable persistent workers if no workers
         if self.num_workers == 0:
             self.persistent_workers = False
@@ -43,11 +46,11 @@ def create_dataloader(
     sampler: Optional[Sampler] = None,
     collate_fn: Optional[Callable] = None,
     prefetch_factor: int = 2,
-    persistent_workers: bool = False
+    persistent_workers: bool = False,
 ) -> DataLoader:
     """
     create dataloader with sensible defaults.
-    
+
     args:
         dataset: dataset to load from
         batch_size: batch size
@@ -59,41 +62,41 @@ def create_dataloader(
         collate_fn: optional custom collation function
         prefetch_factor: number of batches to prefetch per worker
         persistent_workers: whether to keep workers alive between epochs
-        
+
     returns:
         configured dataloader
     """
     # handle worker configuration
     if num_workers == -1:
         num_workers = min(4, multiprocessing.cpu_count() // 2)
-    
+
     # disable features incompatible with no workers
     if num_workers == 0:
         prefetch_factor = None
         persistent_workers = False
-    
+
     # shuffle and sampler are mutually exclusive
     if sampler is not None:
         shuffle = False
-    
+
     loader_kwargs = {
-        'batch_size': batch_size,
-        'shuffle': shuffle,
-        'num_workers': num_workers,
-        'pin_memory': pin_memory,
-        'drop_last': drop_last,
-        'persistent_workers': persistent_workers and num_workers > 0,
+        "batch_size": batch_size,
+        "shuffle": shuffle,
+        "num_workers": num_workers,
+        "pin_memory": pin_memory,
+        "drop_last": drop_last,
+        "persistent_workers": persistent_workers and num_workers > 0,
     }
-    
+
     if sampler is not None:
-        loader_kwargs['sampler'] = sampler
-    
+        loader_kwargs["sampler"] = sampler
+
     if collate_fn is not None:
-        loader_kwargs['collate_fn'] = collate_fn
-    
+        loader_kwargs["collate_fn"] = collate_fn
+
     if num_workers > 0 and prefetch_factor is not None:
-        loader_kwargs['prefetch_factor'] = prefetch_factor
-    
+        loader_kwargs["prefetch_factor"] = prefetch_factor
+
     return DataLoader(dataset, **loader_kwargs)
 
 
@@ -102,11 +105,11 @@ def create_train_loader(
     batch_size: int = 8,
     num_workers: int = 4,
     sampler: Optional[Sampler] = None,
-    collate_fn: Optional[Callable] = None
+    collate_fn: Optional[Callable] = None,
 ) -> DataLoader:
     """
     create dataloader optimized for training.
-    
+
     features:
         - shuffling enabled (unless custom sampler provided)
         - drop last batch to avoid batch norm issues
@@ -123,7 +126,7 @@ def create_train_loader(
         sampler=sampler,
         collate_fn=collate_fn,
         prefetch_factor=2,
-        persistent_workers=True
+        persistent_workers=True,
     )
 
 
@@ -131,11 +134,11 @@ def create_val_loader(
     dataset: Dataset,
     batch_size: int = 16,
     num_workers: int = 4,
-    collate_fn: Optional[Callable] = None
+    collate_fn: Optional[Callable] = None,
 ) -> DataLoader:
     """
     create dataloader optimized for validation.
-    
+
     features:
         - no shuffling for reproducibility
         - larger batch size (no gradient storage needed)
@@ -150,7 +153,7 @@ def create_val_loader(
         drop_last=False,
         collate_fn=collate_fn,
         prefetch_factor=2,
-        persistent_workers=False
+        persistent_workers=False,
     )
 
 
@@ -158,11 +161,11 @@ def create_test_loader(
     dataset: Dataset,
     batch_size: int = 1,
     num_workers: int = 2,
-    collate_fn: Optional[Callable] = None
+    collate_fn: Optional[Callable] = None,
 ) -> DataLoader:
     """
     create dataloader optimized for testing/inference.
-    
+
     features:
         - small batch size for per-sample metrics
         - no shuffling for reproducibility
@@ -177,25 +180,25 @@ def create_test_loader(
         drop_last=False,
         collate_fn=collate_fn,
         prefetch_factor=1,
-        persistent_workers=False
+        persistent_workers=False,
     )
 
 
 class InfiniteDataLoader:
     """
     dataloader that cycles indefinitely.
-    
+
     useful for training loops that use iteration count
     instead of epoch count.
     """
-    
+
     def __init__(
         self,
         dataset: Dataset,
         batch_size: int = 8,
         num_workers: int = 4,
         sampler: Optional[Sampler] = None,
-        collate_fn: Optional[Callable] = None
+        collate_fn: Optional[Callable] = None,
     ):
         """
         args:
@@ -211,28 +214,28 @@ class InfiniteDataLoader:
             batch_size=batch_size,
             num_workers=num_workers,
             sampler=sampler,
-            collate_fn=collate_fn
+            collate_fn=collate_fn,
         )
         self._iterator = None
-    
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         if self._iterator is None:
             self._iterator = iter(self.loader)
-        
+
         try:
             batch = next(self._iterator)
         except StopIteration:
             self._iterator = iter(self.loader)
             batch = next(self._iterator)
-        
+
         return batch
-    
+
     def __len__(self):
         return len(self.loader)
-    
+
     def reset(self):
         """reset the iterator."""
         self._iterator = None
@@ -241,34 +244,30 @@ class InfiniteDataLoader:
 class PrefetchDataLoader:
     """
     dataloader wrapper with gpu prefetching for faster training.
-    
+
     prefetches the next batch to gpu while current batch is being processed.
     """
-    
-    def __init__(
-        self,
-        loader: DataLoader,
-        device: torch.device = None
-    ):
+
+    def __init__(self, loader: DataLoader, device: torch.device = None):
         """
         args:
             loader: dataloader to wrap
             device: device to prefetch to (default: current cuda device)
         """
         self.loader = loader
-        self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.stream = torch.cuda.Stream() if torch.cuda.is_available() else None
-    
+
     def __iter__(self):
         loader_iter = iter(self.loader)
-        
+
         # prefetch first batch
         try:
             batch = next(loader_iter)
             batch = self._to_device(batch)
         except StopIteration:
             return
-        
+
         for next_batch in loader_iter:
             # start prefetch of next batch
             if self.stream is not None:
@@ -276,19 +275,19 @@ class PrefetchDataLoader:
                     next_batch = self._to_device(next_batch)
             else:
                 next_batch = self._to_device(next_batch)
-            
+
             # yield current batch
             yield batch
-            
+
             # wait for prefetch to complete
             if self.stream is not None:
                 torch.cuda.current_stream().wait_stream(self.stream)
-            
+
             batch = next_batch
-        
+
         # yield last batch
         yield batch
-    
+
     def _to_device(self, batch: Any) -> Any:
         """recursively move batch to device."""
         if isinstance(batch, torch.Tensor):
@@ -299,7 +298,7 @@ class PrefetchDataLoader:
             return type(batch)(self._to_device(v) for v in batch)
         else:
             return batch
-    
+
     def __len__(self):
         return len(self.loader)
 
@@ -307,16 +306,16 @@ class PrefetchDataLoader:
 class MultiDomainLoader:
     """
     loader for multiple domains with synchronized iteration.
-    
+
     yields batches from multiple domains simultaneously.
     """
-    
+
     def __init__(
         self,
-        domain_datasets: Dict[str, Dataset],
+        domain_datasets: dict[str, Dataset],
         batch_size: int = 8,
         num_workers: int = 2,
-        strategy: str = 'zip'  # 'zip' or 'cycle'
+        strategy: str = "zip",  # 'zip' or 'cycle'
     ):
         """
         args:
@@ -327,21 +326,19 @@ class MultiDomainLoader:
         """
         self.domains = list(domain_datasets.keys())
         self.strategy = strategy
-        
+
         self.loaders = {
             domain: create_train_loader(
-                dataset=dataset,
-                batch_size=batch_size,
-                num_workers=num_workers
+                dataset=dataset, batch_size=batch_size, num_workers=num_workers
             )
             for domain, dataset in domain_datasets.items()
         }
-    
+
     def __iter__(self):
-        if self.strategy == 'zip':
+        if self.strategy == "zip":
             # parallel iteration
             iterators = {domain: iter(loader) for domain, loader in self.loaders.items()}
-            
+
             while True:
                 batch = {}
                 try:
@@ -350,11 +347,11 @@ class MultiDomainLoader:
                 except StopIteration:
                     break
                 yield batch
-        
+
         else:  # cycle
             # infinite cycling
             iterators = {domain: iter(loader) for domain, loader in self.loaders.items()}
-            
+
             while True:
                 batch = {}
                 for domain in self.domains:
@@ -364,31 +361,31 @@ class MultiDomainLoader:
                         iterators[domain] = iter(self.loaders[domain])
                         batch[domain] = next(iterators[domain])
                 yield batch
-    
+
     def __len__(self):
-        if self.strategy == 'zip':
+        if self.strategy == "zip":
             return min(len(loader) for loader in self.loaders.values())
         else:
             return max(len(loader) for loader in self.loaders.values())
 
 
-def collate_medical_images(batch: List[Dict]) -> Dict[str, torch.Tensor]:
+def collate_medical_images(batch: list[dict]) -> dict[str, torch.Tensor]:
     """
     custom collation function for medical image batches.
-    
+
     handles variable-sized images and optional segmentation masks.
     """
     collated = {}
-    
+
     # get all keys from first sample
     keys = batch[0].keys()
-    
+
     for key in keys:
         values = [item[key] for item in batch if key in item]
-        
+
         if not values:
             continue
-        
+
         if isinstance(values[0], torch.Tensor):
             # stack tensors
             try:
@@ -411,9 +408,5 @@ def collate_medical_images(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         else:
             # keep as list
             collated[key] = values
-    
+
     return collated
-
-
-# import numpy for collate function
-import numpy as np
