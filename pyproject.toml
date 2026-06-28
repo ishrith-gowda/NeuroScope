@@ -267,7 +267,7 @@ filterwarnings = [
 # coverage
 # ---------------------------------------------------------------------------
 [tool.coverage.run]
-source = ["neuroscope"]
+source = ["neuroscope", "journal_extension"]
 omit = [
     "neuroscope/tests/*",
     "neuroscope/*/__init__.py",
@@ -284,7 +284,9 @@ exclude_lines = [
     "except ImportError",
 ]
 show_missing = true
-fail_under = 0
+# regression floor only: the metric unit tests are a small research suite (~2%).
+# this prevents coverage silently collapsing to 0; expanding the suite is future work.
+fail_under = 1
 
 # ---------------------------------------------------------------------------
 # bandit (security linter)
