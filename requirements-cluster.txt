@@ -2,25 +2,25 @@
 # install: pip install -r requirements-cluster.txt
 
 # deep learning
-torch>=2.0.0
-torchvision>=0.15.0
+torch>=2.12.1
+torchvision>=0.27.1
 
 # medical imaging
-nibabel>=4.0.0
-simpleitk>=2.2.0
+nibabel>=5.4.2
+simpleitk>=2.5.5
 
 # scientific computing
-numpy>=1.23.0
-scipy>=1.9.0
-scikit-image>=0.19.0
-scikit-learn>=1.1.0
+numpy>=1.26.4
+scipy>=1.15.3
+scikit-image>=0.25.2
+scikit-learn>=1.7.2
 
 # training infrastructure
-tensorboard>=2.8.0
-tqdm>=4.64.0
-pyyaml>=6.0
+tensorboard>=2.20.0
+tqdm>=4.68.3
+pyyaml>=6.0.3
 
 # data and visualization
-matplotlib>=3.5.0
-pandas>=1.4.0
-h5py>=3.7.0
+matplotlib>=3.10.9
+pandas>=2.3.3
+h5py>=3.16.0
