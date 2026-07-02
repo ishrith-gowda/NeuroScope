@@ -1,0 +1,81 @@
+{
+  "splits": {
+    "brats_train": 67,
+    "brats_test": 17,
+    "upenn_train": 412,
+    "upenn_test": 103
+  },
+  "A_on_rawA": {
+    "dice_mean_foreground_mean": 0.7558074146686017,
+    "dice_mean_foreground_std": 0.19914238813688534,
+    "region_wt_mean": 0.7360871824017804,
+    "region_tc_mean": 0.8803015835640877,
+    "region_et_mean": 0.8547210848483693,
+    "hd95_mean": 4.720261408757204,
+    "hd95_std": 5.87058601246934
+  },
+  "A_on_rawB": {
+    "dice_mean_foreground_mean": 0.7846588545292409,
+    "dice_mean_foreground_std": 0.22354976135967217,
+    "region_wt_mean": 0.7632099288684213,
+    "region_tc_mean": 0.8573919424345535,
+    "region_et_mean": 0.849698729631165,
+    "hd95_mean": 5.054705768529611,
+    "hd95_std": 7.168201567859542
+  },
+  "A_on_harmB": {
+    "dice_mean_foreground_mean": 0.45802254229950573,
+    "dice_mean_foreground_std": 0.38615950212110023,
+    "region_wt_mean": 0.19764724341656595,
+    "region_tc_mean": 0.5426366814027179,
+    "region_et_mean": 0.5509468752745202,
+    "hd95_mean": 38.150171759709266,
+    "hd95_std": 16.57111129524307
+  },
+  "B_on_rawB": {
+    "dice_mean_foreground_mean": 0.856032620110836,
+    "dice_mean_foreground_std": 0.1710648802140409,
+    "region_wt_mean": 0.8189788686148689,
+    "region_tc_mean": 0.9309694423363579,
+    "region_et_mean": 0.9201469747917836,
+    "hd95_mean": 2.9943094448092453,
+    "hd95_std": 5.033496008671071
+  },
+  "B_on_rawA": {
+    "dice_mean_foreground_mean": 0.7527439857380401,
+    "dice_mean_foreground_std": 0.1992870578262453,
+    "region_wt_mean": 0.7076001885182718,
+    "region_tc_mean": 0.8694323173277195,
+    "region_et_mean": 0.8569473129676961,
+    "hd95_mean": 4.312397912536805,
+    "hd95_std": 5.198362031327609
+  },
+  "B_on_harmA": {
+    "dice_mean_foreground_mean": 0.4377327317315259,
+    "dice_mean_foreground_std": 0.3074612572066819,
+    "region_wt_mean": 0.3574445407728062,
+    "region_tc_mean": 0.5686292970628007,
+    "region_et_mean": 0.5198806689760933,
+    "hd95_mean": 13.79768866908922,
+    "hd95_std": 10.274604702217587
+  },
+  "harmonization_effect": {
+    "A_to_B_direction (train brats, test upenn)": {
+      "raw": 0.7846588545292409,
+      "harmonized": 0.45802254229950573,
+      "delta": -0.32663631222973516,
+      "relative_pct": -41.62781192671328
+    },
+    "B_to_A_direction (train upenn, test brats)": {
+      "raw": 0.7527439857380401,
+      "harmonized": 0.4377327317315259,
+      "delta": -0.31501125400651425,
+      "relative_pct": -41.84839201307684
+    }
+  },
+  "metadata": {
+    "timestamp": "2026-06-22T08:28:44.372337",
+    "seg_epochs": 40,
+    "protocol": "train-raw-test-raw-vs-harmonized"
+  }
+}

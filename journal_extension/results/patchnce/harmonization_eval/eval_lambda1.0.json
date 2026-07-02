@@ -1,0 +1,43 @@
+{
+  "label": "lambda1.0",
+  "checkpoint": "/home/cc/neuroscope/experiments/ext_a/ext_a_lambda1.0/checkpoints/checkpoint_best.pth",
+  "domain_classifier": {
+    "acc_raw": 0.6392212725546059,
+    "acc_harmonized": 0.5032288698955366,
+    "chance": 0.5,
+    "note": "lower harmonized acc toward chance = better site confusion"
+  },
+  "mmd_feature_space_fakeB_vs_realB": 0.0006224155658856034,
+  "fid": {
+    "A2B_FLAIR": 62.08002853393555,
+    "A2B_T1": 33.6141242980957,
+    "A2B_T1ce": 45.7829475402832,
+    "A2B_T2": 52.61925506591797,
+    "B2A_FLAIR": 263.2521057128906,
+    "B2A_T1": 235.31813049316406,
+    "B2A_T1ce": 246.63162231445312,
+    "B2A_T2": 241.8121337890625
+  },
+  "kid_mean": {
+    "A2B_FLAIR": 0.050202805548906326,
+    "A2B_T1": 0.026181943714618683,
+    "A2B_T1ce": 0.039882734417915344,
+    "A2B_T2": 0.04497705399990082,
+    "B2A_FLAIR": 0.3586830794811249,
+    "B2A_T1": 0.32252663373947144,
+    "B2A_T1ce": 0.3730204999446869,
+    "B2A_T2": 0.32042914628982544
+  },
+  "masked_windowed_ssim_structure_A2B": {
+    "mean": 0.4197859972885134,
+    "std": 0.023493934162813437,
+    "n_subjects": 88
+  },
+  "masked_windowed_ssim_cycle_A2B": {
+    "mean": 0.7140357621629528,
+    "std": 0.025042864190625867,
+    "n_subjects": 88
+  },
+  "fid_A2B_avg": 48.524088859558105,
+  "fid_B2A_avg": 246.75349807739258
+}
