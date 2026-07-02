@@ -1,84 +1,79 @@
-## Downstream Segmentation Transfer Analysis
+# Downstream Segmentation Transfer Analysis (corrected)
 
-### Summary of Results
+> **Correction note (supersedes the earlier version of this file).** An earlier version reported a
+> −11 to −19% Dice degradation (harmonized A→B Dice 0.629). Those numbers came from a **buggy
+> harmonization pipeline** (`eval_downstream.generate_harmonized_data`, which used the wrong channel
+> order / intensity normalization / 2.5D slice assembly). The corrected pipeline
+> (`journal_extension/scripts/eval_downstream_corrected.py`, harmonizing via `harmonize_for_downstream.py`)
+> yields a **larger** degradation: A→B −53.3% and B→A −37.4%. The corrected result is the canonical one;
+> the raw numbers below trace to committed JSONs under
+> `journal_extension/results/patchnce/downstream_corrected/`.
+
+### Summary of Results (λ_NCE = 0.5, best-FID arm; segmenter 40 epochs; brain-masked Dice / HD95)
 
 | Condition | Dice | WT | TC | ET | HD95 |
 |---|---|---|---|---|---|
-| Raw A->B (cross-site) | 0.777 | 0.740 | 0.848 | 0.835 | 5.1 |
-| Harmonized A->B (cross-site) | 0.629 | 0.532 | 0.776 | 0.747 | 8.9 |
-| Raw A->A (within-site) | 0.757 | 0.726 | 0.875 | 0.843 | 4.8 |
-| Harmonized A->A (within-site) | 0.745 | 0.765 | 0.855 | 0.824 | 5.0 |
-| Raw B->A (cross-site, reverse) | 0.767 | 0.740 | 0.884 | 0.866 | 4.1 |
-| Harmonized B->A (cross-site, reverse) | 0.679 | 0.700 | 0.821 | 0.734 | 6.0 |
+| Raw A→B (cross-site) | 0.776 | 0.730 | 0.859 | 0.848 | 5.10 |
+| **Harmonized A→B (cross-site)** | **0.363** | **0.057** | **0.414** | **0.420** | **31.44** |
+| Raw A→A (within-site, source) | 0.765 | 0.750 | 0.892 | 0.865 | 4.68 |
+| Raw B→A (cross-site, reverse) | 0.765 | 0.727 | 0.880 | 0.868 | 4.14 |
+| **Harmonized B→A (cross-site, reverse)** | **0.479** | **0.413** | **0.607** | **0.561** | **12.09** |
+| Raw B→B (within-site, target upper bound) | 0.855 | 0.821 | 0.928 | 0.920 | 3.13 |
+
+Cross-site transfer degrades **−53.3%** (A→B: 0.776 → 0.363) and **−37.4%** (B→A: 0.765 → 0.479) in
+mean foreground Dice after harmonization, with HD95 rising 5.1 → 31.4 mm and 4.1 → 12.1 mm respectively.
 
 ### Key Findings
 
-1. **Perceptual-task utility gap**: Despite achieving SSIM=0.998 for harmonized output quality,
-   cross-site segmentation transfer degrades by 11-19% in mean Dice score after harmonization.
+1. **Perceptual-task utility gap (strengthened).** Despite high global intensity fidelity (global
+   SSIM ≈ 0.99) and monotonically improving brain-masked *structure* SSIM (0.29 → 0.44 across the λ
+   sweep), cross-site segmentation transfer *degrades* by 37–53% in Dice after harmonization. Image-level
+   fidelity and downstream task utility move in opposite directions.
 
-2. **High raw cross-site baseline**: Raw A->B Dice of 0.777 and raw B->A Dice of 0.767 indicate
-   the two sites are already similar for segmentation despite visual domain differences. This means
-   harmonization introduces perturbations without conferring distributional benefit for the
-   downstream task.
+2. **Whole-tumor collapse.** The A→B whole-tumor (WT) Dice collapses from 0.730 (raw) to 0.057
+   (harmonized) — the largest single degradation — indicating harmonization redistributes exactly the
+   intensity/contrast cues the segmenter relies on at tumor boundaries.
 
-3. **Within-site distortion**: Harmonized A->A (0.745) slightly underperforms raw A->A (0.757),
-   confirming that harmonization introduces small but measurable distortions even when no domain
-   shift is present. This supports the information corruption hypothesis.
+3. **High raw cross-site baseline.** Raw A→B (0.776) and raw B→A (0.765) show the two sites are already
+   close for segmentation despite visible domain differences. Harmonization therefore introduces
+   perturbations without a compensating reduction in a large domain gap.
 
-4. **Asymmetric degradation**: A->B (-19.1%) is more affected than B->A (-11.5%), potentially
-   because the BraTS training set (67 subjects) is smaller and more variable than UPenn (412
-   subjects), making the A-trained segmenter more sensitive to input perturbations.
+4. **Asymmetric degradation.** A→B (−53.3%) is worse than B→A (−37.4%), consistent with the BraTS
+   training set (67 subjects) being smaller and more variable than UPenn (412), making the A-trained
+   segmenter more sensitive to input perturbations.
 
 ### Mechanistic Interpretation
 
 CycleGAN-based harmonization optimizes perceptual similarity via cycle-consistency and adversarial
-losses. This objective encourages matching the target domain's intensity distribution and texture
-patterns. However, segmentation networks rely on intensity gradients and contrast patterns at tumor
-boundaries -- features that may be redistributed during harmonization. When the raw cross-site
-generalization gap is already small, these perturbations to task-discriminative features outweigh
-any reduction in domain shift.
+losses, matching the target domain's intensity distribution and texture. Segmentation networks, however,
+depend on intensity gradients and contrast at tumor boundaries — features redistributed during
+harmonization. When the raw cross-site generalization gap is already small, these perturbations to
+task-discriminative features dominate any reduction in domain shift, and downstream Dice falls.
 
 ### Contribution Framing
 
-This result constitutes an **empirical contribution** to the field. We recommend framing it as:
+This is an honest, rigorously-diagnosed **empirical contribution**: a genuine negative/mechanism result.
 
-> "These results reveal a fundamental disconnect between image-level quality metrics and
-> downstream task-level utility. Despite achieving near-perfect perceptual fidelity (SSIM=0.998),
-> harmonized images degraded cross-site segmentation transfer by 11-19% in Dice score. This
-> finding underscores that image-quality metrics (SSIM, PSNR) are insufficient surrogates for
-> clinical utility and that downstream evaluation should be mandatory for validating any
-> harmonization pipeline."
+> "These results reveal a disconnect between image-level quality metrics and downstream task-level
+> utility. Despite high perceptual fidelity, harmonized images degraded cross-site segmentation transfer
+> by 37–53% in Dice. Image-quality metrics (SSIM, FID) are insufficient surrogates for clinical utility;
+> downstream evaluation should be mandatory when validating any harmonization pipeline."
+
+This motivates the **task-aware harmonization** experiment (Extension A, WS-2): adding a
+foreground-weighted / segmentation-consistency objective so harmonization preserves task-relevant
+structure. If that recovers Dice, the paper reports a positive downstream result; if not, this
+mechanism study stands on its own.
 
 ### Supporting Literature
 
-- Ho et al. (JMRI 2026): systematic benchmark showing image-level harmonization does not uniformly
-  improve downstream tasks
-- Dinsdale et al. (NeuroImage 2021): theoretical argument that task-agnostic image harmonization is
-  fundamentally limited; proposes feature-level unlearning
-- Palladino et al. (arXiv 2025): demonstrates that upstream metrics (SSIM, FID) show "profound
-  insensitivity" to anatomical details critical for segmentation
-- Zuo et al. HACA3 (CMIG 2023): anatomy-aware harmonization necessary; naive style transfer
-  corrupts task-relevant features
-- Moyer et al. survey (BioMedical Engineering OnLine 2024): notes that 2D/2.5D methods can
-  negatively impact downstream brain age prediction
+- Ho et al. (JMRI 2026): image-level harmonization does not uniformly improve downstream tasks.
+- Dinsdale et al. (NeuroImage 2021): task-agnostic image harmonization is fundamentally limited; proposes feature-level unlearning.
+- Palladino et al. (arXiv 2025): upstream metrics (SSIM, FID) show "profound insensitivity" to anatomical detail critical for segmentation.
+- Zuo et al. HACA3 (CMIG 2023): anatomy-aware harmonization is necessary; naive style transfer corrupts task-relevant features.
+- Moyer et al. survey (BioMedical Engineering OnLine 2024): 2D/2.5D methods can negatively impact downstream prediction.
 
-### Proposed Discussion Section Outline
+### Provenance
 
-1. **State the finding directly** with exact numbers
-2. **Explain the mechanism**: intensity redistribution corrupting task-discriminative features
-3. **Contextualize with literature**: this is an increasingly recognized phenomenon
-4. **Provide evidence**: within-site degradation, asymmetric direction effects, high raw baseline
-5. **Position as contribution**: motivates task-aware or jointly-optimized harmonization
-6. **Future directions**: segmentation-aware auxiliary objectives, feature-level harmonization,
-   task-conditional style transfer
-
-### Future Work Directions (Motivated by This Finding)
-
-1. **Task-aware harmonization**: add downstream task loss (e.g., segmentation cross-entropy) as an
-   auxiliary training objective alongside cycle-consistency
-2. **Feature-level harmonization**: operate in latent space rather than image space to preserve
-   task-relevant representations (cf. Dinsdale et al.)
-3. **Two-tier evaluation protocol**: all future harmonization papers should report both image-level
-   metrics (SSIM, PSNR) and at least one downstream task metric (Dice, accuracy)
-4. **Conditional harmonization**: learn when harmonization is beneficial (large domain gap) vs.
-   harmful (small domain gap) and apply adaptively
+- Corrected downstream: `journal_extension/results/patchnce/downstream_corrected/lambda{0.0,0.5}_downstream_corrected.json` (`eval_downstream_corrected.py`).
+- Harmonization metrics: `journal_extension/results/patchnce/harmonization_eval/eval_lambda*.json` (`eval_harmonization_correct.py`).
+- See `journal_extension/results/patchnce/CANONICAL_RESULTS.md` for the regenerate command.
