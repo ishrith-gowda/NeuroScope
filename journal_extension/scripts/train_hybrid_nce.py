@@ -126,6 +126,7 @@ class HybridNCETrainer:
         seed: int = 42,
         task_aware_loss: bool = False,
         mask_weight_foreground: float = 4.0,
+        cut_mode: bool = False,
     ):
         # configure torch for maximum throughput
         setup_torch_performance()
@@ -141,6 +142,7 @@ class HybridNCETrainer:
         self.seed = seed
         self.task_aware_loss = task_aware_loss
         self.mask_weight_foreground = float(mask_weight_foreground)
+        self.cut_mode = cut_mode
 
         self.config = config
         self.epochs = epochs
@@ -388,6 +390,9 @@ class HybridNCETrainer:
         center_A = batch["A_center"].to(self.device)
         center_B = batch["B_center"].to(self.device)
 
+        if self.cut_mode:
+            return self._cut_train_step(real_A, center_B)
+
         # ================================================================
         # train generators
         # ================================================================
@@ -547,6 +552,72 @@ class HybridNCETrainer:
             "ssim_loss": loss_ssim.item(),
             "nce_A2B": loss_nce_A2B.item(),
             "nce_B2A": loss_nce_B2A.item(),
+            "nce_total": loss_nce.item(),
+        }
+
+    def _cut_train_step(self, real_A, center_B):
+        """one-sided cut baseline step (fastcut config).
+
+        translates a->b with patchnce(a->b) + lsgan on b; no cycle, identity,
+        ssim, or b2a branch. reuses the same generator / discriminator / nce /
+        gan-loss and checkpoint format as the hybrid trainer for eval parity.
+        """
+        # --- generator ---
+        self.opt_G.zero_grad(set_to_none=True)
+        with autocast("cuda", enabled=self.use_amp):
+            fake_B = self.model.G_A2B(real_A)
+            G_A2B_raw = self._get_generator("G_A2B")
+            src_feats_A = G_A2B_raw(real_A, encode_only=True)
+            gen_feats_B = G_A2B_raw(
+                fake_B.unsqueeze(2)
+                .repeat(1, 1, 3, 1, 1)
+                .view(fake_B.size(0), -1, fake_B.size(2), fake_B.size(3)),
+                encode_only=True,
+            )
+            loss_nce = self.nce_loss_A2B(gen_feats_B, src_feats_A)
+            pred_fake_B = self.model.D_B(fake_B)
+            loss_gan_A2B = self.losses.gan_loss.generator_loss(pred_fake_B)
+            loss_G = loss_gan_A2B + self.lambda_nce * loss_nce
+
+        self.scaler_G.scale(loss_G).backward()
+        if self.gradient_clip_norm > 0:
+            self.scaler_G.unscale_(self.opt_G)
+            torch.nn.utils.clip_grad_norm_(
+                list(self.model.G_A2B.parameters())
+                + list(self.nce_loss_A2B.mlp_heads.parameters()),
+                self.gradient_clip_norm,
+            )
+        self.scaler_G.step(self.opt_G)
+        self.scaler_G.update()
+
+        # --- discriminator d_b (no replay buffer: faithful cut trains on current fake) ---
+        self.opt_D.zero_grad(set_to_none=True)
+        with autocast("cuda", enabled=self.use_amp):
+            pred_real_B = self.model.D_B(center_B)
+            pred_fake_B_d = self.model.D_B(fake_B.detach())
+            loss_D = self.losses.gan_loss.discriminator_loss(pred_real_B, pred_fake_B_d)
+
+        self.scaler_D.scale(loss_D).backward()
+        if self.gradient_clip_norm > 0:
+            self.scaler_D.unscale_(self.opt_D)
+            torch.nn.utils.clip_grad_norm_(
+                list(self.model.D_B.parameters()), self.gradient_clip_norm
+            )
+        self.scaler_D.step(self.opt_D)
+        self.scaler_D.update()
+
+        return {
+            "G_loss": loss_G.item(),
+            "D_loss": loss_D.item(),
+            "cycle_A": 0.0,
+            "cycle_B": 0.0,
+            "identity_A": 0.0,
+            "identity_B": 0.0,
+            "gan_A2B": loss_gan_A2B.item(),
+            "gan_B2A": 0.0,
+            "ssim_loss": 0.0,
+            "nce_A2B": loss_nce.item(),
+            "nce_B2A": 0.0,
             "nce_total": loss_nce.item(),
         }
 
@@ -843,6 +914,11 @@ def parse_args():
         default=4.0,
         help="multiplicative weight applied to foreground voxels in cycle loss",
     )
+    parser.add_argument(
+        "--cut_mode",
+        action="store_true",
+        help="one-sided cut baseline (fastcut config): patchnce(a->b) + lsgan, no cycle/identity",
+    )
 
     return parser.parse_args()
 
@@ -887,6 +963,7 @@ def main():
         seed=getattr(args, "seed", 42),
         task_aware_loss=getattr(args, "task_aware_loss", False),
         mask_weight_foreground=getattr(args, "mask_weight_foreground", 4.0),
+        cut_mode=getattr(args, "cut_mode", False),
     )
 
     # resume if specified
