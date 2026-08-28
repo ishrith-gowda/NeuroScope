@@ -84,7 +84,13 @@ def main() -> None:
     if glob.glob(os.path.join(a.cityscapes, "*.png")):
         from cleanfid import fid
 
-        fid_val = float(fid.compute_fid(a.images, a.cityscapes, mode="clean", verbose=False))
+        # clean-fid defaults its InceptionV3 extractor to cuda; force cpu so FID runs on this mac
+        # (no cuda; inception features are architecture-deterministic, so cpu is exact and reliable)
+        fid_val = float(
+            fid.compute_fid(
+                a.images, a.cityscapes, mode="clean", device=torch.device("cpu"), verbose=False
+            )
+        )
 
     out = {
         "tag": a.tag,
