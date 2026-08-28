@@ -45,7 +45,11 @@ def main() -> None:
     ap.add_argument("--tag", default="")
     a = ap.parse_args()
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "mps"
+        if torch.backends.mps.is_available()
+        else ("cuda" if torch.cuda.is_available() else "cpu")
+    )
     model = SegformerForSemanticSegmentation.from_pretrained(MID).to(device).eval()
     proc = SegformerImageProcessor.from_pretrained(MID)
 
@@ -69,8 +73,8 @@ def main() -> None:
             inter[c] += float((pc & gc).sum())
             union[c] += float((pc | gc).sum())
         n += 1
-        if n % 200 == 0:
-            print(f"  segmented {n}/{len(imgs)}")
+        if n % 50 == 0:
+            print(f"  segmented {n}/{len(imgs)}", flush=True)
 
     iou = inter / np.maximum(union, 1e-8)
     present = union > 0

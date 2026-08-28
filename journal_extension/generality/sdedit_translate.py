@@ -27,7 +27,9 @@ NEG = "cartoon, painting, cgi, rendered, video game, illustration, blurry, low q
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="SDEdit diffusion translation for the generality benchmark")
+    ap = argparse.ArgumentParser(
+        description="SDEdit diffusion translation for the generality benchmark"
+    )
     ap.add_argument("--src", required=True, help="GTA5 images dir")
     ap.add_argument("--out", required=True)
     ap.add_argument("--strength", type=float, default=0.55, help="SDEdit noise strength (0..1)")
@@ -35,27 +37,52 @@ def main() -> None:
     ap.add_argument("--size", type=int, default=512)
     ap.add_argument("--limit", type=int, default=0, help="0 = all")
     ap.add_argument("--model", default="stable-diffusion-v1-5/stable-diffusion-v1-5")
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="base seed; image i uses seed+i so the noise is "
+        "identical across a strength sweep (strength is the only varying factor)",
+    )
+    ap.add_argument(
+        "--prompt",
+        default=PROMPT,
+        help='target-domain prompt; pass "" for the empty-prompt '
+        "ablation (isolates the img2img prior from text guidance)",
+    )
+    ap.add_argument("--neg", default=NEG, help="negative prompt")
     a = ap.parse_args()
 
-    dev = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+    dev = (
+        "mps"
+        if torch.backends.mps.is_available()
+        else ("cuda" if torch.cuda.is_available() else "cpu")
+    )
     dtype = torch.float32 if dev == "mps" else torch.float16
-    print(f"device={dev} dtype={dtype} model={a.model} strength={a.strength} steps={a.steps}", flush=True)
-    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(a.model, torch_dtype=dtype, safety_checker=None)
+    print(
+        f"device={dev} dtype={dtype} model={a.model} strength={a.strength} steps={a.steps}",
+        flush=True,
+    )
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+        a.model, torch_dtype=dtype, safety_checker=None
+    )
     pipe = pipe.to(dev)
     pipe.set_progress_bar_config(disable=True)
 
     os.makedirs(a.out, exist_ok=True)
-    gen = torch.Generator(device="cpu").manual_seed(42)
+    gen = torch.Generator(device="cpu")
     files = sorted(glob.glob(os.path.join(a.src, "*.png")))
     if a.limit:
         files = files[: a.limit]
+    print(f"prompt={a.prompt!r} neg={a.neg!r} seed={a.seed} n_files={len(files)}", flush=True)
 
     n = 0
-    for p in files:
+    for i, p in enumerate(files):
         img = Image.open(p).convert("RGB").resize((a.size, a.size), Image.BICUBIC)
+        gen.manual_seed(a.seed + i)  # image i gets identical noise across every strength/prompt run
         out = pipe(
-            prompt=PROMPT,
-            negative_prompt=NEG,
+            prompt=a.prompt,
+            negative_prompt=a.neg,
             image=img,
             strength=a.strength,
             num_inference_steps=a.steps,
