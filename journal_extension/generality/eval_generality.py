@@ -86,9 +86,15 @@ def main() -> None:
 
         # clean-fid defaults its InceptionV3 extractor to cuda; force cpu so FID runs on this mac
         # (no cuda; inception features are architecture-deterministic, so cpu is exact and reliable)
+        # num_workers=0: clean-fid's resizer is a local closure that macOS spawn cannot pickle
         fid_val = float(
             fid.compute_fid(
-                a.images, a.cityscapes, mode="clean", device=torch.device("cpu"), verbose=False
+                a.images,
+                a.cityscapes,
+                mode="clean",
+                device=torch.device("cpu"),
+                num_workers=0,
+                verbose=False,
             )
         )
 
