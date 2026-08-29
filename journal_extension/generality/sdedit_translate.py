@@ -51,6 +51,7 @@ def main() -> None:
         "ablation (isolates the img2img prior from text guidance)",
     )
     ap.add_argument("--neg", default=NEG, help="negative prompt")
+    ap.add_argument("--resume", action="store_true", help="skip images whose output already exists")
     a = ap.parse_args()
 
     dev = (
@@ -77,7 +78,12 @@ def main() -> None:
     print(f"prompt={a.prompt!r} neg={a.neg!r} seed={a.seed} n_files={len(files)}", flush=True)
 
     n = 0
+    skipped = 0
     for i, p in enumerate(files):
+        dst = os.path.join(a.out, os.path.basename(p))
+        if a.resume and os.path.exists(dst):  # resumable: unreliable local compute can hang mid-run
+            skipped += 1
+            continue
         img = Image.open(p).convert("RGB").resize((a.size, a.size), Image.BICUBIC)
         gen.manual_seed(a.seed + i)  # image i gets identical noise across every strength/prompt run
         out = pipe(
@@ -89,11 +95,11 @@ def main() -> None:
             guidance_scale=7.5,
             generator=gen,
         ).images[0]
-        out.save(os.path.join(a.out, os.path.basename(p)))
+        out.save(dst)
         n += 1
         if n % 20 == 0:
-            print(f"  sdedit {n}/{len(files)}", flush=True)
-    print(f"SDEdit-translated {n} images -> {a.out}", flush=True)
+            print(f"  sdedit {n}/{len(files)} (skipped {skipped} existing)", flush=True)
+    print(f"SDEdit-translated {n} images ({skipped} resumed/skipped) -> {a.out}", flush=True)
 
 
 if __name__ == "__main__":
