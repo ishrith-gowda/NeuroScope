@@ -10,9 +10,9 @@ if [ ! -d gvenv ]; then python3 -m venv gvenv; fi
 # shellcheck disable=SC1091
 source gvenv/bin/activate
 pip install -q --upgrade pip wheel
-# torch cuda build is the default linux wheel; pin diffusers to the version used locally
-pip install -q torch torchvision
-pip install -q "diffusers==0.40.0" transformers accelerate cleanfid opencv-python-headless \
+# torch built for CUDA 12.6 (matches the A30 node's 560/12.6 driver; the default wheel is cu130 = too new)
+pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cu126
+pip install -q "diffusers==0.40.0" transformers accelerate clean-fid opencv-python-headless \
   matplotlib huggingface_hub scikit-image safetensors
 
 python - <<'PY'
