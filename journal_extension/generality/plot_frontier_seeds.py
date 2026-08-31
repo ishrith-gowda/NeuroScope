@@ -27,7 +27,8 @@ def main() -> None:
     ap.add_argument("--out", default="")
     a = ap.parse_args()
     out = a.out or os.path.dirname(a.seeds_json)
-    d = json.load(open(a.seeds_json))
+    with open(a.seeds_json) as f:
+        d = json.load(f)
 
     gan, diff, nonl, base = "#bb463c", "#0e7c7b", "#2f7d5b", "#586170"
     plt.rcParams.update(

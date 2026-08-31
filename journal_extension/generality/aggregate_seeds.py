@@ -39,7 +39,8 @@ def main() -> None:
         base = os.path.splitext(os.path.basename(p))[0]
         if base.startswith("benchmark"):
             continue
-        d = json.load(open(p))
+        with open(p) as f:
+            d = json.load(f)
         fid, miou = d.get("FID"), d.get("mIoU")
         if base in DET:
             det[base] = {

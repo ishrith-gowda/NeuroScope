@@ -26,7 +26,8 @@ def load(results: str) -> dict[str, dict]:
     for p in glob.glob(os.path.join(results, "*.json")):
         if os.path.basename(p).startswith("benchmark"):
             continue
-        d = json.load(open(p))
+        with open(p) as f:
+            d = json.load(f)
         if d.get("FID") is not None and d.get("mIoU") is not None:
             out[d.get("tag", os.path.splitext(os.path.basename(p))[0])] = d
     return out

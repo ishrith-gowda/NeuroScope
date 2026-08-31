@@ -58,7 +58,8 @@ def main() -> None:
     refs = {m: _load(ref_subj / f"{m}.nii.gz") for m in MODS}
     print(f"reference: {ref_subj.name}")
 
-    ids = [ln.strip() for ln in open(a.ids) if ln.strip()]
+    with open(a.ids) as f:
+        ids = [ln.strip() for ln in f if ln.strip()]
     aff = np.eye(4)
     n = 0
     for sid in ids:

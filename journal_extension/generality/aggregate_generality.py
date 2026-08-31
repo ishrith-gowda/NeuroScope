@@ -49,7 +49,8 @@ def main() -> None:
     for p in sorted(glob.glob(os.path.join(a.results, "*.json"))):
         if os.path.basename(p).startswith("benchmark"):
             continue
-        d = json.load(open(p))
+        with open(p) as f:
+            d = json.load(f)
         tag = d.get("tag") or os.path.splitext(os.path.basename(p))[0]
         fam, lbl = _family(tag)
         rows.append(
