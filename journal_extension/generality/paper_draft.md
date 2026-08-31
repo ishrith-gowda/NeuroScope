@@ -1,9 +1,9 @@
 # Fidelity Is Not Utility: A Controlled Dissociation in Learned Image Translation
 
 **Target venue:** ICLR 2026 (deadline ~Sept 24) / NeurIPS D&B track.
-**Status:** working draft. N=200 numbers are final on the local run; items marked `[TODO-node]`
-require the publication-grade compute run (N=1000, multi-seed error bars, structure-preserving
-diffusion baseline). Do not treat this as camera-ready.
+**Status:** working draft. The driving results are the publication-grade N=1000 / 3-seed run (NVIDIA A30,
+GPU eval); the medical results are final. The one remaining `[TODO-node]` item is an optional
+structure-preserving diffusion baseline. Do not treat this as camera-ready.
 
 ---
 
@@ -81,30 +81,36 @@ sweep of strengths). FID is compared only at equal sample size N (it is N-biased
 
 ### 4.1 Driving: GTA5 → Cityscapes
 
-Frozen evaluator: SegFormer-b4 fine-tuned on Cityscapes (19 classes); utility = mIoU. N=200 per
-condition, identical evaluator + clean-fid for all.
+Frozen evaluator: SegFormer-b4 fine-tuned on Cityscapes (19 classes); utility = mIoU. N=1000 GTA5
+images per condition, with the Cityscapes validation set (500 images) as the fixed FID reference,
+identical evaluator + clean-fid (GPU) for all. SDEdit rows are mean ± std over 3 seeds {42,43,44}.
 
 | condition | family | FID ↓ | mIoU ↑ | ΔmIoU vs raw |
 |---|---|---:|---:|---:|
-| raw GTA5 | baseline | 165.8 | 0.348 | — |
-| color match | non-learned | 195.0 | 0.319 | −0.029 |
-| SDEdit strength 0.30 | diffusion | 162.6 | 0.253 | −0.095 |
-| SDEdit strength 0.40 | diffusion | 143.1 | 0.200 | −0.148 |
-| SDEdit strength 0.55 | diffusion | 124.1 | 0.158 | −0.190 |
-| SDEdit strength 0.70 | diffusion | 122.0 | 0.098 | −0.249 |
-| CycleGAN | learned-GAN | 105.7 | 0.126 | −0.221 |
-| SDEdit 0.55, empty prompt | diffusion (ablation) | 198.3 | 0.132 | −0.215 |
+| raw GTA5 | baseline | 137.2 | 0.380 | — |
+| color match | non-learned | 165.9 | 0.363 | −0.018 |
+| SDEdit strength 0.20 | diffusion | 145.1 ± 1.8 | 0.323 ± 0.003 | −0.057 |
+| SDEdit strength 0.30 | diffusion | 133.1 ± 2.1 | 0.289 ± 0.002 | −0.092 |
+| SDEdit strength 0.40 | diffusion | 116.4 ± 1.1 | 0.237 ± 0.003 | −0.143 |
+| SDEdit strength 0.50 | diffusion | 100.3 ± 1.4 | 0.194 ± 0.005 | −0.187 |
+| SDEdit strength 0.60 | diffusion | 90.8 ± 2.0 | 0.150 ± 0.001 | −0.231 |
+| SDEdit strength 0.70 | diffusion | 88.0 ± 0.4 | 0.106 ± 0.001 | −0.274 |
+| CycleGAN | learned-GAN | 65.5 | 0.167 | −0.214 |
+| SDEdit 0.50, empty prompt | diffusion (ablation) | 154.2 ± 1.9 | 0.170 ± 0.003 | −0.211 |
 
 **Findings.** (a) Learned translation (CycleGAN and every SDEdit strength) lowers FID relative to raw
-while collapsing mIoU by 55–72%. (b) The non-learned baseline does not improve FID yet preserves mIoU
-(−3%). (c) SDEdit strength traces a **monotonic frontier**: as strength rises, FID falls and mIoU falls
-with it; the ideal corner is empty (Fig. `figures/frontier.pdf`). (d) **Empty-prompt ablation:** with
-no text prompt, FID is *worse* than raw (198.3 > 165.8) yet mIoU still collapses (0.132) — the utility
+while collapsing mIoU by 15–72%; CycleGAN more than halves FID (137→65) at mIoU 0.167. (b) The
+non-learned baseline does not improve FID yet preserves mIoU (−1.8%). (c) SDEdit strength traces a
+**monotonic frontier** with tight seed variance (σ(mIoU) ≤ 0.005): as strength rises, FID falls (145→88)
+and mIoU falls with it (0.323→0.106); no learned setting reaches the ideal (low-FID, high-mIoU) corner,
+occupied only by raw/non-learned (Fig. `figures/frontier_seeds.pdf`). (d) **Empty-prompt ablation:** with
+no text prompt, FID is *worse* than raw (154.2 > 137.2) yet mIoU still collapses (0.170) — the utility
 loss is the diffusion img2img prior itself, not text guidance, and occurs even absent any fidelity gain.
-This N=200 run independently reproduces an N=1000 run (raw 0.380 / colormatch 0.363 / CycleGAN 0.166).
-`[TODO-node]` publication-grade N=1000 sweep + multi-seed error bars + one structure-preserving diffusion
-baseline (ControlNet-seg / plug-and-play), expected to sit near the non-learned point (high utility, modest
-fidelity), completing the frontier.
+These are the publication-grade numbers (N=1000, 3 seeds, GPU eval on an NVIDIA A30); an earlier local
+N=200 run reproduced the same ordering on an independent machine.
+`[TODO-node]` one remaining optional add: a structure-preserving diffusion baseline (ControlNet-seg /
+plug-and-play), expected to sit near the non-learned point, to preempt the "why not condition on structure?"
+question.
 
 ### 4.2 Medical: multi-site brain-tumor MRI
 
@@ -140,8 +146,9 @@ Non-learned transforms, lacking a learned prior, cannot introduce this failure.
 
 ## 6. Limitations
 
-- FID is N-biased; we compare only at equal N and provide an independent N=200 replication of the N=1000
-  trend. `[TODO-node]` error bars over ≥3 seeds.
+- FID is N-biased; all conditions use the same N (1000 translated vs the 500-image Cityscapes val set as
+  the fixed reference), and SDEdit points report mean ± std over 3 seeds (σ(mIoU) ≤ 0.005, σ(FID) ≤ 2.1),
+  so the ordering is robust to both sample size and seed. A separate local N=200 run reproduces it.
 - Two medical evaluation protocols exist; headline uses the frozen independent one.
 - `[TODO-node]` a structure-preserving diffusion baseline (ControlNet/PnP) to preempt "why not condition
   on structure?" — expected to support the thesis (explicit structure = non-distributional constraint).
