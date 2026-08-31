@@ -84,15 +84,16 @@ def main() -> None:
     if glob.glob(os.path.join(a.cityscapes, "*.png")):
         from cleanfid import fid
 
-        # clean-fid defaults its InceptionV3 extractor to cuda; force cpu so FID runs on this mac
-        # (no cuda; inception features are architecture-deterministic, so cpu is exact and reliable)
-        # num_workers=0: clean-fid's resizer is a local closure that macOS spawn cannot pickle
+        # FID extractor on cuda when available (fast on the gpu node), else cpu. clean-fid defaults
+        # to cuda and mps cannot run inception, so map non-cuda -> cpu (exact, deterministic features).
+        # num_workers=0: clean-fid's resizer is a local closure that macOS spawn cannot pickle.
+        fid_dev = torch.device("cuda") if device == "cuda" else torch.device("cpu")
         fid_val = float(
             fid.compute_fid(
                 a.images,
                 a.cityscapes,
                 mode="clean",
-                device=torch.device("cpu"),
+                device=fid_dev,
                 num_workers=0,
                 verbose=False,
             )
