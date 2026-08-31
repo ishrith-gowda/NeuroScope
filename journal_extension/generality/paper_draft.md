@@ -2,8 +2,8 @@
 
 **Target venue:** ICLR 2026 (deadline ~Sept 24) / NeurIPS D&B track.
 **Status:** working draft. The driving results are the publication-grade N=1000 / 3-seed run (NVIDIA A30,
-GPU eval); the medical results are final. The one remaining `[TODO-node]` item is an optional
-structure-preserving diffusion baseline. Do not treat this as camera-ready.
+GPU eval), including the structure-preserving (ControlNet-Canny) baseline; the medical results are final.
+No `[TODO-node]` items remain. Do not treat this as camera-ready.
 
 ---
 
@@ -97,6 +97,7 @@ identical evaluator + clean-fid (GPU) for all. SDEdit rows are mean ± std over 
 | SDEdit strength 0.70 | diffusion | 88.0 ± 0.4 | 0.106 ± 0.001 | −0.274 |
 | CycleGAN | learned-GAN | 65.5 | 0.167 | −0.214 |
 | SDEdit 0.50, empty prompt | diffusion (ablation) | 154.2 ± 1.9 | 0.170 ± 0.003 | −0.211 |
+| ControlNet-Canny (structure-preserving) | diffusion + edge cond. | 133.2 ± 0.3 | 0.221 ± 0.002 | −0.159 |
 
 **Findings.** (a) Learned translation (CycleGAN and every SDEdit strength) lowers FID relative to raw
 while collapsing mIoU by 15–72%; CycleGAN more than halves FID (137→65) at mIoU 0.167. (b) The
@@ -107,10 +108,14 @@ occupied only by raw/non-learned (Fig. `figures/frontier_seeds.pdf`). (d) **Empt
 no text prompt, FID is *worse* than raw (154.2 > 137.2) yet mIoU still collapses (0.170) — the utility
 loss is the diffusion img2img prior itself, not text guidance, and occurs even absent any fidelity gain.
 These are the publication-grade numbers (N=1000, 3 seeds, GPU eval on an NVIDIA A30); an earlier local
-N=200 run reproduced the same ordering on an independent machine.
-`[TODO-node]` one remaining optional add: a structure-preserving diffusion baseline (ControlNet-seg /
-plug-and-play), expected to sit near the non-learned point, to preempt the "why not condition on structure?"
-question.
+N=200 run reproduced the same ordering on an independent machine. (e) **Structure-preserving baseline.**
+Conditioning the diffusion generator on the source image's Canny edges (ControlNet-Canny) does *not*
+rescue utility: it lands on the learned frontier (FID 133.2, mIoU 0.221 ± 0.002) — in fact Pareto-dominated
+by SDEdit at equal FID (SDEdit 0.30: FID 133.1, mIoU 0.289) — nowhere near the ideal corner. Edge-level
+structure is not the task-relevant signal; only conditioning on the *segmentation map itself* (label-guided
+diffusion, e.g. Peng et al. ICCV 2023) recovers utility, and only by injecting the labels — precisely the
+non-distributional constraint our thesis says is required. This preempts "why not condition on structure?"
+empirically: generic structural conditioning is insufficient.
 
 ### 4.2 Medical: multi-site brain-tumor MRI
 
@@ -150,8 +155,9 @@ Non-learned transforms, lacking a learned prior, cannot introduce this failure.
   the fixed reference), and SDEdit points report mean ± std over 3 seeds (σ(mIoU) ≤ 0.005, σ(FID) ≤ 2.1),
   so the ordering is robust to both sample size and seed. A separate local N=200 run reproduces it.
 - Two medical evaluation protocols exist; headline uses the frozen independent one.
-- `[TODO-node]` a structure-preserving diffusion baseline (ControlNet/PnP) to preempt "why not condition
-  on structure?" — expected to support the thesis (explicit structure = non-distributional constraint).
+- The structure-preserving baseline uses edge (Canny) conditioning; a segmentation-map-conditioned variant
+  (label-guided diffusion) would recover utility only by injecting the labels, which concedes the thesis
+  rather than refuting it. We report the edge variant as the honest "generic structure" control.
 
 ## 7. Conclusion
 

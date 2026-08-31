@@ -14,3 +14,4 @@ GTA5->Cityscapes, N per condition, frozen SegFormer-b4 + clean-fid; SDEdit over 
 | SDEdit 0.60 | learned-diffusion | 90.75 ± 2.01 | 0.1495 ± 0.0012 | 3 |
 | SDEdit 0.70 | learned-diffusion | 88.01 ± 0.37 | 0.1062 ± 0.0007 | 3 |
 | SDEdit 0.50 empty | learned-diffusion | 154.18 ± 1.85 | 0.1695 ± 0.0027 | 3 |
+| ControlNet-Canny (structure-preserving) | learned-diffusion+struct | 133.16 ± 0.30 | 0.2213 ± 0.0015 | 3 |
