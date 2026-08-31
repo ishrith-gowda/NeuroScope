@@ -107,6 +107,24 @@ def main() -> None:
                 label=lbl,
             )
 
+    cn = d.get("controlnet")
+    if cn and cn.get("FID_mean") is not None:
+        ax.errorbar(
+            [cn["FID_mean"]],
+            [cn["mIoU_mean"]],
+            xerr=[cn["FID_std"] or 0.0],
+            yerr=[cn["mIoU_std"] or 0.0],
+            fmt="^",
+            color="#6a4c93",
+            ecolor="#6a4c93",
+            capsize=3,
+            ms=12,
+            mec="white",
+            mew=1.2,
+            zorder=4,
+            label=f"ControlNet-Canny (structure-preserving, n={cn['n_seeds']})",
+        )
+
     if d.get("raw_mIoU") is not None:
         ax.axhline(d["raw_mIoU"], color=base, lw=0.7, ls=":", alpha=0.6, zorder=1)
 

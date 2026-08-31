@@ -22,6 +22,7 @@ import numpy as np
 
 DET = {"raw": "baseline", "colormatch": "non-learned", "cyclegan": "learned-GAN"}
 SD = re.compile(r"^sdedit_s(\d+)(_empty)?_seed(\d+)$")
+CN = re.compile(r"^controlnet_seed(\d+)$")  # structure-preserving diffusion baseline
 
 
 def main() -> None:
@@ -33,6 +34,7 @@ def main() -> None:
 
     det: dict[str, dict] = {}
     groups: dict[tuple[float, bool], dict[str, list[float]]] = {}
+    cn: dict[str, list[float]] = {"FID": [], "mIoU": []}
     for p in sorted(glob.glob(os.path.join(a.results, "*.json"))):
         base = os.path.splitext(os.path.basename(p))[0]
         if base.startswith("benchmark"):
@@ -46,6 +48,12 @@ def main() -> None:
                 "mIoU": miou,
                 "n_images": d.get("n_images"),
             }
+            continue
+        if CN.match(base):
+            if fid is not None:
+                cn["FID"].append(fid)
+            if miou is not None:
+                cn["mIoU"].append(miou)
             continue
         m = SD.match(base)
         if not m:
@@ -81,6 +89,20 @@ def main() -> None:
             }
         )
 
+    cfm, cfs = stat(cn["FID"])
+    cmm, cms = stat(cn["mIoU"])
+    cn_row = (
+        {
+            "FID_mean": cfm,
+            "FID_std": cfs,
+            "mIoU_mean": cmm,
+            "mIoU_std": cms,
+            "n_seeds": max(len(cn["FID"]), len(cn["mIoU"])),
+        }
+        if (cn["FID"] or cn["mIoU"])
+        else None
+    )
+
     # markdown
     md = ["# generality benchmark (multi-seed): fidelity vs utility, mean +/- std", ""]
     md.append(
@@ -100,11 +122,29 @@ def main() -> None:
         fid = f"{r['FID_mean']:.2f} ± {r['FID_std']:.2f}" if r["FID_mean"] is not None else "-"
         miou = f"{r['mIoU_mean']:.4f} ± {r['mIoU_std']:.4f}" if r["mIoU_mean"] is not None else "-"
         md.append(f"| {lbl} | learned-diffusion | {fid} | {miou} | {r['n_seeds']} |")
+    if cn_row:
+        fid = (
+            f"{cn_row['FID_mean']:.2f} ± {cn_row['FID_std']:.2f}"
+            if cn_row["FID_mean"] is not None
+            else "-"
+        )
+        miou = (
+            f"{cn_row['mIoU_mean']:.4f} ± {cn_row['mIoU_std']:.4f}"
+            if cn_row["mIoU_mean"] is not None
+            else "-"
+        )
+        md.append(
+            f"| ControlNet-Canny (structure-preserving) | learned-diffusion+struct | {fid} | {miou} | {cn_row['n_seeds']} |"
+        )
     with open(os.path.join(out, "benchmark_seeds.md"), "w") as f:
         f.write("\n".join(md) + "\n")
 
     with open(os.path.join(out, "benchmark_seeds.json"), "w") as f:
-        json.dump({"deterministic": det, "sdedit": sd_rows, "raw_mIoU": raw_miou}, f, indent=2)
+        json.dump(
+            {"deterministic": det, "sdedit": sd_rows, "controlnet": cn_row, "raw_mIoU": raw_miou},
+            f,
+            indent=2,
+        )
 
     print("\n".join(md))
     print(f"\nwrote benchmark_seeds.md / benchmark_seeds.json -> {out}")
