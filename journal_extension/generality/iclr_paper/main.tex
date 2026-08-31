@@ -1,0 +1,265 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{caption}
+
+% NOTE: this is the working (non-anonymous) draft. For the ICLR double-blind
+% submission, replace the author block with the anonymous placeholder.
+\title{Fidelity Is Not Utility:\\ A Controlled Dissociation in Learned Image Translation}
+\author{%
+  Ishrith Gowda\\
+  University of California, Berkeley\\
+  \texttt{ishrithgowda@berkeley.edu}\\
+  \And
+  Chunwei Liu\\
+  Purdue University\\
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Generative image translation---harmonization, style transfer, synthetic-to-real
+adaptation---is almost universally evaluated with \emph{distributional fidelity}
+metrics such as the Fr\'echet Inception Distance (FID). We show, in a controlled
+setting, that improving fidelity does not imply improving downstream utility, and
+that for \emph{learned} translation the two systematically trade off. Holding a
+downstream model \emph{frozen}, we measure a fidelity axis (FID to the target
+domain) and a utility axis (the frozen model's task metric) on identical inputs.
+Across two domains (synthetic-to-real driving and multi-site brain-tumor MRI) and
+two generative families (adversarial CycleGAN and diffusion SDEdit), learned
+translation lowers FID while degrading the downstream task metric, whereas a
+non-learned baseline (histogram / color transfer) preserves the task metric
+without improving FID. Using SDEdit's noise-strength parameter as a continuous
+knob, we trace a monotonic FID--utility frontier ($N{=}1000$, three seeds): no
+learned setting reaches the high-fidelity, high-utility region, and none
+Pareto-dominates the non-learned baseline. An empty-prompt ablation shows the
+utility loss persists even when fidelity is \emph{not} improved, isolating the
+effect to the learned generative prior rather than any conditioning signal. A
+structure-preserving baseline (ControlNet conditioned on edges) does not rescue
+utility either: it lands on the learned frontier, confirming that generic
+structural conditioning is insufficient---only injecting the task labels
+themselves recovers utility, which concedes our thesis. Our contribution is not a
+new method but a \emph{measurement}: a general, architecture-agnostic dissociation
+between what fidelity metrics reward and what downstream tasks need.
+\end{abstract}
+
+\section{Introduction}
+Distribution-matching translation is trained and evaluated to make outputs
+\emph{look like} a target domain. The implicit promise is that looking more like
+the target makes outputs more \emph{useful}---for example, that harmonizing site
+$B$ to site $A$ helps a model trained on $A$. We test that promise directly and
+find it false for learned translation.
+
+Our contributions are:
+\begin{itemize}
+  \item A \textbf{controlled protocol} for separating fidelity from utility: a
+  frozen downstream evaluator plus a matched non-learned control, measuring FID
+  and the task metric on identical inputs (Section~\ref{sec:setup}).
+  \item Evidence that the fidelity--utility dissociation is a property of the
+  \textbf{learned distribution-matching objective}, not a single architecture---it
+  reproduces under both a GAN (CycleGAN) and a diffusion model (SDEdit).
+  \item A \textbf{continuous characterization} via SDEdit strength: a monotonic
+  FID-vs-mIoU frontier with tight seed variance, an empty-prompt ablation that
+  decouples utility loss from fidelity gain, and a structure-preserving
+  (ControlNet) baseline that fails to escape the frontier.
+  \item \textbf{Cross-domain} generality: the same dissociation in driving scenes
+  and in clinical brain-tumor MRI.
+\end{itemize}
+
+\section{Related Work}
+Three separately-established observations converge in our claim; we unify them.
+
+\paragraph{Fidelity metrics mis-rank generators for downstream tasks.}
+\citet{konz2024rethinking} show no perceptual metric reliably tracks segmentation
+quality in medical translation; \citet{dutt2025chexgenbench} show low FID does not
+predict clinical utility; and \citet{kynkaanniemi2023role} show FID is gameable by
+aligning ImageNet-class statistics. These are \emph{metric-evaluation} studies; we
+add a learned/non-learned control and a second generative family and domain.
+
+\paragraph{Distribution-matching translation alters task content.}
+\citet{cohen2018distribution} show CycleGAN-style matching can hallucinate or
+remove tumors to fit the target distribution, and semantic-consistency losses
+\citep{hoffman2018cycada,peng2023diffusion} exist precisely to patch this. We show
+that \emph{without} such non-distributional anchoring the pure learned objective
+degrades utility, reframing those losses as evidence for our thesis.
+
+\paragraph{Non-learned alignment rivals learned translation.}
+\citet{yang2020fda} reach strong segmentation adaptation with a non-learned
+spectral swap. We use histogram/color transfer as the analogous control and,
+unlike FDA, measure the fidelity axis explicitly to expose the dissociation.
+\citet{richter2022enhancing} likewise treat a segmentation-stability metric as a
+guardrail that realism must not break.
+
+\paragraph{Positioning.} No prior work runs the clean $2\times2$
+$\{$learned, non-learned$\}\times\{$fidelity$\downarrow?$, utility$\downarrow?\}$
+as its thesis, ties the failure to the objective across both a GAN \emph{and} a
+diffusion model, and does so across driving and medicine. This is a
+measurement/positioning contribution, not a new architecture.
+
+\section{Setup: Separating Fidelity from Utility}
+\label{sec:setup}
+Given source images $x$ and a translation $T$, we evaluate $T(x)$ on two axes.
+\textbf{Fidelity} is $\mathrm{FID}(T(x),\text{target})$ via
+clean-fid~\citep{parmar2022cleanfid}; lower is closer to the target.
+\textbf{Utility} is a \emph{frozen} downstream model $f$ (never retrained) applied
+to $T(x)$ and scored against ground truth; because $f$ is fixed, any change in its
+score is attributable purely to $T$. We compare four families of $T$:
+(i) identity (raw source, reference); (ii) non-learned (histogram / color
+transfer); (iii) learned-GAN (CycleGAN, \citealp{zhu2017cyclegan}); and
+(iv) learned-diffusion (SDEdit, \citealp{meng2022sdedit}, over a sweep of noise
+strengths, plus ControlNet-Canny, \citealp{zhang2023controlnet}). FID is compared
+only at equal sample size, which it is known to bias.
+
+\section{Experiments}
+
+\subsection{Driving: GTA5 $\rightarrow$ Cityscapes}
+The source is GTA5~\citep{richter2016playing} and the target is
+Cityscapes~\citep{cordts2016cityscapes}. The frozen evaluator is a
+Cityscapes-finetuned SegFormer-b4~\citep{xie2021segformer} (19 classes); utility is
+mIoU. We use $N{=}1000$ GTA5 images per condition, with the Cityscapes validation
+set (500 images) as the fixed FID reference, and identical evaluator and clean-fid
+(GPU) for all conditions. SDEdit runs on Stable Diffusion~\citep{rombach2022ldm}
+and rows report mean $\pm$ std over three seeds $\{42,43,44\}$. Results are in
+Table~\ref{tab:driving} and Figure~\ref{fig:frontier}.
+
+\begin{table}[t]
+\centering
+\caption{GTA5$\rightarrow$Cityscapes, $N{=}1000$, frozen SegFormer-b4 + clean-fid.
+SDEdit rows are mean $\pm$ std over three seeds. Learned translation lowers FID
+while collapsing mIoU; the non-learned baseline preserves mIoU without improving
+FID; no learned setting reaches the low-FID/high-mIoU corner.}
+\label{tab:driving}
+\begin{tabular}{llrrr}
+\toprule
+condition & family & FID $\downarrow$ & mIoU $\uparrow$ & $\Delta$mIoU \\
+\midrule
+raw GTA5 & baseline & 137.2 & 0.380 & --- \\
+color match & non-learned & 165.9 & 0.363 & $-0.018$ \\
+SDEdit 0.20 & diffusion & $145.1{\pm}1.8$ & $0.323{\pm}0.003$ & $-0.057$ \\
+SDEdit 0.30 & diffusion & $133.1{\pm}2.1$ & $0.289{\pm}0.002$ & $-0.092$ \\
+SDEdit 0.40 & diffusion & $116.4{\pm}1.1$ & $0.237{\pm}0.003$ & $-0.143$ \\
+SDEdit 0.50 & diffusion & $100.3{\pm}1.4$ & $0.194{\pm}0.005$ & $-0.187$ \\
+SDEdit 0.60 & diffusion & $90.8{\pm}2.0$ & $0.150{\pm}0.001$ & $-0.231$ \\
+SDEdit 0.70 & diffusion & $88.0{\pm}0.4$ & $0.106{\pm}0.001$ & $-0.274$ \\
+CycleGAN & learned-GAN & 65.5 & 0.167 & $-0.214$ \\
+SDEdit 0.50, empty prompt & diffusion (abl.) & $154.2{\pm}1.9$ & $0.170{\pm}0.003$ & $-0.211$ \\
+ControlNet-Canny & diffusion + edge & $133.2{\pm}0.3$ & $0.221{\pm}0.002$ & $-0.159$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\linewidth]{frontier_seeds.pdf}
+\caption{The fidelity--utility plane for GTA5$\rightarrow$Cityscapes (mean $\pm$
+std over seeds). The SDEdit strength sweep traces a monotonic frontier: as strength
+rises, FID falls and mIoU falls with it. Every learned point (CycleGAN, all SDEdit
+strengths, the empty-prompt ablation, and edge-conditioned ControlNet) sits well
+below raw and the non-learned baseline on utility; the ideal low-FID/high-mIoU
+corner is empty.}
+\label{fig:frontier}
+\end{figure}
+
+\paragraph{Findings.}
+(a) Learned translation lowers FID relative to raw while collapsing mIoU by
+15--72\%; CycleGAN more than halves FID ($137{\rightarrow}65$) at mIoU 0.167.
+(b) The non-learned baseline does not improve FID yet preserves mIoU ($-1.8\%$).
+(c) SDEdit strength traces a \textbf{monotonic frontier} with tight seed variance
+($\sigma(\text{mIoU})\le 0.005$): as strength rises, FID falls ($145{\rightarrow}88$)
+and mIoU falls with it ($0.323{\rightarrow}0.106$); no learned setting reaches the
+ideal corner, occupied only by raw/non-learned.
+(d) \textbf{Empty-prompt ablation.} With no text prompt, FID is \emph{worse} than
+raw ($154.2 > 137.2$) yet mIoU still collapses ($0.170$)---the utility loss is the
+diffusion prior itself, not text guidance, and occurs even absent any fidelity gain.
+(e) \textbf{Structure-preserving baseline.} Conditioning on the source image's
+Canny edges (ControlNet-Canny) does \emph{not} rescue utility: it lands on the
+learned frontier (FID 133.2, mIoU $0.221{\pm}0.002$), Pareto-dominated by SDEdit at
+equal FID (SDEdit 0.30: FID 133.1, mIoU 0.289). Edge structure is not the
+task-relevant signal; only conditioning on the segmentation \emph{map}
+\citep{peng2023diffusion} recovers utility, and only by injecting the labels---the
+non-distributional constraint our thesis requires. A local $N{=}200$ run reproduces
+the same ordering on an independent machine.
+
+\subsection{Medical: Multi-Site Brain-Tumor MRI}
+The frozen evaluator is an nnU-Net~\citep{isensee2021nnunet} trained on
+BraTS~\citep{menze2015brats} and frozen; utility is tumor Dice on the external
+UPenn-GBM site~\citep{bakas2022upenn} ($n{=}103$). The learned harmonizer is
+SA-CycleGAN-2.5D, a self-attention CycleGAN over 2.5D multi-modal MRI.
+Table~\ref{tab:medical} reports the result.
+
+\begin{table}[t]
+\centering
+\caption{External UPenn-GBM tumor Dice under a frozen BraTS-trained nnU-Net.
+Learned harmonization collapses Dice even though it makes images more source-like;
+the non-learned baseline preserves it.}
+\label{tab:medical}
+\begin{tabular}{llr}
+\toprule
+input to frozen nnU-Net & family & Dice (fg. mean) \\
+\midrule
+BraTS test (in-domain ref.) & --- & 0.771 \\
+UPenn raw (external) & baseline & 0.682 \\
+UPenn + histogram match & non-learned & 0.669 \\
+UPenn + learned harmonization & learned-GAN & 0.064 \\
+UPenn + symmetric seg-consistency & learned-GAN (+ content) & 0.205 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Findings.} Learned harmonization collapses external-site Dice
+($0.682{\rightarrow}0.064$) while the non-learned baseline preserves it ($0.669$).
+Content/segmentation-consistency losses reduce but do not eliminate the loss
+($0.205 \ll 0.682$), consistent with the driving result that the degradation is
+intrinsic to the learned objective. A second external site (RHUH-GBM,
+\citealp{cardoso2022rhuh}, $n{=}40$) confirms the direction
+($0.718{\rightarrow}0.599$, $-16.6\%$). We note two evaluation protocols exist: the
+headline numbers use the frozen independent nnU-Net; a separate
+method-development evaluator ranks the symmetric loss as the best-preserving
+\emph{learned} harmonizer, which belongs to a companion method paper.
+
+\section{Analysis}
+The learned objective optimizes appearance under a distribution/adversarial or
+denoising target with no term guaranteeing task-relevant signal survives. SDEdit
+strength is precisely the amount of learned prior injected, and utility falls
+monotonically with it. The empty-prompt result decouples utility loss from fidelity
+gain: passing through the prior damages task content even when the output is
+\emph{less} target-like. Non-learned transforms, lacking a learned prior, cannot
+introduce this failure; edge-conditioned ControlNet, injecting structure but not
+semantics, does not avoid it.
+
+\section{Limitations}
+FID is sample-size biased; all conditions use the same $N$ (1000 translated vs the
+500-image Cityscapes validation set as the fixed reference), and SDEdit points
+report mean $\pm$ std over three seeds ($\sigma(\text{mIoU})\le0.005$,
+$\sigma(\text{FID})\le2.1$), so the ordering is robust to both sample size and
+seed. The structure-preserving baseline uses edge (Canny) conditioning; a
+segmentation-map-conditioned variant would recover utility only by injecting the
+labels, which concedes the thesis rather than refuting it.
+
+\section{Conclusion}
+Fidelity is not utility. Rewarding distributional realism can actively harm the
+downstream task for learned translation, across architectures and domains. We
+recommend reporting a frozen-evaluator utility axis alongside any fidelity metric,
+and treating non-learned baselines as first-class controls.
+
+\section*{Reproducibility Statement}
+All conditions regenerate from a single command; seeds are fixed and logged; frozen
+evaluators are referenced by checkpoint id (SegFormer-b4, nnU-Net); FID uses
+clean-fid at a fixed $N$. Code, configs, and the $N{=}1000$ result set are released
+with the paper.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
