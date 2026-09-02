@@ -1,0 +1,12 @@
+# latex build artifacts (regenerable); source (.tex/.bib/.sty), the figure, and main.pdf are tracked
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+build*.log
+build_bib.log

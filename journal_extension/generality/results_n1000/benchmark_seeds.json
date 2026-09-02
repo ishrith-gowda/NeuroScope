@@ -1,0 +1,95 @@
+{
+  "deterministic": {
+    "colormatch": {
+      "family": "non-learned",
+      "FID": 165.8826599625997,
+      "mIoU": 0.3626083708423942,
+      "n_images": 1000
+    },
+    "cyclegan": {
+      "family": "learned-GAN",
+      "FID": 65.48555030534209,
+      "mIoU": 0.166591574042619,
+      "n_images": 1000
+    },
+    "raw": {
+      "family": "baseline",
+      "FID": 137.1508993424485,
+      "mIoU": 0.3803462586528634,
+      "n_images": 1000
+    }
+  },
+  "sdedit": [
+    {
+      "strength": 0.2,
+      "empty_prompt": false,
+      "FID_mean": 145.09514431389889,
+      "FID_std": 1.8165268583395082,
+      "mIoU_mean": 0.3229097320277953,
+      "mIoU_std": 0.00275561592326203,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.3,
+      "empty_prompt": false,
+      "FID_mean": 133.1439399133449,
+      "FID_std": 2.132153536337529,
+      "mIoU_mean": 0.2886919319192012,
+      "mIoU_std": 0.002354739679064556,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.4,
+      "empty_prompt": false,
+      "FID_mean": 116.44058998313535,
+      "FID_std": 1.0555417111593257,
+      "mIoU_mean": 0.23700290896664422,
+      "mIoU_std": 0.0030567088487904524,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.5,
+      "empty_prompt": false,
+      "FID_mean": 100.25226815031367,
+      "FID_std": 1.3732103417186394,
+      "mIoU_mean": 0.19357293508604748,
+      "mIoU_std": 0.0048192565748595645,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.6,
+      "empty_prompt": false,
+      "FID_mean": 90.75035533355968,
+      "FID_std": 2.0136552120404807,
+      "mIoU_mean": 0.14949177113319445,
+      "mIoU_std": 0.0012034998669704262,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.7,
+      "empty_prompt": false,
+      "FID_mean": 88.01002814677592,
+      "FID_std": 0.36767240549814206,
+      "mIoU_mean": 0.1062096014205111,
+      "mIoU_std": 0.0007305530223075643,
+      "n_seeds": 3
+    },
+    {
+      "strength": 0.5,
+      "empty_prompt": true,
+      "FID_mean": 154.18464104650803,
+      "FID_std": 1.8512306868358541,
+      "mIoU_mean": 0.16950227214118732,
+      "mIoU_std": 0.0027460523109199466,
+      "n_seeds": 3
+    }
+  ],
+  "controlnet": {
+    "FID_mean": 133.16367227808684,
+    "FID_std": 0.29547623863248396,
+    "mIoU_mean": 0.22129743266086507,
+    "mIoU_std": 0.0015168706014669659,
+    "n_seeds": 3
+  },
+  "raw_mIoU": 0.3803462586528634
+}

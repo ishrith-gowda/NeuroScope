@@ -1,0 +1,104 @@
+{
+  "rows": [
+    {
+      "tag": "cyclegan",
+      "family": "learned-GAN",
+      "label": "CycleGAN (adversarial)",
+      "FID": 105.74677577346432,
+      "mIoU": 0.12626440059518443,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.2212045657221632
+    },
+    {
+      "tag": "sdedit_s070",
+      "family": "learned-diffusion",
+      "label": "SDEdit (diffusion) strength 0.70",
+      "FID": 122.01887388691196,
+      "mIoU": 0.09833976072806268,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.24912920558928497
+    },
+    {
+      "tag": "sdedit_s055",
+      "family": "learned-diffusion",
+      "label": "SDEdit (diffusion) strength 0.55",
+      "FID": 124.09753906579505,
+      "mIoU": 0.15754954787351289,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.18991941844383475
+    },
+    {
+      "tag": "sdedit_s040",
+      "family": "learned-diffusion",
+      "label": "SDEdit (diffusion) strength 0.40",
+      "FID": 143.08238743190287,
+      "mIoU": 0.19978729012515584,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.1476816761921918
+    },
+    {
+      "tag": "sdedit_s030",
+      "family": "learned-diffusion",
+      "label": "SDEdit (diffusion) strength 0.30",
+      "FID": 162.59787943782675,
+      "mIoU": 0.2529054667624108,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.09456349955493681
+    },
+    {
+      "tag": "raw",
+      "family": "baseline",
+      "label": "raw GTA5 (no translation)",
+      "FID": 165.7862842655435,
+      "mIoU": 0.34746896631734764,
+      "n_images": 200,
+      "dmIoU_vs_raw": 0.0
+    },
+    {
+      "tag": "colormatch",
+      "family": "non-learned",
+      "label": "color match (histogram)",
+      "FID": 194.9583829862808,
+      "mIoU": 0.3185073897853541,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.02896157653199355
+    },
+    {
+      "tag": "sdedit_s055_empty",
+      "family": "learned-diffusion",
+      "label": "SDEdit (diffusion) strength 0.55, empty prompt",
+      "FID": 198.31242578625324,
+      "mIoU": 0.13239627893777314,
+      "n_images": 200,
+      "dmIoU_vs_raw": -0.2150726873795745
+    }
+  ],
+  "diffusion_frontier": [
+    {
+      "strength": "SDEdit (diffusion) strength 0.70",
+      "FID": 122.01887388691196,
+      "mIoU": 0.09833976072806268
+    },
+    {
+      "strength": "SDEdit (diffusion) strength 0.55",
+      "FID": 124.09753906579505,
+      "mIoU": 0.15754954787351289
+    },
+    {
+      "strength": "SDEdit (diffusion) strength 0.40",
+      "FID": 143.08238743190287,
+      "mIoU": 0.19978729012515584
+    },
+    {
+      "strength": "SDEdit (diffusion) strength 0.30",
+      "FID": 162.59787943782675,
+      "mIoU": 0.2529054667624108
+    },
+    {
+      "strength": "SDEdit (diffusion) strength 0.55, empty prompt",
+      "FID": 198.31242578625324,
+      "mIoU": 0.13239627893777314
+    }
+  ],
+  "raw_mIoU": 0.34746896631734764
+}
