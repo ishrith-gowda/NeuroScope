@@ -171,7 +171,19 @@ corner is empty.}
 \label{fig:frontier}
 \end{figure}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{qualitative.jpg}
+\caption{Qualitative GTA5$\rightarrow$Cityscapes translations (three scenes, seed 42). Left to right: raw
+source, non-learned color match, CycleGAN, SDEdit at increasing strength, the empty-prompt SDEdit, and
+edge-conditioned ControlNet. As the learned translations become more Cityscapes-like they visibly
+hallucinate and alter scene structure---buildings, lane markings, added objects---that the frozen
+segmenter depends on, while the non-learned baseline leaves structure intact.}
+\label{fig:qualitative}
+\end{figure}
+
 \paragraph{Findings.}
+Figure~\ref{fig:qualitative} shows representative translations.
 (a) Learned translation lowers FID relative to raw while collapsing mIoU by
 15--72\%; CycleGAN more than halves FID ($137{\rightarrow}65$) at mIoU 0.167.
 (b) The non-learned baseline does not improve FID yet preserves mIoU ($-1.8\%$).
